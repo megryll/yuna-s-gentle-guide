@@ -27,9 +27,9 @@ import {
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (s: Record<string, unknown>) => ({
-    q: (s.q as string) ?? "",
-    callEnded: (s.callEnded as string) ?? "",
-    callDuration: (s.callDuration as string) ?? "",
+    q: (s.q as string | undefined) ?? "",
+    callEnded: (s.callEnded as string | undefined),
+    callDuration: (s.callDuration as string | undefined),
   }),
   head: () => ({
     meta: [
