@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { YunaMark, YunaWordmark } from "@/components/YunaMark";
+import { YunaMark } from "@/components/YunaMark";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { AppMenuDrawer } from "@/components/AppMenuDrawer";
+import { getHasChatted, getLastTopics } from "@/lib/yuna-session";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -20,10 +22,16 @@ export const Route = createFileRoute("/home")({
   component: Home,
 });
 
-const suggestions = [
-  "Tell me what you can help with.",
+const firstTimeSuggestions = [
+  "I'm just exploring the app",
   "There's something on my mind.",
   "Guide our first conversation.",
+];
+
+const activities = [
+  { title: "Guided breath", note: "3 min · Meditation" },
+  { title: "Set a small goal", note: "Goals" },
+  { title: "Learn: name the feeling", note: "Skill · 4 min" },
 ];
 
 const voices = [
@@ -40,6 +48,14 @@ function Home() {
   const [step, setStep] = useState<"mic" | "voice">("mic");
   const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
   const [voice, setVoice] = useState<string>("Aria");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
+
+  useEffect(() => {
+    setReturning(getHasChatted());
+    setTopics(getLastTopics());
+  }, []);
 
   const open = (initial: string) => {
     if (!initial.trim()) return;
@@ -69,33 +85,52 @@ function Home() {
     navigate({ to: "/call", search: { voice } });
   };
 
+  const followUps =
+    topics.length > 0
+      ? [
+          `Pick up where we left off — ${topics[0]}`,
+          topics[1] ? `More on ${topics[1]}` : "Reflect on yesterday",
+          "Something new on my mind",
+        ]
+      : [
+          "Pick up where we left off",
+          "Reflect on yesterday",
+          "Something new on my mind",
+        ];
+
+  const showSuggestions = returning ? followUps : firstTimeSuggestions;
+
   return (
     <PhoneFrame>
       <div className="flex-1 flex flex-col px-7 pt-14 pb-6">
         <div className="flex items-center justify-between">
-          <YunaWordmark />
           <button
-            onClick={openCall}
-            aria-label="Call Yuna"
-            className="font-sans-ui h-9 px-4 rounded-full hairline flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase hover:bg-accent transition-colors"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="h-9 w-9 rounded-full hairline flex items-center justify-center hover:bg-accent transition-colors"
           >
-            <PhoneIcon />
-            Call
+            <MenuIcon />
           </button>
+          <span className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+            Yuna
+          </span>
+          <span className="h-9 w-9" />
         </div>
 
-        <div className="mt-14 yuna-rise">
-          <YunaMark size={44} className="text-primary" />
-          <h1 className="mt-6 text-2xl leading-snug tracking-tight">
-            Good to see you.
+        <div className="mt-10 yuna-rise">
+          <YunaMark size={40} className="text-primary" />
+          <h1 className="mt-5 text-2xl leading-snug tracking-tight">
+            {returning ? "Welcome back." : "Good to see you."}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-[18rem]">
-            Where shall we begin? Pick a thread, or start one of your own.
+            {returning
+              ? "A few threads from last time, or start somewhere new."
+              : "Where shall we begin? Pick a thread, or start one of your own."}
           </p>
         </div>
 
-        <div className="mt-10 flex flex-col gap-2.5">
-          {suggestions.map((s, i) => (
+        <div className="mt-8 flex flex-col gap-2.5">
+          {showSuggestions.map((s, i) => (
             <button
               key={s}
               onClick={() => open(s)}
@@ -107,29 +142,68 @@ function Home() {
           ))}
         </div>
 
+        {returning && (
+          <div className="mt-6">
+            <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
+              Try an activity
+            </p>
+            <div className="-mx-7 overflow-x-auto">
+              <div className="flex gap-3 px-7 pb-1">
+                {activities.map((a) => (
+                  <button
+                    key={a.title}
+                    onClick={() => open(a.title)}
+                    className="shrink-0 w-44 text-left rounded-2xl hairline p-4 hover:bg-accent transition-colors"
+                  >
+                    <div className="h-16 rounded-lg hairline mb-3 flex items-center justify-center">
+                      <YunaMark size={22} className="text-primary" />
+                    </div>
+                    <p className="text-sm leading-snug">{a.title}</p>
+                    <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1">
+                      {a.note}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <form
           onSubmit={(e) => { e.preventDefault(); open(text); }}
           className="mt-auto"
         >
-          <div className="flex items-center gap-2 rounded-full hairline pl-5 pr-1.5 py-1.5 bg-background focus-within:border-foreground transition-colors">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Write to Yuna…"
-              className="font-sans-ui flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground"
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 rounded-full hairline pl-5 pr-1.5 py-1.5 bg-background focus-within:border-foreground transition-colors">
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Write to Yuna…"
+                className="font-sans-ui flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground"
+              />
+              <button
+                type="submit"
+                aria-label="Send"
+                className="h-9 w-9 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-opacity"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
             <button
-              type="submit"
-              aria-label="Send"
-              className="h-9 w-9 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-opacity"
+              type="button"
+              onClick={openCall}
+              aria-label="Call Yuna"
+              className="h-11 w-11 rounded-full hairline flex items-center justify-center hover:bg-accent transition-colors shrink-0"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <PhoneIcon />
             </button>
           </div>
         </form>
       </div>
+
+      <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
 
       <Dialog open={callOpen} onOpenChange={setCallOpen}>
         <DialogContent className="sm:max-w-[380px] rounded-3xl">
@@ -226,9 +300,17 @@ function Home() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function PhoneIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
       <path
         d="M5 4h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
         stroke="currentColor"
