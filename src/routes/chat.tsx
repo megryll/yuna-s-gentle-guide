@@ -26,10 +26,14 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/chat")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): {
+    q?: string;
+    callEnded?: string;
+    callDuration?: string;
+  } => ({
     q: (s.q as string | undefined) ?? "",
-    callEnded: (s.callEnded as string | undefined),
-    callDuration: (s.callDuration as string | undefined),
+    callEnded: s.callEnded as string | undefined,
+    callDuration: s.callDuration as string | undefined,
   }),
   head: () => ({
     meta: [
