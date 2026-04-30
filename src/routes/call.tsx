@@ -6,9 +6,12 @@ import { getAvatar } from "@/lib/yuna-session";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 
 export const Route = createFileRoute("/call")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    voice: (s.voice as string) ?? "Aria",
-    returnTo: (s.returnTo as string) ?? "home",
+  validateSearch: (s: Record<string, unknown>): {
+    voice?: string;
+    returnTo?: string;
+  } => ({
+    voice: (s.voice as string | undefined) ?? "Aria",
+    returnTo: (s.returnTo as string | undefined) ?? "home",
   }),
   head: () => ({
     meta: [
