@@ -62,26 +62,27 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  /* Wireframe-minimalist palette: warm off-white, ink, hairline borders */
+  --radius: 1.25rem;
+  --background: oklch(0.992 0.003 80);
+  --foreground: oklch(0.22 0.02 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.22 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.22 0.02 260);
+  --primary: oklch(0.55 0.14 255);
+  --primary-foreground: oklch(0.99 0.003 80);
+  --secondary: oklch(0.97 0.005 80);
+  --secondary-foreground: oklch(0.22 0.02 260);
+  --muted: oklch(0.96 0.005 80);
+  --muted-foreground: oklch(0.5 0.02 260);
+  --accent: oklch(0.94 0.02 255);
+  --accent-foreground: oklch(0.3 0.05 260);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.86 0.01 260);
+  --input: oklch(0.86 0.01 260);
+  --ring: oklch(0.55 0.14 255);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +141,31 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-feature-settings: "ss01", "kern";
+  }
+
+  .font-sans-ui {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Inter", sans-serif;
+  }
+}
+
+@layer utilities {
+  .hairline {
+    border: 1px solid var(--color-border);
+  }
+  .yuna-fade-in {
+    animation: yuna-fade 600ms ease both;
+  }
+  .yuna-rise {
+    animation: yuna-rise 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @keyframes yuna-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes yuna-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
