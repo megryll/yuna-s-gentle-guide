@@ -36,6 +36,7 @@ function Index() {
         <div className="flex flex-col gap-3">
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="w-full text-center rounded-full hairline px-6 py-3.5 text-sm tracking-wide hover:bg-accent transition-colors"
           >
             Begin
