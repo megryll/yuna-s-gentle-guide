@@ -30,14 +30,26 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Yuna — your gentle guide" },
+      {
+        name: "description",
+        content:
+          "A calm, private space to talk through what's on your mind. Chat or call with Yuna, your AI wellness companion.",
+      },
+      { name: "author", content: "Yuna" },
+      { property: "og:title", content: "Yuna — your gentle guide" },
+      {
+        property: "og:description",
+        content:
+          "A calm, private space to talk through what's on your mind. Chat or call with Yuna, your AI wellness companion.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      {
+        name: "twitter:description",
+        content:
+          "A calm, private space to talk through what's on your mind.",
+      },
     ],
     links: [
       {
