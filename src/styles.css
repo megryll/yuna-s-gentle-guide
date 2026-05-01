@@ -4,6 +4,65 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ─── Fonts ───────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-Variable.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-Italic-Variable.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-SemiBoldItalic.otf") format("opentype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 /*
  * Design system definition.
  *
@@ -141,8 +200,16 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-family: "Stara", ui-serif, Georgia, "Times New Roman", serif;
     font-feature-settings: "ss01", "kern";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  }
+
+  .font-display {
+    font-family: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
   }
 
   .font-sans-ui {
@@ -167,6 +234,25 @@
   @keyframes yuna-rise {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes welcome-rise {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes glow-spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  @keyframes glow-breathe {
+    0%   { transform: translate(-50%, -50%) scale(0.92); opacity: 0.55; }
+    35%  { transform: translate(-50%, -50%) scale(1.06); opacity: 0.95; }
+    65%  { transform: translate(-50%, -50%) scale(0.98); opacity: 0.75; }
+    100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.55; }
+  }
+  @keyframes glow-drift {
+    0%   { transform: translate(-50%, -50%) scale(1)    rotate(0deg); }
+    50%  { transform: translate(-50%, -50%) scale(1.04) rotate(180deg); }
+    100% { transform: translate(-50%, -50%) scale(1)    rotate(360deg); }
   }
   .yuna-pulse-ring {
     animation: yuna-pulse-ring 2.4s ease-out infinite;

@@ -1,4 +1,4 @@
-import type { AvatarVariant } from "@/components/YunaAvatar";
+import { AVATAR_VARIANTS, type AvatarVariant } from "@/components/YunaAvatar";
 
 const NAME_KEY = "yuna.name";
 const AVATAR_KEY = "yuna.avatar";
@@ -17,7 +17,15 @@ export function setName(name: string) {
 
 export function getAvatar(): AvatarVariant | null {
   if (typeof window === "undefined") return null;
-  return (window.localStorage.getItem(AVATAR_KEY) as AvatarVariant | null) ?? null;
+  const raw = window.localStorage.getItem(AVATAR_KEY);
+  if (!raw) return null;
+  // Drop stale values from prior avatar sets so a removed variant doesn't
+  // render a broken image.
+  if (!AVATAR_VARIANTS.includes(raw as AvatarVariant)) {
+    window.localStorage.removeItem(AVATAR_KEY);
+    return null;
+  }
+  return raw as AvatarVariant;
 }
 
 export function setAvatar(v: AvatarVariant) {

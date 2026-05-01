@@ -9,16 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YouRouteImport } from './routes/you'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as IntroRouteImport } from './routes/intro'
+import { Route as HomeReturningRouteImport } from './routes/home-returning'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CallRouteImport } from './routes/call'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 
+const YouRoute = YouRouteImport.update({
+  id: '/you',
+  path: '/you',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntroRoute = IntroRouteImport.update({
   id: '/intro',
   path: '/intro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeReturningRoute = HomeReturningRouteImport.update({
+  id: '/home-returning',
+  path: '/home-returning',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -41,61 +61,146 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivitiesRoute = ActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsButtonsRoute = DsButtonsRouteImport.update({
+  id: '/ds/buttons',
+  path: '/ds/buttons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
   '/home': typeof HomeRoute
+  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
+  '/progress': typeof ProgressRoute
+  '/you': typeof YouRoute
+  '/ds/buttons': typeof DsButtonsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
   '/home': typeof HomeRoute
+  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
+  '/progress': typeof ProgressRoute
+  '/you': typeof YouRoute
+  '/ds/buttons': typeof DsButtonsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activities': typeof ActivitiesRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
   '/home': typeof HomeRoute
+  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
+  '/progress': typeof ProgressRoute
+  '/you': typeof YouRoute
+  '/ds/buttons': typeof DsButtonsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/call' | '/chat' | '/home' | '/intro'
+  fullPaths:
+    | '/'
+    | '/activities'
+    | '/auth'
+    | '/call'
+    | '/chat'
+    | '/home'
+    | '/home-returning'
+    | '/intro'
+    | '/progress'
+    | '/you'
+    | '/ds/buttons'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/call' | '/chat' | '/home' | '/intro'
-  id: '__root__' | '/' | '/auth' | '/call' | '/chat' | '/home' | '/intro'
+  to:
+    | '/'
+    | '/activities'
+    | '/auth'
+    | '/call'
+    | '/chat'
+    | '/home'
+    | '/home-returning'
+    | '/intro'
+    | '/progress'
+    | '/you'
+    | '/ds/buttons'
+  id:
+    | '__root__'
+    | '/'
+    | '/activities'
+    | '/auth'
+    | '/call'
+    | '/chat'
+    | '/home'
+    | '/home-returning'
+    | '/intro'
+    | '/progress'
+    | '/you'
+    | '/ds/buttons'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivitiesRoute: typeof ActivitiesRoute
   AuthRoute: typeof AuthRoute
   CallRoute: typeof CallRoute
   ChatRoute: typeof ChatRoute
   HomeRoute: typeof HomeRoute
+  HomeReturningRoute: typeof HomeReturningRoute
   IntroRoute: typeof IntroRoute
+  ProgressRoute: typeof ProgressRoute
+  YouRoute: typeof YouRoute
+  DsButtonsRoute: typeof DsButtonsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/you': {
+      id: '/you'
+      path: '/you'
+      fullPath: '/you'
+      preLoaderRoute: typeof YouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/intro': {
       id: '/intro'
       path: '/intro'
       fullPath: '/intro'
       preLoaderRoute: typeof IntroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home-returning': {
+      id: '/home-returning'
+      path: '/home-returning'
+      fullPath: '/home-returning'
+      preLoaderRoute: typeof HomeReturningRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -126,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activities': {
+      id: '/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof ActivitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -133,16 +245,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/buttons': {
+      id: '/ds/buttons'
+      path: '/ds/buttons'
+      fullPath: '/ds/buttons'
+      preLoaderRoute: typeof DsButtonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivitiesRoute: ActivitiesRoute,
   AuthRoute: AuthRoute,
   CallRoute: CallRoute,
   ChatRoute: ChatRoute,
   HomeRoute: HomeRoute,
+  HomeReturningRoute: HomeReturningRoute,
   IntroRoute: IntroRoute,
+  ProgressRoute: ProgressRoute,
+  YouRoute: YouRoute,
+  DsButtonsRoute: DsButtonsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
