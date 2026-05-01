@@ -8,5 +8,5 @@ export const Route = createFileRoute("/home")({
       { name: "description", content: "Begin a conversation with Yuna." },
     ],
   }),
-  component: () => <HomeScreen variant="new" />,
+  component: () => <HomeScreen variant="new" showWelcome />,
 });

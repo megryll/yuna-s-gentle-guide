@@ -1,5 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { YunaMark } from "@/components/YunaMark";
+import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
+import { getAvatar } from "@/lib/yuna-session";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 
@@ -34,8 +37,20 @@ const activities = [
   { title: "Learn: name the feeling", note: "Skill · 4 min" },
 ];
 
-export function HomeScreen({ variant }: { variant: "new" | "returning" }) {
+export function HomeScreen({
+  variant,
+  showWelcome = false,
+}: {
+  variant: "new" | "returning";
+  showWelcome?: boolean;
+}) {
   const navigate = useNavigate();
+  const [welcomeOpen, setWelcomeOpen] = useState(showWelcome);
+  const [welcomeMuted, setWelcomeMuted] = useState(false);
+
+  useEffect(() => {
+    if (showWelcome) setWelcomeOpen(true);
+  }, [showWelcome]);
 
   const returning = variant === "returning";
 
@@ -138,7 +153,116 @@ export function HomeScreen({ variant }: { variant: "new" | "returning" }) {
           </div>
         )}
       </div>
+      {welcomeOpen && (
+        <WelcomeTooltip
+          muted={welcomeMuted}
+          onToggleMute={() => setWelcomeMuted((m) => !m)}
+          onDismiss={() => setWelcomeOpen(false)}
+        />
+      )}
     </ScreenChrome>
+  );
+}
+
+function WelcomeTooltip({
+  muted,
+  onToggleMute,
+  onDismiss,
+}: {
+  muted: boolean;
+  onToggleMute: () => void;
+  onDismiss: () => void;
+}) {
+  const [avatar, setAvatar] = useState<AvatarVariant | null>(null);
+  useEffect(() => {
+    setAvatar(getAvatar());
+  }, []);
+
+  return (
+    <div
+      className="absolute inset-0 z-40 flex flex-col justify-end items-end px-5 pb-24 yuna-fade-in"
+      style={{ background: "rgba(0,0,0,0.32)" }}
+      role="dialog"
+      aria-label="Welcome"
+      onClick={onDismiss}
+    >
+      <div
+        className="yuna-rise relative rounded-3xl bg-background p-5 shadow-xl w-full max-w-[20rem]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <span className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+            {avatar ? (
+              <YunaAvatar variant={avatar} size={40} />
+            ) : (
+              <span className="h-10 w-10 rounded-full hairline flex items-center justify-center">
+                <YunaMark size={20} className="text-foreground" />
+              </span>
+            )}
+          </span>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <p className="text-[15px] font-semibold leading-snug">
+              Welcome in.
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              Take a look around, I'll be here when you're ready to chat.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onToggleMute}
+            aria-label={muted ? "Unmute Yuna" : "Mute Yuna"}
+            aria-pressed={muted}
+            className="h-8 w-8 rounded-full hairline flex items-center justify-center text-muted-foreground active:bg-accent transition-colors"
+          >
+            {muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
+          </button>
+          <Button
+            surface="light"
+            variant="primary"
+            size="sm"
+            onClick={onDismiss}
+          >
+            Got it
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpeakerOnIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 9v6h4l5 4V5L9 9H5z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M17 8c1.5 1.5 1.5 6.5 0 8M19.5 5c3 3 3 11 0 14"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function SpeakerOffIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 9v6h4l5 4V5L9 9H5z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M17 9l5 6M22 9l-5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
   );
 }
 

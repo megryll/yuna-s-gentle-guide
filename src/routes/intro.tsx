@@ -6,6 +6,16 @@ import { setName as saveName } from "@/lib/yuna-session";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 
 export const Route = createFileRoute("/intro")({
+  validateSearch: (s: Record<string, unknown>): { step?: number } => {
+    const raw = s.step;
+    const n =
+      typeof raw === "number"
+        ? raw
+        : typeof raw === "string"
+          ? Number(raw)
+          : NaN;
+    return Number.isFinite(n) ? { step: n } : {};
+  },
   head: () => ({
     meta: [
       { title: "Meet Yuna" },
@@ -67,7 +77,7 @@ const initialRevealsForStep = (
   if (stepIdx === 3) {
     return [
       {
-        text: "People report improved mood and stress after just one session!",
+        text: "91% of people reported improved mood and stress after 4 weeks of working together.",
         card: { kind: "mood-stats" },
       },
     ];
@@ -94,7 +104,19 @@ const newBubbleId = () => `b${++bubbleIdSeq}`;
 
 function Intro() {
   const navigate = useNavigate();
-  const [stepIdx, setStepIdx] = useState(0);
+  const search = Route.useSearch();
+  const clampStep = (n: number) =>
+    Math.max(0, Math.min(TOTAL_STEPS - 1, Math.floor(n)));
+  const [stepIdx, setStepIdx] = useState(
+    search.step !== undefined ? clampStep(search.step) : 0,
+  );
+
+  useEffect(() => {
+    if (search.step !== undefined) {
+      setStepIdx(clampStep(search.step));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.step]);
   const [bubbles, setBubbles] = useState<BubbleData[]>([]);
   const [typing, setTyping] = useState(false);
   const [phase, setPhase] = useState<Phase>("reveal");
@@ -103,6 +125,7 @@ function Intro() {
   const [muted, setMuted] = useState(false);
   const [voiceIdx, setVoiceIdx] = useState(0);
   const [voicePlayingIdx, setVoicePlayingIdx] = useState<number | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const fadeRafRef = useRef<number | null>(null);
@@ -314,12 +337,39 @@ function Intro() {
     };
   };
 
+  const goToStep = (idx: number) => {
+    navigate({ to: "/intro", search: { step: idx }, replace: true });
+  };
+
+  const fadeOutAmbient = (ms: number) => {
+    cancelAmbientFade();
+    const el = audioRef.current;
+    if (!el) return;
+    const startVol = el.volume;
+    const startT = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min((t - startT) / ms, 1);
+      el.volume = startVol * (1 - p);
+      if (p < 1) {
+        fadeRafRef.current = requestAnimationFrame(tick);
+      } else {
+        el.pause();
+        fadeRafRef.current = null;
+      }
+    };
+    fadeRafRef.current = requestAnimationFrame(tick);
+  };
+
   const advance = () => {
     if (stepIdx < TOTAL_STEPS - 1) {
-      setStepIdx((i) => i + 1);
+      goToStep(stepIdx + 1);
       return;
     }
-    navigate({ to: "/home" });
+    setTransitioning(true);
+    fadeOutAmbient(1300);
+    setTimeout(() => {
+      navigate({ to: "/home" });
+    }, 1400);
   };
 
   return (
@@ -331,6 +381,24 @@ function Intro() {
         preload="auto"
         aria-hidden="true"
       />
+      {transitioning && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.42)), url(/background.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+          aria-live="polite"
+          aria-label="Creating Your Space"
+        >
+          <Spinner />
+          <p className="text-white/95 text-sm tracking-[0.04em]">
+            Creating Your Space
+          </p>
+        </div>
+      )}
       <div className="flex-1 flex flex-col text-white min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between px-8 pt-14 pb-2">
@@ -339,7 +407,7 @@ function Intro() {
             variant="secondary"
             size="icon"
             onClick={() => {
-              if (stepIdx > 0) setStepIdx((i) => i - 1);
+              if (stepIdx > 0) goToStep(stepIdx - 1);
               else navigate({ to: "/auth" });
             }}
             aria-label="Back"
@@ -368,69 +436,106 @@ function Intro() {
         </div>
 
         {/* Body */}
-        <div className="flex-1 flex flex-col px-8 pb-10 pt-[72px] min-h-0">
-          {/* Avatar — re-mounts per step so it animates fresh on each new screen */}
-          <div key={`avatar-${stepIdx}`}>
-            <YunaAvatarLarge />
-          </div>
+        {stepIdx === 5 ? (
+          <div className="flex-1 flex flex-col px-8 pb-10 pt-8 min-h-0">
+            {/* Avatar + intro bubble in a row */}
+            <div className="flex items-center gap-3">
+              <div key={`avatar-${stepIdx}`} className="shrink-0">
+                <YunaAvatarLarge />
+              </div>
+              <div className="flex-1 flex flex-col gap-3 min-w-0">
+                {bubbles.map((b) => (
+                  <Bubble key={b.id} bubble={b} />
+                ))}
+                {typing && <TypingBubble />}
+              </div>
+            </div>
 
-          {/* Bubbles — bubble state is cleared on step change, so each screen fills fresh */}
-          <div
-            className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0 transition-[padding] duration-200 ease-out"
-            style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET } : undefined}
-          >
-            {bubbles.map((b) => (
-              <Bubble key={b.id} bubble={b} />
-            ))}
-            {typing && <TypingBubble />}
-            {stepIdx === 5 && phase === "wait-tap" && (
-              <div className="yuna-rise mt-2 -mx-8">
-                <VoicePicker
-                  selectedIdx={voiceIdx}
-                  onSelect={(i) => {
-                    setVoiceIdx(i);
-                    setVoicePlayingIdx(null);
-                  }}
-                  playingIdx={voicePlayingIdx}
-                  onTogglePlay={(i) =>
-                    setVoicePlayingIdx((p) => (p === i ? null : i))
-                  }
-                />
-              </div>
-            )}
-          </div>
+            {/* Carousel + pills — flex-1 absorbs remaining space, content centered */}
+            <div className="flex-1 flex flex-col justify-center -mx-8 min-h-0">
+              {phase === "wait-tap" && (
+                <div className="yuna-rise">
+                  <VoicePicker
+                    selectedIdx={voiceIdx}
+                    onSelect={(i) => {
+                      setVoiceIdx(i);
+                      setVoicePlayingIdx(null);
+                    }}
+                    playingIdx={voicePlayingIdx}
+                    onTogglePlay={(i) =>
+                      setVoicePlayingIdx((p) => (p === i ? null : i))
+                    }
+                  />
+                </div>
+              )}
+            </div>
 
-          {/* CTA — translates up to sit above the keyboard when input is focused */}
-          <div
-            className="pt-4 min-h-[60px] transition-transform duration-200 ease-out"
-            style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
-          >
-            {phase === "wait-input" && (
-              <div className="yuna-rise">
-                <NameForm
-                  inputRef={nameInputRef}
-                  value={nameInput}
-                  onChange={setNameInput}
-                  onSubmit={submitName}
-                  onFocus={() => setInputFocused(true)}
-                  onBlur={() => setInputFocused(false)}
-                />
-              </div>
-            )}
-            {phase === "wait-tap" && (
-              <div className="yuna-rise">
-                <Button
-                  surface="dark"
-                  variant="primary"
-                  fullWidth
-                  onClick={advance}
-                >
-                  {ctaLabelForStep(stepIdx)}
-                </Button>
-              </div>
-            )}
+            {/* CTA — pinned to bottom, same position as other steps */}
+            <div className="pt-4 min-h-[60px]">
+              {phase === "wait-tap" && (
+                <div className="yuna-rise">
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={advance}
+                  >
+                    {ctaLabelForStep(stepIdx)}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col px-8 pb-10 pt-[72px] min-h-0">
+            {/* Avatar — re-mounts per step so it animates fresh on each new screen */}
+            <div key={`avatar-${stepIdx}`}>
+              <YunaAvatarLarge />
+            </div>
+
+            {/* Bubbles — bubble state is cleared on step change, so each screen fills fresh */}
+            <div
+              className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0 transition-[padding] duration-200 ease-out"
+              style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET } : undefined}
+            >
+              {bubbles.map((b) => (
+                <Bubble key={b.id} bubble={b} />
+              ))}
+              {typing && <TypingBubble />}
+            </div>
+
+            {/* CTA — translates up to sit above the keyboard when input is focused */}
+            <div
+              className="pt-4 min-h-[60px] transition-transform duration-200 ease-out"
+              style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
+            >
+              {phase === "wait-input" && (
+                <div className="yuna-rise">
+                  <NameForm
+                    inputRef={nameInputRef}
+                    value={nameInput}
+                    onChange={setNameInput}
+                    onSubmit={submitName}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
+                  />
+                </div>
+              )}
+              {phase === "wait-tap" && (
+                <div className="yuna-rise">
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={advance}
+                  >
+                    {ctaLabelForStep(stepIdx)}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </PhoneFrame>
   );
@@ -526,11 +631,19 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
         >
           {bubble.text}
         </p>
-        {bubble.card && (
-          <div className="border-t border-white/20 bg-white/10 px-4 py-3">
-            <Attachment kind={bubble.card.kind} />
-          </div>
-        )}
+        {bubble.card &&
+          (bubble.card.kind === "mood-stats" ? (
+            <div
+              className="border-t border-white/15"
+              style={{ backgroundColor: "#EAF1DA" }}
+            >
+              <Attachment kind={bubble.card.kind} />
+            </div>
+          ) : (
+            <div className="border-t border-white/20 bg-white/10 px-4 py-3">
+              <Attachment kind={bubble.card.kind} />
+            </div>
+          ))}
       </div>
     </div>
   );
@@ -663,62 +776,123 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
     );
   }
   if (kind === "mood-stats") {
-    const lowMood = "#3F8B52";
-    const stress = "#9BD94A";
+    const moodLine = "#5FA85C";
+    const stressLine = "#A6D957";
+    const moodPill = "#9CC36D";
+    const stressPill = "#C5E97D";
+    const pillText = "#1F3D1B";
+    const grid = "rgba(31, 61, 27, 0.10)";
+    const labelText = "rgba(31, 61, 27, 0.55)";
+    const surface = "#EAF1DA";
+
     return (
-      <div className="flex flex-col gap-3 text-white">
-        <div className="flex items-center gap-4 justify-center">
-          <div className="flex items-center gap-1.5">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: lowMood }}
-            />
-            <span className="font-sans-ui text-[10px] tracking-[0.08em] uppercase text-white/85">
-              Low mood
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: stress }}
-            />
-            <span className="font-sans-ui text-[10px] tracking-[0.08em] uppercase text-white/85">
-              Stress
-            </span>
-          </div>
-        </div>
+      <div className="px-4 py-4">
         <svg
-          viewBox="0 0 280 80"
+          viewBox="0 0 320 180"
           className="w-full h-auto"
           aria-hidden="true"
         >
-          <line
-            x1="10"
-            y1="18"
-            x2="270"
-            y2="58"
-            stroke={stress}
+          <g stroke={grid} strokeWidth="1">
+            <line x1="14" y1="30" x2="306" y2="30" />
+            <line x1="14" y1="55" x2="306" y2="55" />
+            <line x1="14" y1="80" x2="306" y2="80" />
+            <line x1="14" y1="105" x2="306" y2="105" />
+            <line x1="14" y1="130" x2="306" y2="130" />
+          </g>
+
+          <path
+            d="M 24 105 C 80 105, 130 60, 216 40"
+            stroke={moodLine}
             strokeWidth="3"
+            fill="none"
             strokeLinecap="round"
           />
-          <line
-            x1="10"
-            y1="22"
-            x2="270"
-            y2="62"
-            stroke={lowMood}
+          <circle cx="24" cy="105" r="4" fill={moodLine} />
+
+          <path
+            d="M 24 55 C 80 55, 130 100, 216 115"
+            stroke={stressLine}
             strokeWidth="3"
+            fill="none"
             strokeLinecap="round"
           />
-          <circle cx="10" cy="18" r="5" fill={stress} />
-          <circle cx="10" cy="22" r="5" fill={lowMood} />
-          <circle cx="270" cy="58" r="5" fill={stress} />
-          <circle cx="270" cy="62" r="5" fill={lowMood} />
+          <circle cx="24" cy="55" r="4" fill={stressLine} />
+
+          <rect x="216" y="0" width="96" height="40" rx="10" fill={moodPill} />
+          <text
+            x="264"
+            y="17"
+            fontSize="13"
+            fontWeight="700"
+            fill={pillText}
+            textAnchor="middle"
+          >
+            Improved
+          </text>
+          <text
+            x="264"
+            y="32"
+            fontSize="13"
+            fontWeight="700"
+            fill={pillText}
+            textAnchor="middle"
+          >
+            mood
+          </text>
+          <circle
+            cx="216"
+            cy="40"
+            r="4"
+            fill={moodPill}
+            stroke={surface}
+            strokeWidth="2"
+          />
+
+          <rect x="216" y="75" width="96" height="40" rx="10" fill={stressPill} />
+          <text
+            x="264"
+            y="92"
+            fontSize="13"
+            fontWeight="700"
+            fill={pillText}
+            textAnchor="middle"
+          >
+            Reduced
+          </text>
+          <text
+            x="264"
+            y="107"
+            fontSize="13"
+            fontWeight="700"
+            fill={pillText}
+            textAnchor="middle"
+          >
+            stress
+          </text>
+          <circle
+            cx="216"
+            cy="115"
+            r="4"
+            fill={stressPill}
+            stroke={surface}
+            strokeWidth="2"
+          />
+
+          <g fontSize="11" fill={labelText}>
+            <text x="24" y="160" textAnchor="middle">
+              Week 1
+            </text>
+            <text x="88" y="160" textAnchor="middle">
+              Week 2
+            </text>
+            <text x="152" y="160" textAnchor="middle">
+              Week 3
+            </text>
+            <text x="216" y="160" textAnchor="middle">
+              Week 4
+            </text>
+          </g>
         </svg>
-        <div className="flex justify-between font-sans-ui text-[10px] tracking-[0.08em] uppercase text-white/70">
-          <span>Before</span>
-          <span>After</span>
-        </div>
       </div>
     );
   }
@@ -787,9 +961,9 @@ const INTRO_VOICES: IntroVoice[] = [
   },
 ];
 
-const VOICE_CARD_W = 220;
+const VOICE_CARD_W = 264;
 const VOICE_CARD_GAP = 14;
-const VOICE_PEEK = 36;
+const VOICE_PEEK = 32;
 
 function VoicePicker({
   selectedIdx,
@@ -803,24 +977,83 @@ function VoicePicker({
   onTogglePlay: (idx: number) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    active: false,
+    startX: 0,
+    startScroll: 0,
+    moved: 0,
+    pointerId: 0,
+  });
+  // Click-suppression flag: a drag larger than the threshold consumes the
+  // pointerup-driven click so the underlying card doesn't fire onSelect again.
+  const suppressNextClickRef = useRef(false);
+
+  const cardStep = VOICE_CARD_W + VOICE_CARD_GAP;
+  const DRAG_THRESHOLD = 6;
+
+  const snapTo = (idx: number, smooth = true) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const clamped = Math.max(0, Math.min(INTRO_VOICES.length - 1, idx));
+    el.scrollTo({
+      left: clamped * cardStep,
+      behavior: smooth ? "smooth" : "auto",
+    });
+    onSelect(clamped);
+  };
 
   const handleCardClick = (idx: number) => {
-    onSelect(idx);
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+    snapTo(idx);
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Native touch scrolling already feels right; only intercept mouse drags.
+    if (e.pointerType !== "mouse") return;
     const el = scrollRef.current;
-    const card = el?.children[idx] as HTMLElement | undefined;
-    if (el && card) {
-      el.scrollTo({
-        left: card.offsetLeft - VOICE_PEEK,
-        behavior: "smooth",
-      });
+    if (!el) return;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: 0,
+      pointerId: e.pointerId,
+    };
+    el.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d.active || e.pointerId !== d.pointerId) return;
+    const delta = e.clientX - d.startX;
+    d.moved = Math.max(d.moved, Math.abs(delta));
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = d.startScroll - delta;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d.active || e.pointerId !== d.pointerId) return;
+    const el = scrollRef.current;
+    d.active = false;
+    if (el && el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId);
+    }
+    if (d.moved > DRAG_THRESHOLD && el) {
+      suppressNextClickRef.current = true;
+      const idx = Math.round(el.scrollLeft / cardStep);
+      snapTo(idx);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-7">
       <div
         ref={scrollRef}
-        className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory"
+        className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
         style={{
           gap: VOICE_CARD_GAP,
           paddingLeft: VOICE_PEEK,
@@ -830,7 +1063,12 @@ function VoicePicker({
           scrollPaddingLeft: VOICE_PEEK,
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
+          touchAction: "pan-x",
         }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
       >
         {INTRO_VOICES.map((voice, idx) => (
           <VoiceIntroCard
@@ -1050,6 +1288,16 @@ function StarRow({ count, color = "#7FB6FF" }: { count: number; color?: string }
         </svg>
       ))}
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <span
+      className="block h-9 w-9 rounded-full border-2 border-white/25 border-t-white"
+      style={{ animation: "yuna-spin 800ms linear infinite" }}
+      aria-hidden="true"
+    />
   );
 }
 
