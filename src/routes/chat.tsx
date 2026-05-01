@@ -13,6 +13,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
+import {
+  FIRST_TIME_SUGGESTIONS,
+  SuggestionChips,
+} from "@/components/SuggestionChips";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -35,6 +39,8 @@ export const Route = createFileRoute("/chat")({
   component: Chat,
 });
 
+type LimitationItem = { id: string; text: string; checked: boolean };
+
 type Msg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
   | {
@@ -44,6 +50,17 @@ type Msg =
       startedAt: string;
       endedAt: string;
       durationLabel: string;
+    }
+  | {
+      id: string;
+      from: "system";
+      kind: "limitations";
+      items: LimitationItem[];
+    }
+  | {
+      id: string;
+      from: "system";
+      kind: "voice-pitch";
     };
 
 const cannedReplies = [
@@ -51,6 +68,43 @@ const cannedReplies = [
   "I hear you. Could you tell me a little more about when this started?",
   "That sounds like a lot to hold. What would feel like a small relief, even momentarily?",
 ];
+
+const LIMITATIONS_PROMPT =
+  "Before we continue, you'll need to acknowledge my limitations. Tap the checkmarks to agree.";
+
+const LIMITATIONS_ITEMS: LimitationItem[] = [
+  { id: "person", text: "I am not a real person", checked: false },
+  { id: "crisis", text: "I am not a crisis service", checked: false },
+  { id: "private", text: "I keep our chats 100% private", checked: false },
+];
+
+function followUpAfterLimitations(initial: string): string {
+  const v = initial.toLowerCase();
+  if (v.includes("specific")) {
+    return "So — what's on your mind today?";
+  }
+  if (v.includes("guide")) {
+    return "Let's start with whatever feels easy. What brought you here today?";
+  }
+  if (v.includes("how yuna works") || v.includes("tell me more")) {
+    return "I'm here to listen and reflect — we can talk about your day, a feeling, anything that's stirring. There's no right place to begin.";
+  }
+  return "What feels most present right now?";
+}
+
+function acknowledgeChoice(initial: string): string {
+  const v = initial.toLowerCase();
+  if (v.includes("specific")) {
+    return "Wonderful — thank you for bringing something to the table.";
+  }
+  if (v.includes("guide")) {
+    return "I'd love to. Let's take it slow — I'll lead the way.";
+  }
+  if (v.includes("how yuna works") || v.includes("tell me more")) {
+    return "Happy to walk you through how I can support you.";
+  }
+  return "Thank you for sharing that.";
+}
 
 function uid() {
   return crypto.randomUUID();
@@ -95,10 +149,14 @@ function Chat() {
   const [micOpen, setMicOpen] = useState(false);
   const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
   const [inputFocused, setInputFocused] = useState(false);
+  const [pendingLimitations, setPendingLimitations] = useState(false);
+  const [voicePitchActive, setVoicePitchActive] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userTopicsRef = useRef<string[]>([]);
+  const initialPromptRef = useRef<string>("");
   const bootedRef = useRef(false);
+  const limitationsResolvedRef = useRef(false);
 
   const KEYBOARD_OFFSET = 260;
 
@@ -140,7 +198,7 @@ function Chat() {
     }
 
     setMessages(seed);
-    if (q && !isReturnFromCall) respondCanned();
+    if (q && !isReturnFromCall) respondToInitial(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -162,16 +220,135 @@ function Chat() {
     }, 1100);
   };
 
-  const send = (e: React.FormEvent) => {
-    e.preventDefault();
-    const value = text.trim();
-    if (!value) return;
+  const respondToInitial = (initial: string) => {
+    initialPromptRef.current = initial;
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((m) => [
+        ...m,
+        { id: uid(), from: "yuna", kind: "text", text: acknowledgeChoice(initial) },
+      ]);
+      setTyping(false);
+      setTimeout(() => {
+        setTyping(true);
+        setTimeout(() => {
+          setMessages((m) => [
+            ...m,
+            { id: uid(), from: "yuna", kind: "text", text: LIMITATIONS_PROMPT },
+            {
+              id: uid(),
+              from: "system",
+              kind: "limitations",
+              items: LIMITATIONS_ITEMS.map((i) => ({ ...i })),
+            },
+          ]);
+          setTyping(false);
+          setPendingLimitations(true);
+        }, 1100);
+      }, 700);
+    }, 1100);
+  };
+
+  const sendText = (value: string) => {
+    if (!value.trim() || pendingLimitations) return;
+    const isFirstUserMessage = !messages.some((m) => m.from === "you");
     setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: value }]);
     setText("");
     userTopicsRef.current.push(value);
     setLastTopics(userTopicsRef.current);
     inputRef.current?.blur();
-    respondCanned();
+    if (isFirstUserMessage) {
+      respondToInitial(value);
+    } else {
+      respondCanned();
+    }
+  };
+
+  const send = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendText(text.trim());
+  };
+
+  const checkLimitation = (msgId: string, itemId: string) => {
+    setMessages((msgs) =>
+      msgs.map((m) => {
+        if (m.id !== msgId || m.kind !== "limitations") return m;
+        return {
+          ...m,
+          items: m.items.map((i) =>
+            i.id === itemId && !i.checked ? { ...i, checked: true } : i,
+          ),
+        };
+      }),
+    );
+  };
+
+  // Once all three limitations are checked, unlock the input and let Yuna
+  // acknowledge before continuing the conversation.
+  useEffect(() => {
+    if (!pendingLimitations) return;
+    if (limitationsResolvedRef.current) return;
+    const lim = messages.find((m) => m.kind === "limitations");
+    if (!lim || lim.kind !== "limitations") return;
+    if (!lim.items.every((i) => i.checked)) return;
+    limitationsResolvedRef.current = true;
+    setPendingLimitations(false);
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          from: "yuna",
+          kind: "text",
+          text: "Thank you for those acknowledgements.",
+        },
+      ]);
+      setTyping(false);
+      setTimeout(() => {
+        setTyping(true);
+        setTimeout(() => {
+          setMessages((m) => [
+            ...m,
+            {
+              id: uid(),
+              from: "yuna",
+              kind: "text",
+              text: "Let's get into it.",
+            },
+          ]);
+          setTyping(false);
+          setTimeout(() => {
+            setTyping(true);
+            setTimeout(() => {
+              setMessages((m) => [
+                ...m,
+                { id: uid(), from: "system", kind: "voice-pitch" },
+              ]);
+              setTyping(false);
+              setVoicePitchActive(true);
+            }, 1300);
+          }, 700);
+        }, 1100);
+      }, 600);
+    }, 900);
+  }, [messages, pendingLimitations]);
+
+  const dismissVoicePitch = () => {
+    setVoicePitchActive(false);
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          from: "yuna",
+          kind: "text",
+          text: followUpAfterLimitations(initialPromptRef.current),
+        },
+      ]);
+      setTyping(false);
+    }, 900);
   };
 
   const endChat = () => navigate({ to: "/home" });
@@ -234,6 +411,15 @@ function Chat() {
         >
           {messages.map((m) => {
             if (m.kind === "call-summary") return <CallSummary key={m.id} msg={m} />;
+            if (m.kind === "limitations")
+              return (
+                <LimitationsCard
+                  key={m.id}
+                  msg={m}
+                  onCheck={(itemId) => checkLimitation(m.id, itemId)}
+                />
+              );
+            if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} avatar={avatar} />;
             return <Bubble key={m.id} msg={m} avatar={avatar} />;
           })}
           {typing && <TypingBubble avatar={avatar} />}
@@ -241,9 +427,36 @@ function Chat() {
 
         {/* Input + Call Yuna footer */}
         <div
-          className="border-t border-border bg-background transition-transform duration-200 ease-out"
+          className="bg-background transition-transform duration-200 ease-out"
           style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
         >
+          {voicePitchActive ? (
+            <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
+              <Button surface="light" variant="primary" fullWidth onClick={openCall}>
+                <PhoneCallIcon />
+                Continue Over Voice
+              </Button>
+              <Button
+                surface="light"
+                variant="ghost"
+                fullWidth
+                onClick={dismissVoicePitch}
+              >
+                Keep Texting
+              </Button>
+            </div>
+          ) : (
+            <>
+          {!messages.some((m) => m.from === "you") && (
+            <SuggestionChips
+              suggestions={FIRST_TIME_SUGGESTIONS}
+              onSelect={(s) => sendText(s)}
+              disabled={pendingLimitations}
+              vertical
+              align="end"
+              className="px-5 pt-3"
+            />
+          )}
           <form onSubmit={send} className="px-5 pt-3">
             <div className="flex items-center gap-1 rounded-full hairline pl-5 pr-1.5 py-1.5 bg-background focus-within:border-foreground transition-colors">
               <input
@@ -252,8 +465,13 @@ function Chat() {
                 onChange={(e) => setText(e.target.value)}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
-                placeholder="Write to Yuna…"
-                className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0"
+                placeholder={
+                  pendingLimitations
+                    ? "Tap each checkmark above to continue"
+                    : "Write to Yuna…"
+                }
+                disabled={pendingLimitations}
+                className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0 disabled:opacity-60"
               />
               <Button
                 surface="light"
@@ -262,6 +480,7 @@ function Chat() {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 aria-label="Send a voice note"
+                disabled={pendingLimitations}
               >
                 <MicIcon />
               </Button>
@@ -272,6 +491,7 @@ function Chat() {
                 type="submit"
                 onMouseDown={(e) => e.preventDefault()}
                 aria-label="Send"
+                disabled={pendingLimitations || !text.trim()}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -299,6 +519,8 @@ function Chat() {
               Call Yuna
             </Button>
           </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -404,6 +626,168 @@ function CallSummary({ msg }: { msg: Extract<Msg, { kind: "call-summary" }> }) {
         <Button surface="light" variant="secondary" size="sm" fullWidth className="mt-4">
           View transcript
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function LimitationsCard({
+  msg,
+  onCheck,
+}: {
+  msg: Extract<Msg, { kind: "limitations" }>;
+  onCheck: (itemId: string) => void;
+}) {
+  const allChecked = msg.items.every((i) => i.checked);
+
+  if (allChecked) {
+    return (
+      <div className="yuna-rise w-full flex justify-end">
+        <div className="flex items-center gap-2 rounded-full hairline bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="shrink-0 h-4 w-4 rounded-full bg-foreground text-background flex items-center justify-center"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 12.5l4.5 4.5L19 7"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          Acknowledgements accepted
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="yuna-rise w-full flex flex-col gap-2">
+      {msg.items.map((item) => {
+        const checked = item.checked;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onCheck(item.id)}
+            disabled={checked}
+            aria-pressed={checked}
+            className="flex items-center gap-3 rounded-2xl hairline bg-background px-4 py-3 text-left transition-colors active:bg-accent disabled:active:bg-background"
+          >
+            <span className="flex-1 text-sm leading-snug">{item.text}</span>
+            <span
+              aria-hidden="true"
+              className={
+                "shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-colors " +
+                (checked
+                  ? "bg-foreground text-background"
+                  : "border border-muted-foreground/40 text-transparent")
+              }
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12.5l4.5 4.5L19 7"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
+  return (
+    <div className="flex items-end gap-2 yuna-rise justify-start">
+      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center text-foreground shrink-0 bg-muted">
+        {avatar ? (
+          <YunaAvatar variant={avatar} size={28} />
+        ) : (
+          <span className="h-7 w-7 rounded-full hairline flex items-center justify-center">
+            <YunaMark size={14} />
+          </span>
+        )}
+      </div>
+      <div className="max-w-[78%] hairline bg-background rounded-2xl rounded-bl-sm overflow-hidden text-foreground">
+        <p className="text-sm leading-relaxed px-4 pt-3 pb-2">
+          People who chat with me over voice are{" "}
+          <span className="font-semibold">75% more likely</span> to find value
+          in our conversations.
+        </p>
+        <div className="px-3 pb-3">
+          <svg
+            viewBox="0 0 280 132"
+            className="w-full block"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="vpVoice" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.06" />
+              </linearGradient>
+              <linearGradient id="vpText" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+
+            {/* subtle horizontal grid */}
+            <line x1="22" y1="36" x2="266" y2="36" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
+            <line x1="22" y1="68" x2="266" y2="68" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
+            <line x1="22" y1="100" x2="266" y2="100" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
+
+            {/* text chat (muted, dashed) */}
+            <path
+              d="M 22 118 C 60 108, 110 92, 170 80 C 210 74, 246 70, 266 68 L 266 118 Z"
+              fill="url(#vpText)"
+            />
+            <path
+              d="M 22 118 C 60 108, 110 92, 170 80 C 210 74, 246 70, 266 68"
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.45"
+              strokeWidth="1.25"
+              strokeLinecap="round"
+              strokeDasharray="3 3"
+            />
+
+            {/* voice chat (foreground, prominent) */}
+            <path
+              d="M 22 118 C 60 92, 100 56, 160 32 C 210 18, 246 12, 266 10 L 266 118 Z"
+              fill="url(#vpVoice)"
+            />
+            <path
+              d="M 22 118 C 60 92, 100 56, 160 32 C 210 18, 246 12, 266 10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+
+            {/* axes */}
+            <line x1="22" y1="14" x2="22" y2="120" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round" />
+            <line x1="22" y1="118" x2="266" y2="118" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round" />
+
+            {/* endpoint dots */}
+            <circle cx="266" cy="10" r="3" fill="currentColor" />
+            <circle cx="266" cy="68" r="2.5" fill="currentColor" fillOpacity="0.45" />
+
+            {/* in-line legend at endpoints */}
+            <text x="260" y="6" textAnchor="end" fill="currentColor" fontSize="7" letterSpacing="1.6" className="font-sans-ui">VOICE</text>
+            <text x="260" y="64" textAnchor="end" fill="currentColor" fillOpacity="0.55" fontSize="7" letterSpacing="1.6" className="font-sans-ui">TEXT</text>
+          </svg>
+          <p className="font-sans-ui text-[8.5px] tracking-[0.22em] uppercase text-muted-foreground text-center -mt-1">
+            Reported positive impact
+          </p>
+        </div>
       </div>
     </div>
   );

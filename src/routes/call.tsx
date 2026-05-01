@@ -5,6 +5,10 @@ import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { getAvatar } from "@/lib/yuna-session";
 import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { Button } from "@/components/Button";
+import {
+  FIRST_TIME_SUGGESTIONS,
+  SuggestionChips,
+} from "@/components/SuggestionChips";
 
 export const Route = createFileRoute("/call")({
   validateSearch: (s: Record<string, unknown>): {
@@ -86,8 +90,15 @@ function CallScreen() {
             </p>
           </div>
 
+          <SuggestionChips
+            suggestions={FIRST_TIME_SUGGESTIONS}
+            vertical
+            align="center"
+            className="mt-8"
+          />
+
           {/* Controls */}
-          <div className="mt-auto w-full grid grid-cols-3 gap-4 px-2">
+          <div className="mt-auto w-full grid grid-cols-3 gap-4 px-2 pt-8">
             <CallButton
               label={muted ? "Unmute" : "Mute"}
               active={muted}

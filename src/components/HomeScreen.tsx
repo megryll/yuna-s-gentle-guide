@@ -5,12 +5,9 @@ import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { getAvatar } from "@/lib/yuna-session";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
+import { FIRST_TIME_SUGGESTIONS } from "@/components/SuggestionChips";
 
-const firstTimeSuggestions = [
-  "I'm just exploring the app.",
-  "I have a topic in mind.",
-  "Get to know me first.",
-];
+const firstTimeSuggestions = FIRST_TIME_SUGGESTIONS;
 
 type FollowUp = {
   eyebrow?: string;
