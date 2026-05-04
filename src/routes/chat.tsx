@@ -3,7 +3,21 @@ import { useEffect, useRef, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
-import { getAvatar, setHasChatted, setLastTopics } from "@/lib/yuna-session";
+import {
+  AMBIENCE_FILES,
+  getAmbience,
+  getVoice,
+  setHasChatted,
+  setLastTopics,
+  useYunaIdentity,
+} from "@/lib/yuna-session";
+import { VOICES } from "@/lib/voices";
+import { fetchTtsBlobUrl } from "@/lib/tts-client";
+import {
+  isSpeechRecognitionSupported,
+  startRecognition,
+  type RecognitionHandle,
+} from "@/lib/speech";
 import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import {
   Dialog,
@@ -39,38 +53,27 @@ export const Route = createFileRoute("/chat")({
   component: Chat,
 });
 
-type LimitationItem = { id: string; text: string; checked: boolean };
-
-type Msg =
-  | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
-  | {
-      id: string;
-      from: "system";
-      kind: "call-summary";
-      startedAt: string;
-      endedAt: string;
-      durationLabel: string;
-    }
-  | {
-      id: string;
-      from: "system";
-      kind: "limitations";
-      items: LimitationItem[];
-    }
-  | {
-      id: string;
-      from: "system";
-      kind: "voice-pitch";
-    };
-
-const cannedReplies = [
-  "Thank you for sharing that. Take your time — I'm listening. What feels most present right now?",
-  "I hear you. Could you tell me a little more about when this started?",
-  "That sounds like a lot to hold. What would feel like a small relief, even momentarily?",
-];
+import {
+  chatUid as uid,
+  clearStoredMessages,
+  loadStoredMessages,
+  saveStoredMessages,
+  type ChatMsg as Msg,
+  type LimitationItem,
+} from "@/lib/chat-store";
 
 const LIMITATIONS_PROMPT =
   "Before we continue, you'll need to acknowledge my limitations. Tap the checkmarks to agree.";
+
+// Spoken version of the voice-pitch card copy. The card itself bolds
+// "75% more likely" for emphasis; we strip that markup here so TTS reads
+// the sentence cleanly. The follow-up question is enqueued as its own
+// utterance so the serial TTS queue gives it a fresh fetch + a natural
+// beat — keeps the call-to-action from feeling tacked on or clipped.
+const VOICE_PITCH_SPOKEN_LINES = [
+  "People who chat with me over voice are 75% more likely to find value in our conversations.",
+  "Want to give me a call?",
+];
 
 const LIMITATIONS_ITEMS: LimitationItem[] = [
   { id: "person", text: "I am not a real person", checked: false },
@@ -106,36 +109,8 @@ function acknowledgeChoice(initial: string): string {
   return "Thank you for sharing that.";
 }
 
-function uid() {
-  return crypto.randomUUID();
-}
-
 function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-const CHAT_STORE_KEY = "yuna.chatMessages";
-
-function loadStoredMessages(): Msg[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.sessionStorage.getItem(CHAT_STORE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Msg[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredMessages(msgs: Msg[]) {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(CHAT_STORE_KEY, JSON.stringify(msgs));
-}
-
-function clearStoredMessages() {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(CHAT_STORE_KEY);
 }
 
 function Chat() {
@@ -144,28 +119,83 @@ function Chat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
-  const [avatar, setAvatarState] = useState<AvatarVariant | null>(null);
-  const [speakerOn, setSpeakerOn] = useState(false);
+  // Live-subscribed: a voice change in Personalize Yuna (which mirrors to
+  // avatar via setVoice) instantly re-renders every bubble, the typing
+  // indicator, and the voice-pitch card without remounting the chat. The
+  // TTS drain still calls getVoice() directly so an in-flight queue picks
+  // up the latest pick on the next chunk.
+  const { avatar } = useYunaIdentity();
+  // Audio on by default — Yuna's replies read aloud unless the user mutes
+  // from the top-left toggle. Same default as the intro screen.
+  const [speakerOn, setSpeakerOn] = useState(true);
   const [micOpen, setMicOpen] = useState(false);
   const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
   const [inputFocused, setInputFocused] = useState(false);
   const [pendingLimitations, setPendingLimitations] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
+  // Voice-note dictation state. While recording, the input is read-only
+  // and the live transcript is rendered into `text` so the user sees what
+  // was heard before they tap the check to send.
+  const [recordingVoice, setRecordingVoice] = useState(false);
+  const recognitionRef = useRef<RecognitionHandle | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userTopicsRef = useRef<string[]>([]);
   const initialPromptRef = useRef<string>("");
   const bootedRef = useRef(false);
   const limitationsResolvedRef = useRef(false);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const speakerOnRef = useRef(true);
+  const ttsQueueRef = useRef<string[]>([]);
+  const ttsBusyRef = useRef(false);
+  const ambientRef = useRef<HTMLAudioElement | null>(null);
+
+  const AMBIENT_VOLUME = 0.18;
+  const AMBIENT_DUCK = 0.04;
 
   const KEYBOARD_OFFSET = 260;
+
+  // Mount the chosen ambience bed once. Autoplay may be blocked on direct
+  // navigation (no prior gesture); we fall back to starting on the first
+  // user gesture anywhere on the page.
+  useEffect(() => {
+    const ambience = getAmbience();
+    const file = AMBIENCE_FILES[ambience];
+    if (!file) return;
+
+    const el = new Audio(file);
+    el.loop = true;
+    el.volume = AMBIENT_VOLUME;
+    ambientRef.current = el;
+
+    let bound = false;
+    const start = () => {
+      el.play().catch(() => {
+        if (bound) return;
+        bound = true;
+        const onGesture = () => {
+          document.removeEventListener("pointerdown", onGesture, true);
+          document.removeEventListener("keydown", onGesture, true);
+          document.removeEventListener("touchstart", onGesture, true);
+          el.play().catch(() => {});
+        };
+        document.addEventListener("pointerdown", onGesture, true);
+        document.addEventListener("keydown", onGesture, true);
+        document.addEventListener("touchstart", onGesture, true);
+      });
+    };
+    start();
+
+    return () => {
+      el.pause();
+      ambientRef.current = null;
+    };
+  }, []);
 
   // Boot — guarded so Strict Mode's double-mount doesn't fire respondCanned twice
   useEffect(() => {
     if (bootedRef.current) return;
     bootedRef.current = true;
-    const savedAvatar = getAvatar();
-    setAvatarState(savedAvatar);
     setHasChatted();
 
     const isReturnFromCall = !!callEnded && !!callDuration;
@@ -211,24 +241,197 @@ function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, typing]);
 
-  const respondCanned = () => {
+  // Keep a ref so speakIfEnabled — used inside async callbacks — sees the
+  // current toggle without needing to be re-bound on every change.
+  useEffect(() => {
+    speakerOnRef.current = speakerOn;
+    if (!speakerOn) {
+      // Drop anything queued and stop the current playback so muting feels
+      // immediate. We don't try to "resume" later — the message will already
+      // be on screen as text.
+      ttsQueueRef.current = [];
+      ttsBusyRef.current = false;
+      ttsAudioRef.current?.pause();
+      ambientRef.current?.pause();
+    } else {
+      const el = ambientRef.current;
+      if (el && el.paused) el.play().catch(() => {});
+      setAmbientVolume(AMBIENT_VOLUME);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speakerOn]);
+
+  const setAmbientVolume = (v: number) => {
+    const el = ambientRef.current;
+    if (el) el.volume = v;
+  };
+
+  // Serial TTS queue — every call to speakIfEnabled appends, and the worker
+  // drains entries one at a time so successive bubbles don't talk over each
+  // other (issue: "second bubble interrupted the first").
+  const drainTtsQueue = async () => {
+    if (ttsBusyRef.current) return;
+    if (!speakerOnRef.current) return;
+    const next = ttsQueueRef.current.shift();
+    if (!next) {
+      setAmbientVolume(AMBIENT_VOLUME);
+      return;
+    }
+    const voiceId = getVoice();
+    if (!voiceId) return;
+    const cfg = VOICES[voiceId];
+
+    ttsBusyRef.current = true;
+    setAmbientVolume(AMBIENT_DUCK);
+    try {
+      const blobUrl = await fetchTtsBlobUrl(cfg.elevenlabsId, next);
+      if (!speakerOnRef.current) {
+        ttsBusyRef.current = false;
+        return;
+      }
+      // Always fresh — a reused element that already played to `ended`
+      // can swallow the next play() in Chrome.
+      const prior = ttsAudioRef.current;
+      if (prior) {
+        prior.onended = null;
+        prior.pause();
+        prior.removeAttribute("src");
+        prior.load();
+      }
+      const el = new Audio();
+      ttsAudioRef.current = el;
+      el.volume = 1;
+      el.onended = () => {
+        ttsBusyRef.current = false;
+        if (ttsQueueRef.current.length === 0) setAmbientVolume(AMBIENT_VOLUME);
+        void drainTtsQueue();
+      };
+      el.src = blobUrl;
+      el.currentTime = 0;
+      await el.play();
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        console.error("TTS failed", err);
+      }
+      ttsBusyRef.current = false;
+      // Skip the broken entry and try the next; otherwise one failure
+      // would freeze the queue.
+      void drainTtsQueue();
+    }
+  };
+
+  const speakIfEnabled = (text: string) => {
+    if (!speakerOnRef.current) return;
+    if (!text.trim()) return;
+    ttsQueueRef.current.push(text);
+    void drainTtsQueue();
+  };
+
+  const respondClaude = async (newUserText: string) => {
+    // Build the conversation Claude sees: every prior text turn plus the
+    // user's just-sent message. System messages (limitations, voice-pitch,
+    // call-summary) are UI artifacts and don't belong in the API call.
+    const conversation = [
+      ...messages
+        .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
+        .map((m) => ({
+          role: m.from === "you" ? "user" : "assistant",
+          content: m.text,
+        })),
+      { role: "user", content: newUserText },
+    ];
+
     setTyping(true);
-    setTimeout(() => {
-      const reply = cannedReplies[Math.floor(Math.random() * cannedReplies.length)];
-      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: reply }]);
+    const bubbleId = uid();
+    let buffer = "";
+    let bubbleAdded = false;
+
+    const upsertBubble = (text: string) => {
+      if (!bubbleAdded) {
+        setTyping(false);
+        bubbleAdded = true;
+        setMessages((m) => [...m, { id: bubbleId, from: "yuna", kind: "text", text }]);
+      } else {
+        setMessages((m) =>
+          m.map((x) =>
+            x.id === bubbleId && x.kind === "text" ? { ...x, text } : x,
+          ),
+        );
+      }
+    };
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversation }),
+      });
+      if (!res.ok || !res.body) {
+        throw new Error(`chat ${res.status}`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let pending = "";
+      let finalText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        pending += decoder.decode(value, { stream: true });
+        const events = pending.split("\n\n");
+        pending = events.pop() ?? "";
+        for (const ev of events) {
+          const lines = ev.split("\n");
+          const eventLine = lines.find((l) => l.startsWith("event: "));
+          const dataLine = lines.find((l) => l.startsWith("data: "));
+          if (!eventLine || !dataLine) continue;
+          const eventType = eventLine.slice(7);
+          let data: { text?: string; message?: string };
+          try {
+            data = JSON.parse(dataLine.slice(6));
+          } catch {
+            continue;
+          }
+          if (eventType === "delta" && typeof data.text === "string") {
+            buffer += data.text;
+            upsertBubble(buffer);
+          } else if (eventType === "done") {
+            finalText = (data.text as string | undefined) ?? buffer;
+            upsertBubble(finalText);
+          } else if (eventType === "error") {
+            throw new Error(data.message ?? "Unknown server error");
+          }
+        }
+      }
+      if (finalText) speakIfEnabled(finalText);
+    } catch (err) {
+      console.error("Claude error", err);
       setTyping(false);
-    }, 1100);
+      if (!bubbleAdded) {
+        setMessages((m) => [
+          ...m,
+          {
+            id: uid(),
+            from: "yuna",
+            kind: "text",
+            text: "I'm having trouble connecting right now. Could we try again in a moment?",
+          },
+        ]);
+      }
+    }
   };
 
   const respondToInitial = (initial: string) => {
     initialPromptRef.current = initial;
     setTyping(true);
     setTimeout(() => {
+      const ackText = acknowledgeChoice(initial);
       setMessages((m) => [
         ...m,
-        { id: uid(), from: "yuna", kind: "text", text: acknowledgeChoice(initial) },
+        { id: uid(), from: "yuna", kind: "text", text: ackText },
       ]);
       setTyping(false);
+      speakIfEnabled(ackText);
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
@@ -244,6 +447,7 @@ function Chat() {
           ]);
           setTyping(false);
           setPendingLimitations(true);
+          speakIfEnabled(LIMITATIONS_PROMPT);
         }, 1100);
       }, 700);
     }, 1100);
@@ -260,7 +464,7 @@ function Chat() {
     if (isFirstUserMessage) {
       respondToInitial(value);
     } else {
-      respondCanned();
+      void respondClaude(value);
     }
   };
 
@@ -268,6 +472,53 @@ function Chat() {
     e.preventDefault();
     sendText(text.trim());
   };
+
+  // Voice note: tap mic to start dictation, tap the check to stop and send.
+  // The input is locked while recording and shows the live transcript so
+  // the user can confirm what's being heard before commit.
+  const startVoiceNote = () => {
+    if (recordingVoice || pendingLimitations) return;
+    if (!isSpeechRecognitionSupported()) {
+      alert(
+        "Voice notes need a browser that supports speech recognition (try Chrome or Safari).",
+      );
+      return;
+    }
+    setText("");
+    const handle = startRecognition({
+      onTranscript: (live) => setText(live),
+      onFinal: (committed) => {
+        recognitionRef.current = null;
+        setRecordingVoice(false);
+        const trimmed = committed.trim();
+        if (trimmed) sendText(trimmed);
+        else setText("");
+      },
+      onError: (err) => {
+        recognitionRef.current = null;
+        setRecordingVoice(false);
+        if (err.error !== "aborted" && err.error !== "no-speech") {
+          console.error("Voice note recognition error", err);
+        }
+      },
+    });
+    if (!handle) return;
+    recognitionRef.current = handle;
+    setRecordingVoice(true);
+  };
+
+  const finishVoiceNote = () => {
+    recognitionRef.current?.stop();
+  };
+
+  // If the user navigates away or the limitations gate trips while recording,
+  // tear down the recognition so the mic indicator doesn't persist.
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const checkLimitation = (msgId: string, itemId: string) => {
     setMessages((msgs) =>
@@ -295,59 +546,41 @@ function Chat() {
     setPendingLimitations(false);
     setTyping(true);
     setTimeout(() => {
+      const thanksText = "Thanks, now let's get into it.";
       setMessages((m) => [
         ...m,
-        {
-          id: uid(),
-          from: "yuna",
-          kind: "text",
-          text: "Thank you for those acknowledgements.",
-        },
+        { id: uid(), from: "yuna", kind: "text", text: thanksText },
       ]);
       setTyping(false);
+      speakIfEnabled(thanksText);
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
           setMessages((m) => [
             ...m,
-            {
-              id: uid(),
-              from: "yuna",
-              kind: "text",
-              text: "Let's get into it.",
-            },
+            { id: uid(), from: "system", kind: "voice-pitch" },
           ]);
           setTyping(false);
-          setTimeout(() => {
-            setTyping(true);
-            setTimeout(() => {
-              setMessages((m) => [
-                ...m,
-                { id: uid(), from: "system", kind: "voice-pitch" },
-              ]);
-              setTyping(false);
-              setVoicePitchActive(true);
-            }, 1300);
-          }, 700);
-        }, 1100);
-      }, 600);
+          setVoicePitchActive(true);
+          VOICE_PITCH_SPOKEN_LINES.forEach(speakIfEnabled);
+        }, 1300);
+      }, 700);
     }, 900);
+    // speakIfEnabled is stable via refs, no need to track it as a dep
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, pendingLimitations]);
 
   const dismissVoicePitch = () => {
     setVoicePitchActive(false);
     setTyping(true);
     setTimeout(() => {
+      const followText = followUpAfterLimitations(initialPromptRef.current);
       setMessages((m) => [
         ...m,
-        {
-          id: uid(),
-          from: "yuna",
-          kind: "text",
-          text: followUpAfterLimitations(initialPromptRef.current),
-        },
+        { id: uid(), from: "yuna", kind: "text", text: followText },
       ]);
       setTyping(false);
+      speakIfEnabled(followText);
     }, 900);
   };
 
@@ -380,9 +613,9 @@ function Chat() {
               surface="light"
               variant="ghost"
               size="icon-lg"
-              pressed={speakerOn}
+              pressed={!speakerOn}
               onClick={() => setSpeakerOn((s) => !s)}
-              aria-label={speakerOn ? "Mute Yuna's voice" : "Hear Yuna's voice"}
+              aria-label={speakerOn ? "Mute Yuna's voice" : "Unmute Yuna's voice"}
             >
               {speakerOn ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
             </Button>
@@ -458,7 +691,21 @@ function Chat() {
             />
           )}
           <form onSubmit={send} className="px-5 pt-3">
-            <div className="flex items-center gap-1 rounded-full hairline pl-5 pr-1.5 py-1.5 bg-background focus-within:border-foreground transition-colors">
+            <div
+              className={
+                "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background transition-colors " +
+                (recordingVoice
+                  ? "border border-foreground"
+                  : "hairline focus-within:border-foreground")
+              }
+            >
+              {recordingVoice && (
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-2 rounded-full bg-destructive shrink-0"
+                  style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+                />
+              )}
               <input
                 ref={inputRef}
                 value={text}
@@ -468,21 +715,26 @@ function Chat() {
                 placeholder={
                   pendingLimitations
                     ? "Tap each checkmark above to continue"
-                    : "Write to Yuna…"
+                    : recordingVoice
+                      ? "Listening…"
+                      : "Write to Yuna…"
                 }
+                readOnly={recordingVoice}
                 disabled={pendingLimitations}
                 className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0 disabled:opacity-60"
               />
               <Button
                 surface="light"
-                variant="ghost"
+                variant={recordingVoice ? "primary" : "ghost"}
                 size="icon-sm"
                 type="button"
+                pressed={recordingVoice}
                 onMouseDown={(e) => e.preventDefault()}
-                aria-label="Send a voice note"
+                onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
+                aria-label={recordingVoice ? "Stop recording and send" : "Record a voice note"}
                 disabled={pendingLimitations}
               >
-                <MicIcon />
+                {recordingVoice ? <CheckIcon /> : <MicIcon />}
               </Button>
               <Button
                 surface="light"
@@ -491,7 +743,7 @@ function Chat() {
                 type="submit"
                 onMouseDown={(e) => e.preventDefault()}
                 aria-label="Send"
-                disabled={pendingLimitations || !text.trim()}
+                disabled={pendingLimitations || recordingVoice || !text.trim()}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -788,6 +1040,9 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
             Reported positive impact
           </p>
         </div>
+        <p className="text-sm leading-relaxed px-4 pt-1 pb-3">
+          Want to give me a call?
+        </p>
       </div>
     </div>
   );
@@ -889,6 +1144,19 @@ function MicIcon() {
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M5 12.5l4.5 4.5L19 7"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

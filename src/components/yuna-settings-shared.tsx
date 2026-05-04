@@ -1,47 +1,38 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@/components/ui/carousel";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { fetchTtsBlobUrl } from "@/lib/tts-client";
+import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
+import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
 export type Choice = { id: string; label: string; description: string };
 
-export type Voice = {
-  id: string;
-  note: string;
-  description: string;
+export type IntroVoice = {
+  id: VoiceId;
+  photo: string;
+  desc: string;
 };
 
-export const VOICE_OPTIONS: Voice[] = [
-  {
-    id: "Aria",
-    note: "Warm, unhurried",
-    description:
-      "A calm, low-tempo voice that lingers on the words. Gentle pauses, soft consonants — best for slow, reflective conversations.",
-  },
-  {
-    id: "Sol",
-    note: "Bright, attentive",
-    description:
-      "Awake and curious, with a lift at the end of phrases. Best when you want energy without pressure.",
-  },
-  {
-    id: "Wren",
-    note: "Soft, low",
-    description:
-      "Quiet and grounded, almost a whisper. Good for late nights or when you need to feel held without a lot of words.",
-  },
-  {
-    id: "Kit",
-    note: "Plain, even",
-    description:
-      "Neutral and steady. No theatrics — just clear delivery, the same temperature throughout.",
-  },
-];
+const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
+  iris: "A warm, confident voice that grounds the room as it speaks.",
+  marcus: "Steady and resonant — a calm authority that helps you settle in.",
+  mei: "Soft and thoughtful, gentle enough to hold what's underneath.",
+  arun: "Articulate and unhurried, like a trusted friend taking their time.",
+  rosa: "Bright and warm, lifting the conversation without rushing it.",
+  theo: "Easy-going and approachable, like someone who really gets you.",
+  sage: "Clear and supportive, attentive to every word you offer.",
+  felix: "Casual and conversational, with an open, friendly warmth.",
+  aura: "A soft, mysterious presence that holds space for stillness.",
+  ember: "Warm and steadying, like firelight on a quiet evening.",
+  tide: "Cool and rhythmic, easing in and out like a slow breath.",
+  cloud: "Light and airy — soft enough to land softly into the next moment.",
+};
+
+export const INTRO_VOICES: IntroVoice[] = VOICE_IDS.map((id) => ({
+  id,
+  photo: avatarSrc(id as AvatarVariant),
+  desc: VOICE_DESCRIPTIONS[id],
+}));
 
 export const LANGUAGE_OPTIONS: Choice[] = [
   { id: "English", label: "English", description: "EN" },
@@ -130,11 +121,13 @@ export function NavRow({
   icon,
   label,
   value,
+  imageSrc,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value?: string;
+  imageSrc?: string;
   onClick: () => void;
 }) {
   return (
@@ -146,7 +139,17 @@ export function NavRow({
         {icon}
       </span>
       <span className="flex-1 text-sm">{label}</span>
-      <span className="font-sans-ui text-xs text-muted-foreground">{value}</span>
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt=""
+          aria-hidden="true"
+          className="h-7 w-7 rounded-full object-cover hairline shrink-0"
+          draggable={false}
+        />
+      ) : value ? (
+        <span className="font-sans-ui text-xs text-muted-foreground">{value}</span>
+      ) : null}
       <ChevronRightIcon />
     </button>
   );
@@ -265,177 +268,362 @@ export function PaceSlider({
   );
 }
 
-// ── Voice carousel ───────────────────────────────────────────────────────────
+// ── Intro-style voice picker ─────────────────────────────────────────────────
 
-export function VoiceCarousel({
-  voice,
-  onVoiceChange,
+export const VOICE_CARD_W = 297;
+export const VOICE_CARD_GAP = 14;
+const VOICE_PEEK = `calc((100% - ${VOICE_CARD_W}px) / 2)`;
+
+export function IntroVoicePicker({
+  selectedIdx,
+  onSelect,
+  playingIdx,
+  onTogglePlay,
+  surface = "dark",
 }: {
-  voice: string;
-  onVoiceChange: (id: string) => void;
+  selectedIdx: number;
+  onSelect: (idx: number) => void;
+  playingIdx: number | null;
+  onTogglePlay: (idx: number) => void;
+  /** "dark" matches photo-bg (intro), "light" matches the personalize drawer. */
+  surface?: "dark" | "light";
 }) {
-  const [api, setApi] = useState<CarouselApi | null>(null);
-  const [playingId, setPlayingId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({
+    active: false,
+    startX: 0,
+    startScroll: 0,
+    moved: 0,
+    pointerId: 0,
+  });
+  const suppressNextClickRef = useRef(false);
 
+  const cardStep = VOICE_CARD_W + VOICE_CARD_GAP;
+  const DRAG_THRESHOLD = 6;
+
+  const snapTo = (idx: number, smooth = true) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const clamped = Math.max(0, Math.min(INTRO_VOICES.length - 1, idx));
+    el.scrollTo({
+      left: clamped * cardStep,
+      behavior: smooth ? "smooth" : "auto",
+    });
+    onSelect(clamped);
+  };
+
+  // On mount only: jump to the pre-selected voice (e.g. when the drawer opens
+  // with iris already chosen). Re-running on every selectedIdx change would
+  // hijack the smooth scroll initiated by snapTo and make tap-to-select feel
+  // broken, so this is intentionally mount-once.
   useEffect(() => {
-    if (!api) return;
-    const startIdx = Math.max(
-      0,
-      VOICE_OPTIONS.findIndex((v) => v.id === voice),
-    );
-    api.scrollTo(startIdx, true);
-    const onSelect = () => {
-      const idx = api.selectedScrollSnap();
-      const next = VOICE_OPTIONS[idx];
-      if (next) onVoiceChange(next.id);
-      setPlayingId(null);
-    };
-    api.on("select", onSelect);
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api, voice, onVoiceChange]);
+    const el = scrollRef.current;
+    if (!el) return;
+    const target = selectedIdx * cardStep;
+    if (Math.abs(el.scrollLeft - target) > 2) {
+      el.scrollTo({ left: target, behavior: "auto" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const togglePlay = (id: string) => {
-    setPlayingId((cur) => (cur === id ? null : id));
+  const handleCardClick = (idx: number) => {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+    snapTo(idx);
+  };
+
+  // Mouse drag-to-scroll. We deliberately avoid setPointerCapture: capturing
+  // the pointer on the carousel container also retargets the synthesized
+  // `click` away from the card the user is actually clicking, breaking
+  // tap-to-select. Instead we attach pointermove/up to `window` so the drag
+  // continues even if the cursor leaves the carousel.
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse") return;
+    if ((e.target as HTMLElement | null)?.closest("button")) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: 0,
+      pointerId: e.pointerId,
+    };
+
+    const handleMove = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d.active || ev.pointerId !== d.pointerId) return;
+      const delta = ev.clientX - d.startX;
+      d.moved = Math.max(d.moved, Math.abs(delta));
+      el.scrollLeft = d.startScroll - delta;
+    };
+
+    const handleUp = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d.active || ev.pointerId !== d.pointerId) return;
+      d.active = false;
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleUp);
+      if (d.moved > DRAG_THRESHOLD) {
+        suppressNextClickRef.current = true;
+        // Auto-release the suppress flag in case no `click` ever fires (e.g.
+        // pointerup landed off any card). Without this the next legitimate
+        // tap could be silently eaten.
+        setTimeout(() => {
+          suppressNextClickRef.current = false;
+        }, 200);
+        const idx = Math.round(el.scrollLeft / cardStep);
+        snapTo(idx);
+      }
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleUp);
   };
 
   return (
-    <div className="flex flex-col">
-      <Carousel
-        setApi={setApi}
-        opts={{ align: "center", loop: true, containScroll: false }}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-3 px-3">
-          {VOICE_OPTIONS.map((v) => (
-            <CarouselItem key={v.id} className="pl-3 basis-[78%]">
-              <VoiceCard
-                voice={v}
-                selected={v.id === voice}
-                playing={playingId === v.id}
-                onTogglePlay={() => togglePlay(v.id)}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
-
-      <Dots count={VOICE_OPTIONS.length} activeId={voice} ids={VOICE_OPTIONS.map((v) => v.id)} />
-    </div>
-  );
-}
-
-function VoiceCard({
-  voice,
-  selected,
-  playing,
-  onTogglePlay,
-}: {
-  voice: Voice;
-  selected: boolean;
-  playing: boolean;
-  onTogglePlay: () => void;
-}) {
-  return (
     <div
-      className={
-        "h-full rounded-3xl hairline px-6 py-7 flex flex-col gap-4 transition-all duration-300 " +
-        (selected ? "bg-foreground text-background" : "bg-background")
-      }
+      ref={scrollRef}
+      className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
+      style={{
+        gap: VOICE_CARD_GAP,
+        paddingLeft: VOICE_PEEK,
+        paddingRight: VOICE_PEEK,
+        paddingTop: 6,
+        paddingBottom: 6,
+        scrollPaddingLeft: VOICE_PEEK,
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        touchAction: "pan-x",
+      }}
+      onPointerDown={onPointerDown}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p
-            className={
-              "font-sans-ui text-[10px] tracking-[0.25em] uppercase " +
-              (selected ? "text-background/70" : "text-muted-foreground")
-            }
-          >
-            {voice.note}
-          </p>
-          <h3 className="font-serif text-3xl tracking-tight mt-1">{voice.id}</h3>
-        </div>
-        <span
-          className={
-            "h-2.5 w-2.5 rounded-full mt-2 shrink-0 " + (selected ? "bg-background" : "bg-border")
-          }
-          aria-hidden="true"
-        />
-      </div>
-
-      <p
-        className={
-          "text-sm leading-relaxed " + (selected ? "text-background/85" : "text-muted-foreground")
-        }
-      >
-        {voice.description}
-      </p>
-
-      <div className="mt-auto flex items-center gap-3 pt-2">
-        <button
-          onClick={onTogglePlay}
-          aria-label={playing ? `Pause ${voice.id} preview` : `Play ${voice.id} preview`}
-          className={
-            "h-12 w-12 rounded-full flex items-center justify-center transition-colors shrink-0 " +
-            (selected ? "bg-background text-foreground" : "bg-foreground text-background")
-          }
-        >
-          {playing ? <PauseIcon /> : <PlayIcon />}
-        </button>
-        <Waveform active={playing} muted={!selected} />
-      </div>
-    </div>
-  );
-}
-
-function Waveform({ active, muted }: { active: boolean; muted: boolean }) {
-  const bars = 14;
-  return (
-    <div className="flex-1 flex items-center gap-[3px] h-7" aria-hidden="true">
-      {Array.from({ length: bars }).map((_, i) => {
-        const base = 6 + ((i * 7) % 14);
-        return (
-          <span
-            key={i}
-            className={
-              "w-[3px] rounded-full transition-all " +
-              (muted ? "bg-current opacity-30" : "bg-current opacity-80")
-            }
-            style={{
-              height: active ? `${base + (i % 3) * 4}px` : `${base}px`,
-              animation: active
-                ? `voice-wave 900ms ease-in-out ${i * 60}ms infinite alternate`
-                : "none",
-            }}
-          />
-        );
-      })}
-      <style>{`
-        @keyframes voice-wave {
-          0% { transform: scaleY(0.55); }
-          100% { transform: scaleY(1.4); }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-function Dots({ count, activeId, ids }: { count: number; activeId: string; ids: string[] }) {
-  const activeIdx = ids.indexOf(activeId);
-  return (
-    <div className="flex items-center justify-center gap-1.5 mt-5">
-      {Array.from({ length: count }).map((_, i) => (
-        <span
-          key={i}
-          className={
-            "h-1.5 rounded-full transition-all " +
-            (i === activeIdx ? "w-5 bg-foreground" : "w-1.5 bg-border")
-          }
+      {INTRO_VOICES.map((voice, idx) => (
+        <VoiceIntroCard
+          key={voice.id}
+          voice={voice}
+          active={idx === selectedIdx}
+          playing={playingIdx === idx}
+          onSelect={() => handleCardClick(idx)}
+          onTogglePlay={() => onTogglePlay(idx)}
+          surface={surface}
         />
       ))}
+      <style>{`.voice-carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
+}
+
+function VoiceIntroCard({
+  voice,
+  active,
+  playing,
+  onSelect,
+  onTogglePlay,
+  surface,
+}: {
+  voice: IntroVoice;
+  active: boolean;
+  playing: boolean;
+  onSelect: () => void;
+  onTogglePlay: () => void;
+  surface: "dark" | "light";
+}) {
+  const ringActive = surface === "dark" ? "ring-white" : "ring-foreground";
+  const ringIdle = surface === "dark" ? "ring-white/15" : "ring-border";
+  const checkBg = surface === "dark" ? "rgba(255,255,255,0.95)" : "#fff";
+  const checkFg = surface === "dark" ? "#0e2a18" : "#000";
+
+  return (
+    <div
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={
+        "relative shrink-0 rounded-2xl overflow-hidden snap-start transition-all duration-200 cursor-pointer " +
+        (active
+          ? `ring-2 ${ringActive} shadow-lg scale-100`
+          : `ring-1 ${ringIdle} opacity-80 scale-[0.97]`)
+      }
+      style={{
+        width: VOICE_CARD_W,
+        aspectRatio: "332 / 428",
+        background: "#0e2a18",
+      }}
+    >
+      <img
+        src={voice.photo}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{
+          objectFit: "cover",
+          objectPosition: "50% 30%",
+        }}
+      />
+
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.85) 100%)",
+        }}
+      />
+
+      {active && (
+        <div
+          className="absolute h-6 w-6 rounded-full flex items-center justify-center"
+          style={{
+            top: 10,
+            right: 10,
+            background: checkBg,
+            color: checkFg,
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M5 12.5l4.5 4.5L19 7"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      )}
+
+      <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2.5">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePlay();
+          }}
+          type="button"
+          className="self-start flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm active:bg-white/25"
+          aria-label={playing ? "Pause voice preview" : "Play voice preview"}
+        >
+          {playing ? <PausePill /> : <PlayPill />}
+          <span className="font-sans-ui text-[10px] tracking-[0.1em] uppercase text-white">
+            {playing ? "Pause" : "Play"}
+          </span>
+        </button>
+        <p className="text-[14px] leading-snug text-white/90">{voice.desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function PlayPill() {
+  return (
+    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
+      <path d="M1 1L7 4.5L1 8V1Z" fill="white" />
+    </svg>
+  );
+}
+
+function PausePill() {
+  return (
+    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
+      <rect x="0.5" y="1" width="2.4" height="7" rx="0.8" fill="white" />
+      <rect x="5.1" y="1" width="2.4" height="7" rx="0.8" fill="white" />
+    </svg>
+  );
+}
+
+// ── Voice preview (TTS) hook ─────────────────────────────────────────────────
+
+/**
+ * Plays the ElevenLabs preview for a given voice id, with a single-flight guard
+ * so rapid swipes can't pile up overlapping audio. Caches blob URLs per id so
+ * subsequent plays are instant.
+ */
+export function useVoicePreview() {
+  const [playingId, setPlayingId] = useState<VoiceId | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cacheRef = useRef<Map<VoiceId, string>>(new Map());
+  const playGenRef = useRef(0);
+
+  const stop = useCallback(() => {
+    playGenRef.current++;
+    const el = audioRef.current;
+    if (el) {
+      el.onended = null;
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    }
+    setPlayingId(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stop();
+      audioRef.current = null;
+    };
+  }, [stop]);
+
+  const toggle = useCallback(async (id: VoiceId) => {
+    if (playingId === id) {
+      stop();
+      return;
+    }
+
+    // Tear down the prior element and start fresh — reusing leaves an `ended`
+    // state where Chrome occasionally swallows the next play().
+    const prior = audioRef.current;
+    if (prior) {
+      prior.onended = null;
+      prior.pause();
+      prior.removeAttribute("src");
+      prior.load();
+    }
+
+    setPlayingId(id);
+    const gen = ++playGenRef.current;
+    const el = new Audio();
+    audioRef.current = el;
+    el.volume = 1;
+
+    const cfg = VOICES[id];
+    if (!cfg) {
+      setPlayingId(null);
+      return;
+    }
+
+    try {
+      let blobUrl = cacheRef.current.get(id);
+      if (!blobUrl) {
+        blobUrl = await fetchTtsBlobUrl(cfg.elevenlabsId, cfg.sampleText);
+        cacheRef.current.set(id, blobUrl);
+      }
+      if (gen !== playGenRef.current) return;
+
+      el.onended = () => {
+        if (gen !== playGenRef.current) return;
+        setPlayingId((p) => (p === id ? null : p));
+      };
+      el.src = blobUrl;
+      el.currentTime = 0;
+      await el.play();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (gen !== playGenRef.current) return;
+      console.error("Voice preview failed", err);
+      setPlayingId((p) => (p === id ? null : p));
+    }
+  }, [playingId, stop]);
+
+  return { playingId, toggle, stop };
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -514,26 +702,6 @@ export function SpeedIcon() {
       />
       <path d="M12 14l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <circle cx="12" cy="14" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M7 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 7 5.5z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" />
-      <rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" />
     </svg>
   );
 }

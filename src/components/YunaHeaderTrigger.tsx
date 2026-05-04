@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { YunaMark } from "@/components/YunaMark";
-import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
-import { getAvatar } from "@/lib/yuna-session";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { useYunaIdentity } from "@/lib/yuna-session";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 
 /**
@@ -10,11 +10,7 @@ import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
  */
 export function YunaHeaderTrigger() {
   const [open, setOpen] = useState(false);
-  const [avatar, setAvatar] = useState<AvatarVariant | null>(null);
-
-  useEffect(() => {
-    setAvatar(getAvatar());
-  }, [open]);
+  const { avatar } = useYunaIdentity();
 
   return (
     <>

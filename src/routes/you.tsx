@@ -15,17 +15,14 @@ const PREVIEW = [
   {
     title: "Breakthroughs",
     body: "Quiet shifts you and Yuna notice together.",
-    icon: <SparkIcon />,
   },
   {
     title: "Beliefs & behaviors",
     body: "Patterns that show up in how you move through your days.",
-    icon: <PersonIcon />,
   },
   {
     title: "Basics",
     body: "The context Yuna holds about your life.",
-    icon: <PersonIcon />,
   },
 ];
 
@@ -35,11 +32,9 @@ function YouScreen() {
       <div className="flex-1 flex flex-col px-6 pt-2 pb-10 yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center pt-4 text-center">
           <span
-            className="h-24 w-24 rounded-full border-2 border-foreground flex items-center justify-center bg-background"
+            className="h-24 w-24 rounded-full bg-muted"
             aria-hidden="true"
-          >
-            <TreeIcon />
-          </span>
+          />
           <h1 className="mt-7 font-serif text-2xl tracking-tight">
             Yuna's getting to know you
           </h1>
@@ -60,11 +55,9 @@ function YouScreen() {
               className="rounded-2xl hairline bg-card p-4 flex items-start gap-3"
             >
               <span
-                className="h-9 w-9 rounded-full border border-border flex items-center justify-center shrink-0 bg-muted/40 text-foreground"
+                className="h-9 w-9 rounded-full bg-muted shrink-0"
                 aria-hidden="true"
-              >
-                {item.icon}
-              </span>
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] leading-snug font-medium">
                   {item.title}
@@ -81,47 +74,3 @@ function YouScreen() {
   );
 }
 
-function TreeIcon() {
-  return (
-    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <circle cx="32" cy="20" r="11" stroke="currentColor" strokeWidth="2" />
-      <circle cx="22" cy="28" r="9" stroke="currentColor" strokeWidth="2" />
-      <circle cx="42" cy="28" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M32 36v18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-      <path
-        d="M32 44l-4-3M32 48l4-3"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path d="M22 56h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PersonIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="9" r="3.2" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function SparkIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l3.5 3.5M14.5 14.5L18 18M18 6l-3.5 3.5M9.5 14.5L6 18"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}

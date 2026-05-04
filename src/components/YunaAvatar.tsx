@@ -29,21 +29,6 @@ export const AVATAR_VARIANTS: AvatarVariant[] = [
   "cloud",
 ];
 
-export const AVATAR_LABELS: Record<AvatarVariant, string> = {
-  iris: "Iris",
-  marcus: "Marcus",
-  mei: "Mei",
-  arun: "Arun",
-  rosa: "Rosa",
-  theo: "Theo",
-  sage: "Sage",
-  felix: "Felix",
-  aura: "Aura",
-  ember: "Ember",
-  tide: "Tide",
-  cloud: "Cloud",
-};
-
 const AVATAR_SRC: Record<AvatarVariant, string> = {
   iris: "/avatars/avatar-1.png",
   marcus: "/avatars/avatar-2.png",
@@ -71,7 +56,8 @@ export function YunaAvatar({ size = 32, className, variant }: Props) {
   return (
     <img
       src={AVATAR_SRC[variant]}
-      alt={AVATAR_LABELS[variant]}
+      alt=""
+      aria-hidden="true"
       width={size}
       height={size}
       style={{ width: size, height: size }}

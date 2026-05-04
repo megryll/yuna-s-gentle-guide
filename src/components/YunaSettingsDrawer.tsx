@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
 import {
-  AVATAR_VARIANTS,
-  YunaAvatar,
-  type AvatarVariant,
-} from "@/components/YunaAvatar";
-import { getAvatar, setAvatar } from "@/lib/yuna-session";
+  AMBIENCE_OPTIONS,
+  type Ambience,
+  getAmbience,
+  setAmbience as persistAmbience,
+  setVoice as persistVoice,
+  useYunaIdentity,
+} from "@/lib/yuna-session";
+import { VOICE_IDS, VOICES, type VoiceId } from "@/lib/voices";
 import {
   ChoiceList,
   GlobeIcon,
+  IntroVoicePicker,
   LANGUAGE_OPTIONS,
   MicIcon,
   NavList,
@@ -17,7 +22,7 @@ import {
   PaceSlider,
   SpeedIcon,
   SubScreen,
-  VoiceCarousel,
+  useVoicePreview,
   type Choice,
 } from "@/components/yuna-settings-shared";
 
@@ -34,9 +39,25 @@ const RESPONSE_LENGTHS: Choice[] = [
   { id: "Long", label: "Long", description: "Broad and detailed" },
 ];
 
-const DEFAULT_PACE_IDX = 2;
+const AMBIENCE_CHOICES: Choice[] = [
+  { id: "None", label: "None", description: "Silent — no background sounds" },
+  { id: "Forest", label: "Forest", description: "Light wind, distant birdsong" },
+  { id: "Campfire", label: "Campfire", description: "Crackling logs, gentle warmth" },
+  { id: "Ocean", label: "Ocean", description: "Slow waves on a quiet shore" },
+  { id: "Busy Cafe", label: "Busy Cafe", description: "Murmured conversation, soft clatter" },
+];
 
-type Screen = "main" | "responseLength" | "supportStyle" | "voice" | "pace" | "language";
+const DEFAULT_PACE_IDX = 2;
+const DEFAULT_VOICE_ID: VoiceId = VOICE_IDS[0];
+
+type Screen =
+  | "main"
+  | "responseLength"
+  | "supportStyle"
+  | "voice"
+  | "pace"
+  | "language"
+  | "ambience";
 
 export function YunaSettingsDrawer({
   open,
@@ -48,25 +69,50 @@ export function YunaSettingsDrawer({
   const [screen, setScreen] = useState<Screen>("main");
   const [supportStyle, setSupportStyle] = useState<string>("Friendly");
   const [responseLength, setResponseLength] = useState<string>("Brief");
-  const [voice, setVoice] = useState<string>("Aria");
   const [paceIdx, setPaceIdx] = useState<number>(DEFAULT_PACE_IDX);
   const [language, setLanguage] = useState<string>("English");
-  // Defer reading localStorage to an effect — accessing it synchronously
-  // during render causes a server/client hydration mismatch under SSR.
-  const [avatar, setAvatarLocal] = useState<AvatarVariant | null>(null);
+  const [ambience, setAmbienceLocal] = useState<Ambience>("None");
+
+  // Live source of truth — picker carousel reflects the current persisted
+  // voice, and the NavRow imageSrc updates the moment chooseVoice writes.
+  const { voice: persistedVoice } = useYunaIdentity();
+  const voice: VoiceId = persistedVoice ?? DEFAULT_VOICE_ID;
+
+  // Ambience isn't part of the reactive identity store — read it on open.
   useEffect(() => {
-    setAvatarLocal(getAvatar());
+    setAmbienceLocal(getAmbience());
   }, [open]);
 
+  const chooseAmbience = (v: string) => {
+    if (!(AMBIENCE_OPTIONS as readonly string[]).includes(v)) return;
+    const next = v as Ambience;
+    setAmbienceLocal(next);
+    persistAmbience(next);
+  };
+
   const handleClose = (next: boolean) => {
-    if (!next) setScreen("main");
+    if (!next) {
+      setScreen("main");
+      voicePreview.stop();
+    }
     onOpenChange(next);
   };
 
-  const chooseAvatar = (v: AvatarVariant) => {
-    setAvatar(v);
-    setAvatarLocal(v);
+  // Voice and avatar are mirrored inside persistVoice — one write, both keys
+  // stay in lockstep, all subscribed screens (home, chat, call, header)
+  // re-render with the new face/voice.
+  const chooseVoice = (idx: number) => {
+    const id = VOICE_IDS[idx];
+    if (!id) return;
+    persistVoice(id);
+    voicePreview.stop();
   };
+
+  const voicePreview = useVoicePreview();
+  const voiceIdx = Math.max(0, VOICE_IDS.indexOf(voice));
+  const playingIdx = voicePreview.playingId
+    ? VOICE_IDS.indexOf(voicePreview.playingId)
+    : null;
 
   const subTitle: Record<Exclude<Screen, "main">, string> = {
     responseLength: "Response length",
@@ -74,6 +120,7 @@ export function YunaSettingsDrawer({
     voice: "Voice",
     pace: "Voice pace",
     language: "Language",
+    ambience: "Ambience",
   };
 
   const responseLengthOption = RESPONSE_LENGTHS.find((o) => o.id === responseLength);
@@ -91,59 +138,6 @@ export function YunaSettingsDrawer({
             </DrawerHeader>
 
             <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-6">
-              <div
-                className="overflow-x-auto -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                style={{ touchAction: "pan-x", WebkitOverflowScrolling: "touch" }}
-              >
-                <div className="flex gap-3 pb-2 pt-1 w-max">
-                  {AVATAR_VARIANTS.map((v) => {
-                    const selected = v === avatar;
-                    return (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => chooseAvatar(v)}
-                        aria-pressed={selected}
-                        aria-label={`Avatar ${v}`}
-                        className={
-                          "shrink-0 transition-opacity " +
-                          (selected || !avatar ? "opacity-100" : "opacity-60 hover:opacity-100")
-                        }
-                      >
-                        <span
-                          className={
-                            "relative block h-16 w-16 rounded-full transition-all " +
-                            (selected
-                              ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
-                              : "hairline")
-                          }
-                        >
-                          <span className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
-                            <YunaAvatar variant={v} size={64} />
-                          </span>
-                          {selected && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-foreground text-background flex items-center justify-center border-2 border-background"
-                            >
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                                <path
-                                  d="M5 12.5l4.5 4.5L19 7"
-                                  stroke="currentColor"
-                                  strokeWidth="2.4"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               <NavList>
                 <NavRow
                   icon={<ChatLinesIcon />}
@@ -160,7 +154,7 @@ export function YunaSettingsDrawer({
                 <NavRow
                   icon={<MicIcon />}
                   label="Voice"
-                  value={voice}
+                  imageSrc={avatarSrc(voice as AvatarVariant)}
                   onClick={() => setScreen("voice")}
                 />
                 <NavRow
@@ -175,11 +169,23 @@ export function YunaSettingsDrawer({
                   value={language}
                   onClick={() => setScreen("language")}
                 />
+                <NavRow
+                  icon={<LeafIcon />}
+                  label="Ambience"
+                  value={ambience}
+                  onClick={() => setScreen("ambience")}
+                />
               </NavList>
             </div>
           </>
         ) : (
-          <SubScreen title={subTitle[screen]} onBack={() => setScreen("main")}>
+          <SubScreen
+            title={subTitle[screen]}
+            onBack={() => {
+              voicePreview.stop();
+              setScreen("main");
+            }}
+          >
             {screen === "responseLength" && (
               <ChoiceList
                 value={responseLength}
@@ -194,12 +200,32 @@ export function YunaSettingsDrawer({
                 options={SUPPORT_STYLES}
               />
             )}
-            {screen === "voice" && <VoiceCarousel voice={voice} onVoiceChange={setVoice} />}
+            {screen === "voice" && (
+              <div className="-mx-6">
+                <IntroVoicePicker
+                  surface="light"
+                  selectedIdx={voiceIdx}
+                  onSelect={chooseVoice}
+                  playingIdx={playingIdx}
+                  onTogglePlay={(i) => {
+                    const id = VOICE_IDS[i];
+                    if (id) void voicePreview.toggle(id);
+                  }}
+                />
+              </div>
+            )}
             {screen === "pace" && (
               <PaceSlider steps={PACE_STEPS} value={paceIdx} onChange={setPaceIdx} />
             )}
             {screen === "language" && (
               <ChoiceList value={language} onChange={setLanguage} options={LANGUAGE_OPTIONS} />
+            )}
+            {screen === "ambience" && (
+              <ChoiceList
+                value={ambience}
+                onChange={chooseAmbience}
+                options={AMBIENCE_CHOICES}
+              />
             )}
           </SubScreen>
         )}
@@ -218,6 +244,20 @@ function ChatLinesIcon() {
         strokeLinejoin="round"
       />
       <path d="M7 9h10M7 13h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LeafIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M5 19c4-4 7-7 11-11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }

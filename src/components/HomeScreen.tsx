@@ -1,11 +1,16 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { YunaMark } from "@/components/YunaMark";
-import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
-import { getAvatar } from "@/lib/yuna-session";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { useYunaIdentity } from "@/lib/yuna-session";
+import { VOICES } from "@/lib/voices";
+import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { FIRST_TIME_SUGGESTIONS } from "@/components/SuggestionChips";
+
+const WELCOME_TOOLTIP_TEXT =
+  "Welcome in. Take a look around — I'll be here when you're ready to chat.";
 
 const firstTimeSuggestions = FIRST_TIME_SUGGESTIONS;
 
@@ -170,14 +175,54 @@ function WelcomeTooltip({
   onToggleMute: () => void;
   onDismiss: () => void;
 }) {
-  const [avatar, setAvatar] = useState<AvatarVariant | null>(null);
+  const { avatar, voice } = useYunaIdentity();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+
+  // Auto-play the tooltip text in the user's chosen voice on first appearance.
+  // Honors the mute toggle. Browsers may block autoplay without a prior gesture
+  // — the user's tap that opened this tooltip counts on most platforms.
   useEffect(() => {
-    setAvatar(getAvatar());
+    if (muted) {
+      audioRef.current?.pause();
+      return;
+    }
+    let cancelled = false;
+    if (!voice) return;
+    const cfg = VOICES[voice];
+    (async () => {
+      try {
+        if (!blobUrlRef.current) {
+          blobUrlRef.current = await fetchTtsBlobUrl(
+            cfg.elevenlabsId,
+            WELCOME_TOOLTIP_TEXT,
+          );
+        }
+        if (cancelled) return;
+        const el = audioRef.current ?? new Audio();
+        audioRef.current = el;
+        el.src = blobUrlRef.current;
+        el.currentTime = 0;
+        await el.play();
+      } catch (err) {
+        console.error("Welcome TTS failed", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [muted, voice]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    };
   }, []);
 
   return (
     <div
-      className="absolute inset-0 z-40 flex flex-col justify-end items-end px-5 pb-24 yuna-fade-in"
+      className="absolute inset-0 z-40 flex items-center justify-center px-5 yuna-fade-in"
       style={{ background: "rgba(0,0,0,0.32)" }}
       role="dialog"
       aria-label="Welcome"

@@ -2,8 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { setName as saveName } from "@/lib/yuna-session";
+import { setName as saveName, setVoice } from "@/lib/yuna-session";
+import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
+import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
+import { IntroVoicePicker } from "@/components/yuna-settings-shared";
 
 export const Route = createFileRoute("/intro")({
   validateSearch: (s: Record<string, unknown>): { step?: number } => {
@@ -128,6 +131,11 @@ function Intro() {
   const [transitioning, setTransitioning] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceCacheRef = useRef<Map<VoiceId, string>>(new Map());
+  // Monotonically increases on every play/stop so an in-flight fetch or a
+  // pending el.play() promise can detect that it's stale and bail out.
+  const voicePlayGenRef = useRef(0);
   const fadeRafRef = useRef<number | null>(null);
   const mutedRef = useRef(muted);
 
@@ -152,6 +160,90 @@ function Intro() {
     if (fadeRafRef.current != null) {
       cancelAnimationFrame(fadeRafRef.current);
       fadeRafRef.current = null;
+    }
+  };
+
+  // Smoothly fade the ambient bed to `target` over `ms`. Used to duck the
+  // forest sound while a voice preview plays so the voice cuts through.
+  const fadeAmbientTo = (target: number, ms: number) => {
+    cancelAmbientFade();
+    const el = audioRef.current;
+    if (!el) return;
+    const startVol = el.volume;
+    const startT = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min((t - startT) / ms, 1);
+      el.volume = startVol + (target - startVol) * p;
+      if (p < 1) {
+        fadeRafRef.current = requestAnimationFrame(tick);
+      } else {
+        fadeRafRef.current = null;
+      }
+    };
+    fadeRafRef.current = requestAnimationFrame(tick);
+  };
+
+  const stopVoicePreview = () => {
+    voicePlayGenRef.current++;
+    const el = voiceAudioRef.current;
+    if (el) {
+      el.pause();
+      el.currentTime = 0;
+    }
+    if (!mutedRef.current) fadeAmbientTo(AMBIENT_VOLUME, 350);
+  };
+
+  const playVoicePreview = async (idx: number) => {
+    const id = VOICE_IDS[idx];
+    if (!id) return;
+    const cfg = VOICES[id];
+    const gen = ++voicePlayGenRef.current;
+
+    // Duck the forest bed immediately on tap so even a slow fetch doesn't
+    // make the user think nothing is happening — and so the voice has air.
+    if (!mutedRef.current) fadeAmbientTo(0.04, 250);
+
+    // Tear down the prior preview element entirely. Reusing the same audio
+    // element across plays leaves it in `ended` state after the first finish,
+    // and Chrome occasionally swallows the next play() as a no-op even after
+    // resetting src + currentTime. A fresh Audio per preview is cheap and
+    // avoids the whole class of bugs.
+    const prior = voiceAudioRef.current;
+    if (prior) {
+      prior.onended = null;
+      prior.pause();
+      prior.removeAttribute("src");
+      prior.load();
+    }
+
+    const el = new Audio();
+    voiceAudioRef.current = el;
+    el.volume = 1;
+
+    try {
+      let blobUrl = voiceCacheRef.current.get(id);
+      if (!blobUrl) {
+        blobUrl = await fetchTtsBlobUrl(cfg.elevenlabsId, cfg.sampleText);
+        voiceCacheRef.current.set(id, blobUrl);
+      }
+      if (gen !== voicePlayGenRef.current) return;
+
+      el.onended = () => {
+        if (gen !== voicePlayGenRef.current) return;
+        setVoicePlayingIdx((p) => (p === idx ? null : p));
+        if (!mutedRef.current) fadeAmbientTo(AMBIENT_VOLUME, 600);
+      };
+      el.src = blobUrl;
+      el.currentTime = 0;
+      await el.play();
+    } catch (err) {
+      // AbortError fires when src is reassigned mid-play; that's expected on
+      // rapid card switches and shouldn't wipe the freshly-set playing index.
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (gen !== voicePlayGenRef.current) return;
+      console.error("Voice preview failed", err);
+      setVoicePlayingIdx(null);
+      if (!mutedRef.current) fadeAmbientTo(AMBIENT_VOLUME, 350);
     }
   };
 
@@ -297,6 +389,31 @@ function Intro() {
     return () => clearTimeout(t);
   }, [phase]);
 
+  // Enter advances the Continue CTA on every step where it's the active
+  // action. Step 0 lives in "wait-input" with a name form that handles
+  // Enter natively, so this effect doesn't bind there. We also bow out if
+  // an editable element has focus, so typing Enter inside a form control
+  // never trips a navigation.
+  useEffect(() => {
+    if (phase !== "wait-tap" || transitioning) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      e.preventDefault();
+      advance();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, transitioning, stepIdx, voiceIdx]);
+
   const submitName = (e: React.FormEvent) => {
     e.preventDefault();
     const value = nameInput.trim();
@@ -365,6 +482,11 @@ function Intro() {
       goToStep(stepIdx + 1);
       return;
     }
+    // Last step is the voice picker — persist whichever card the user
+    // landed on, even if they never tapped to change the default.
+    const id = VOICE_IDS[voiceIdx];
+    if (id) setVoice(id);
+    stopVoicePreview();
     setTransitioning(true);
     fadeOutAmbient(1300);
     setTimeout(() => {
@@ -459,12 +581,21 @@ function Intro() {
                     selectedIdx={voiceIdx}
                     onSelect={(i) => {
                       setVoiceIdx(i);
+                      const id = VOICE_IDS[i];
+                      if (id) setVoice(id);
                       setVoicePlayingIdx(null);
+                      stopVoicePreview();
                     }}
                     playingIdx={voicePlayingIdx}
-                    onTogglePlay={(i) =>
-                      setVoicePlayingIdx((p) => (p === i ? null : i))
-                    }
+                    onTogglePlay={(i) => {
+                      const turningOff = voicePlayingIdx === i;
+                      setVoicePlayingIdx(turningOff ? null : i);
+                      if (turningOff) {
+                        stopVoicePreview();
+                      } else {
+                        void playVoicePreview(i);
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -635,7 +766,7 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
           (bubble.card.kind === "mood-stats" ? (
             <div
               className="border-t border-white/15"
-              style={{ backgroundColor: "#EAF1DA" }}
+              style={{ backgroundColor: "#FFFFFF" }}
             >
               <Attachment kind={bubble.card.kind} />
             </div>
@@ -783,7 +914,9 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
     const pillText = "#1F3D1B";
     const grid = "rgba(31, 61, 27, 0.10)";
     const labelText = "rgba(31, 61, 27, 0.55)";
-    const surface = "#EAF1DA";
+    // Used for the small outline ring on the pill endpoint dots — must
+    // match the card surface so the dot reads as "punched into" the card.
+    const surface = "#FFFFFF";
 
     return (
       <div className="px-4 py-4">
@@ -917,53 +1050,8 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
 }
 
 // ── Voice picker ─────────────────────────────────────────────────────────────
-
-type IntroVoice = {
-  id: number;
-  name: string;
-  photo: string;
-  objectPosition: string;
-  zoom?: number;
-  desc: string;
-};
-
-const INTRO_VOICES: IntroVoice[] = [
-  {
-    id: 1,
-    name: "Aria",
-    photo: "/voices/photo1.jpg",
-    objectPosition: "49% 33%",
-    zoom: 1.3,
-    desc: "A calming, compassionate voice with a warm tone.",
-  },
-  {
-    id: 2,
-    name: "Sol",
-    photo: "/voices/photo2.jpg",
-    objectPosition: "51% 37%",
-    zoom: 1.3,
-    desc: "A nurturing voice with a soft, thoughtful tone.",
-  },
-  {
-    id: 3,
-    name: "Wren",
-    photo: "/voices/photo3.jpg",
-    objectPosition: "52% 34%",
-    zoom: 1.3,
-    desc: "A confident, reassuring voice with a deep, rich tone.",
-  },
-  {
-    id: 4,
-    name: "Kit",
-    photo: "/voices/photo4.jpg",
-    objectPosition: "47% 45%",
-    desc: "A soothing, articulate voice with a calm demeanor.",
-  },
-];
-
-const VOICE_CARD_W = 264;
-const VOICE_CARD_GAP = 14;
-const VOICE_PEEK = 32;
+// Picker carousel + card UI live in yuna-settings-shared so the Personalize
+// drawer can use the same component. Intro adds the language/pace pills below.
 
 function VoicePicker({
   selectedIdx,
@@ -976,113 +1064,15 @@ function VoicePicker({
   playingIdx: number | null;
   onTogglePlay: (idx: number) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({
-    active: false,
-    startX: 0,
-    startScroll: 0,
-    moved: 0,
-    pointerId: 0,
-  });
-  // Click-suppression flag: a drag larger than the threshold consumes the
-  // pointerup-driven click so the underlying card doesn't fire onSelect again.
-  const suppressNextClickRef = useRef(false);
-
-  const cardStep = VOICE_CARD_W + VOICE_CARD_GAP;
-  const DRAG_THRESHOLD = 6;
-
-  const snapTo = (idx: number, smooth = true) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const clamped = Math.max(0, Math.min(INTRO_VOICES.length - 1, idx));
-    el.scrollTo({
-      left: clamped * cardStep,
-      behavior: smooth ? "smooth" : "auto",
-    });
-    onSelect(clamped);
-  };
-
-  const handleCardClick = (idx: number) => {
-    if (suppressNextClickRef.current) {
-      suppressNextClickRef.current = false;
-      return;
-    }
-    snapTo(idx);
-  };
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Native touch scrolling already feels right; only intercept mouse drags.
-    if (e.pointerType !== "mouse") return;
-    const el = scrollRef.current;
-    if (!el) return;
-    dragRef.current = {
-      active: true,
-      startX: e.clientX,
-      startScroll: el.scrollLeft,
-      moved: 0,
-      pointerId: e.pointerId,
-    };
-    el.setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = dragRef.current;
-    if (!d.active || e.pointerId !== d.pointerId) return;
-    const delta = e.clientX - d.startX;
-    d.moved = Math.max(d.moved, Math.abs(delta));
-    const el = scrollRef.current;
-    if (el) el.scrollLeft = d.startScroll - delta;
-  };
-
-  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = dragRef.current;
-    if (!d.active || e.pointerId !== d.pointerId) return;
-    const el = scrollRef.current;
-    d.active = false;
-    if (el && el.hasPointerCapture(e.pointerId)) {
-      el.releasePointerCapture(e.pointerId);
-    }
-    if (d.moved > DRAG_THRESHOLD && el) {
-      suppressNextClickRef.current = true;
-      const idx = Math.round(el.scrollLeft / cardStep);
-      snapTo(idx);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-7">
-      <div
-        ref={scrollRef}
-        className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
-        style={{
-          gap: VOICE_CARD_GAP,
-          paddingLeft: VOICE_PEEK,
-          paddingRight: VOICE_PEEK,
-          paddingTop: 6,
-          paddingBottom: 6,
-          scrollPaddingLeft: VOICE_PEEK,
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-          touchAction: "pan-x",
-        }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-      >
-        {INTRO_VOICES.map((voice, idx) => (
-          <VoiceIntroCard
-            key={voice.id}
-            voice={voice}
-            active={idx === selectedIdx}
-            playing={playingIdx === idx}
-            onSelect={() => handleCardClick(idx)}
-            onTogglePlay={() => onTogglePlay(idx)}
-          />
-        ))}
-        <style>{`.voice-carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
-      </div>
-
+      <IntroVoicePicker
+        selectedIdx={selectedIdx}
+        onSelect={onSelect}
+        playingIdx={playingIdx}
+        onTogglePlay={onTogglePlay}
+        surface="dark"
+      />
       <VoiceControlPills />
     </div>
   );
@@ -1149,123 +1139,6 @@ function SpeedPillIcon() {
       />
       <line x1="7.5" y1="10.5" x2="10" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
       <circle cx="7.5" cy="10.5" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function VoiceIntroCard({
-  voice,
-  active,
-  playing,
-  onSelect,
-  onTogglePlay,
-}: {
-  voice: IntroVoice;
-  active: boolean;
-  playing: boolean;
-  onSelect: () => void;
-  onTogglePlay: () => void;
-}) {
-  return (
-    <div
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-      className={
-        "relative shrink-0 rounded-2xl overflow-hidden snap-start transition-all duration-200 cursor-pointer " +
-        (active
-          ? "ring-2 ring-white shadow-lg scale-100"
-          : "ring-1 ring-white/15 opacity-80 scale-[0.97]")
-      }
-      style={{
-        width: VOICE_CARD_W,
-        aspectRatio: "332 / 428",
-        background: "#0e2a18",
-      }}
-    >
-      <img
-        src={voice.photo}
-        alt=""
-        draggable={false}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        style={{
-          objectFit: "cover",
-          objectPosition: voice.objectPosition,
-          transform: voice.zoom ? `scale(${voice.zoom})` : undefined,
-          transformOrigin: voice.zoom ? "50% 0%" : undefined,
-        }}
-      />
-
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,0.85) 100%)",
-        }}
-      />
-
-      {active && (
-        <div
-          className="absolute h-6 w-6 rounded-full flex items-center justify-center"
-          style={{
-            top: 10,
-            right: 10,
-            background: "rgba(255,255,255,0.95)",
-            color: "#0e2a18",
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M5 12.5l4.5 4.5L19 7"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      )}
-
-      <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2.5">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePlay();
-          }}
-          type="button"
-          className="self-start flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm active:bg-white/25"
-          aria-label={playing ? "Pause voice preview" : "Play voice preview"}
-        >
-          {playing ? <PausePill /> : <PlayPill />}
-          <span className="font-sans-ui text-[10px] tracking-[0.1em] uppercase text-white">
-            {playing ? "Pause" : "Play"}
-          </span>
-        </button>
-        <p className="text-[15px] leading-snug text-white/95">{voice.desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function PlayPill() {
-  return (
-    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
-      <path d="M1 1L7 4.5L1 8V1Z" fill="white" />
-    </svg>
-  );
-}
-
-function PausePill() {
-  return (
-    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
-      <rect x="0.5" y="1" width="2.4" height="7" rx="0.8" fill="white" />
-      <rect x="5.1" y="1" width="2.4" height="7" rx="0.8" fill="white" />
     </svg>
   );
 }
