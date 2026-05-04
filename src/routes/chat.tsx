@@ -27,10 +27,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
-import {
-  FIRST_TIME_SUGGESTIONS,
-  SuggestionChips,
-} from "@/components/SuggestionChips";
+import { FIRST_TIME_SUGGESTIONS, SuggestionChips } from "@/components/SuggestionChips";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -39,10 +36,12 @@ export const Route = createFileRoute("/chat")({
     q?: string;
     callEnded?: string;
     callDuration?: string;
+    revisit?: string;
   } => ({
     q: (s.q as string | undefined) ?? "",
     callEnded: s.callEnded as string | undefined,
     callDuration: s.callDuration as string | undefined,
+    revisit: s.revisit as string | undefined,
   }),
   head: () => ({
     meta: [
@@ -109,12 +108,24 @@ function acknowledgeChoice(initial: string): string {
   return "Thank you for sharing that.";
 }
 
+// Treat any opener that doesn't match a suggestion chip as a real share
+// — we want Yuna to reflect on it after the onboarding gate, not reset.
+function isCustomInitial(initial: string): boolean {
+  const v = initial.trim().toLowerCase();
+  if (!v) return false;
+  if (v.includes("specific")) return false;
+  if (v.includes("guide")) return false;
+  if (v.includes("how yuna works")) return false;
+  if (v.includes("tell me more")) return false;
+  return true;
+}
+
 function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 function Chat() {
-  const { q, callEnded, callDuration } = Route.useSearch();
+  const { q, callEnded, callDuration, revisit } = Route.useSearch();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -199,10 +210,11 @@ function Chat() {
     setHasChatted();
 
     const isReturnFromCall = !!callEnded && !!callDuration;
-    // Returning from a voice call: keep the chat the user already had and
-    // append a summary. Anything else (a fresh `q` from Home, or a clean
-    // open) starts a new thread.
-    const seed: Msg[] = isReturnFromCall ? loadStoredMessages() : [];
+    const isRevisit = revisit === "1" || revisit === "true";
+    // Returning from a voice call OR revisiting from wrap-up: keep the
+    // existing chat. Anything else (a fresh `q` from Home, or a clean open)
+    // starts a new thread.
+    const seed: Msg[] = isReturnFromCall || isRevisit ? loadStoredMessages() : [];
 
     if (isReturnFromCall) {
       const ended = new Date(Number(callEnded));
@@ -218,8 +230,9 @@ function Chat() {
         endedAt: fmtTime(ended),
         durationLabel: `${mm}:${ss}`,
       });
-    } else {
-      // Any non-call entry starts a fresh thread — wipe the persisted log.
+    } else if (!isRevisit) {
+      // Any non-call, non-revisit entry starts a fresh thread — wipe the
+      // persisted log so the next conversation begins clean.
       clearStoredMessages();
       if (q) {
         seed.push({ id: uid(), from: "you", kind: "text", text: q });
@@ -228,7 +241,7 @@ function Chat() {
     }
 
     setMessages(seed);
-    if (q && !isReturnFromCall) respondToInitial(q);
+    if (q && !isReturnFromCall && !isRevisit) respondToInitial(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -327,20 +340,27 @@ function Chat() {
     void drainTtsQueue();
   };
 
-  const respondClaude = async (newUserText: string) => {
-    // Build the conversation Claude sees: every prior text turn plus the
-    // user's just-sent message. System messages (limitations, voice-pitch,
-    // call-summary) are UI artifacts and don't belong in the API call.
-    const conversation = [
-      ...messages
-        .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
-        .map((m) => ({
-          role: m.from === "you" ? "user" : "assistant",
-          content: m.text,
-        })),
-      { role: "user", content: newUserText },
-    ];
+  // Hard-stop the TTS pipeline. Used when handing off to the call screen so
+  // chat's in-flight utterance doesn't talk over the call's opener, and on
+  // unmount as a belt-and-suspenders.
+  const stopTts = () => {
+    ttsQueueRef.current = [];
+    ttsBusyRef.current = false;
+    const el = ttsAudioRef.current;
+    if (el) {
+      el.onended = null;
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    }
+  };
 
+  // Stream a Yuna reply from the chat API given an explicit conversation.
+  // Returns whether a bubble was rendered + the final text so callers can
+  // decide on fallbacks.
+  const streamYunaReply = async (
+    conversation: { role: string; content: string }[],
+  ): Promise<{ ok: boolean; bubbleAdded: boolean; text: string }> => {
     setTyping(true);
     const bubbleId = uid();
     let buffer = "";
@@ -353,13 +373,12 @@ function Chat() {
         setMessages((m) => [...m, { id: bubbleId, from: "yuna", kind: "text", text }]);
       } else {
         setMessages((m) =>
-          m.map((x) =>
-            x.id === bubbleId && x.kind === "text" ? { ...x, text } : x,
-          ),
+          m.map((x) => (x.id === bubbleId && x.kind === "text" ? { ...x, text } : x)),
         );
       }
     };
 
+    let finalText = "";
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -372,7 +391,6 @@ function Chat() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let pending = "";
-      let finalText = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -404,20 +422,38 @@ function Chat() {
         }
       }
       if (finalText) speakIfEnabled(finalText);
+      return { ok: true, bubbleAdded, text: finalText };
     } catch (err) {
       console.error("Claude error", err);
       setTyping(false);
-      if (!bubbleAdded) {
-        setMessages((m) => [
-          ...m,
-          {
-            id: uid(),
-            from: "yuna",
-            kind: "text",
-            text: "I'm having trouble connecting right now. Could we try again in a moment?",
-          },
-        ]);
-      }
+      return { ok: false, bubbleAdded, text: "" };
+    }
+  };
+
+  const respondClaude = async (newUserText: string) => {
+    // Build the conversation Claude sees: every prior text turn plus the
+    // user's just-sent message. System messages (limitations, voice-pitch,
+    // call-summary) are UI artifacts and don't belong in the API call.
+    const conversation = [
+      ...messages
+        .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
+        .map((m) => ({
+          role: m.from === "you" ? "user" : "assistant",
+          content: m.text,
+        })),
+      { role: "user", content: newUserText },
+    ];
+    const result = await streamYunaReply(conversation);
+    if (!result.ok && !result.bubbleAdded) {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          from: "yuna",
+          kind: "text",
+          text: "I'm having trouble connecting right now. Could we try again in a moment?",
+        },
+      ]);
     }
   };
 
@@ -426,10 +462,7 @@ function Chat() {
     setTyping(true);
     setTimeout(() => {
       const ackText = acknowledgeChoice(initial);
-      setMessages((m) => [
-        ...m,
-        { id: uid(), from: "yuna", kind: "text", text: ackText },
-      ]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ackText }]);
       setTyping(false);
       speakIfEnabled(ackText);
       setTimeout(() => {
@@ -479,9 +512,7 @@ function Chat() {
   const startVoiceNote = () => {
     if (recordingVoice || pendingLimitations) return;
     if (!isSpeechRecognitionSupported()) {
-      alert(
-        "Voice notes need a browser that supports speech recognition (try Chrome or Safari).",
-      );
+      alert("Voice notes need a browser that supports speech recognition (try Chrome or Safari).");
       return;
     }
     setText("");
@@ -512,12 +543,15 @@ function Chat() {
   };
 
   // If the user navigates away or the limitations gate trips while recording,
-  // tear down the recognition so the mic indicator doesn't persist.
+  // tear down the recognition so the mic indicator doesn't persist. Also
+  // stop any in-flight TTS so the chat voice doesn't bleed into /call.
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
       recognitionRef.current = null;
+      stopTts();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkLimitation = (msgId: string, itemId: string) => {
@@ -526,9 +560,7 @@ function Chat() {
         if (m.id !== msgId || m.kind !== "limitations") return m;
         return {
           ...m,
-          items: m.items.map((i) =>
-            i.id === itemId && !i.checked ? { ...i, checked: true } : i,
-          ),
+          items: m.items.map((i) => (i.id === itemId && !i.checked ? { ...i, checked: true } : i)),
         };
       }),
     );
@@ -547,19 +579,13 @@ function Chat() {
     setTyping(true);
     setTimeout(() => {
       const thanksText = "Thanks, now let's get into it.";
-      setMessages((m) => [
-        ...m,
-        { id: uid(), from: "yuna", kind: "text", text: thanksText },
-      ]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: thanksText }]);
       setTyping(false);
       speakIfEnabled(thanksText);
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
-          setMessages((m) => [
-            ...m,
-            { id: uid(), from: "system", kind: "voice-pitch" },
-          ]);
+          setMessages((m) => [...m, { id: uid(), from: "system", kind: "voice-pitch" }]);
           setTyping(false);
           setVoicePitchActive(true);
           VOICE_PITCH_SPOKEN_LINES.forEach(speakIfEnabled);
@@ -572,21 +598,52 @@ function Chat() {
 
   const dismissVoicePitch = () => {
     setVoicePitchActive(false);
+
+    // Suggestion-chip openers haven't surfaced anything substantive yet, so
+    // a canned re-engagement reads warmly. A custom opener (e.g. "I just
+    // lost my dog") is a real share — let Yuna actually respond to it
+    // instead of pivoting to "What feels most present right now?".
+    if (isCustomInitial(initialPromptRef.current)) {
+      const conversation = messages
+        .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
+        .map((m) => ({
+          role: m.from === "you" ? "user" : "assistant",
+          content: m.text,
+        }));
+      // Hidden cue — sent only to the API, never persisted to chat state.
+      // Tells Yuna to honor the share she briefly acknowledged earlier
+      // before the limitations gate broke the rhythm.
+      conversation.push({
+        role: "user",
+        content:
+          "(I just finished tapping through the acknowledgements. Please pick our conversation back up — gently reflect on what I shared at the start, in your own words, then ask one warm open follow-up. Don't restart, don't repeat lines you've already used, and don't reference this bracketed note.)",
+      });
+      void streamYunaReply(conversation).then((r) => {
+        if (!r.ok && !r.bubbleAdded) {
+          const fallback = followUpAfterLimitations(initialPromptRef.current);
+          setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: fallback }]);
+          speakIfEnabled(fallback);
+        }
+      });
+      return;
+    }
+
     setTyping(true);
     setTimeout(() => {
       const followText = followUpAfterLimitations(initialPromptRef.current);
-      setMessages((m) => [
-        ...m,
-        { id: uid(), from: "yuna", kind: "text", text: followText },
-      ]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: followText }]);
       setTyping(false);
       speakIfEnabled(followText);
     }, 900);
   };
 
-  const endChat = () => navigate({ to: "/home" });
+  const endChat = () => navigate({ to: "/wrap-up" });
 
   const openCall = () => {
+    // Hush the chat voice the moment the user commits to switching — the mic
+    // dialog and any subsequent navigation can take a beat, and we don't want
+    // "Want to give me a call?" still finishing while the call screen loads.
+    stopTts();
     setMicState("idle");
     setMicOpen(true);
   };
@@ -669,108 +726,103 @@ function Chat() {
                 <PhoneCallIcon />
                 Continue Over Voice
               </Button>
-              <Button
-                surface="light"
-                variant="ghost"
-                fullWidth
-                onClick={dismissVoicePitch}
-              >
+              <Button surface="light" variant="ghost" fullWidth onClick={dismissVoicePitch}>
                 Keep Texting
               </Button>
             </div>
           ) : (
             <>
-          {!messages.some((m) => m.from === "you") && (
-            <SuggestionChips
-              suggestions={FIRST_TIME_SUGGESTIONS}
-              onSelect={(s) => sendText(s)}
-              disabled={pendingLimitations}
-              vertical
-              align="end"
-              className="px-5 pt-3"
-            />
-          )}
-          <form onSubmit={send} className="px-5 pt-3">
-            <div
-              className={
-                "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background transition-colors " +
-                (recordingVoice
-                  ? "border border-foreground"
-                  : "hairline focus-within:border-foreground")
-              }
-            >
-              {recordingVoice && (
-                <span
-                  aria-hidden="true"
-                  className="h-2 w-2 rounded-full bg-destructive shrink-0"
-                  style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+              {!messages.some((m) => m.from === "you") && (
+                <SuggestionChips
+                  suggestions={FIRST_TIME_SUGGESTIONS}
+                  onSelect={(s) => sendText(s)}
+                  disabled={pendingLimitations}
+                  vertical
+                  align="end"
+                  className="px-5 pt-3"
                 />
               )}
-              <input
-                ref={inputRef}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onFocus={() => setInputFocused(true)}
-                onBlur={() => setInputFocused(false)}
-                placeholder={
-                  pendingLimitations
-                    ? "Tap each checkmark above to continue"
-                    : recordingVoice
-                      ? "Listening…"
-                      : "Write to Yuna…"
-                }
-                readOnly={recordingVoice}
-                disabled={pendingLimitations}
-                className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0 disabled:opacity-60"
-              />
-              <Button
-                surface="light"
-                variant={recordingVoice ? "primary" : "ghost"}
-                size="icon-sm"
-                type="button"
-                pressed={recordingVoice}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
-                aria-label={recordingVoice ? "Stop recording and send" : "Record a voice note"}
-                disabled={pendingLimitations}
-              >
-                {recordingVoice ? <CheckIcon /> : <MicIcon />}
-              </Button>
-              <Button
-                surface="light"
-                variant="primary"
-                size="icon-sm"
-                type="submit"
-                onMouseDown={(e) => e.preventDefault()}
-                aria-label="Send"
-                disabled={pendingLimitations || recordingVoice || !text.trim()}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M5 12h14M13 6l6 6-6 6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+              <form onSubmit={send} className="px-5 pt-3">
+                <div
+                  className={
+                    "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background transition-colors " +
+                    (recordingVoice
+                      ? "border border-foreground"
+                      : "hairline focus-within:border-foreground")
+                  }
+                >
+                  {recordingVoice && (
+                    <span
+                      aria-hidden="true"
+                      className="h-2 w-2 rounded-full bg-destructive shrink-0"
+                      style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+                    />
+                  )}
+                  <input
+                    ref={inputRef}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
+                    placeholder={
+                      pendingLimitations
+                        ? "Tap each checkmark above to continue"
+                        : recordingVoice
+                          ? "Listening…"
+                          : "Write to Yuna…"
+                    }
+                    readOnly={recordingVoice}
+                    disabled={pendingLimitations}
+                    className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0 disabled:opacity-60"
                   />
-                </svg>
-              </Button>
-            </div>
-          </form>
+                  <Button
+                    surface="light"
+                    variant={recordingVoice ? "primary" : "ghost"}
+                    size="icon-sm"
+                    type="button"
+                    pressed={recordingVoice}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
+                    aria-label={recordingVoice ? "Stop recording and send" : "Record a voice note"}
+                    disabled={pendingLimitations}
+                  >
+                    {recordingVoice ? <CheckIcon /> : <MicIcon />}
+                  </Button>
+                  <Button
+                    surface="light"
+                    variant="primary"
+                    size="icon-sm"
+                    type="submit"
+                    onMouseDown={(e) => e.preventDefault()}
+                    aria-label="Send"
+                    disabled={pendingLimitations || recordingVoice || !text.trim()}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5 12h14M13 6l6 6-6 6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Button>
+                </div>
+              </form>
 
-          <div
-            className={
-              "px-5 pt-3 pb-6 flex justify-center transition-opacity duration-150 " +
-              (inputFocused
-                ? "opacity-0 pointer-events-none h-0 overflow-hidden p-0"
-                : "opacity-100")
-            }
-          >
-            <Button surface="light" variant="secondary" size="sm" onClick={openCall}>
-              <PhoneCallIcon />
-              Call Yuna
-            </Button>
-          </div>
+              <div
+                className={
+                  "px-5 pt-3 pb-6 flex justify-center transition-opacity duration-150 " +
+                  (inputFocused
+                    ? "opacity-0 pointer-events-none h-0 overflow-hidden p-0"
+                    : "opacity-100")
+                }
+              >
+                <Button surface="light" variant="secondary" size="sm" onClick={openCall}>
+                  <PhoneCallIcon />
+                  Call Yuna
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -818,7 +870,6 @@ function Chat() {
           </div>
         </DialogContent>
       </Dialog>
-
     </PhoneFrame>
   );
 }
@@ -971,15 +1022,10 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
       <div className="max-w-[78%] hairline bg-background rounded-2xl rounded-bl-sm overflow-hidden text-foreground">
         <p className="text-sm leading-relaxed px-4 pt-3 pb-2">
           People who chat with me over voice are{" "}
-          <span className="font-semibold">75% more likely</span> to find value
-          in our conversations.
+          <span className="font-semibold">75% more likely</span> to find value in our conversations.
         </p>
         <div className="px-3 pb-3">
-          <svg
-            viewBox="0 0 280 132"
-            className="w-full block"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 280 132" className="w-full block" aria-hidden="true">
             <defs>
               <linearGradient id="vpVoice" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="currentColor" stopOpacity="0.55" />
@@ -992,9 +1038,33 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
             </defs>
 
             {/* subtle horizontal grid */}
-            <line x1="22" y1="36" x2="266" y2="36" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
-            <line x1="22" y1="68" x2="266" y2="68" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
-            <line x1="22" y1="100" x2="266" y2="100" stroke="currentColor" strokeOpacity="0.08" strokeDasharray="2 3" />
+            <line
+              x1="22"
+              y1="36"
+              x2="266"
+              y2="36"
+              stroke="currentColor"
+              strokeOpacity="0.08"
+              strokeDasharray="2 3"
+            />
+            <line
+              x1="22"
+              y1="68"
+              x2="266"
+              y2="68"
+              stroke="currentColor"
+              strokeOpacity="0.08"
+              strokeDasharray="2 3"
+            />
+            <line
+              x1="22"
+              y1="100"
+              x2="266"
+              y2="100"
+              stroke="currentColor"
+              strokeOpacity="0.08"
+              strokeDasharray="2 3"
+            />
 
             {/* text chat (muted, dashed) */}
             <path
@@ -1025,24 +1095,61 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
             />
 
             {/* axes */}
-            <line x1="22" y1="14" x2="22" y2="120" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round" />
-            <line x1="22" y1="118" x2="266" y2="118" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round" />
+            <line
+              x1="22"
+              y1="14"
+              x2="22"
+              y2="120"
+              stroke="currentColor"
+              strokeOpacity="0.5"
+              strokeWidth="1"
+              strokeLinecap="round"
+            />
+            <line
+              x1="22"
+              y1="118"
+              x2="266"
+              y2="118"
+              stroke="currentColor"
+              strokeOpacity="0.5"
+              strokeWidth="1"
+              strokeLinecap="round"
+            />
 
             {/* endpoint dots */}
             <circle cx="266" cy="10" r="3" fill="currentColor" />
             <circle cx="266" cy="68" r="2.5" fill="currentColor" fillOpacity="0.45" />
 
             {/* in-line legend at endpoints */}
-            <text x="260" y="6" textAnchor="end" fill="currentColor" fontSize="7" letterSpacing="1.6" className="font-sans-ui">VOICE</text>
-            <text x="260" y="64" textAnchor="end" fill="currentColor" fillOpacity="0.55" fontSize="7" letterSpacing="1.6" className="font-sans-ui">TEXT</text>
+            <text
+              x="260"
+              y="6"
+              textAnchor="end"
+              fill="currentColor"
+              fontSize="7"
+              letterSpacing="1.6"
+              className="font-sans-ui"
+            >
+              VOICE
+            </text>
+            <text
+              x="260"
+              y="64"
+              textAnchor="end"
+              fill="currentColor"
+              fillOpacity="0.55"
+              fontSize="7"
+              letterSpacing="1.6"
+              className="font-sans-ui"
+            >
+              TEXT
+            </text>
           </svg>
           <p className="font-sans-ui text-[8.5px] tracking-[0.22em] uppercase text-muted-foreground text-center -mt-1">
             Reported positive impact
           </p>
         </div>
-        <p className="text-sm leading-relaxed px-4 pt-1 pb-3">
-          Want to give me a call?
-        </p>
+        <p className="text-sm leading-relaxed px-4 pt-1 pb-3">Want to give me a call?</p>
       </div>
     </div>
   );
