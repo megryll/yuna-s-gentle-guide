@@ -27,18 +27,18 @@ function devApiMiddleware(): Plugin {
         if (
           req.url !== "/api/tts" &&
           req.url !== "/api/chat" &&
+          req.url !== "/api/wrap-up" &&
           !req.url?.startsWith("/api/tts?") &&
-          !req.url?.startsWith("/api/chat?")
+          !req.url?.startsWith("/api/chat?") &&
+          !req.url?.startsWith("/api/wrap-up?")
         ) {
           return next();
         }
 
-        const { handleChat, handleTts } = await server.ssrLoadModule(
-          "/api/_handlers.mjs",
-        );
+        const { handleChat, handleTts, handleWrapUp } =
+          await server.ssrLoadModule("/api/_handlers.mjs");
 
-        const protocol =
-          (req.headers["x-forwarded-proto"] as string | undefined) || "http";
+        const protocol = (req.headers["x-forwarded-proto"] as string | undefined) || "http";
         const host = req.headers.host || "localhost";
         const url = `${protocol}://${host}${req.url}`;
 
@@ -58,7 +58,11 @@ function devApiMiddleware(): Plugin {
         const request = new Request(url, { method: req.method, headers, body });
         const path = req.url?.split("?")[0];
         const response =
-          path === "/api/tts" ? await handleTts(request) : await handleChat(request);
+          path === "/api/tts"
+            ? await handleTts(request)
+            : path === "/api/wrap-up"
+              ? await handleWrapUp(request)
+              : await handleChat(request);
 
         res.statusCode = response.status;
         response.headers.forEach((value, key) => res.setHeader(key, value));

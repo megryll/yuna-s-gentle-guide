@@ -10,17 +10,14 @@ import {
   startRecognition,
   type RecognitionHandle,
 } from "@/lib/speech";
-import {
-  chatUid,
-  loadStoredMessages,
-  saveStoredMessages,
-  type ChatMsg,
-} from "@/lib/chat-store";
+import { chatUid, loadStoredMessages, saveStoredMessages, type ChatMsg } from "@/lib/chat-store";
 import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { Button } from "@/components/Button";
 
 export const Route = createFileRoute("/call")({
-  validateSearch: (s: Record<string, unknown>): {
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): {
     voice?: string;
     returnTo?: string;
   } => ({
@@ -28,10 +25,7 @@ export const Route = createFileRoute("/call")({
     returnTo: (s.returnTo as string | undefined) ?? "home",
   }),
   head: () => ({
-    meta: [
-      { title: "Calling Yuna" },
-      { name: "description", content: "A voice call with Yuna." },
-    ],
+    meta: [{ title: "Calling Yuna" }, { name: "description", content: "A voice call with Yuna." }],
   }),
   component: CallScreen,
 });
@@ -322,8 +316,7 @@ function CallScreen() {
       } catch (err) {
         if (endedRef.current) return;
         console.error("Call chat error", err);
-        const fallback =
-          "I'm having trouble connecting right now. Could we try again in a moment?";
+        const fallback = "I'm having trouble connecting right now. Could we try again in a moment?";
         setYunaSpoken(fallback);
         setPhase("speaking");
         await speak(fallback);
@@ -421,6 +414,9 @@ function CallScreen() {
     }
     // History is already in sessionStorage via saveStoredMessages on every turn.
     if (returnTo === "chat") {
+      // Mid-session call inside an open chat thread — drop the user back
+      // into the chat with a summary card. The full session ends (and
+      // wrap-up runs) when the user closes the chat with the X.
       navigate({
         to: "/chat",
         search: {
@@ -430,7 +426,9 @@ function CallScreen() {
         },
       });
     } else {
-      navigate({ to: "/home" });
+      // Standalone call — go straight to wrap-up. The persisted call turns
+      // become the transcript the keepsake is distilled from.
+      navigate({ to: "/wrap-up" });
     }
   }, [navigate, returnTo, seconds]);
 
@@ -482,9 +480,11 @@ function CallScreen() {
               </>
             )}
             <div className="relative h-32 w-32 rounded-full hairline overflow-hidden flex items-center justify-center bg-background">
-              {avatar
-                ? <YunaAvatar variant={avatar} size={128} />
-                : <span className="h-3 w-3 rounded-full bg-foreground" />}
+              {avatar ? (
+                <YunaAvatar variant={avatar} size={128} />
+              ) : (
+                <span className="h-3 w-3 rounded-full bg-foreground" />
+              )}
             </div>
           </div>
 
@@ -499,11 +499,7 @@ function CallScreen() {
               We deliberately don't render the live transcript while the
               user is talking — the waveform below is the "we hear you" signal. */}
           <div className="mt-6 w-full max-w-[20rem] min-h-[100px] flex flex-col items-center text-center gap-2">
-            {yunaSpoken && (
-              <p className="text-sm leading-relaxed text-foreground">
-                {yunaSpoken}
-              </p>
-            )}
+            {yunaSpoken && <p className="text-sm leading-relaxed text-foreground">{yunaSpoken}</p>}
           </div>
 
           {/* Spacer that vertically centres the waveform between Yuna's
@@ -526,12 +522,7 @@ function CallScreen() {
               onClick={toggleSpeaker}
               icon={<SpeakerIcon />}
             />
-            <CallButton
-              label="End Call"
-              destructive
-              onClick={endCall}
-              icon={<EndIcon />}
-            />
+            <CallButton label="End Call" destructive onClick={endCall} icon={<EndIcon />} />
           </div>
         </div>
       </div>
@@ -572,7 +563,12 @@ function MicIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M5 11a7 7 0 0 0 14 0M12 18v3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -580,23 +576,49 @@ function MicOffIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M9 9v3a3 3 0 0 0 4.7 2.5M15 12V6a3 3 0 0 0-5.7-1.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M5 11a7 7 0 0 0 11.6 5.3M19 11a7 7 0 0 1-.5 2.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M9 9v3a3 3 0 0 0 4.7 2.5M15 12V6a3 3 0 0 0-5.7-1.3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5 11a7 7 0 0 0 11.6 5.3M19 11a7 7 0 0 1-.5 2.6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function SpeakerIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M4 10v4h4l5 4V6L8 10H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M16 9c1.2 1 1.2 5 0 6M19 6c2.5 2 2.5 10 0 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M4 10v4h4l5 4V6L8 10H4z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 9c1.2 1 1.2 5 0 6M19 6c2.5 2 2.5 10 0 12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 function EndIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M3 14c5-5 13-5 18 0l-2 2-3-1v-2a10 10 0 0 0-8 0v2l-3 1-2-2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" transform="rotate(135 12 12)" />
+      <path
+        d="M3 14c5-5 13-5 18 0l-2 2-3-1v-2a10 10 0 0 0-8 0v2l-3 1-2-2z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        transform="rotate(135 12 12)"
+      />
     </svg>
   );
 }
@@ -652,10 +674,7 @@ function VoiceWaveform({ active }: { active: boolean }) {
         // normalise by the worst-case sum (1 + 0.35) so |wave| ≤ 1 and the
         // line can never overshoot `amp` — otherwise peaks get clipped at
         // the top/bottom of the SVG.
-        const wave =
-          (Math.sin(t * 7 + phase) +
-            Math.sin(t * 13 + phase * 1.4) * 0.35) /
-          1.35;
+        const wave = (Math.sin(t * 7 + phase) + Math.sin(t * 13 + phase * 1.4) * 0.35) / 1.35;
         // Taper amplitude near both ends so the line eases into the centre
         // line at the screen edges instead of cutting off mid-wave.
         const taper = Math.sin(t * Math.PI);
@@ -674,8 +693,7 @@ function VoiceWaveform({ active }: { active: boolean }) {
         }
         const Ctx: typeof AudioContext =
           window.AudioContext ??
-          (window as unknown as { webkitAudioContext: typeof AudioContext })
-            .webkitAudioContext;
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         audioCtx = new Ctx();
         const source = audioCtx.createMediaStreamSource(stream);
         analyser = audioCtx.createAnalyser();
@@ -755,10 +773,7 @@ function VoiceWaveform({ active }: { active: boolean }) {
 //   - Prior chat history    → stream a short continuation from Claude with
 //                             a gentle "you just switched to voice" nudge so
 //                             the line picks up where things left off.
-async function composeGreeting(
-  history: ChatMsg[],
-  returnTo: string | undefined,
-): Promise<string> {
+async function composeGreeting(history: ChatMsg[], returnTo: string | undefined): Promise<string> {
   const textTurns = history.filter(
     (m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text",
   );

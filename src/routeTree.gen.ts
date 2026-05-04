@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YouRouteImport } from './routes/you'
+import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeReturningRouteImport } from './routes/home-returning'
@@ -24,6 +25,11 @@ import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 const YouRoute = YouRouteImport.update({
   id: '/you',
   path: '/you',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WrapUpRoute = WrapUpRouteImport.update({
+  id: '/wrap-up',
+  path: '/wrap-up',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgressRoute = ProgressRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/wrap-up'
     | '/you'
     | '/ds/buttons'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/wrap-up'
     | '/you'
     | '/ds/buttons'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/wrap-up'
     | '/you'
     | '/ds/buttons'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   HomeReturningRoute: typeof HomeReturningRoute
   IntroRoute: typeof IntroRoute
   ProgressRoute: typeof ProgressRoute
+  WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
 }
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/you'
       fullPath: '/you'
       preLoaderRoute: typeof YouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wrap-up': {
+      id: '/wrap-up'
+      path: '/wrap-up'
+      fullPath: '/wrap-up'
+      preLoaderRoute: typeof WrapUpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/progress': {
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeReturningRoute: HomeReturningRoute,
   IntroRoute: IntroRoute,
   ProgressRoute: ProgressRoute,
+  WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,
 }

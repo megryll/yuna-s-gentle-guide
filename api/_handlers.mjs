@@ -114,6 +114,147 @@ export async function handleChat(request) {
   });
 }
 
+// Distill the conversation into a single keepsake sentence + a small set of
+// themes. Returns one-shot JSON, not a stream — the wrap-up screen waits for
+// the whole thing before swapping in the keepsake card.
+const WRAP_UP_SYSTEM_PROMPT = `You are Yuna, distilling a conversation you just had with the user into a small keepsake they can carry forward.
+
+You will return ONLY a JSON object, no prose around it, no markdown fences, in this exact shape:
+{ "keepsake": string, "themes": string[] }
+
+The keepsake:
+- One sentence, under 18 words. Speak TO the user, not about them.
+- Present tense, forward-leaning. Never "today you struggled with..." or "you came here feeling..."
+- Sounds like something Yuna might've actually said in the conversation — not a summary, label, or report.
+- Concrete to what came up. Avoid clichés ("trust the process", "be kind to yourself", "you've got this").
+- Don't quote the user's words verbatim — paraphrase what they brought.
+- No reference to "our chat", "today's session", or the conversation itself as an object.
+- Plain text, no quotes around it.
+
+Themes:
+- 0–3 short labels, lowercase, max two words each.
+- Concrete things that surfaced ("rest", "mom", "boundaries", "self-trust", "work stress").
+- Never fabricate. If nothing concrete came up, return [].
+
+If the conversation has almost no substance (e.g. a single greeting), return a gentle generic keepsake about showing up, and themes: [].`;
+
+export async function handleWrapUp(request) {
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "Missing ANTHROPIC_API_KEY" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const transcript = Array.isArray(body?.transcript) ? body.transcript : null;
+  if (!transcript || transcript.length === 0) {
+    return new Response(JSON.stringify({ error: "transcript required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // Render the conversation as a labelled block so Claude's working set
+  // contains the full exchange, then ask for the JSON in one user turn.
+  const rendered = transcript
+    .map((m) => {
+      const who = m.role === "user" ? "User" : "Yuna";
+      return `${who}: ${typeof m.content === "string" ? m.content.trim() : ""}`;
+    })
+    .filter((line) => line.length > 6)
+    .join("\n");
+
+  const client = new Anthropic({ apiKey });
+
+  try {
+    const result = await client.messages.create({
+      model: "claude-opus-4-7",
+      max_tokens: 250,
+      thinking: { type: "disabled" },
+      system: [
+        {
+          type: "text",
+          text: WRAP_UP_SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+      messages: [
+        {
+          role: "user",
+          content: `Here is the conversation:\n\n${rendered}\n\nReturn the JSON now.`,
+        },
+      ],
+    });
+
+    const raw = result.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("")
+      .trim();
+
+    // Be forgiving: strip ```json fences if Claude added them despite instructions.
+    const cleaned = raw
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Could not parse keepsake", raw }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const keepsake =
+      typeof parsed?.keepsake === "string" ? parsed.keepsake.trim() : "";
+    const themes = Array.isArray(parsed?.themes)
+      ? parsed.themes
+          .filter((t) => typeof t === "string")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+          .slice(0, 3)
+      : [];
+
+    if (!keepsake) {
+      return new Response(
+        JSON.stringify({ error: "Empty keepsake from model" }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ keepsake, themes }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 export async function handleTts(request) {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });

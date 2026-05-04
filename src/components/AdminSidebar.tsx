@@ -21,24 +21,18 @@ const PAGES: Entry[] = [
   { label: "Home: Returning", to: "/home-returning" },
   { label: "Chat", to: "/chat" },
   { label: "Call", to: "/call" },
+  { label: "Wrap-up", to: "/wrap-up" },
   { label: "You", to: "/you" },
   { label: "Activities", to: "/activities" },
   { label: "Progress", to: "/progress" },
 ];
 
-const DS_PAGES: Entry[] = [
-  { label: "Buttons", to: "/ds/buttons" },
-];
+const DS_PAGES: Entry[] = [{ label: "Buttons", to: "/ds/buttons" }];
 
 function readStep(search: unknown): number | undefined {
   if (!search || typeof search !== "object") return undefined;
   const raw = (search as Record<string, unknown>).step;
-  const n =
-    typeof raw === "number"
-      ? raw
-      : typeof raw === "string"
-        ? Number(raw)
-        : NaN;
+  const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
   return Number.isFinite(n) ? n : undefined;
 }
 
@@ -79,11 +73,7 @@ export function AdminSidebar() {
         Design System
       </div>
       {DS_PAGES.map((p) => (
-        <NavLink
-          key={p.to}
-          entry={p}
-          active={isEntryActive(p, currentPath, currentStep)}
-        />
+        <NavLink key={p.to} entry={p} active={isEntryActive(p, currentPath, currentStep)} />
       ))}
     </aside>
   );

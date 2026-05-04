@@ -266,4 +266,39 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
   }
+
+  /* Slow gradient sweep used by the wrap-up's "ready to reveal" card. The
+     animated background is layered on top of the card's own surface so
+     content underneath stays readable. */
+  .keepsake-shimmer {
+    background-image: linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 25%,
+      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0) 75%
+    );
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    animation: keepsake-shimmer 3.2s ease-in-out infinite;
+  }
+  @keyframes keepsake-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -100% 0; }
+  }
+
+  /* Periodic gentle shake on the wrap-up's "ready to reveal" card. Most of
+     the cycle sits at rest so the motion reads as "look at me" instead of
+     a constant jitter. */
+  .keepsake-attention {
+    animation: keepsake-attention 3.4s ease-in-out infinite;
+  }
+  @keyframes keepsake-attention {
+    0%, 86%, 100% { transform: translateX(0); }
+    88% { transform: translateX(-3px); }
+    90% { transform: translateX(3px); }
+    92% { transform: translateX(-2.5px); }
+    94% { transform: translateX(2.5px); }
+    96% { transform: translateX(-1.5px); }
+    98% { transform: translateX(1.5px); }
+  }
 }
