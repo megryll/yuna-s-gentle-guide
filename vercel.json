@@ -2,6 +2,8 @@
   "outputDirectory": "dist/client",
   "routes": [
     { "handle": "filesystem" },
+    { "src": "/api/tts", "dest": "/api/tts" },
+    { "src": "/api/chat", "dest": "/api/chat" },
     { "src": "/.*", "dest": "/api/index" }
   ]
 }
