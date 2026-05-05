@@ -23,7 +23,8 @@ const PAGES: Entry[] = [
   { label: "Call", to: "/call" },
   { label: "Wrap-up", to: "/wrap-up" },
   { label: "You", to: "/you" },
-  { label: "Activities", to: "/activities" },
+  { label: "Activities: New", to: "/activities" },
+  { label: "Activities: Returning", to: "/activities-returning" },
   { label: "Progress", to: "/progress" },
 ];
 

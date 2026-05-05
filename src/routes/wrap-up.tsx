@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
+import { YunaMark } from "@/components/YunaMark";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import {
   clearStoredMessages,
@@ -11,6 +11,10 @@ import {
   type ChatMsg,
 } from "@/lib/chat-store";
 import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
+import {
+  PERSONALIZED_ACTIVITIES,
+  type Activity,
+} from "@/lib/activities";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -24,14 +28,18 @@ export const Route = createFileRoute("/wrap-up")({
 
 type Status = "loading" | "ready" | "error";
 
-// Sliders default to neutral — we only persist the value if the user
-// actually moved them, so a "5/5" record can't be confused with "didn't rate."
-const DEFAULT_SLIDER_VALUE = 5;
+// Hold the loading state for a beat even if the LLM resolves early. Keeps
+// the skeleton on screen long enough to read as intentional rather than a
+// flicker.
+const MIN_LOADING_MS = 2500;
 
-// Hold the loading state for a beat even if the LLM resolves early. Gives
-// the user time to settle into the screen and (optionally) fiddle with the
-// sliders before the reveal is offered.
-const MIN_LOADING_MS = 6000;
+// What the wrap-up tells the user Yuna placed for them — the two NEW items
+// from the personalized list. This is the moment the "I made these for you"
+// connection gets formed; it's intentionally just two so it reads as
+// curated, not a content dump.
+const PLACED_FOR_YOU: Activity[] = PERSONALIZED_ACTIVITIES.filter(
+  (a) => a.isNew,
+).slice(0, 2);
 
 function WrapUp() {
   const navigate = useNavigate();
@@ -42,22 +50,11 @@ function WrapUp() {
   const [themes, setThemes] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
-  // The reveal flow is opt-in: even when the LLM has resolved, the user
-  // taps the shimmering card to "open" it. Errors auto-reveal so the
-  // fallback line shows up without a hidden button.
-  const [revealed, setRevealed] = useState(false);
-
-  const [stress, setStress] = useState(DEFAULT_SLIDER_VALUE);
-  const [mood, setMood] = useState(DEFAULT_SLIDER_VALUE);
-  const [stressTouched, setStressTouched] = useState(false);
-  const [moodTouched, setMoodTouched] = useState(false);
 
   const idRef = useRef<string>(keepsakeUid());
-  const transcriptLengthRef = useRef<number>(0);
 
   useEffect(() => {
     const messages = loadStoredMessages();
-    transcriptLengthRef.current = messages.length;
 
     const textTurns = messages
       .filter((m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text")
@@ -117,8 +114,6 @@ function WrapUp() {
         setKeepsake("What you brought is worth carrying with you.");
         setThemes([]);
         setStatus("error");
-        // Errors skip the reveal beat — show the fallback immediately.
-        setRevealed(true);
       }
     })();
 
@@ -133,8 +128,8 @@ function WrapUp() {
       quote: keepsake,
       themes,
       note: note.trim() || undefined,
-      mood: moodTouched ? mood : null,
-      stress: stressTouched ? stress : null,
+      mood: null,
+      stress: null,
       createdAt: Date.now(),
     };
     saveKeepsake(k);
@@ -157,51 +152,55 @@ function WrapUp() {
   const onDone = () => {
     if (saved) persist();
     clearStoredMessages();
-    navigate({ to: "/home" });
+    navigate({ to: "/home-returning" });
   };
+
+  const onViewActivities = () => {
+    if (saved) persist();
+    clearStoredMessages();
+    navigate({ to: "/activities-returning" });
+  };
+
+  const isLoading = status === "loading";
 
   return (
     <PhoneFrame backgroundImage="/background.png">
       <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white min-h-0">
-        {/* Body — scrolls if it overflows on shorter phones */}
-        <div className="flex-1 flex flex-col gap-8 overflow-y-auto -mx-2 px-2 pb-2">
-          {/* Title sits above the card for the entire lifecycle so the user's
-              focal point doesn't shift when content swaps in. */}
-          <h1 className="font-display text-[26px] leading-tight tracking-tight text-white yuna-fade-in">
-            Session highlights
-          </h1>
+        <div className="flex-1 flex flex-col gap-6 overflow-y-auto -mx-2 px-2 pb-2">
+          {isLoading ? (
+            <SkeletonScreen />
+          ) : (
+            <>
+              <h1 className="font-display text-[26px] leading-tight tracking-tight text-white yuna-fade-in">
+                Session highlights
+              </h1>
 
-          <HighlightCard
-            status={status}
-            revealed={revealed}
-            avatar={avatar}
-            keepsake={keepsake}
-            note={note}
-            onNoteChange={setNote}
-            onNoteBlur={handleNoteBlur}
-            saved={saved}
-            onSaveToggle={onSaveToggle}
-            onReveal={() => setRevealed(true)}
-          />
+              <HighlightCard
+                avatar={avatar}
+                keepsake={keepsake}
+                note={note}
+                onNoteChange={setNote}
+                onNoteBlur={handleNoteBlur}
+                saved={saved}
+                onSaveToggle={onSaveToggle}
+              />
 
-          <CheckIn
-            showHeader={!revealed}
-            stress={stress}
-            mood={mood}
-            stressTouched={stressTouched}
-            moodTouched={moodTouched}
-            onStress={(v) => {
-              setStress(v);
-              setStressTouched(true);
-            }}
-            onMood={(v) => {
-              setMood(v);
-              setMoodTouched(true);
-            }}
-          />
+              <PlacedForYou items={PLACED_FOR_YOU} />
+            </>
+          )}
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 flex flex-col gap-2">
+          {!isLoading && (
+            <Button
+              surface="dark"
+              variant="ghost"
+              fullWidth
+              onClick={onViewActivities}
+            >
+              View all activities
+            </Button>
+          )}
           <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
             Done
           </Button>
@@ -211,14 +210,71 @@ function WrapUp() {
   );
 }
 
+// ── Skeleton (full-screen) ──────────────────────────────────────────────────
+// Stand-in for the entire wrap-up while the LLM is working. Stack mirrors
+// the post-load layout (title, card, section header, two activity rows) so
+// the transition feels like content settling into place rather than the
+// screen reflowing.
+function SkeletonScreen() {
+  return (
+    <div aria-busy aria-live="polite" className="flex flex-col gap-6 yuna-fade-in">
+      <SkeletonBar widthClass="w-[55%]" heightClass="h-7" />
+
+      <div className="relative rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-5 py-7 overflow-hidden min-h-[200px]">
+        <span aria-hidden className="absolute inset-0 pointer-events-none keepsake-shimmer" />
+        <div className="relative flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="block h-9 w-9 rounded-full bg-white/15" />
+            <span className="block h-5 w-5 rounded bg-white/15" />
+          </div>
+          <SkeletonBar widthClass="w-[90%]" />
+          <SkeletonBar widthClass="w-[78%]" />
+          <SkeletonBar widthClass="w-[55%]" />
+        </div>
+      </div>
+
+      <div className="pt-1">
+        <SkeletonBar widthClass="w-28" heightClass="h-3" />
+      </div>
+
+      <SkeletonRow />
+      <SkeletonRow />
+    </div>
+  );
+}
+
+function SkeletonRow() {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/[0.04] p-4">
+      <span className="h-10 w-10 shrink-0 rounded-full bg-white/15" />
+      <div className="flex-1 flex flex-col gap-2 pt-1">
+        <SkeletonBar widthClass="w-[55%]" heightClass="h-3" />
+        <SkeletonBar widthClass="w-[80%]" />
+        <SkeletonBar widthClass="w-[65%]" />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonBar({
+  widthClass,
+  heightClass = "h-4",
+}: {
+  widthClass: string;
+  heightClass?: string;
+}) {
+  return (
+    <span
+      className={`block ${heightClass} rounded-full bg-white/15 ${widthClass}`}
+      style={{ animation: "yuna-fade 1.6s ease-in-out infinite alternate" }}
+    />
+  );
+}
+
 // ── Highlight card ──────────────────────────────────────────────────────────
-// One card with three visual states:
-//   loading              — quiet skeleton, "reflecting…" copy
-//   ready (not revealed) — animated gradient sweep + "Reveal" button
-//   revealed | error     — quote, themes, save toggle, note input
+// Single state: the keepsake, save toggle, and note input. Loading is
+// handled at the screen level by SkeletonScreen.
 function HighlightCard({
-  status,
-  revealed,
   avatar,
   keepsake,
   note,
@@ -226,10 +282,7 @@ function HighlightCard({
   onNoteBlur,
   saved,
   onSaveToggle,
-  onReveal,
 }: {
-  status: Status;
-  revealed: boolean;
   avatar: AvatarVariant | null;
   keepsake: string;
   note: string;
@@ -237,229 +290,90 @@ function HighlightCard({
   onNoteBlur: () => void;
   saved: boolean;
   onSaveToggle: () => void;
-  onReveal: () => void;
-}) {
-  if (revealed) {
-    return (
-      <div className="relative rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-sm px-5 py-6 flex flex-col gap-4 yuna-rise overflow-hidden">
-        <div className="flex items-center justify-between">
-          <span className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0">
-            {avatar ? (
-              <YunaAvatar variant={avatar} size={36} />
-            ) : (
-              <span className="h-2 w-2 rounded-full bg-white" />
-            )}
-          </span>
-          <button
-            type="button"
-            onClick={onSaveToggle}
-            aria-pressed={saved}
-            aria-label={saved ? "Unsave highlight" : "Save highlight"}
-            className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors active:scale-95"
-          >
-            <BookmarkIcon filled={saved} />
-          </button>
-        </div>
-
-        <p className="font-display italic text-[22px] leading-[1.35] text-white">
-          {keepsake}
-        </p>
-
-        <div className="pt-2 border-t border-white/12">
-          <input
-            type="text"
-            value={note}
-            onChange={(e) => onNoteChange(e.target.value)}
-            onBlur={onNoteBlur}
-            placeholder="Add a note for yourself…"
-            className="w-full bg-transparent text-sm py-2 outline-none placeholder:text-white/45 text-white"
-            maxLength={140}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Pre-reveal: skeleton bars sit in the back as texture; a centered
-  // overlay carries the actual messaging (spinner + "loading" while we
-  // wait, "your reflection is ready" + Reveal button when the LLM
-  // resolves). On ready, the whole card adds a periodic gentle shake to
-  // pull the user's eye back.
-  const isReady = status === "ready";
-  return (
-    <div
-      aria-busy={status === "loading"}
-      aria-live="polite"
-      className={
-        "relative rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-5 py-8 overflow-hidden yuna-fade-in min-h-[200px] " +
-        (isReady ? "keepsake-attention" : "")
-      }
-    >
-      {/* Shimmer overlay — only animated on ready. */}
-      <span
-        aria-hidden
-        className={
-          "absolute inset-0 pointer-events-none " +
-          (isReady ? "keepsake-shimmer" : "opacity-0")
-        }
-      />
-
-      {/* Skeleton bars sit in document flow as background texture. */}
-      <div className="relative flex flex-col gap-3 opacity-50">
-        <SkeletonBar widthClass="w-[88%]" />
-        <SkeletonBar widthClass="w-[72%]" />
-        <SkeletonBar widthClass="w-[58%]" />
-      </div>
-
-      {/* Centered foreground — the focal copy + action. */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 pointer-events-none">
-        {!isReady ? (
-          <>
-            <Spinner size={22} />
-            <p className="font-sans-ui text-sm tracking-[0.28em] uppercase text-white">
-              loading
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="font-sans-ui text-sm tracking-[0.28em] uppercase text-white">
-              your reflection is ready
-            </p>
-            <button
-              type="button"
-              onClick={onReveal}
-              className="font-sans-ui text-[12px] tracking-[0.2em] uppercase text-white px-5 py-2.5 rounded-full border border-white/80 hover:border-white active:scale-[0.98] transition-transform pointer-events-auto"
-            >
-              Reveal
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SkeletonBar({ widthClass }: { widthClass: string }) {
-  return (
-    <span
-      className={"block h-4 rounded-full bg-white/15 " + widthClass}
-      style={{ animation: "yuna-fade 1.6s ease-in-out infinite alternate" }}
-    />
-  );
-}
-
-// ── Check-in ────────────────────────────────────────────────────────────────
-function CheckIn({
-  showHeader,
-  stress,
-  mood,
-  stressTouched,
-  moodTouched,
-  onStress,
-  onMood,
-}: {
-  showHeader: boolean;
-  stress: number;
-  mood: number;
-  stressTouched: boolean;
-  moodTouched: boolean;
-  onStress: (v: number) => void;
-  onMood: (v: number) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 yuna-rise">
-      {showHeader && (
-        <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/65">
-          While you&apos;re waiting…
-        </p>
-      )}
-      <SliderRow
-        leftLabel="LOW STRESS"
-        rightLabel="HIGH STRESS"
-        value={stress}
-        touched={stressTouched}
-        onChange={onStress}
-      />
-      <SliderRow
-        leftLabel="GOOD MOOD"
-        rightLabel="BAD MOOD"
-        value={mood}
-        touched={moodTouched}
-        onChange={onMood}
-      />
-    </div>
-  );
-}
-
-// Same convention for both sliders: leftward (low value) = positive (green),
-// rightward (high value) = negative (orange). Untouched stays muted so the
-// user can tell whether they've actually rated it.
-function SliderRow({
-  leftLabel,
-  rightLabel,
-  value,
-  touched,
-  onChange,
-}: {
-  leftLabel: string;
-  rightLabel: string;
-  value: number;
-  touched: boolean;
-  onChange: (v: number) => void;
-}) {
-  const fillClass = !touched
-    ? "bg-white/85"
-    : value <= 5
-      ? "bg-gradient-to-r from-emerald-300 to-emerald-500"
-      : "bg-gradient-to-r from-amber-300 to-orange-500";
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/75">
-        <span>{leftLabel}</span>
-        <span>{rightLabel}</span>
+    <div className="relative rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-sm px-5 py-6 flex flex-col gap-4 yuna-rise overflow-hidden">
+      <div className="flex items-center justify-between">
+        <span className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0">
+          {avatar ? (
+            <YunaAvatar variant={avatar} size={36} />
+          ) : (
+            <span className="h-2 w-2 rounded-full bg-white" />
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={onSaveToggle}
+          aria-pressed={saved}
+          aria-label={saved ? "Unsave highlight" : "Save highlight"}
+          className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors active:scale-95"
+        >
+          <BookmarkIcon filled={saved} />
+        </button>
       </div>
-      <SliderPrimitive.Root
-        className="relative flex w-full touch-none select-none items-center h-5"
-        min={0}
-        max={10}
-        step={0.01}
-        value={[value]}
-        onValueChange={(v) => onChange(v[0] ?? 0)}
-        aria-label={`${leftLabel} to ${rightLabel}`}
-      >
-        <SliderPrimitive.Track className="relative h-[2px] w-full grow rounded-full bg-white/20">
-          <SliderPrimitive.Range
-            className={"absolute h-full rounded-full transition-colors " + fillClass}
-          />
-        </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb
-          className="block h-4 w-4 rounded-full bg-white shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+
+      <p className="font-display italic text-[22px] leading-[1.35] text-white">
+        {keepsake}
+      </p>
+
+      <div className="pt-2 border-t border-white/12">
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => onNoteChange(e.target.value)}
+          onBlur={onNoteBlur}
+          placeholder="Add a note for yourself…"
+          className="w-full bg-transparent text-sm py-2 outline-none placeholder:text-white/45 text-white"
+          maxLength={140}
         />
-      </SliderPrimitive.Root>
+      </div>
     </div>
   );
 }
 
-function Spinner({ size = 16 }: { size?: number }) {
+// ── Activities Yuna placed for you ──────────────────────────────────────────
+function PlacedForYou({ items }: { items: Activity[] }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-      className="text-white shrink-0"
-      style={{ animation: "yuna-spin 900ms linear infinite" }}
-    >
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2.5" />
-      <path
-        d="M21 12a9 9 0 0 0-9-9"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    <div className="flex flex-col gap-3 yuna-rise">
+      <div className="flex items-baseline justify-between">
+        <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/75">
+          Activities for you
+        </p>
+        <p className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/55">
+          From this session
+        </p>
+      </div>
+
+      {items.map((a) => (
+        <div
+          key={a.id}
+          className="flex items-start gap-3 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm p-4"
+        >
+          <span className="h-10 w-10 shrink-0 rounded-full bg-white/10 flex items-center justify-center">
+            <YunaMark size={20} className="text-white" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/65">
+                {a.kind}
+                {a.duration ? ` · ${a.duration}` : ""}
+              </p>
+              {a.isNew && (
+                <span className="font-sans-ui text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full bg-green-600 text-white">
+                  New
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-[15px] leading-snug font-medium text-white">
+              {a.title}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-white/70 italic">
+              {a.why}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -8,6 +8,7 @@ import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { FIRST_TIME_SUGGESTIONS } from "@/components/SuggestionChips";
+import { PERSONALIZED_ACTIVITIES, PERSONALIZED_TOPICS } from "@/lib/activities";
 
 const WELCOME_TOOLTIP_TEXT =
   "Welcome in. Take a look around — I'll be here when you're ready to chat.";
@@ -25,18 +26,12 @@ const followUps: FollowUp[] = [
     title: "Your Experience of Grief",
   },
   {
-    eyebrow: "continue our conversation",
+    eyebrow: "continue our last conversation",
     title: "Staying Present in the Evenings",
   },
   {
     title: "Talk about something else",
   },
-];
-
-const activities = [
-  { title: "Guided breath", note: "3 min · Meditation" },
-  { title: "Set a small goal", note: "Goals" },
-  { title: "Learn: name the feeling", note: "Skill · 4 min" },
 ];
 
 export function HomeScreen({
@@ -63,7 +58,7 @@ export function HomeScreen({
 
   return (
     <ScreenChrome>
-      <div className="flex-1 flex flex-col px-6 pb-4 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 flex flex-col px-6 pb-12 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mt-6 yuna-rise">
           <h1 className="text-2xl leading-snug tracking-tight">
             {returning ? "Welcome back." : "Where shall we begin?"}
@@ -107,51 +102,94 @@ export function HomeScreen({
         </div>
 
         {returning && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-3">
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
               <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-                Try an activity
+                Activities for you
               </p>
               <Button
                 surface="light"
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate({ to: "/activities" })}
+                onClick={() => navigate({ to: "/activities-returning" })}
+                className="-mr-4"
               >
                 View all
               </Button>
             </div>
-            <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex gap-3 px-6 pb-1">
-                {activities.map((a) => (
+            {/* Cards mirror the activities-returning row layout (icon left,
+                content right) but live in a horizontal scroll rail. Width
+                is sized so only a small sliver of the next card shows from
+                the right edge — enough to cue scroll without distracting. */}
+            <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
+              <div className="flex gap-4 pl-6 pr-6 pb-2">
+                {PERSONALIZED_ACTIVITIES.map((a) => (
                   <button
-                    key={a.title}
+                    key={a.id}
                     onClick={() => open(a.title)}
-                    className="shrink-0 w-44 text-left rounded-2xl hairline p-4 hover:bg-accent transition-colors"
+                    className="snap-start shrink-0 w-[320px] text-left rounded-2xl hairline bg-card p-4 hover:bg-accent transition-colors flex items-start gap-3"
                   >
-                    <div className="h-16 rounded-lg hairline mb-3 flex items-center justify-center">
+                    <span className="h-12 w-12 shrink-0 rounded-xl hairline flex items-center justify-center bg-accent/30">
                       <YunaMark size={22} className="text-primary" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                          {a.kind}
+                          {a.duration ? ` · ${a.duration}` : ""}
+                        </p>
+                        {a.isNew && (
+                          <span className="font-sans-ui text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full bg-green-600 text-white">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[15px] leading-snug font-medium">
+                        {a.title}
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground italic">
+                        {a.why}
+                      </p>
                     </div>
-                    <p className="text-sm leading-snug">{a.title}</p>
-                    <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1">
-                      {a.note}
-                    </p>
                   </button>
                 ))}
               </div>
             </div>
-            <Button
-              surface="light"
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: "/progress" })}
-              className="mt-3 self-start"
-            >
-              <span className="font-sans-ui">
-                <span className="tabular-nums font-medium">8</span> completed today
-              </span>
-              <Chevron />
-            </Button>
+          </div>
+        )}
+
+        {returning && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+                Topics for you
+              </p>
+            </div>
+            {/* Topic cards match the visual language of the top follow-up
+                buttons (text-only, no icon tile, eyebrow + title + chevron)
+                so the section reads as "more like those" — distinct from
+                the more substantial activity cards above. */}
+            <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
+              <div className="flex gap-4 pl-6 pr-6 pb-2">
+                {PERSONALIZED_TOPICS.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => open(t.title)}
+                    className="snap-start shrink-0 w-[280px] text-left rounded-2xl hairline px-5 py-4 hover:bg-accent transition-colors flex items-center gap-3"
+                  >
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-sans-ui text-[11px] text-muted-foreground mb-0.5">
+                        a topic for you
+                      </span>
+                      <span className="block text-sm leading-snug">
+                        {t.title}
+                      </span>
+                    </span>
+                    <Chevron />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

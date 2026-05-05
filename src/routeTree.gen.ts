@@ -18,6 +18,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CallRouteImport } from './routes/call'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ActivitiesReturningRouteImport } from './routes/activities-returning'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
@@ -67,6 +68,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivitiesReturningRoute = ActivitiesReturningRouteImport.update({
+  id: '/activities-returning',
+  path: '/activities-returning',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ActivitiesRoute = ActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
@@ -86,6 +92,7 @@ const DsButtonsRoute = DsButtonsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
+  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
+  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
+  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
   '/call': typeof CallRoute
   '/chat': typeof ChatRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/activities'
+    | '/activities-returning'
     | '/auth'
     | '/call'
     | '/chat'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/activities'
+    | '/activities-returning'
     | '/auth'
     | '/call'
     | '/chat'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/activities'
+    | '/activities-returning'
     | '/auth'
     | '/call'
     | '/chat'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivitiesRoute: typeof ActivitiesRoute
+  ActivitiesReturningRoute: typeof ActivitiesReturningRoute
   AuthRoute: typeof AuthRoute
   CallRoute: typeof CallRoute
   ChatRoute: typeof ChatRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activities-returning': {
+      id: '/activities-returning'
+      path: '/activities-returning'
+      fullPath: '/activities-returning'
+      preLoaderRoute: typeof ActivitiesReturningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/activities': {
       id: '/activities'
       path: '/activities'
@@ -278,6 +298,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivitiesRoute: ActivitiesRoute,
+  ActivitiesReturningRoute: ActivitiesReturningRoute,
   AuthRoute: AuthRoute,
   CallRoute: CallRoute,
   ChatRoute: ChatRoute,
