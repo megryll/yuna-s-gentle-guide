@@ -55,12 +55,15 @@ const POST_NAME_DELAY_MS = 500;
 
 // Slide-up + fade used both by the chat-style messages exit and by the
 // voice-step elements (bubble, picker, CTA) when transitioning to privacy.
+// Snappy on purpose — the user has already committed to leaving the step,
+// so we get out of the way fast.
 const EXIT_SLIDE_UP_STYLE: React.CSSProperties = {
   transform: "translateY(-120%)",
   opacity: 0,
   transition:
-    "transform 700ms cubic-bezier(0.4, 0, 0.7, 1), opacity 600ms ease-in",
+    "transform 380ms cubic-bezier(0.4, 0, 1, 1), opacity 280ms ease-in",
 };
+const EXIT_ANIM_MS = 400;
 
 const initialRevealsForStep = (
   stepIdx: number,
@@ -474,7 +477,6 @@ function Intro() {
     setPhase("reveal");
 
     const READ_DELAY_MS = 1800;
-    const EXIT_ANIM_MS = 700;
 
     const t1 = setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     const t2 = setTimeout(() => {
@@ -517,7 +519,6 @@ function Intro() {
     setPhase("reveal");
 
     const READ_DELAY_MS = 1500;
-    const EXIT_ANIM_MS = 700;
 
     setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     setTimeout(() => {
@@ -561,7 +562,6 @@ function Intro() {
     }
 
     const READ_DELAY_MS = 1500;
-    const EXIT_ANIM_MS = 700;
 
     setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     setTimeout(() => {
@@ -588,7 +588,6 @@ function Intro() {
     setPushModalOpen(false);
 
     const READ_DELAY_MS = 1500;
-    const EXIT_ANIM_MS = 700;
 
     setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     setTimeout(() => {
@@ -639,7 +638,7 @@ function Intro() {
     // Slide the avatar, the bubble, the picker, and the CTA up off-screen
     // before navigating so the voice step exits like the chat-style steps.
     setMessagesExiting(true);
-    setTimeout(() => goToStep(stepIdx + 1), 700);
+    setTimeout(() => goToStep(stepIdx + 1), EXIT_ANIM_MS);
   };
 
   const advance = () => {
@@ -744,7 +743,7 @@ function Intro() {
                 messagesExiting
                   ? {
                       animation:
-                        "intro-avatar-exit 600ms cubic-bezier(0.4, 0, 0.7, 1) forwards",
+                        "intro-avatar-exit 380ms cubic-bezier(0.4, 0, 1, 1) forwards",
                     }
                   : undefined
               }
