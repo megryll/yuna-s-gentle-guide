@@ -3,9 +3,14 @@ import { ScreenChrome } from "@/components/ScreenChrome";
 import { YunaMark } from "@/components/YunaMark";
 import {
   PERSONALIZED_ACTIVITIES,
-  RETURNING_THEMES,
   type Activity,
 } from "@/lib/activities";
+
+const QUICK_LINKS = [
+  { name: "Goals", Icon: TargetIcon },
+  { name: "Meditate", Icon: MeditateIcon },
+  { name: "Gratitude Journal", Icon: BookIcon },
+] as const;
 
 export const Route = createFileRoute("/activities-returning")({
   head: () => ({ meta: [{ title: "Activities — Yuna (returning)" }] }),
@@ -19,21 +24,24 @@ function ActivitiesReturningScreen() {
     navigate({ to: "/chat", search: { q: a.title } });
   };
 
+  const openLink = (title: string) => {
+    navigate({ to: "/chat", search: { q: title } });
+  };
+
   return (
     <ScreenChrome>
       <div className="flex-1 flex flex-col px-6 pb-6 yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="mt-4 yuna-rise">
-          <h1 className="text-2xl leading-snug tracking-tight">
-            Your activities
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground max-w-[20rem]">
-            Chosen for the highest impact on your long-term goals and growth.
-          </p>
-        </div>
+        <p className="mt-4 font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+          Tools
+        </p>
 
-        <ThemesSection />
+        <QuickLinksSection onOpen={openLink} />
 
-        <ul className="mt-7 flex flex-col gap-3">
+        <p className="mt-7 font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+          Activities for you
+        </p>
+
+        <ul className="mt-3 flex flex-col gap-3">
           {PERSONALIZED_ACTIVITIES.map((a, i) => (
             <li key={a.id}>
               <button
@@ -72,43 +80,64 @@ function ActivitiesReturningScreen() {
   );
 }
 
-function ThemesSection() {
+function QuickLinksSection({ onOpen }: { onOpen: (title: string) => void }) {
   return (
-    <div className="mt-6 flex flex-col gap-3">
-      <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-        Working on
-      </p>
-      <div className="grid grid-cols-3 gap-2">
-        {RETURNING_THEMES.map((name) => (
-          <ThemeCard key={name} name={name} />
-        ))}
-      </div>
+    <div className="mt-3 grid grid-cols-3 gap-2">
+      {QUICK_LINKS.map(({ name, Icon }) => (
+        <button
+          key={name}
+          onClick={() => onOpen(name)}
+          className="rounded-2xl hairline bg-card px-3 py-3 flex flex-col items-start gap-2 min-h-[88px] text-left active:bg-accent transition-colors"
+        >
+          <span className="text-muted-foreground">
+            <Icon />
+          </span>
+          <p className="font-display text-base leading-tight mt-auto">{name}</p>
+        </button>
+      ))}
     </div>
   );
 }
 
-function ThemeCard({ name }: { name: string }) {
-  return (
-    <div className="rounded-2xl hairline bg-card px-3 py-3 flex flex-col items-start gap-2 min-h-[88px]">
-      <span className="text-muted-foreground">
-        <ThreadsIcon />
-      </span>
-      <p className="font-display text-base leading-tight mt-auto">{name}</p>
-    </div>
-  );
-}
-
-function ThreadsIcon() {
+function TargetIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function MeditateIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="6" r="2.2" stroke="currentColor" strokeWidth="1.6" />
       <path
-        d="M4 7h12M4 12h16M4 17h10"
+        d="M5 19c2-5 5-6 7-6s5 1 7 6"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="19" cy="7" r="1.5" fill="currentColor" />
-      <circle cx="17" cy="17" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6 4h10a3 3 0 0 1 3 3v13H9a3 3 0 0 1-3-3V4z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 17a3 3 0 0 1 3-3h10"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
     </svg>
   );
 }

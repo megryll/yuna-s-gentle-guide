@@ -239,6 +239,14 @@
     from { opacity: 0; transform: translateY(40px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes intro-avatar-rise {
+    from { opacity: 0; transform: translateY(140px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes intro-avatar-exit {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-140px); }
+  }
   @keyframes glow-spin {
     from { transform: translate(-50%, -50%) rotate(0deg); }
     to   { transform: translate(-50%, -50%) rotate(360deg); }

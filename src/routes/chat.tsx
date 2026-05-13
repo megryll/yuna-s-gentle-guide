@@ -468,19 +468,10 @@ function Chat() {
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
-          setMessages((m) => [
-            ...m,
-            { id: uid(), from: "yuna", kind: "text", text: LIMITATIONS_PROMPT },
-            {
-              id: uid(),
-              from: "system",
-              kind: "limitations",
-              items: LIMITATIONS_ITEMS.map((i) => ({ ...i })),
-            },
-          ]);
+          setMessages((m) => [...m, { id: uid(), from: "system", kind: "voice-pitch" }]);
           setTyping(false);
-          setPendingLimitations(true);
-          speakIfEnabled(LIMITATIONS_PROMPT);
+          setVoicePitchActive(true);
+          VOICE_PITCH_SPOKEN_LINES.forEach(speakIfEnabled);
         }, 1100);
       }, 700);
     }, 1100);

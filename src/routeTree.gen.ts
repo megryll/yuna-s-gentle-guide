@@ -20,6 +20,7 @@ import { Route as CallRouteImport } from './routes/call'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ActivitiesReturningRouteImport } from './routes/activities-returning'
 import { Route as ActivitiesRouteImport } from './routes/activities'
+import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 
@@ -78,6 +79,11 @@ const ActivitiesRoute = ActivitiesRouteImport.update({
   path: '/activities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcceptTermsRoute = AcceptTermsRouteImport.update({
+  id: '/accept-terms',
+  path: '/accept-terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -91,6 +97,7 @@ const DsButtonsRoute = DsButtonsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accept-terms': typeof AcceptTermsRoute
   '/activities': typeof ActivitiesRoute
   '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accept-terms': typeof AcceptTermsRoute
   '/activities': typeof ActivitiesRoute
   '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/accept-terms': typeof AcceptTermsRoute
   '/activities': typeof ActivitiesRoute
   '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accept-terms'
     | '/activities'
     | '/activities-returning'
     | '/auth'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accept-terms'
     | '/activities'
     | '/activities-returning'
     | '/auth'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/accept-terms'
     | '/activities'
     | '/activities-returning'
     | '/auth'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcceptTermsRoute: typeof AcceptTermsRoute
   ActivitiesRoute: typeof ActivitiesRoute
   ActivitiesReturningRoute: typeof ActivitiesReturningRoute
   AuthRoute: typeof AuthRoute
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accept-terms': {
+      id: '/accept-terms'
+      path: '/accept-terms'
+      fullPath: '/accept-terms'
+      preLoaderRoute: typeof AcceptTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -297,6 +317,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcceptTermsRoute: AcceptTermsRoute,
   ActivitiesRoute: ActivitiesRoute,
   ActivitiesReturningRoute: ActivitiesReturningRoute,
   AuthRoute: AuthRoute,

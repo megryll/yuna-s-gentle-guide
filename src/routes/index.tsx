@@ -15,15 +15,16 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <PhoneFrame backgroundImage="/background.png">
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white">
+    <PhoneFrame backgroundImage="/welcome-forest.png">
+      <div className="flex-1 flex flex-col px-8 pt-14 pb-44 text-white">
         <div className="yuna-fade-in">
           <img src="/yuna-logo.svg" alt="Yuna" className="h-5 w-auto" />
         </div>
 
-        <div className="flex-1 flex flex-col justify-center items-start gap-10">
+        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex items-end gap-3">
           <div
-            className="relative h-14 w-14"
+            className="relative h-14 w-14 shrink-0"
             style={{
               animation:
                 "welcome-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
@@ -84,41 +85,42 @@ function Index() {
               className="relative h-14 w-14"
             />
           </div>
-          <div>
-            <h1
-              className="text-3xl leading-snug tracking-tight text-white"
+          <div className="flex-1 min-w-0">
+            <div
+              className="rounded-2xl rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm px-5 py-4"
               style={{
                 animation:
                   "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 120ms both",
               }}
             >
-              Hi, I'm Yuna.
-            </h1>
-            <p
-              className="mt-3 text-base text-white/95 leading-relaxed max-w-[18rem]"
-              style={{
-                animation:
-                  "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 240ms both",
-              }}
-            >
-              An intelligent system designed to guide you toward becoming the best version of yourself.
-            </p>
+              <p className="text-[20px] leading-[1.4] text-white">
+                Hi, I'm Yuna.
+                <br />
+                <br />
+                Here to listen, reflect, and grow with you.
+              </p>
+            </div>
           </div>
+        </div>
         </div>
 
-        <div className="flex flex-col items-center gap-5">
-          <div className="w-full grid grid-cols-2 gap-3">
-            <Button surface="dark" variant="secondary" fullWidth>
-              Log in
-            </Button>
-            <Button surface="dark" variant="primary" fullWidth asChild>
-              <Link to="/auth">Get started</Link>
-            </Button>
-          </div>
-          <Button surface="dark" variant="ghost">
-            Use Referral Code
+      </div>
+
+      <div
+        className="absolute left-0 right-0 bottom-[-72px] rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col items-center gap-5"
+        style={{ animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 320ms both" }}
+      >
+        <div className="w-full grid grid-cols-2 gap-3">
+          <Button surface="dark" variant="secondary" fullWidth>
+            Log in
+          </Button>
+          <Button surface="dark" variant="primary" fullWidth asChild>
+            <Link to="/auth">Get started</Link>
           </Button>
         </div>
+        <Button surface="dark" variant="ghost">
+          Use Referral Code
+        </Button>
       </div>
     </PhoneFrame>
   );

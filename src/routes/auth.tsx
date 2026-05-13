@@ -17,7 +17,7 @@ function AuthScreen() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
 
-  const continueOn = () => navigate({ to: "/intro" });
+  const continueOn = () => navigate({ to: "/accept-terms" });
 
   return (
     <PhoneFrame backgroundImage="/background.png">
@@ -38,7 +38,7 @@ function AuthScreen() {
         </div>
 
         <div className="mt-14 yuna-rise">
-          <h1 className="text-2xl leading-snug tracking-tight text-white">
+          <h1 className="text-[32px] leading-tight tracking-tight text-white">
             Create your account.
           </h1>
         </div>

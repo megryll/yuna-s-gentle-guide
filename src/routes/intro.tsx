@@ -32,7 +32,8 @@ type Card =
   | { kind: "harvard" }
   | { kind: "stats" }
   | { kind: "mood-stats" }
-  | { kind: "privacy" };
+  | { kind: "privacy" }
+  | { kind: "push-preview" };
 
 type BubbleData = {
   id: string;
@@ -52,12 +53,21 @@ const FIRST_STEP_AVATAR_DELAY_MS = 400;
 const SUBSEQUENT_STEP_DELAY_MS = 300;
 const POST_NAME_DELAY_MS = 500;
 
+// Slide-up + fade used both by the chat-style messages exit and by the
+// voice-step elements (bubble, picker, CTA) when transitioning to privacy.
+const EXIT_SLIDE_UP_STYLE: React.CSSProperties = {
+  transform: "translateY(-120%)",
+  opacity: 0,
+  transition:
+    "transform 700ms cubic-bezier(0.4, 0, 0.7, 1), opacity 600ms ease-in",
+};
+
 const initialRevealsForStep = (
   stepIdx: number,
 ): { text: string; card?: Card }[] => {
   if (stepIdx === 0) {
     return [
-      { text: "Hi there, great job showing up for yourself today." },
+      { text: "Hi, great job showing up for yourself today." },
       { text: "Before we continue, what should I call you?" },
     ];
   }
@@ -67,13 +77,17 @@ const initialRevealsForStep = (
         text: "I was lovingly created by experienced mental health professionals.",
         card: { kind: "harvard" },
       },
+      {
+        text: "I'm so grateful to be helping people \u{1F60A}",
+        card: { kind: "stats" },
+      },
     ];
   }
   if (stepIdx === 2) {
     return [
       {
-        text: "I'm so grateful to be helping people \u{1F60A}",
-        card: { kind: "stats" },
+        text: "People love when I send them notifications. Want to set them up now?",
+        card: { kind: "push-preview" },
       },
     ];
   }
@@ -86,19 +100,20 @@ const initialRevealsForStep = (
     ];
   }
   if (stepIdx === 4) {
-    return [
-      {
-        text: "Everything you share stays between us, guaranteed.",
-        card: { kind: "privacy" },
-      },
-    ];
+    return [{ text: "What would you like me to sound like?" }];
   }
-  return [{ text: "What would you like me to sound like?" }];
+  return [
+    {
+      text: "Everything you share stays between us, guaranteed.",
+      card: { kind: "privacy" },
+    },
+  ];
 };
 
 const ctaLabelForStep = (stepIdx: number): string => {
   if (stepIdx === 0) return "Continue";
-  if (stepIdx === TOTAL_STEPS - 1) return "Choose this voice";
+  if (stepIdx === 4) return "Choose this voice";
+  if (stepIdx === TOTAL_STEPS - 1) return "Continue";
   return "Next";
 };
 
@@ -129,6 +144,8 @@ function Intro() {
   const [voiceIdx, setVoiceIdx] = useState(0);
   const [voicePlayingIdx, setVoicePlayingIdx] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [messagesExiting, setMessagesExiting] = useState(false);
+  const [pushModalOpen, setPushModalOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -327,6 +344,8 @@ function Intro() {
     setBubbles([]);
     setTyping(false);
     setPhase("reveal");
+    setMessagesExiting(false);
+    setPushModalOpen(false);
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -364,8 +383,7 @@ function Intro() {
         }, showBubbleAt),
       );
       const isLast = i === reveals.length - 1;
-      const gap =
-        !isLast && stepIdx === 0 ? INTRO_BETWEEN_BUBBLES_MS : POST_BUBBLE_GAP_MS;
+      const gap = !isLast ? INTRO_BETWEEN_BUBBLES_MS : POST_BUBBLE_GAP_MS;
       cursor = showBubbleAt + gap;
     }
 
@@ -407,6 +425,28 @@ function Intro() {
         return;
       }
       e.preventDefault();
+      if (stepIdx === 1) {
+        submitChatReaction(
+          REACTION_AMAZING.userText,
+          REACTION_AMAZING.yunaReply,
+        );
+        return;
+      }
+      if (stepIdx === 3) {
+        submitChatReaction(
+          REACTION_IMPRESSIVE.userText,
+          REACTION_IMPRESSIVE.yunaReply,
+        );
+        return;
+      }
+      if (stepIdx === 2) {
+        // Two-button choice step — let the user click explicitly.
+        return;
+      }
+      if (stepIdx === 4) {
+        submitVoiceChoice();
+        return;
+      }
       advance();
     };
     window.addEventListener("keydown", onKey);
@@ -433,6 +473,9 @@ function Intro() {
     // Pause the CTA, then play Yuna's response, then show Continue
     setPhase("reveal");
 
+    const READ_DELAY_MS = 1800;
+    const EXIT_ANIM_MS = 700;
+
     const t1 = setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     const t2 = setTimeout(() => {
       setTyping(false);
@@ -445,17 +488,127 @@ function Intro() {
           text: `I'm looking forward to getting to know you, ${value}.`,
         },
       ]);
-      setPhase("wait-tap");
     }, POST_NAME_DELAY_MS + TYPING_MS);
+    const t3 = setTimeout(() => {
+      setMessagesExiting(true);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
+    const t4 = setTimeout(() => {
+      goToStep(1);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
   };
 
   const goToStep = (idx: number) => {
     navigate({ to: "/intro", search: { step: idx }, replace: true });
+  };
+
+  const submitChatReaction = (userText: string, yunaReply: string) => {
+    playSendPop();
+    setBubbles((prev) => [
+      ...prev,
+      { id: newBubbleId(), from: "you", text: userText },
+    ]);
+    setPhase("reveal");
+
+    const READ_DELAY_MS = 1500;
+    const EXIT_ANIM_MS = 700;
+
+    setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
+    setTimeout(() => {
+      setTyping(false);
+      playBubblePop();
+      setBubbles((prev) => [
+        ...prev,
+        { id: newBubbleId(), from: "yuna", text: yunaReply },
+      ]);
+    }, POST_NAME_DELAY_MS + TYPING_MS);
+    setTimeout(() => {
+      setMessagesExiting(true);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
+    setTimeout(() => {
+      goToStep(stepIdx + 1);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+  };
+
+  const REACTION_AMAZING = {
+    userText: "Amazing! \u{1F929}",
+    yunaReply: "That means so much \u{1F49A}",
+  };
+  const REACTION_IMPRESSIVE = {
+    userText: "Impressive! \u{1F92F}",
+    yunaReply: "It really does work \u{1F49A}",
+  };
+
+  const submitNotificationChoice = (wantsPush: boolean, label: string) => {
+    playSendPop();
+    setBubbles((prev) => [
+      ...prev,
+      { id: newBubbleId(), from: "you", text: label },
+    ]);
+    setPhase("reveal");
+
+    if (wantsPush) {
+      // Surface the iOS-style permission modal after a short beat so the
+      // user can register their tap before the modal arrives.
+      setTimeout(() => setPushModalOpen(true), 450);
+      return;
+    }
+
+    const READ_DELAY_MS = 1500;
+    const EXIT_ANIM_MS = 700;
+
+    setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
+    setTimeout(() => {
+      setTyping(false);
+      playBubblePop();
+      setBubbles((prev) => [
+        ...prev,
+        {
+          id: newBubbleId(),
+          from: "yuna",
+          text: "Whenever you’re ready \u{1F49A}",
+        },
+      ]);
+    }, POST_NAME_DELAY_MS + TYPING_MS);
+    setTimeout(() => {
+      setMessagesExiting(true);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
+    setTimeout(() => {
+      goToStep(stepIdx + 1);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+  };
+
+  const dismissPushModal = () => {
+    setPushModalOpen(false);
+
+    const READ_DELAY_MS = 1500;
+    const EXIT_ANIM_MS = 700;
+
+    setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
+    setTimeout(() => {
+      setTyping(false);
+      playBubblePop();
+      setBubbles((prev) => [
+        ...prev,
+        {
+          id: newBubbleId(),
+          from: "yuna",
+          text: "I’ll keep them gentle \u{1F49A}",
+        },
+      ]);
+    }, POST_NAME_DELAY_MS + TYPING_MS);
+    setTimeout(() => {
+      setMessagesExiting(true);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
+    setTimeout(() => {
+      goToStep(stepIdx + 1);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
   };
 
   const fadeOutAmbient = (ms: number) => {
@@ -477,16 +630,24 @@ function Intro() {
     fadeRafRef.current = requestAnimationFrame(tick);
   };
 
+  const submitVoiceChoice = () => {
+    // Persist whichever card the user landed on, even if they never tapped
+    // to change the default, and tear down any in-flight preview.
+    const id = VOICE_IDS[voiceIdx];
+    if (id) setVoice(id);
+    stopVoicePreview();
+    // Slide the avatar, the bubble, the picker, and the CTA up off-screen
+    // before navigating so the voice step exits like the chat-style steps.
+    setMessagesExiting(true);
+    setTimeout(() => goToStep(stepIdx + 1), 700);
+  };
+
   const advance = () => {
     if (stepIdx < TOTAL_STEPS - 1) {
       goToStep(stepIdx + 1);
       return;
     }
-    // Last step is the voice picker — persist whichever card the user
-    // landed on, even if they never tapped to change the default.
-    const id = VOICE_IDS[voiceIdx];
-    if (id) setVoice(id);
-    stopVoicePreview();
+    // Final step (privacy) — fade out and head to /home.
     setTransitioning(true);
     fadeOutAmbient(1300);
     setTimeout(() => {
@@ -521,6 +682,12 @@ function Intro() {
           </p>
         </div>
       )}
+      {pushModalOpen && (
+        <PushPermissionModal
+          onAllow={dismissPushModal}
+          onDeny={dismissPushModal}
+        />
+      )}
       <div className="flex-1 flex flex-col text-white min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between px-8 pt-14 pb-2">
@@ -530,7 +697,7 @@ function Intro() {
             size="icon"
             onClick={() => {
               if (stepIdx > 0) goToStep(stepIdx - 1);
-              else navigate({ to: "/auth" });
+              else navigate({ to: "/accept-terms" });
             }}
             aria-label="Back"
           >
@@ -557,24 +724,51 @@ function Intro() {
           </Button>
         </div>
 
-        {/* Body */}
-        {stepIdx === 5 ? (
-          <div className="flex-1 flex flex-col px-8 pb-10 pt-8 min-h-0">
-            {/* Avatar + intro bubble in a row */}
-            <div className="flex items-center gap-3">
-              <div key={`avatar-${stepIdx}`} className="shrink-0">
-                <YunaAvatarLarge />
-              </div>
-              <div className="flex-1 flex flex-col gap-3 min-w-0">
+        {/* Body — the avatar wrapper is re-keyed by stepIdx so it unmounts
+            and remounts between steps, firing intro-avatar-rise fresh each
+            time. The matching intro-avatar-exit is applied via the wrapper
+            style while messagesExiting is true. The voice step uses a tighter
+            top padding so the avatar+bubble row sits higher and the carousel
+            below gets the full available height. */}
+        <div
+          className={
+            "flex-1 flex flex-col px-8 pb-10 min-h-0 " +
+            (stepIdx === 4 ? "pt-8" : "pt-[72px]")
+          }
+        >
+          <div className="flex items-center gap-3">
+            <div
+              key={`avatar-${stepIdx}`}
+              className="shrink-0"
+              style={
+                messagesExiting
+                  ? {
+                      animation:
+                        "intro-avatar-exit 600ms cubic-bezier(0.4, 0, 0.7, 1) forwards",
+                    }
+                  : undefined
+              }
+            >
+              <YunaAvatarLarge />
+            </div>
+            {stepIdx === 4 && (
+              <div
+                className="flex-1 flex flex-col gap-3 min-w-0"
+                style={messagesExiting ? EXIT_SLIDE_UP_STYLE : undefined}
+              >
                 {bubbles.map((b) => (
                   <Bubble key={b.id} bubble={b} />
                 ))}
                 {typing && <TypingBubble />}
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Carousel + pills — flex-1 absorbs remaining space, content centered */}
-            <div className="flex-1 flex flex-col justify-center -mx-8 min-h-0">
+          {stepIdx === 4 ? (
+            <div
+              className="flex-1 flex flex-col justify-center -mx-8 min-h-0"
+              style={messagesExiting ? EXIT_SLIDE_UP_STYLE : undefined}
+            >
               {phase === "wait-tap" && (
                 <div className="yuna-rise">
                   <VoicePicker
@@ -600,60 +794,147 @@ function Intro() {
                 </div>
               )}
             </div>
-
-            {/* CTA — pinned to bottom, same position as other steps */}
-            <div className="pt-4 min-h-[60px]">
-              {phase === "wait-tap" && (
-                <div className="yuna-rise">
-                  <Button
-                    surface="dark"
-                    variant="primary"
-                    fullWidth
-                    onClick={advance}
-                  >
-                    {ctaLabelForStep(stepIdx)}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col px-8 pb-10 pt-[72px] min-h-0">
-            {/* Avatar — re-mounts per step so it animates fresh on each new screen */}
-            <div key={`avatar-${stepIdx}`}>
-              <YunaAvatarLarge />
-            </div>
-
-            {/* Bubbles — bubble state is cleared on step change, so each screen fills fresh */}
+          ) : (
             <div
-              className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0 transition-[padding] duration-200 ease-out"
-              style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET } : undefined}
+              className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0"
+              style={
+                messagesExiting
+                  ? {
+                      transform: "translateY(-120%)",
+                      opacity: 0,
+                      transition:
+                        "transform 700ms cubic-bezier(0.4, 0, 0.7, 1), opacity 600ms ease-in",
+                      paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
+                    }
+                  : {
+                      transition: "padding 200ms ease-out",
+                      paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
+                    }
+              }
             >
               {bubbles.map((b) => (
                 <Bubble key={b.id} bubble={b} />
               ))}
               {typing && <TypingBubble />}
             </div>
+          )}
 
-            {/* CTA — translates up to sit above the keyboard when input is focused */}
-            <div
-              className="pt-4 min-h-[60px] transition-transform duration-200 ease-out"
-              style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
-            >
-              {phase === "wait-input" && (
-                <div className="yuna-rise">
-                  <NameForm
-                    inputRef={nameInputRef}
-                    value={nameInput}
-                    onChange={setNameInput}
-                    onSubmit={submitName}
-                    onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
-                  />
-                </div>
-              )}
-              {phase === "wait-tap" && (
-                <div className="yuna-rise">
+          {/* CTA — translates up to sit above the keyboard when input is focused.
+              On the voice step, it joins the rest of the screen in sliding up
+              off-screen when the user picks a voice and we transition out. */}
+          <div
+            className="pt-4 min-h-[60px] transition-transform duration-200 ease-out"
+            style={
+              stepIdx === 4 && messagesExiting
+                ? EXIT_SLIDE_UP_STYLE
+                : inputFocused
+                  ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` }
+                  : undefined
+            }
+          >
+            {phase === "wait-input" && (
+              <div className="yuna-rise">
+                <NameForm
+                  inputRef={nameInputRef}
+                  value={nameInput}
+                  onChange={setNameInput}
+                  onSubmit={submitName}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
+                />
+              </div>
+            )}
+            {phase === "wait-tap" && (
+              <div className="yuna-rise">
+                {stepIdx === 1 ? (
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={() =>
+                      submitChatReaction(
+                        REACTION_AMAZING.userText,
+                        REACTION_AMAZING.yunaReply,
+                      )
+                    }
+                  >
+                    Amazing! {"\u{1F929}"}
+                  </Button>
+                ) : stepIdx === 3 ? (
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={() =>
+                      submitChatReaction(
+                        REACTION_IMPRESSIVE.userText,
+                        REACTION_IMPRESSIVE.yunaReply,
+                      )
+                    }
+                  >
+                    Impressive! {"\u{1F92F}"}
+                  </Button>
+                ) : stepIdx === 2 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      surface="dark"
+                      variant="secondary"
+                      fullWidth
+                      onClick={() =>
+                        submitNotificationChoice(false, "Maybe later")
+                      }
+                    >
+                      Maybe later
+                    </Button>
+                    <Button
+                      surface="dark"
+                      variant="primary"
+                      fullWidth
+                      onClick={() =>
+                        submitNotificationChoice(true, "Set them up \u{2728}")
+                      }
+                    >
+                      Set them up {"\u{2728}"}
+                    </Button>
+                  </div>
+                ) : stepIdx === 4 ? (
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={submitVoiceChoice}
+                  >
+                    {ctaLabelForStep(stepIdx)}
+                  </Button>
+                ) : stepIdx === 5 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      surface="dark"
+                      variant="secondary"
+                      fullWidth
+                      onClick={() =>
+                        window.open(
+                          "https://yuna.io/privacy",
+                          "_blank",
+                          "noopener,noreferrer",
+                        )
+                      }
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        Prove it
+                        <LinkOutIcon />
+                      </span>
+                    </Button>
+                    <Button
+                      surface="dark"
+                      variant="primary"
+                      fullWidth
+                      onClick={advance}
+                    >
+                      Let’s Start!
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     surface="dark"
                     variant="primary"
@@ -662,11 +943,11 @@ function Intro() {
                   >
                     {ctaLabelForStep(stepIdx)}
                   </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </PhoneFrame>
   );
@@ -679,7 +960,8 @@ function YunaAvatarLarge() {
     <div
       className="relative h-14 w-14 shrink-0"
       style={{
-        animation: "welcome-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
+        animation:
+          "intro-avatar-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
       }}
     >
       <span
@@ -768,6 +1050,10 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
               className="border-t border-white/15"
               style={{ backgroundColor: "#FFFFFF" }}
             >
+              <Attachment kind={bubble.card.kind} />
+            </div>
+          ) : bubble.card.kind === "push-preview" ? (
+            <div className="border-t border-white/20 bg-white/5 px-3 py-3">
               <Attachment kind={bubble.card.kind} />
             </div>
           ) : (
@@ -1029,6 +1315,31 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
       </div>
     );
   }
+  if (kind === "push-preview") {
+    return (
+      <div className="rounded-md bg-white/80 text-neutral-900 px-3 py-2.5 flex items-start gap-3">
+        <div
+          className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0"
+          style={{ backgroundColor: "#66BA24" }}
+        >
+          <YunaPushMark />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-sans-ui text-[13px] font-semibold leading-tight truncate">
+              Check in w/ Yuna
+            </span>
+            <span className="font-sans-ui text-[11px] text-neutral-500 shrink-0">
+              5m ago
+            </span>
+          </div>
+          <p className="text-[13px] leading-snug mt-0.5 text-neutral-800">
+            How did your grad ceremony go?
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <a
       href="#"
@@ -1046,6 +1357,27 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         <span className="text-xs text-white/70">yuna.io/privacy</span>
       </span>
     </a>
+  );
+}
+
+function YunaPushMark() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 36 36"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M23.7609 33.0343L23.7621 33.0354L23.7636 33.0369C23.9788 33.2496 24.1955 33.4638 24.4046 33.6679V33.6778C25.0334 34.2867 24.6011 35.3572 23.7168 35.3572H10.5904C9.70614 35.3572 9.27384 34.2965 9.90265 33.6778C10.3251 33.2653 10.7771 32.8233 11.1897 32.4108C12.1231 31.4876 12.6439 30.2304 12.6439 28.9242L12.6439 24.8024C12.6445 23.2621 12.6451 21.7153 12.0937 20.242C11.5926 18.9063 6.80772 10.6269 3.56541 5.07775C2.91694 3.96793 2.07198 2.97596 1.06981 2.16078C0.834006 1.96435 0.627677 1.79739 0.4803 1.67953C-0.286064 1.06078 -0.099386 -0.00975432 0.78488 6.71089e-05C0.942281 6.71089e-05 2.29529 0.00196462 3.81188 0.00409155C5.74564 0.00680354 7.94537 0.00988853 8.27167 0.00988853C9.32296 0.00988853 10.2957 0.56971 10.8066 1.47328C13.0565 5.36257 19.0794 15.842 20.5237 18.7295C21.2802 20.2224 21.6634 21.8724 21.6634 23.5519V28.9144C21.6634 30.2206 22.1841 31.4778 23.1175 32.401C23.325 32.6034 23.5423 32.8183 23.7609 33.0343Z"
+        fill="white"
+      />
+      <path
+        d="M28.6813 5.87724C28.6318 5.82771 28.5723 5.79799 28.503 5.79799V5.77817C28.4534 5.77817 28.4138 5.79799 28.3741 5.8178C24.0135 8.25989 22.0259 10.5782 20.9193 13.3723C20.7767 13.7325 20.28 13.643 20.1305 13.3723C16.2801 6.39951 24.0203 2.23857 26.2506 1.46871C28.8273 0.57711 32.1401 -0.165857 34.8358 0.0322775C35.6506 0.0921667 36.106 0.939267 35.7521 1.6765C34.7445 3.77522 34.3541 5.85376 33.9978 7.75118C33.1248 12.3997 31.4882 15.3297 26.1536 15.929C25.4724 16.0055 24.7391 16.0453 23.952 16.0453C22.2448 16.0453 22.4118 14.3222 23.3916 12.5627C24.9695 9.72926 28.5127 6.31297 28.6615 6.18435C28.7606 6.07538 28.7408 5.95649 28.6813 5.87724Z"
+        fill="white"
+      />
+    </svg>
   );
 }
 
@@ -1174,6 +1506,63 @@ function Spinner() {
   );
 }
 
+function PushPermissionModal({
+  onAllow,
+  onDeny,
+}: {
+  onAllow: () => void;
+  onDeny: () => void;
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="push-modal-title"
+    >
+      <div
+        className="w-full max-w-[280px] rounded-[14px] overflow-hidden text-white"
+        style={{
+          backgroundColor: "rgba(40, 40, 44, 0.92)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          animation:
+            "welcome-rise 250ms cubic-bezier(0.2, 0.8, 0.2, 1) 0ms both",
+        }}
+      >
+        <div className="px-5 pt-5 pb-4 text-center">
+          <h3
+            id="push-modal-title"
+            className="font-sans-ui text-[16px] font-semibold leading-snug"
+          >
+            &ldquo;Yuna&rdquo; Would Like to Send You Notifications
+          </h3>
+          <p className="mt-2 font-sans-ui text-[12px] text-white/75 leading-snug">
+            Notifications may include alerts, sounds, and icon badges. These
+            can be configured in Settings.
+          </p>
+        </div>
+        <div className="border-t border-white/15 grid grid-cols-2">
+          <button
+            type="button"
+            onClick={onDeny}
+            className="px-3 py-2.5 font-sans-ui text-[15px] text-white border-r border-white/15 active:bg-white/10"
+          >
+            Don&rsquo;t Allow
+          </button>
+          <button
+            type="button"
+            onClick={onAllow}
+            className="px-3 py-2.5 font-sans-ui text-[15px] font-semibold text-white active:bg-white/10"
+          >
+            Allow
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SpeakerOnIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1183,6 +1572,26 @@ function SpeakerOnIcon() {
         stroke="currentColor"
         strokeWidth="1.4"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function LinkOutIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M7 17L17 7M17 7H9M17 7V15"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

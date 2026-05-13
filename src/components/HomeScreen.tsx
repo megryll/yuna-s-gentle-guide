@@ -22,15 +22,7 @@ type FollowUp = {
 
 const followUps: FollowUp[] = [
   {
-    eyebrow: "a topic for you",
-    title: "Your Experience of Grief",
-  },
-  {
-    eyebrow: "continue our last conversation",
-    title: "Staying Present in the Evenings",
-  },
-  {
-    title: "Talk about something else",
+    title: "Chat Now",
   },
 ];
 
@@ -102,8 +94,40 @@ export function HomeScreen({
         </div>
 
         {returning && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+                Topics for you
+              </p>
+            </div>
+            {/* Topic cards match the visual language of the top follow-up
+                buttons (text-only, no icon tile, eyebrow + title + chevron)
+                so the section reads as "more like those" — distinct from
+                the more substantial activity cards above. */}
+            <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
+              <div className="flex gap-4 pl-6 pr-6 pb-2">
+                {PERSONALIZED_TOPICS.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => open(t.title)}
+                    className="snap-start shrink-0 w-[320px] text-left rounded-2xl hairline px-5 py-4 hover:bg-accent transition-colors flex items-center gap-3"
+                  >
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm leading-snug">
+                        {t.title}
+                      </span>
+                    </span>
+                    <Chevron />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {returning && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
               <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
                 Activities for you
               </p>
@@ -151,41 +175,6 @@ export function HomeScreen({
                         {a.why}
                       </p>
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {returning && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-                Topics for you
-              </p>
-            </div>
-            {/* Topic cards match the visual language of the top follow-up
-                buttons (text-only, no icon tile, eyebrow + title + chevron)
-                so the section reads as "more like those" — distinct from
-                the more substantial activity cards above. */}
-            <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
-              <div className="flex gap-4 pl-6 pr-6 pb-2">
-                {PERSONALIZED_TOPICS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => open(t.title)}
-                    className="snap-start shrink-0 w-[280px] text-left rounded-2xl hairline px-5 py-4 hover:bg-accent transition-colors flex items-center gap-3"
-                  >
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-sans-ui text-[11px] text-muted-foreground mb-0.5">
-                        a topic for you
-                      </span>
-                      <span className="block text-sm leading-snug">
-                        {t.title}
-                      </span>
-                    </span>
-                    <Chevron />
                   </button>
                 ))}
               </div>

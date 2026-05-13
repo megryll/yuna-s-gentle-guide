@@ -1,17 +1,14 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { loadEnv, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import { readFileSync } from "node:fs";
+import tailwindcss from "@tailwindcss/vite";
+import tsConfigPaths from "vite-tsconfig-paths";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
 
 // Dev-only middleware: routes /api/tts and /api/chat to the same handlers
 // the Vercel functions use in production (api/_handlers.mjs). Vite does not
-// auto-serve files under /api/, and the lovable preset does not load
-// non-VITE_-prefixed env vars into process.env, so we do both here.
+// auto-serve files under /api/, and non-VITE_-prefixed env vars are not loaded
+// into process.env by default, so we do both here.
 function devApiMiddleware(): Plugin {
   return {
     name: "yuna-dev-api-middleware",
@@ -81,7 +78,7 @@ function devApiMiddleware(): Plugin {
   };
 }
 
-// Load .env files at config time too, so any plugin or build step that reads
+// Load .env.local at config time so any plugin or build step that reads
 // process.env synchronously can also see them.
 try {
   const raw = readFileSync(".env.local", "utf8");
@@ -94,6 +91,32 @@ try {
 }
 
 export default defineConfig({
-  cloudflare: false,
-  plugins: [devApiMiddleware()],
+  server: {
+    port: 8080,
+  },
+  resolve: {
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
+  },
+  plugins: [
+    tailwindcss(),
+    tsConfigPaths({ projects: ["./tsconfig.json"] }),
+    tanstackStart({
+      importProtection: {
+        behavior: "error",
+        client: {
+          files: ["**/server/**"],
+          specifiers: ["server-only"],
+        },
+      },
+    }),
+    viteReact(),
+    devApiMiddleware(),
+  ],
 });
