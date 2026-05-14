@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
+import { Button } from "@/components/Button";
 import { useUserType } from "@/lib/user-type";
+import { getProfileData, type Insight } from "@/lib/profile-data";
+import {
+  EmptyStateCard,
+  FocusAreaBentoCard,
+  InsightCard,
+  MoreButton,
+  ProgressRing,
+} from "@/components/profile-components";
 
 export const Route = createFileRoute("/you")({
   head: () => ({
@@ -12,82 +21,112 @@ export const Route = createFileRoute("/you")({
   component: YouRoute,
 });
 
-const PREVIEW = [
-  {
-    title: "Breakthroughs",
-    body: "Quiet shifts you and Yuna notice together.",
-  },
-  {
-    title: "Beliefs & behaviors",
-    body: "Patterns that show up in how you move through your days.",
-  },
-  {
-    title: "Basics",
-    body: "The context Yuna holds about your life.",
-  },
-];
-
 function YouRoute() {
   const userType = useUserType();
-  return userType === "returning" ? <YouReturning /> : <YouNew />;
-}
+  const data = getProfileData(userType);
 
-function YouReturning() {
   return (
     <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col items-center justify-center px-6 text-white yuna-fade-in">
-        <p className="font-display text-2xl tracking-tight text-white text-center">
-          returning user: You
-        </p>
+      <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex justify-center pt-4">
+          <ProgressRing progress={data.progress} icon={data.ringIcon} />
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          {[
+            { value: data.conversations, label: "Conversations" },
+            { value: data.messages, label: "Messages" },
+            { value: data.insights, label: "Insights" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex-1 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm py-5 px-2 flex flex-col items-center gap-1"
+            >
+              <span
+                className="font-display font-normal text-white"
+                style={{ fontSize: 26, lineHeight: "30px" }}
+              >
+                {stat.value}
+              </span>
+              <span className="font-sans-ui text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-8 mt-10">
+          <Section heading="Focus Areas">
+            <div className="flex gap-2">
+              <FocusAreaBentoCard num={1} title={data.focusArea1.title} taskCount={data.tasks1.length} />
+              <FocusAreaBentoCard num={2} title={data.focusArea2.title} taskCount={data.tasks2.length} />
+            </div>
+          </Section>
+
+          <Section heading="Breakthroughs">
+            {data.breakthroughs ? (
+              <ListOfInsights insights={data.breakthroughs} accentLeft />
+            ) : (
+              <EmptyStateCard
+                heading="None yet, keep chatting"
+                body="Breakthroughs happen gradually, then suddenly. As real shifts emerge in your thinking, Yuna will mark them here."
+                leafSrc="/assets/profile/empty-leaf-2.svg"
+              />
+            )}
+          </Section>
+
+          <Section heading="Beliefs & Behaviors">
+            {data.beliefs ? (
+              <>
+                <ListOfInsights insights={data.beliefs} />
+                {data.beliefsMore > 0 && <MoreButton count={data.beliefsMore} />}
+              </>
+            ) : (
+              <EmptyStateCard
+                heading="None yet, keep chatting"
+                body="As your conversations deepen, Yuna will surface the core beliefs shaping how you see the world — and the recurring patterns that tend to follow from them."
+                leafSrc="/assets/profile/empty-leaf-1.svg"
+              />
+            )}
+          </Section>
+
+          <Section heading="Basics">
+            <ListOfInsights insights={data.basics} />
+            {data.basicsMore > 0 && <MoreButton count={data.basicsMore} />}
+          </Section>
+        </div>
+
+        <div className="flex flex-col items-center gap-3 mt-10">
+          <p className="font-display text-[20px] leading-7 text-white/90 text-center">
+            Something feel off?
+          </p>
+          <p className="text-[14px] leading-[22px] text-white/75 text-center max-w-[20rem]">
+            Yuna's understanding grows over time. If anything here doesn't feel right, you can help refine it.
+          </p>
+          <Button surface="dark" variant="secondary" size="sm" className="mt-1">
+            Help Yuna understand you better
+          </Button>
+        </div>
       </div>
     </ScreenChrome>
   );
 }
 
-function YouNew() {
+function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col px-6 pt-2 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center pt-4 text-center">
-          <span
-            className="h-24 w-24 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm"
-            aria-hidden="true"
-          />
-          <h1 className="mt-7 font-display text-2xl tracking-tight text-white">
-            Yuna's getting to know you
-          </h1>
-          <p className="mt-3 text-sm text-white/80 leading-relaxed max-w-[20rem]">
-            As you have more sessions, this is where you'll see what Yuna's
-            learning about you — your story, your patterns, the moments that
-            matter.
-          </p>
-        </div>
+    <div className="flex flex-col gap-3">
+      <h2 className="font-display text-[20px] leading-7 text-white text-center">{heading}</h2>
+      {children}
+    </div>
+  );
+}
 
-        <p className="mt-10 mb-3 font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/65 text-center">
-          What will appear here
-        </p>
-        <ul className="flex flex-col gap-2.5">
-          {PREVIEW.map((item) => (
-            <li
-              key={item.title}
-              className="rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm p-4 flex items-start gap-3"
-            >
-              <span
-                className="h-9 w-9 rounded-full bg-white/10 border border-white/20 shrink-0"
-                aria-hidden="true"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] leading-snug font-medium text-white">
-                  {item.title}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-white/70">
-                  {item.body}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </ScreenChrome>
+function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentLeft?: boolean }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {insights.map((insight, i) => (
+        <InsightCard key={i} insight={insight} accentLeft={accentLeft} />
+      ))}
+    </div>
   );
 }

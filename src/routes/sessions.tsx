@@ -56,7 +56,7 @@ function SessionsReturning() {
           Past sessions
         </h1>
 
-        <ul className="mt-5 flex flex-col gap-3">
+        <ul className="mt-5 flex flex-col gap-5">
           {PAST_SESSIONS.map((s, i) => {
             const accent = SESSION_ACCENTS[i % SESSION_ACCENTS.length];
             return (
@@ -73,7 +73,7 @@ function SessionsReturning() {
                     {s.date} · {s.length}
                   </p>
                 </div>
-                <p className="text-[15px] leading-snug font-medium text-white">
+                <p className="font-display text-xl leading-tight tracking-tight text-white">
                   {s.title}
                 </p>
                 <button

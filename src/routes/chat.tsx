@@ -791,7 +791,7 @@ function Chat() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 pt-16 pb-6 flex flex-col gap-3 transition-[padding] duration-200 ease-out"
+              className="flex-1 overflow-y-auto px-5 pt-20 pb-6 flex flex-col gap-3 transition-[padding] duration-200 ease-out"
               style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET + 24 } : undefined}
             >
               {messages.map((m) => {

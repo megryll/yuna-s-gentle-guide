@@ -22,6 +22,7 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 
 const YouRoute = YouRouteImport.update({
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
+  id: '/focus-area/$num',
+  path: '/focus-area/$num',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
   id: '/ds/buttons',
   path: '/ds/buttons',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/focus-area/$num'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/focus-area/$num'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/focus-area/$num'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  FocusAreaNumRoute: typeof FocusAreaNumRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/focus-area/$num': {
+      id: '/focus-area/$num'
+      path: '/focus-area/$num'
+      fullPath: '/focus-area/$num'
+      preLoaderRoute: typeof FocusAreaNumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/buttons': {
       id: '/ds/buttons'
       path: '/ds/buttons'
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,
+  FocusAreaNumRoute: FocusAreaNumRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

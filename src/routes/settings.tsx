@@ -158,9 +158,9 @@ function SettingsRowItem({
   if (row.kind === "toggle") {
     return (
       <div className={baseClass}>
-        <div className="flex items-center gap-2">
-          <Icon size={24} strokeWidth={1.6} className="text-white" aria-hidden />
-          <span className="text-[16px] leading-6 text-white">{row.label}</span>
+        <div className="flex items-center gap-4">
+          <Icon size={18} strokeWidth={1.5} className="text-white" aria-hidden />
+          <span className="text-[15px] leading-6 font-medium text-white">{row.label}</span>
         </div>
         <IOSSwitch checked={!!toggleOn} onChange={onToggle} label={row.label} />
       </div>
@@ -169,9 +169,9 @@ function SettingsRowItem({
 
   return (
     <button type="button" className={`${baseClass} active:bg-white/[0.05] transition-colors`}>
-      <div className="flex items-center gap-2">
-        <Icon size={24} strokeWidth={1.6} className="text-white" aria-hidden />
-        <span className="text-[16px] leading-6 text-white">{row.label}</span>
+      <div className="flex items-center gap-4">
+        <Icon size={18} strokeWidth={1.5} className="text-white" aria-hidden />
+        <span className="text-[15px] leading-6 font-medium text-white">{row.label}</span>
       </div>
       <ChevronRight size={16} strokeWidth={2} className="text-white/70" aria-hidden />
     </button>

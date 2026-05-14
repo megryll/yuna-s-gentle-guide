@@ -61,7 +61,7 @@ export function HomeScreen({
     });
 
   useEffect(() => {
-    if (showWelcome) setWelcomeOpen(true);
+    setWelcomeOpen(showWelcome);
   }, [showWelcome]);
 
   const returning = variant === "returning";
@@ -303,7 +303,7 @@ function CreatedForYou({
           </p>
         </div>
       ) : (
-        <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-2.5")}>
+        <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-4")}>
           {items.map((c, i) => (
             <li
               key={c.id}

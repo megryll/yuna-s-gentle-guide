@@ -75,7 +75,7 @@ export function HomeCardRow({
       <button
         type="button"
         onClick={onClick}
-        className="relative w-full text-left rounded-xl px-6 py-5 active:opacity-90 transition-opacity flex items-center gap-5 overflow-hidden"
+        className="relative w-full text-left rounded-xl px-4 py-3.5 active:opacity-90 transition-opacity flex items-center gap-4 overflow-hidden"
         style={{
           backgroundImage: background,
           backgroundSize: "cover",
@@ -92,7 +92,7 @@ export function HomeCardRow({
           >
             {title}
           </p>
-          <div className="mt-3 flex items-center gap-3 flex-wrap">
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
             <span className="font-sans-ui text-[11px] tracking-[0.12em] uppercase text-white inline-flex items-center gap-1.5">
               {isGuided && avatar ? (
                 <YunaAvatar variant={avatar} size={15} />
