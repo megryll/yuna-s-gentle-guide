@@ -27,7 +27,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
-import { FIRST_TIME_SUGGESTIONS, SuggestionChips } from "@/components/SuggestionChips";
+import { FIRST_TIME_SUGGESTIONS } from "@/components/SuggestionChips";
+import { SuggestionChip } from "@/components/SuggestionChip";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -652,13 +653,13 @@ function Chat() {
   };
 
   return (
-    <PhoneFrame>
-      <div className="flex-1 flex flex-col yuna-fade-in min-h-0">
+    <PhoneFrame backgroundImage="/background.png">
+      <div className="flex-1 flex flex-col yuna-fade-in min-h-0 text-white">
         {/* Header */}
-        <div className="grid grid-cols-3 items-center px-5 pt-14 pb-2 border-b border-border">
+        <div className="grid grid-cols-3 items-center px-5 pt-14 pb-2 border-b border-white/15">
           <div className="justify-self-start">
             <Button
-              surface="light"
+              surface="dark"
               variant="ghost"
               size="icon-lg"
               pressed={!speakerOn}
@@ -669,11 +670,11 @@ function Chat() {
             </Button>
           </div>
           <div className="justify-self-center">
-            <YunaHeaderTrigger />
+            <YunaHeaderTrigger surface="dark" />
           </div>
           <div className="justify-self-end">
             <Button
-              surface="light"
+              surface="dark"
               variant="ghost"
               size="icon-lg"
               onClick={endChat}
@@ -708,35 +709,40 @@ function Chat() {
 
         {/* Input + Call Yuna footer */}
         <div
-          className="bg-background transition-transform duration-200 ease-out"
+          className="transition-transform duration-200 ease-out"
           style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
         >
           {voicePitchActive ? (
             <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
-              <Button surface="light" variant="primary" fullWidth onClick={openCall}>
+              <Button surface="dark" variant="primary" fullWidth onClick={openCall}>
                 <PhoneCallIcon />
                 Continue Over Voice
               </Button>
-              <Button surface="light" variant="ghost" fullWidth onClick={dismissVoicePitch}>
+              <Button surface="dark" variant="ghost" fullWidth onClick={dismissVoicePitch}>
                 Keep Texting
               </Button>
             </div>
           ) : (
             <>
               {!messages.some((m) => m.from === "you") && (
-                <SuggestionChips
-                  suggestions={FIRST_TIME_SUGGESTIONS}
-                  onSelect={(s) => sendText(s)}
-                  disabled={pendingLimitations}
-                  vertical
-                  align="end"
-                  className="px-5 pt-3"
-                />
+                <div className="px-5 pt-3 flex flex-col gap-2 items-end">
+                  {FIRST_TIME_SUGGESTIONS.map((s) => (
+                    <SuggestionChip
+                      key={s}
+                      onClick={() => sendText(s)}
+                      disabled={pendingLimitations}
+                      size="sm"
+                      fullWidth={false}
+                    >
+                      {s}
+                    </SuggestionChip>
+                  ))}
+                </div>
               )}
               <form onSubmit={send} className="px-5 pt-3">
                 <div
                   className={
-                    "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background transition-colors " +
+                    "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background text-foreground transition-colors " +
                     (recordingVoice
                       ? "border border-foreground"
                       : "hairline focus-within:border-foreground")
@@ -809,7 +815,7 @@ function Chat() {
                     : "opacity-100")
                 }
               >
-                <Button surface="light" variant="secondary" size="sm" onClick={openCall}>
+                <Button surface="dark" variant="secondary" size="sm" onClick={openCall}>
                   <PhoneCallIcon />
                   Call Yuna
                 </Button>
@@ -876,12 +882,12 @@ function Bubble({
   return (
     <div className={"flex items-end gap-2 yuna-rise " + (mine ? "justify-end" : "justify-start")}>
       {!mine && (
-        <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center text-foreground shrink-0 bg-muted">
+        <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
           {avatar ? (
             <YunaAvatar variant={avatar} size={28} />
           ) : (
-            <span className="h-7 w-7 rounded-full hairline flex items-center justify-center">
-              <YunaMark size={14} />
+            <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
+              <YunaMark size={14} className="text-white" />
             </span>
           )}
         </div>
@@ -890,8 +896,8 @@ function Bubble({
         className={
           "max-w-[78%] px-4 py-2.5 text-sm leading-relaxed rounded-2xl " +
           (mine
-            ? "bg-foreground text-background rounded-br-sm"
-            : "hairline bg-background rounded-bl-sm")
+            ? "bg-white text-neutral-900 rounded-br-sm"
+            : "border border-white/25 bg-white/10 backdrop-blur-sm text-white rounded-bl-sm")
         }
       >
         {msg.text}
@@ -903,12 +909,12 @@ function Bubble({
 function CallSummary({ msg }: { msg: Extract<Msg, { kind: "call-summary" }> }) {
   return (
     <div className="yuna-rise flex justify-center">
-      <div className="w-full max-w-[92%] rounded-2xl hairline bg-muted/30 px-5 py-4">
+      <div className="w-full max-w-[92%] rounded-2xl border border-white/25 bg-white/10 backdrop-blur-sm px-5 py-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-full hairline flex items-center justify-center">
+          <div className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
             <PhoneIcon />
           </div>
-          <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+          <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/70">
             Voice call · ended
           </p>
         </div>
@@ -917,7 +923,7 @@ function CallSummary({ msg }: { msg: Extract<Msg, { kind: "call-summary" }> }) {
           <Stat label="Ended" value={msg.endedAt} />
           <Stat label="Length" value={msg.durationLabel} />
         </div>
-        <Button surface="light" variant="secondary" size="sm" fullWidth className="mt-4">
+        <Button surface="dark" variant="secondary" size="sm" fullWidth className="mt-4">
           View transcript
         </Button>
       </div>
@@ -937,10 +943,10 @@ function LimitationsCard({
   if (allChecked) {
     return (
       <div className="yuna-rise w-full flex justify-end">
-        <div className="flex items-center gap-2 rounded-full hairline bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 text-xs text-white/85">
           <span
             aria-hidden="true"
-            className="shrink-0 h-4 w-4 rounded-full bg-foreground text-background flex items-center justify-center"
+            className="shrink-0 h-4 w-4 rounded-full bg-white text-neutral-900 flex items-center justify-center"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
               <path
@@ -969,16 +975,16 @@ function LimitationsCard({
             onClick={() => onCheck(item.id)}
             disabled={checked}
             aria-pressed={checked}
-            className="flex items-center gap-3 rounded-2xl hairline bg-background px-4 py-3 text-left transition-colors active:bg-accent disabled:active:bg-background"
+            className="flex items-center gap-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-3 text-left transition-colors active:bg-white/20"
           >
-            <span className="flex-1 text-sm leading-snug">{item.text}</span>
+            <span className="flex-1 text-sm leading-snug text-white">{item.text}</span>
             <span
               aria-hidden="true"
               className={
                 "shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-colors " +
                 (checked
-                  ? "bg-foreground text-background"
-                  : "border border-muted-foreground/40 text-transparent")
+                  ? "bg-white text-neutral-900"
+                  : "border border-white/40 text-transparent")
               }
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -1001,16 +1007,16 @@ function LimitationsCard({
 function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
   return (
     <div className="flex items-end gap-2 yuna-rise justify-start">
-      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center text-foreground shrink-0 bg-muted">
+      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
         {avatar ? (
           <YunaAvatar variant={avatar} size={28} />
         ) : (
-          <span className="h-7 w-7 rounded-full hairline flex items-center justify-center">
-            <YunaMark size={14} />
+          <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
+            <YunaMark size={14} className="text-white" />
           </span>
         )}
       </div>
-      <div className="max-w-[78%] hairline bg-background rounded-2xl rounded-bl-sm overflow-hidden text-foreground">
+      <div className="max-w-[78%] border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm overflow-hidden text-white">
         <p className="text-sm leading-relaxed px-4 pt-3 pb-2">
           People who chat with me over voice are{" "}
           <span className="font-semibold">75% more likely</span> to find value in our conversations.
@@ -1136,7 +1142,7 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
               TEXT
             </text>
           </svg>
-          <p className="font-sans-ui text-[8.5px] tracking-[0.22em] uppercase text-muted-foreground text-center -mt-1">
+          <p className="font-sans-ui text-[8.5px] tracking-[0.22em] uppercase text-white/70 text-center -mt-1">
             Reported positive impact
           </p>
         </div>
@@ -1149,8 +1155,8 @@ function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-sm">{value}</p>
-      <p className="font-sans-ui text-[9px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">
+      <p className="text-sm text-white">{value}</p>
+      <p className="font-sans-ui text-[9px] tracking-[0.2em] uppercase text-white/70 mt-0.5">
         {label}
       </p>
     </div>
@@ -1160,16 +1166,16 @@ function Stat({ label, value }: { label: string; value: string }) {
 function TypingBubble({ avatar }: { avatar: AvatarVariant | null }) {
   return (
     <div className="flex items-end gap-2 yuna-fade-in justify-start">
-      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center text-foreground shrink-0 bg-muted">
+      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
         {avatar ? (
           <YunaAvatar variant={avatar} size={28} />
         ) : (
-          <span className="h-7 w-7 rounded-full hairline flex items-center justify-center">
-            <YunaMark size={14} />
+          <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
+            <YunaMark size={14} className="text-white" />
           </span>
         )}
       </div>
-      <div className="hairline rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
+      <div className="border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
         <Dot delay={0} />
         <Dot delay={150} />
         <Dot delay={300} />
@@ -1181,7 +1187,7 @@ function TypingBubble({ avatar }: { avatar: AvatarVariant | null }) {
 function Dot({ delay }: { delay: number }) {
   return (
     <span
-      className="h-1.5 w-1.5 rounded-full bg-muted-foreground"
+      className="h-1.5 w-1.5 rounded-full bg-white"
       style={{
         animation: "yuna-fade 900ms ease-in-out infinite alternate",
         animationDelay: `${delay}ms`,

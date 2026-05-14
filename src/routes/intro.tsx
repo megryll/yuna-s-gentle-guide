@@ -7,6 +7,7 @@ import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
+import { SuggestionChip } from "@/components/SuggestionChip";
 
 export const Route = createFileRoute("/intro")({
   validateSearch: (s: Record<string, unknown>): { step?: number } => {
@@ -846,10 +847,9 @@ function Intro() {
             {phase === "wait-tap" && (
               <div className="yuna-rise">
                 {stepIdx === 1 ? (
-                  <Button
-                    surface="dark"
-                    variant="primary"
-                    fullWidth
+                  <SuggestionChip
+                    size="lg"
+                    action="reply"
                     onClick={() =>
                       submitChatReaction(
                         REACTION_AMAZING.userText,
@@ -858,12 +858,10 @@ function Intro() {
                     }
                   >
                     Amazing! {"\u{1F929}"}
-                  </Button>
+                  </SuggestionChip>
                 ) : stepIdx === 3 ? (
-                  <Button
-                    surface="dark"
-                    variant="primary"
-                    fullWidth
+                  <SuggestionChip
+                    size="lg"
                     onClick={() =>
                       submitChatReaction(
                         REACTION_IMPRESSIVE.userText,
@@ -872,29 +870,26 @@ function Intro() {
                     }
                   >
                     Impressive! {"\u{1F92F}"}
-                  </Button>
+                  </SuggestionChip>
                 ) : stepIdx === 2 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      surface="dark"
-                      variant="secondary"
-                      fullWidth
-                      onClick={() =>
-                        submitNotificationChoice(false, "Maybe later")
-                      }
-                    >
-                      Maybe later
-                    </Button>
-                    <Button
-                      surface="dark"
-                      variant="primary"
-                      fullWidth
+                  <div className="flex flex-col gap-2.5">
+                    <SuggestionChip
+                      size="lg"
                       onClick={() =>
                         submitNotificationChoice(true, "Set them up \u{2728}")
                       }
                     >
                       Set them up {"\u{2728}"}
-                    </Button>
+                    </SuggestionChip>
+                    <SuggestionChip
+                      size="lg"
+                      variant="outline"
+                      onClick={() =>
+                        submitNotificationChoice(false, "Maybe later")
+                      }
+                    >
+                      Maybe later
+                    </SuggestionChip>
                   </div>
                 ) : stepIdx === 4 ? (
                   <Button
@@ -906,11 +901,13 @@ function Intro() {
                     {ctaLabelForStep(stepIdx)}
                   </Button>
                 ) : stepIdx === 5 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      surface="dark"
-                      variant="secondary"
-                      fullWidth
+                  <div className="flex flex-col gap-2.5">
+                    <SuggestionChip size="lg" onClick={advance}>
+                      Let’s Start! {"\u{1F49A}"}
+                    </SuggestionChip>
+                    <SuggestionChip
+                      size="lg"
+                      variant="outline"
                       onClick={() =>
                         window.open(
                           "https://yuna.io/privacy",
@@ -923,15 +920,7 @@ function Intro() {
                         Prove it
                         <LinkOutIcon />
                       </span>
-                    </Button>
-                    <Button
-                      surface="dark"
-                      variant="primary"
-                      fullWidth
-                      onClick={advance}
-                    >
-                      Let’s Start!
-                    </Button>
+                    </SuggestionChip>
                   </div>
                 ) : (
                   <Button
