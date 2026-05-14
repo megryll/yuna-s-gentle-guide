@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown as ChevronDownIcon } from "lucide-react";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -51,9 +52,5 @@ export function YunaHeaderTrigger({
 }
 
 function ChevronDown() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <ChevronDownIcon size={10} strokeWidth={1.5} />;
 }

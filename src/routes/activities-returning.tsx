@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { BookOpen, Target } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { YunaMark } from "@/components/YunaMark";
 import {
@@ -100,13 +101,7 @@ function QuickLinksSection({ onOpen }: { onOpen: (title: string) => void }) {
 }
 
 function TargetIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
-    </svg>
-  );
+  return <Target size={16} strokeWidth={1.6} aria-hidden />;
 }
 
 function MeditateIcon() {
@@ -125,19 +120,5 @@ function MeditateIcon() {
 }
 
 function BookIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6 4h10a3 3 0 0 1 3 3v13H9a3 3 0 0 1-3-3V4z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 17a3 3 0 0 1 3-3h10"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
+  return <BookOpen size={16} strokeWidth={1.6} aria-hidden />;
 }

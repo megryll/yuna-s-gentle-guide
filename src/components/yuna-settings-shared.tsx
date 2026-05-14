@@ -1,4 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Gauge,
+  Globe,
+  Mic,
+  Pause,
+  Play,
+} from "lucide-react";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
@@ -490,15 +500,7 @@ function VoiceIntroCard({
             color: checkFg,
           }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M5 12.5l4.5 4.5L19 7"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Check size={12} strokeWidth={2.2} aria-hidden="true" />
         </div>
       )}
 
@@ -525,18 +527,25 @@ function VoiceIntroCard({
 
 function PlayPill() {
   return (
-    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
-      <path d="M1 1L7 4.5L1 8V1Z" fill="white" />
-    </svg>
+    <Play
+      size={9}
+      strokeWidth={0}
+      fill="white"
+      className="text-white"
+      aria-hidden="true"
+    />
   );
 }
 
 function PausePill() {
   return (
-    <svg width="8" height="9" viewBox="0 0 8 9" fill="none" aria-hidden="true">
-      <rect x="0.5" y="1" width="2.4" height="7" rx="0.8" fill="white" />
-      <rect x="5.1" y="1" width="2.4" height="7" rx="0.8" fill="white" />
-    </svg>
+    <Pause
+      size={9}
+      strokeWidth={0}
+      fill="white"
+      className="text-white"
+      aria-hidden="true"
+    />
   );
 }
 
@@ -629,93 +638,32 @@ export function useVoicePreview() {
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 export function CheckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 12.5l4.5 4.5L19 7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Check size={16} strokeWidth={1.8} aria-hidden="true" />;
 }
 
 export function ChevronRightIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
+    <ChevronRight
+      size={14}
+      strokeWidth={1.6}
       aria-hidden="true"
       className="text-muted-foreground shrink-0"
-    >
-      <path
-        d="M9 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    />
   );
 }
 
 export function ChevronLeftIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M15 6l-6 6 6 6"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <ChevronLeft size={18} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 export function MicIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 11a7 7 0 0 0 14 0M12 18v3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Mic size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
 
 export function SpeedIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 18a8 8 0 1 1 14 0"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path d="M12 14l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="12" cy="14" r="1" fill="currentColor" />
-    </svg>
-  );
+  return <Gauge size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
 
 export function GlobeIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 12h18" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
+  return <Globe size={20} strokeWidth={1.5} aria-hidden="true" />;
 }

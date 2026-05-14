@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { ChevronRight, Menu, Volume2, VolumeX } from "lucide-react";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -319,67 +320,23 @@ function WelcomeTooltip({
 }
 
 function MenuIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Menu size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function SpeakerOnIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 9v6h4l5 4V5L9 9H5z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M17 8c1.5 1.5 1.5 6.5 0 8M19.5 5c3 3 3 11 0 14"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Volume2 size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function SpeakerOffIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 9v6h4l5 4V5L9 9H5z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path d="M17 9l5 6M22 9l-5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+  return <VolumeX size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function Chevron() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
+    <ChevronRight
+      size={14}
+      strokeWidth={1.5}
       className="text-white/70 shrink-0"
-    >
-      <path
-        d="M9 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    />
   );
 }

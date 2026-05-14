@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { ChevronLeft, Mic, PhoneOff, Volume2 } from "lucide-react";
 import { Button } from "@/components/Button";
 
 export const Route = createFileRoute("/ds/buttons")({
@@ -266,35 +267,17 @@ function ToggleDemo() {
 }
 
 function BackArrow() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <ChevronLeft size={14} strokeWidth={1.5} />;
 }
 
 function MicGlyph() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <Mic size={16} strokeWidth={1.5} />;
 }
 
 function SpeakerGlyph() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M4 10v4h4l5 4V6L8 10H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M16 9c1.2 1 1.2 5 0 6M19 6c2.5 2 2.5 10 0 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <Volume2 size={16} strokeWidth={1.5} />;
 }
 
 function EndGlyph() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M3 14c5-5 13-5 18 0l-2 2-3-1v-2a10 10 0 0 0-8 0v2l-3 1-2-2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" transform="rotate(135 12 12)" />
-    </svg>
-  );
+  return <PhoneOff size={16} strokeWidth={1.5} />;
 }

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 
@@ -30,9 +31,7 @@ function AuthScreen() {
             onClick={() => navigate({ to: "/" })}
             aria-label="Back"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronLeft size={14} strokeWidth={1.5} />
           </Button>
           <span className="h-9 w-9" />
         </div>

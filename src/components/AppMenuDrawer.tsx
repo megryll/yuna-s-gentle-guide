@@ -1,4 +1,20 @@
 import { useEffect, type ReactNode } from "react";
+import {
+  ChevronRight as ChevronRightLucide,
+  CircleCheck,
+  CircleHelp,
+  CreditCard,
+  FileText,
+  Lock,
+  LogOut,
+  Mail,
+  MessageSquareWarning,
+  Receipt,
+  RefreshCw,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/Button";
 
 type Row = {
@@ -82,9 +98,7 @@ export function AppMenuDrawer({
             aria-label="Close"
             className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <X size={14} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -172,119 +186,49 @@ export function AppMenuDrawer({
 
 function ChevronRight() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-muted-foreground shrink-0">
-      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <ChevronRightLucide
+      size={14}
+      strokeWidth={1.5}
+      className="text-muted-foreground shrink-0"
+    />
   );
 }
 
 function PersonIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <User size={18} strokeWidth={1.5} />;
 }
 function MailIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3.5 7l8.5 6 8.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Mail size={18} strokeWidth={1.5} />;
 }
 function CardIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <CreditCard size={18} strokeWidth={1.5} />;
 }
 function CardArrowIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M14 16l2-2-2-2M16 14H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Receipt size={18} strokeWidth={1.5} />;
 }
 function ChatBubbleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="11" r="0.8" fill="currentColor" />
-      <path d="M12 13.5v0.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <MessageSquareWarning size={18} strokeWidth={1.5} />;
 }
 function RefreshIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M4 12a8 8 0 0 1 13.7-5.7L20 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 4v5h-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 12a8 8 0 0 1-13.7 5.7L4 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 20v-5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <RefreshCw size={18} strokeWidth={1.5} />;
 }
 function LockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+  return <Lock size={18} strokeWidth={1.5} />;
 }
 function DocIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M6 3h8l4 4v14H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M14 3v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M9 12h6M9 16h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <FileText size={18} strokeWidth={1.5} />;
 }
 function QuestionIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="12" cy="17" r="0.9" fill="currentColor" />
-    </svg>
-  );
+  return <CircleHelp size={18} strokeWidth={1.5} />;
 }
 function CheckCircleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 12.5l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <CircleCheck size={18} strokeWidth={1.5} />;
 }
 function LogoutIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M10 8l-4 4 4 4M6 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <LogOut size={18} strokeWidth={1.5} />;
 }
 function TrashIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M4 7h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Trash2 size={18} strokeWidth={1.5} />;
 }
 function TherapistMatchIcon() {
   return (

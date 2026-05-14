@@ -1,5 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import {
+  ArrowUp,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronLeft,
+  Gauge,
+  Globe,
+  Star,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { setName as saveName, setVoice } from "@/lib/yuna-session";
@@ -701,15 +712,7 @@ function Intro() {
             }}
             aria-label="Back"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 6l-6 6 6 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronLeft size={14} strokeWidth={1.5} />
           </Button>
           <ProgressDots current={stepIdx + 1} total={TOTAL_STEPS} />
           <Button
@@ -1129,15 +1132,7 @@ function NameForm({
           aria-label="Send"
           disabled={!value.trim()}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 4v14M5 11l7-7 7 7"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ArrowUp size={13} strokeWidth={2} />
         </Button>
       </div>
     </form>
@@ -1424,42 +1419,35 @@ function ControlPill({
       {icon}
       <span className="text-[12px] text-white/70">{label}</span>
       <span className="text-[12px] font-semibold text-white">{value}</span>
-      <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true" className="text-white/70">
-        <path
-          d="M2 3.5L5 6.5L8 3.5"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <ChevronDown
+        size={9}
+        strokeWidth={1.5}
+        aria-hidden="true"
+        className="text-white/70"
+      />
     </button>
   );
 }
 
 function GlobePillIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true" className="text-white/85">
-      <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1.2" />
-      <ellipse cx="7" cy="7" rx="2.5" ry="5.25" stroke="currentColor" strokeWidth="1.2" />
-      <line x1="1.75" y1="5" x2="12.25" y2="5" stroke="currentColor" strokeWidth="1.2" />
-      <line x1="1.75" y1="9" x2="12.25" y2="9" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
+    <Globe
+      size={13}
+      strokeWidth={1.2}
+      aria-hidden="true"
+      className="text-white/85"
+    />
   );
 }
 
 function SpeedPillIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true" className="text-white/85">
-      <path
-        d="M2 10.5C2 7.462 4.462 5 7.5 5S13 7.462 13 10.5"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-      <line x1="7.5" y1="10.5" x2="10" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <circle cx="7.5" cy="10.5" r="1" fill="currentColor" />
-    </svg>
+    <Gauge
+      size={13}
+      strokeWidth={1.2}
+      aria-hidden="true"
+      className="text-white/85"
+    />
   );
 }
 
@@ -1469,16 +1457,13 @@ function StarRow({ count, color = "#7FB6FF" }: { count: number; color?: string }
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: count }).map((_, i) => (
-        <svg
+        <Star
           key={i}
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
+          size={16}
           fill={color}
+          strokeWidth={0}
           aria-hidden="true"
-        >
-          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-        </svg>
+        />
       ))}
     </div>
   );
@@ -1552,45 +1537,14 @@ function PushPermissionModal({
 }
 
 function SpeakerOnIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 9v6h4l5 4V5L9 9H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path
-        d="M17 8c1.5 1.5 1.5 6.5 0 8M19.5 5c3 3 3 11 0 14"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Volume2 size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function LinkOutIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 17L17 7M17 7H9M17 7V15"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <ArrowUpRight size={13} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function SpeakerOffIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 9v6h4l5 4V5L9 9H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M17 9l5 6M22 9l-5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+  return <VolumeX size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 

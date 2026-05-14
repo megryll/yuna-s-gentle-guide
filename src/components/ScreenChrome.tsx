@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
+import { Menu, Mic, PhoneCall } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
@@ -141,53 +142,19 @@ export function ScreenChrome({
 }
 
 function MenuIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Menu size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function PhoneCallIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 4h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
-        fill="currentColor"
-      />
-      <path
-        d="M16.2 5.2c1 1 1.6 2.4 1.6 3.8"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M19 3c1.9 1.9 3 4.4 3 7"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
+    <PhoneCall
+      size={22}
+      strokeWidth={1.6}
+      aria-hidden="true"
+    />
   );
 }
 
 function MicLargeIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 11a7 7 0 0 0 14 0M12 18v3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Mic size={32} strokeWidth={1.5} />;
 }

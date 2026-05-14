@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ArrowUp as ArrowUpIcon } from "lucide-react";
 
 type Variant = "filled" | "outline" | "primary";
 type Size = "md" | "sm" | "lg";
@@ -123,15 +124,5 @@ function ActionAffordance({
 }
 
 function ArrowUp({ px }: { px: number }) {
-  return (
-    <svg width={px} height={px} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 19V5M5 12l7-7 7 7"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <ArrowUpIcon size={px} strokeWidth={2.5} />;
 }

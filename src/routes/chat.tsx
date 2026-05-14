@@ -1,5 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  Mic,
+  Phone,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
@@ -794,15 +803,7 @@ function Chat() {
                     aria-label="Send"
                     disabled={pendingLimitations || recordingVoice || !text.trim()}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M5 12h14M13 6l6 6-6 6"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <ArrowRight size={14} strokeWidth={1.5} />
                   </Button>
                 </div>
               </form>
@@ -948,15 +949,7 @@ function LimitationsCard({
             aria-hidden="true"
             className="shrink-0 h-4 w-4 rounded-full bg-white text-neutral-900 flex items-center justify-center"
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5 12.5l4.5 4.5L19 7"
-                stroke="currentColor"
-                strokeWidth="2.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Check size={10} strokeWidth={2.6} />
           </span>
           Acknowledgements accepted
         </div>
@@ -987,15 +980,7 @@ function LimitationsCard({
                   : "border border-white/40 text-transparent")
               }
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12.5l4.5 4.5L19 7"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Check size={14} strokeWidth={2.2} />
             </span>
           </button>
         );
@@ -1197,106 +1182,33 @@ function Dot({ delay }: { delay: number }) {
 }
 
 function SpeakerOnIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 10v4h4l5 4V6L8 10H4z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 9c1.2 1 1.2 5 0 6M19 6c2.5 2 2.5 10 0 12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Volume2 size={22} strokeWidth={1.5} />;
 }
 function SpeakerOffIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 10v4h4l5 4V6L8 10H4z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M17 9l5 6M22 9l-5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <VolumeX size={22} strokeWidth={1.5} />;
 }
 function CloseIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M6 6l12 12M18 6L6 18"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <X size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 function MicIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 11a7 7 0 0 0 14 0M12 18v3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Mic size={14} strokeWidth={1.5} />;
 }
 function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M5 12.5l4.5 4.5L19 7"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Check size={14} strokeWidth={2.2} />;
 }
 function PhoneIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M5 4h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Phone size={14} strokeWidth={1.5} />;
 }
 function PhoneCallIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 4h3l2 5-2 1a11 11 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
-        fill="currentColor"
-      />
-    </svg>
+    <Phone
+      size={14}
+      strokeWidth={1.5}
+      fill="currentColor"
+      aria-hidden="true"
+    />
   );
 }
 function MicLargeIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 11a7 7 0 0 0 14 0M12 18v3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Mic size={32} strokeWidth={1.5} />;
 }

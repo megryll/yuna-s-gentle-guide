@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Bookmark } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
@@ -379,21 +380,12 @@ function PlacedForYou({ items }: { items: Activity[] }) {
 
 function BookmarkIcon({ filled }: { filled: boolean }) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
+    <Bookmark
+      size={18}
+      strokeWidth={1.5}
       aria-hidden
       className="text-white"
-    >
-      <path
-        d="M6 4h12v17l-6-4-6 4V4z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        fill={filled ? "currentColor" : "none"}
-      />
-    </svg>
+      fill={filled ? "currentColor" : "none"}
+    />
   );
 }

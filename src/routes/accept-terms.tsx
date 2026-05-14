@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Check, ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 
@@ -50,15 +51,7 @@ function AcceptTerms() {
             onClick={() => navigate({ to: "/auth" })}
             aria-label="Back"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M15 6l-6 6 6 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronLeft size={14} strokeWidth={1.5} />
           </Button>
           <span className="h-9 w-9" />
         </div>
@@ -151,17 +144,10 @@ function CheckBadge() {
   return (
     <span
       aria-hidden="true"
-      className="flex items-center justify-center h-7 w-7 rounded-full shrink-0"
+      className="flex items-center justify-center h-7 w-7 rounded-full shrink-0 text-white"
       style={{ backgroundColor: "#66BA24" }}
     >
-      <svg width="15" height="15" viewBox="0 0 17 17" fill="none">
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M14.7759 4.77699L14.7763 4.77645C15.1466 4.35163 15.1027 3.70704 14.6781 3.33639C14.2538 2.96609 13.6101 3.00924 13.239 3.43244L6.82275 9.87881C6.619 10.0835 6.30128 10.1213 6.05518 9.97019L3.25594 8.25106C2.8228 7.89368 2.18177 7.95315 1.82187 8.38504C1.46126 8.81778 1.5193 9.46069 1.95125 9.82189L5.53724 13.4722L5.53992 13.4745C6.25505 14.0704 7.3152 13.9862 7.92735 13.2849L14.7759 4.77699Z"
-          fill="#FFFFFF"
-        />
-      </svg>
+      <Check size={15} strokeWidth={2.5} />
     </span>
   );
 }

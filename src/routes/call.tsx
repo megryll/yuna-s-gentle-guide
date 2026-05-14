@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
@@ -560,67 +561,16 @@ function CallButton({
 }
 
 function MicIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 11a7 7 0 0 0 14 0M12 18v3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Mic size={18} strokeWidth={1.5} />;
 }
 function MicOffIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path
-        d="M9 9v3a3 3 0 0 0 4.7 2.5M15 12V6a3 3 0 0 0-5.7-1.3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 11a7 7 0 0 0 11.6 5.3M19 11a7 7 0 0 1-.5 2.6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <MicOff size={18} strokeWidth={1.5} />;
 }
 function SpeakerIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 10v4h4l5 4V6L8 10H4z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 9c1.2 1 1.2 5 0 6M19 6c2.5 2 2.5 10 0 12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Volume2 size={18} strokeWidth={1.5} />;
 }
 function EndIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M3 14c5-5 13-5 18 0l-2 2-3-1v-2a10 10 0 0 0-8 0v2l-3 1-2-2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        transform="rotate(135 12 12)"
-      />
-    </svg>
-  );
+  return <PhoneOff size={18} strokeWidth={1.5} />;
 }
 
 // ── Voice waveform ──────────────────────────────────────────────────────────

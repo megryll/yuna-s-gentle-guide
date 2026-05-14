@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { Bookmark, House, MessageCircle, Pencil, User } from "lucide-react";
 
 type Surface = "light" | "dark";
 
@@ -143,66 +144,28 @@ function NotificationDot({ surface }: { surface: Surface }) {
 }
 
 function HomeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1v-9z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <House size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function PersonIcon() {
-  return (
-    <svg width="20" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <User size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function ChatIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
-        fill="currentColor"
-      />
-    </svg>
+    <MessageCircle
+      size={28}
+      strokeWidth={1.6}
+      fill="currentColor"
+      aria-hidden="true"
+    />
   );
 }
 
 function ToolsIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M14 6.5a3 3 0 1 1 3.5 3.5L9 18.5l-4 1 1-4L14.5 7"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Pencil size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function SessionsIcon() {
-  return (
-    <svg width="20" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 4.5A1.5 1.5 0 0 1 6.5 3h11A1.5 1.5 0 0 1 19 4.5V20l-7-3-7 3V4.5z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Bookmark size={22} strokeWidth={1.6} aria-hidden="true" />;
 }

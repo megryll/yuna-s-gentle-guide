@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Heart, Leaf, MessageSquareText } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
 import {
@@ -235,42 +236,13 @@ export function YunaSettingsDrawer({
 }
 
 function ChatLinesIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M7 9h10M7 13h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <MessageSquareText size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
 
 function LeafIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M5 19c4-4 7-7 11-11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <Leaf size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
 
 function HeartIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Heart size={20} strokeWidth={1.5} aria-hidden="true" />;
 }
