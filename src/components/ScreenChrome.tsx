@@ -6,6 +6,7 @@ import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
+import { isDarkBg, useThemePrefs } from "@/lib/theme-prefs";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +26,11 @@ import {
 export function ScreenChrome({
   children,
   hideHeader = false,
+  surface = "light",
 }: {
   children: ReactNode;
   hideHeader?: boolean;
+  surface?: "light" | "dark";
 }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,20 +49,28 @@ export function ScreenChrome({
       stream.getTracks().forEach((t) => t.stop());
       setMicState("granted");
       setMicOpen(false);
-      navigate({ to: "/call", search: {} });
+      navigate({ to: "/chat", search: { mode: "voice" } });
     } catch {
       setMicState("denied");
     }
   };
 
+  const { mainBg } = useThemePrefs();
+  // surface="dark" is the photo-bg cluster (Home/You/etc). When the user picks
+  // Snowy, the photo turns light, so cards/buttons need surface="light" to
+  // stay readable. Forest keeps the existing dark-photo styling.
+  const effectiveSurface =
+    surface === "dark" && isDarkBg(mainBg) ? "light" : surface;
+  const isDark = surface === "dark";
+
   return (
-    <PhoneFrame>
+    <PhoneFrame backgroundImage={isDark ? "/background.png" : undefined} themed={isDark}>
       <div className="flex-1 flex flex-col min-h-0">
         {!hideHeader && (
           <header className="grid grid-cols-3 items-center px-5 pt-14 pb-2 shrink-0">
             <div className="justify-self-start">
               <Button
-                surface="light"
+                surface={effectiveSurface}
                 variant="ghost"
                 size="icon-lg"
                 onClick={() => setMenuOpen(true)}
@@ -69,11 +80,11 @@ export function ScreenChrome({
               </Button>
             </div>
             <div className="justify-self-center">
-              <YunaHeaderTrigger />
+              <YunaHeaderTrigger surface={effectiveSurface} />
             </div>
             <div className="justify-self-end">
               <Button
-                surface="light"
+                surface={effectiveSurface}
                 variant="ghost"
                 size="icon-lg"
                 onClick={openCall}
@@ -89,7 +100,7 @@ export function ScreenChrome({
           {children}
         </div>
 
-        <AppBar />
+        <AppBar surface={effectiveSurface} />
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
@@ -97,10 +108,10 @@ export function ScreenChrome({
       <Dialog open={micOpen} onOpenChange={setMicOpen}>
         <DialogContent className="sm:max-w-[380px] rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl tracking-tight">
+            <DialogTitle className="font-display text-xl tracking-tight">
               Allow microphone access
             </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
+            <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
               Yuna needs to hear you to hold a conversation.
             </DialogDescription>
           </DialogHeader>

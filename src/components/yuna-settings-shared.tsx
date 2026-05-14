@@ -127,6 +127,65 @@ export function NavList({ children }: { children: React.ReactNode }) {
   return <div className="rounded-2xl hairline overflow-hidden bg-background">{children}</div>;
 }
 
+export type ImageChoice = {
+  id: string;
+  label: string;
+  description?: string;
+  image: string;
+};
+
+export function ImagePicker({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  options: ImageChoice[];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {options.map((o) => {
+        const selected = o.id === value;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={
+              "relative rounded-2xl overflow-hidden text-left aspect-[3/4] transition-shadow " +
+              (selected
+                ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                : "hairline")
+            }
+          >
+            <img
+              src={o.image}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover"
+              draggable={false}
+            />
+            <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+              <p className="text-sm font-medium text-white">{o.label}</p>
+              {o.description && (
+                <p className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
+                  {o.description}
+                </p>
+              )}
+            </div>
+            {selected && (
+              <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-foreground text-background flex items-center justify-center">
+                <Check size={14} strokeWidth={2.5} aria-hidden="true" />
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function NavRow({
   icon,
   label,
@@ -149,7 +208,10 @@ export function NavRow({
         {icon}
       </span>
       <span className="flex-1 text-sm">{label}</span>
-      {imageSrc ? (
+      {value && (
+        <span className="font-sans-ui text-xs text-muted-foreground">{value}</span>
+      )}
+      {imageSrc && (
         <img
           src={imageSrc}
           alt=""
@@ -157,9 +219,7 @@ export function NavRow({
           className="h-7 w-7 rounded-full object-cover hairline shrink-0"
           draggable={false}
         />
-      ) : value ? (
-        <span className="font-sans-ui text-xs text-muted-foreground">{value}</span>
-      ) : null}
+      )}
       <ChevronRightIcon />
     </button>
   );

@@ -18,15 +18,14 @@ const PAGES: Entry[] = [
   { label: "Mood data", to: "/intro", search: { step: 3 }, sub: true },
   { label: "Voice", to: "/intro", search: { step: 4 }, sub: true },
   { label: "Privacy", to: "/intro", search: { step: 5 }, sub: true },
-  { label: "Home: New", to: "/home" },
-  { label: "Home: Returning", to: "/home-returning" },
-  { label: "Chat", to: "/chat" },
-  { label: "Call", to: "/call" },
+  { label: "Home", to: "/home" },
+  { label: "Session", to: "/chat" },
   { label: "Wrap-up", to: "/wrap-up" },
   { label: "You", to: "/you" },
-  { label: "Activities: New", to: "/activities" },
-  { label: "Activities: Returning", to: "/activities-returning" },
+  { label: "Tools", to: "/tools" },
+  { label: "Sessions", to: "/sessions" },
   { label: "Progress", to: "/progress" },
+  { label: "Settings", to: "/settings" },
 ];
 
 const DS_PAGES: Entry[] = [{ label: "Buttons", to: "/ds/buttons" }];

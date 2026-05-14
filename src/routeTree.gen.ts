@@ -11,15 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YouRouteImport } from './routes/you'
 import { Route as WrapUpRouteImport } from './routes/wrap-up'
+import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as IntroRouteImport } from './routes/intro'
-import { Route as HomeReturningRouteImport } from './routes/home-returning'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as EmotionTrendsRouteImport } from './routes/emotion-trends'
 import { Route as ChatRouteImport } from './routes/chat'
-import { Route as CallRouteImport } from './routes/call'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ActivitiesReturningRouteImport } from './routes/activities-returning'
-import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
@@ -34,6 +34,21 @@ const WrapUpRoute = WrapUpRouteImport.update({
   path: '/wrap-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SessionsRoute = SessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -44,14 +59,14 @@ const IntroRoute = IntroRouteImport.update({
   path: '/intro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeReturningRoute = HomeReturningRouteImport.update({
-  id: '/home-returning',
-  path: '/home-returning',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmotionTrendsRoute = EmotionTrendsRouteImport.update({
+  id: '/emotion-trends',
+  path: '/emotion-trends',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -59,24 +74,9 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CallRoute = CallRouteImport.update({
-  id: '/call',
-  path: '/call',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ActivitiesReturningRoute = ActivitiesReturningRouteImport.update({
-  id: '/activities-returning',
-  path: '/activities-returning',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ActivitiesRoute = ActivitiesRouteImport.update({
-  id: '/activities',
-  path: '/activities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptTermsRoute = AcceptTermsRouteImport.update({
@@ -98,15 +98,15 @@ const DsButtonsRoute = DsButtonsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
-  '/activities': typeof ActivitiesRoute
-  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
-  '/call': typeof CallRoute
   '/chat': typeof ChatRoute
+  '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
-  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
+  '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
@@ -114,15 +114,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
-  '/activities': typeof ActivitiesRoute
-  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
-  '/call': typeof CallRoute
   '/chat': typeof ChatRoute
+  '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
-  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
+  '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
@@ -131,15 +131,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
-  '/activities': typeof ActivitiesRoute
-  '/activities-returning': typeof ActivitiesReturningRoute
   '/auth': typeof AuthRoute
-  '/call': typeof CallRoute
   '/chat': typeof ChatRoute
+  '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
-  '/home-returning': typeof HomeReturningRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
+  '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
+  '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
@@ -149,15 +149,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-terms'
-    | '/activities'
-    | '/activities-returning'
     | '/auth'
-    | '/call'
     | '/chat'
+    | '/emotion-trends'
     | '/home'
-    | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/sessions'
+    | '/settings'
+    | '/tools'
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
@@ -165,15 +165,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-terms'
-    | '/activities'
-    | '/activities-returning'
     | '/auth'
-    | '/call'
     | '/chat'
+    | '/emotion-trends'
     | '/home'
-    | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/sessions'
+    | '/settings'
+    | '/tools'
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
@@ -181,15 +181,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/accept-terms'
-    | '/activities'
-    | '/activities-returning'
     | '/auth'
-    | '/call'
     | '/chat'
+    | '/emotion-trends'
     | '/home'
-    | '/home-returning'
     | '/intro'
     | '/progress'
+    | '/sessions'
+    | '/settings'
+    | '/tools'
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
@@ -198,15 +198,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptTermsRoute: typeof AcceptTermsRoute
-  ActivitiesRoute: typeof ActivitiesRoute
-  ActivitiesReturningRoute: typeof ActivitiesReturningRoute
   AuthRoute: typeof AuthRoute
-  CallRoute: typeof CallRoute
   ChatRoute: typeof ChatRoute
+  EmotionTrendsRoute: typeof EmotionTrendsRoute
   HomeRoute: typeof HomeRoute
-  HomeReturningRoute: typeof HomeReturningRoute
   IntroRoute: typeof IntroRoute
   ProgressRoute: typeof ProgressRoute
+  SessionsRoute: typeof SessionsRoute
+  SettingsRoute: typeof SettingsRoute
+  ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
@@ -228,6 +228,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WrapUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sessions': {
+      id: '/sessions'
+      path: '/sessions'
+      fullPath: '/sessions'
+      preLoaderRoute: typeof SessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/progress': {
       id: '/progress'
       path: '/progress'
@@ -242,18 +263,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home-returning': {
-      id: '/home-returning'
-      path: '/home-returning'
-      fullPath: '/home-returning'
-      preLoaderRoute: typeof HomeReturningRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/home': {
       id: '/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emotion-trends': {
+      id: '/emotion-trends'
+      path: '/emotion-trends'
+      fullPath: '/emotion-trends'
+      preLoaderRoute: typeof EmotionTrendsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -263,32 +284,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/call': {
-      id: '/call'
-      path: '/call'
-      fullPath: '/call'
-      preLoaderRoute: typeof CallRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/activities-returning': {
-      id: '/activities-returning'
-      path: '/activities-returning'
-      fullPath: '/activities-returning'
-      preLoaderRoute: typeof ActivitiesReturningRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/activities': {
-      id: '/activities'
-      path: '/activities'
-      fullPath: '/activities'
-      preLoaderRoute: typeof ActivitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-terms': {
@@ -318,15 +318,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptTermsRoute: AcceptTermsRoute,
-  ActivitiesRoute: ActivitiesRoute,
-  ActivitiesReturningRoute: ActivitiesReturningRoute,
   AuthRoute: AuthRoute,
-  CallRoute: CallRoute,
   ChatRoute: ChatRoute,
+  EmotionTrendsRoute: EmotionTrendsRoute,
   HomeRoute: HomeRoute,
-  HomeReturningRoute: HomeReturningRoute,
   IntroRoute: IntroRoute,
   ProgressRoute: ProgressRoute,
+  SessionsRoute: SessionsRoute,
+  SettingsRoute: SettingsRoute,
+  ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,

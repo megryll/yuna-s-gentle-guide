@@ -4,6 +4,11 @@ export const FIRST_TIME_SUGGESTIONS = [
   "Tell me more about how Yuna works.",
 ] as const;
 
+export const RETURNING_USER_SUGGESTIONS = [
+  "Talk about pressure and perfectionism",
+  "Learn how to come back to your breath",
+] as const;
+
 type Align = "start" | "end" | "center";
 
 export function SuggestionChips({

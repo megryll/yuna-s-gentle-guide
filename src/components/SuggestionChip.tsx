@@ -16,7 +16,7 @@ type Props = {
 };
 
 const FILLED_BG = "rgba(253, 252, 250, 0.2)";
-const PRIMARY_BG = "#115430";
+const PRIMARY_BG = "#FFFFFF";
 
 export function SuggestionChip({
   children,
@@ -38,7 +38,7 @@ export function SuggestionChip({
     variant === "outline"
       ? "border border-white/20 text-white"
       : variant === "primary"
-        ? "text-white"
+        ? "text-neutral-900"
         : "border-t border-white/10 text-white";
 
   const inlineStyle =

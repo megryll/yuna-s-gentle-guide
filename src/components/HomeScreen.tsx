@@ -1,6 +1,13 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Menu, Volume2, VolumeX } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Bookmark,
+  LayoutGrid,
+  List,
+  Menu,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -8,25 +15,22 @@ import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppBar } from "@/components/AppBar";
-import { AppMenuDrawer } from "@/components/AppMenuDrawer";
-import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
-import { PERSONALIZED_ACTIVITIES, PERSONALIZED_TOPICS } from "@/lib/activities";
+import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
+import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 
 const WELCOME_TOOLTIP_TEXT =
   "Welcome in. Take a look around — I'll be here when you're ready to chat.";
 
 const NEW_USER_SUGGESTIONS = [
-  "I have something specific to talk about",
-  "Talk about pressure and perfectionism",
-  "Learn how to come back to your breath",
+  "I want to talk about something specific.",
+  "I want you to guide our first conversation.",
+  "Tell me more about how Yuna works.",
 ] as const;
 
 const RETURNING_SUGGESTIONS = [
   { label: "Start A New Chat", primary: true },
-  { label: "Talk about pressure and perfectionism", primary: false },
-  { label: "Learn how to come back to your breath", primary: false },
 ] as const;
 
 export function HomeScreen({
@@ -37,9 +41,24 @@ export function HomeScreen({
   showWelcome?: boolean;
 }) {
   const navigate = useNavigate();
+  const { name } = useYunaIdentity();
   const [welcomeOpen, setWelcomeOpen] = useState(showWelcome);
   const [welcomeMuted, setWelcomeMuted] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const initialSavedIds = useMemo(
+    () =>
+      new Set(HOME_CARDS.filter((c) => c.isSaved).map((c) => c.id)),
+    [],
+  );
+  const [savedIds, setSavedIds] = useState<Set<string>>(initialSavedIds);
+  const toggleSave = (id: string) =>
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     if (showWelcome) setWelcomeOpen(true);
@@ -53,30 +72,28 @@ export function HomeScreen({
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png">
+    <PhoneFrame backgroundImage="/background.png" themed>
       <div className="flex-1 flex flex-col text-white min-h-0">
-        <header className="grid grid-cols-[1fr_auto_1fr] items-center px-5 pt-14 pb-2 shrink-0">
-          <div />
-          <div className="justify-self-center">
-            <YunaHeaderTrigger surface="dark" />
-          </div>
-          <div className="justify-self-end">
+        <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex justify-end -mr-1">
             <Button
               surface="dark"
               variant="ghost"
               size="icon-lg"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
+              onClick={() => navigate({ to: "/settings" })}
+              aria-label="Open settings"
             >
               <MenuIcon />
             </Button>
           </div>
-        </header>
 
-        <div className="flex-1 flex flex-col px-6 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="mt-6 yuna-rise">
+          <div className="mt-2 yuna-rise">
             <h1 className="text-2xl leading-snug tracking-tight text-white">
-              {returning ? "Welcome back." : "Where shall we begin?"}
+              {returning
+                ? name
+                  ? `Welcome back, ${name}.`
+                  : "Welcome back."
+                : "Where shall we begin?"}
             </h1>
             <p className="mt-2 text-sm text-white/80 max-w-[18rem]">
               {returning
@@ -113,94 +130,20 @@ export function HomeScreen({
           </div>
 
           {returning && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/70">
-                  Topics for you
-                </p>
-              </div>
-              <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
-                <div className="flex gap-4 pl-6 pr-6 pb-2">
-                  {PERSONALIZED_TOPICS.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => open(t.title)}
-                      className="snap-start shrink-0 w-[320px] text-left rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-5 py-4 active:bg-white/15 transition-colors flex items-center gap-3"
-                    >
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-sm leading-snug text-white">
-                          {t.title}
-                        </span>
-                      </span>
-                      <Chevron />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {returning && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/70">
-                  Activities for you
-                </p>
-                <Button
-                  surface="dark"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate({ to: "/activities-returning" })}
-                  className="-mr-4"
-                >
-                  View all
-                </Button>
-              </div>
-              <div className="-mx-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [scroll-padding-left:1.5rem]">
-                <div className="flex gap-4 pl-6 pr-6 pb-2">
-                  {PERSONALIZED_ACTIVITIES.map((a) => (
-                    <button
-                      key={a.id}
-                      onClick={() => open(a.title)}
-                      className="snap-start shrink-0 w-[320px] text-left rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 active:bg-white/15 transition-colors flex items-start gap-3"
-                    >
-                      <span className="h-12 w-12 shrink-0 rounded-xl border border-white/25 flex items-center justify-center bg-white/15">
-                        <YunaMark size={22} className="text-white" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/70">
-                            {a.kind}
-                            {a.duration ? ` · ${a.duration}` : ""}
-                          </p>
-                          {a.isNew && (
-                            <span
-                              className="font-sans-ui text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white"
-                              style={{ backgroundColor: "#66BA24" }}
-                            >
-                              New
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-1 text-[15px] leading-snug font-medium text-white">
-                          {a.title}
-                        </p>
-                        <p className="mt-1 text-xs leading-relaxed text-white/75 italic">
-                          {a.why}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <CreatedForYou
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              savedOnly={savedOnly}
+              setSavedOnly={setSavedOnly}
+              savedIds={savedIds}
+              onToggleSave={toggleSave}
+              onOpen={(c) => open(openPrompt(c))}
+            />
           )}
         </div>
 
         <AppBar surface="dark" />
       </div>
-
-      <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
 
       {welcomeOpen && (
         <WelcomeTooltip
@@ -273,7 +216,7 @@ function WelcomeTooltip({
       onClick={onDismiss}
     >
       <div
-        className="yuna-rise relative rounded-3xl bg-background p-5 shadow-xl w-full max-w-[20rem]"
+        className="yuna-rise relative rounded-3xl bg-popover text-popover-foreground p-5 shadow-xl w-full max-w-[20rem]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -319,6 +262,206 @@ function WelcomeTooltip({
   );
 }
 
+function CreatedForYou({
+  viewMode,
+  setViewMode,
+  savedOnly,
+  setSavedOnly,
+  savedIds,
+  onToggleSave,
+  onOpen,
+}: {
+  viewMode: "card" | "list";
+  setViewMode: (m: "card" | "list") => void;
+  savedOnly: boolean;
+  setSavedOnly: (v: boolean) => void;
+  savedIds: Set<string>;
+  onToggleSave: (id: string) => void;
+  onOpen: (c: HomeCard) => void;
+}) {
+  const items = savedOnly
+    ? HOME_CARDS.filter((c) => savedIds.has(c.id))
+    : HOME_CARDS;
+
+  return (
+    <div className="mt-10">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/70">
+          Created For You
+        </p>
+        <div className="flex items-center gap-2">
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+          <SavedToggle on={savedOnly} onClick={() => setSavedOnly(!savedOnly)} />
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-6 text-center yuna-rise">
+          <p className="text-sm text-white/80">No saved items yet</p>
+          <p className="mt-1 text-xs text-white/60 leading-relaxed">
+            Bookmark anything Yuna shares to keep it close.
+          </p>
+        </div>
+      ) : (
+        <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-2.5")}>
+          {items.map((c, i) => (
+            <li
+              key={c.id}
+              className="yuna-rise"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              {viewMode === "card" ? (
+                <HomeCardItem
+                  card={c}
+                  isSaved={savedIds.has(c.id)}
+                  onClick={() => onOpen(c)}
+                  onToggleSave={() => onToggleSave(c.id)}
+                />
+              ) : (
+                <HomeCardRow card={c} onClick={() => onOpen(c)} />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <ExperienceFeedback />
+    </div>
+  );
+}
+
+function ExperienceFeedback() {
+  const [picked, setPicked] = useState<number | null>(null);
+  const faces = ["😠", "😞", "😐", "🙂", "😊"] as const;
+  const labels = ["Angry", "Sad", "Neutral", "Good", "Great"] as const;
+
+  return (
+    <div className="mt-8 yuna-rise px-1 py-4 text-center text-white">
+      <p className="font-display text-[20px] leading-snug tracking-tight max-w-[18rem] mx-auto">
+        What was your Yuna experience like today?
+      </p>
+      <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+        Our team reads every submission
+      </p>
+      <div className="mt-5 flex items-center justify-between gap-2 max-w-[18rem] mx-auto">
+        {faces.map((emoji, i) => {
+          const active = picked === i;
+          return (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setPicked(i)}
+              aria-label={labels[i]}
+              aria-pressed={active}
+              className={
+                "h-11 w-11 text-[26px] leading-none inline-flex items-center justify-center transition-opacity " +
+                (active ? "opacity-100" : "opacity-80 active:opacity-100")
+              }
+            >
+              <span aria-hidden>{emoji}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function openPrompt(c: HomeCard): string {
+  switch (c.type) {
+    case "guided-session":
+    case "meditation":
+    case "self-discovery":
+    case "learn-skill":
+      return c.title;
+    case "gratitude":
+      return c.prompt;
+    case "affirmation":
+      return c.quote;
+    case "accountability":
+      return c.goal;
+    case "book":
+      return `${c.title} — ${c.author}`;
+  }
+}
+
+function ViewToggle({
+  mode,
+  onChange,
+}: {
+  mode: "card" | "list";
+  onChange: (m: "card" | "list") => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="View mode"
+      className="inline-flex items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-sm h-8 p-0.5"
+    >
+      <ToggleSegmentButton
+        active={mode === "card"}
+        onClick={() => onChange("card")}
+        aria-label="Card view"
+      >
+        <LayoutGrid size={13} strokeWidth={1.75} aria-hidden />
+      </ToggleSegmentButton>
+      <ToggleSegmentButton
+        active={mode === "list"}
+        onClick={() => onChange("list")}
+        aria-label="List view"
+      >
+        <List size={13} strokeWidth={1.75} aria-hidden />
+      </ToggleSegmentButton>
+    </div>
+  );
+}
+
+function ToggleSegmentButton({
+  active,
+  children,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      className={
+        "inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors " +
+        (active
+          ? "bg-white text-neutral-900"
+          : "text-white/75 active:bg-white/10")
+      }
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      aria-label={on ? "Show all activities" : "Show saved only"}
+      className={
+        "inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors " +
+        (on
+          ? "bg-white text-neutral-900"
+          : "border border-white/25 bg-white/10 backdrop-blur-sm text-white/75 active:bg-white/15")
+      }
+    >
+      <Bookmark
+        size={14}
+        strokeWidth={1.75}
+        fill={on ? "currentColor" : "none"}
+        aria-hidden
+      />
+    </button>
+  );
+}
+
 function MenuIcon() {
   return <Menu size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
@@ -331,12 +474,3 @@ function SpeakerOffIcon() {
   return <VolumeX size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 
-function Chevron() {
-  return (
-    <ChevronRight
-      size={14}
-      strokeWidth={1.5}
-      className="text-white/70 shrink-0"
-    />
-  );
-}

@@ -113,21 +113,36 @@ function DSButtons() {
         {/* Label-below icon button */}
         <Section
           title="Icon button with label"
-          subtitle="Pass `label` to an icon-size button to render a small caption below. Use for stacked icon-stacks like the call-screen action bar."
+          subtitle="Pass `label` to an icon-size button to render a small caption below. Caption color follows `surface` (muted on light, white/70 on dark). Use for stacked icon-stacks like the call-screen action bar."
         >
-          <LightSurface>
+          <DarkSurface>
             <div className="flex items-center justify-center gap-6">
-              <Button surface="light" variant="secondary" size="icon-lg" label="Mute" aria-label="Mute">
+              <Button surface="dark" variant="secondary" size="icon-lg" label="Mute" aria-label="Mute">
                 <MicGlyph />
               </Button>
-              <Button surface="light" variant="secondary" size="icon-lg" pressed label="Speaker" aria-label="Speaker">
+              <Button surface="dark" variant="secondary" size="icon-lg" pressed label="Speaker" aria-label="Speaker">
                 <SpeakerGlyph />
               </Button>
-              <Button surface="light" variant="secondary" size="icon-lg" pressed label="End Call" aria-label="End Call">
+              <Button surface="dark" variant="secondary" size="icon-lg" pressed label="End Call" aria-label="End Call">
                 <EndGlyph />
               </Button>
             </div>
-          </LightSurface>
+          </DarkSurface>
+          <div className="mt-3">
+            <LightSurface>
+              <div className="flex items-center justify-center gap-6">
+                <Button surface="light" variant="secondary" size="icon-lg" label="Mute" aria-label="Mute">
+                  <MicGlyph />
+                </Button>
+                <Button surface="light" variant="secondary" size="icon-lg" pressed label="Speaker" aria-label="Speaker">
+                  <SpeakerGlyph />
+                </Button>
+                <Button surface="light" variant="secondary" size="icon-lg" pressed label="End Call" aria-label="End Call">
+                  <EndGlyph />
+                </Button>
+              </div>
+            </LightSurface>
+          </div>
         </Section>
 
         {/* Props reference */}

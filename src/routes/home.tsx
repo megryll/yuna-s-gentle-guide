@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HomeScreen } from "@/components/HomeScreen";
+import { useUserType } from "@/lib/user-type";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -8,5 +9,15 @@ export const Route = createFileRoute("/home")({
       { name: "description", content: "Begin a conversation with Yuna." },
     ],
   }),
-  component: () => <HomeScreen variant="new" showWelcome />,
+  component: HomeRoute,
 });
+
+function HomeRoute() {
+  const userType = useUserType();
+  return (
+    <HomeScreen
+      variant={userType}
+      showWelcome={userType === "new"}
+    />
+  );
+}

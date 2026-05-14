@@ -154,7 +154,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           >
             {children}
           </span>
-          <span className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+          <span
+            className={cn(
+              "font-sans-ui text-[10px] tracking-[0.2em] uppercase",
+              surface === "dark" ? "text-white/70" : "text-muted-foreground",
+            )}
+          >
             {label}
           </span>
         </Comp>

@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { UserTypeToggle } from "@/components/UserTypeToggle";
 
 function NotFoundComponent() {
   return (
@@ -81,6 +82,7 @@ function RootComponent() {
   return (
     <>
       <AdminSidebar />
+      <UserTypeToggle />
       <Outlet />
     </>
   );

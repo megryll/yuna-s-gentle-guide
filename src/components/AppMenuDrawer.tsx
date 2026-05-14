@@ -87,7 +87,7 @@ export function AppMenuDrawer({
         aria-modal="true"
         aria-label="Account settings"
         className={
-          "absolute inset-y-0 left-0 w-[88%] max-w-[340px] bg-background border-r border-border flex flex-col transition-transform duration-300 ease-out " +
+          "absolute inset-y-0 left-0 w-[88%] max-w-[340px] bg-popover text-popover-foreground border-r border-border flex flex-col transition-transform duration-300 ease-out " +
           (open ? "translate-x-0" : "-translate-x-full")
         }
       >

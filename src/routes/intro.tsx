@@ -18,7 +18,6 @@ import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
-import { SuggestionChip } from "@/components/SuggestionChip";
 
 export const Route = createFileRoute("/intro")({
   validateSearch: (s: Record<string, unknown>): { step?: number } => {
@@ -850,9 +849,10 @@ function Intro() {
             {phase === "wait-tap" && (
               <div className="yuna-rise">
                 {stepIdx === 1 ? (
-                  <SuggestionChip
-                    size="lg"
-                    action="reply"
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
                     onClick={() =>
                       submitChatReaction(
                         REACTION_AMAZING.userText,
@@ -861,10 +861,12 @@ function Intro() {
                     }
                   >
                     Amazing! {"\u{1F929}"}
-                  </SuggestionChip>
+                  </Button>
                 ) : stepIdx === 3 ? (
-                  <SuggestionChip
-                    size="lg"
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
                     onClick={() =>
                       submitChatReaction(
                         REACTION_IMPRESSIVE.userText,
@@ -873,26 +875,29 @@ function Intro() {
                     }
                   >
                     Impressive! {"\u{1F92F}"}
-                  </SuggestionChip>
+                  </Button>
                 ) : stepIdx === 2 ? (
                   <div className="flex flex-col gap-2.5">
-                    <SuggestionChip
-                      size="lg"
+                    <Button
+                      surface="dark"
+                      variant="primary"
+                      fullWidth
                       onClick={() =>
                         submitNotificationChoice(true, "Set them up \u{2728}")
                       }
                     >
                       Set them up {"\u{2728}"}
-                    </SuggestionChip>
-                    <SuggestionChip
-                      size="lg"
-                      variant="outline"
+                    </Button>
+                    <Button
+                      surface="dark"
+                      variant="secondary"
+                      fullWidth
                       onClick={() =>
                         submitNotificationChoice(false, "Maybe later")
                       }
                     >
                       Maybe later
-                    </SuggestionChip>
+                    </Button>
                   </div>
                 ) : stepIdx === 4 ? (
                   <Button
@@ -904,27 +909,14 @@ function Intro() {
                     {ctaLabelForStep(stepIdx)}
                   </Button>
                 ) : stepIdx === 5 ? (
-                  <div className="flex flex-col gap-2.5">
-                    <SuggestionChip size="lg" onClick={advance}>
-                      Let’s Start! {"\u{1F49A}"}
-                    </SuggestionChip>
-                    <SuggestionChip
-                      size="lg"
-                      variant="outline"
-                      onClick={() =>
-                        window.open(
-                          "https://yuna.io/privacy",
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      }
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        Prove it
-                        <LinkOutIcon />
-                      </span>
-                    </SuggestionChip>
-                  </div>
+                  <Button
+                    surface="dark"
+                    variant="primary"
+                    fullWidth
+                    onClick={advance}
+                  >
+                    Let’s Start! {"\u{1F49A}"}
+                  </Button>
                 ) : (
                   <Button
                     surface="dark"
@@ -1325,9 +1317,10 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   }
   return (
     <a
-      href="#"
-      onClick={(e) => e.preventDefault()}
-      className="flex items-center gap-3 text-white"
+      href="https://yuna.io/privacy"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 text-white active:opacity-80 transition-opacity"
     >
       <img
         src="/lock.png"
@@ -1335,10 +1328,18 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         aria-hidden="true"
         className="h-28 w-auto object-contain shrink-0"
       />
-      <span className="flex flex-col gap-0.5">
-        <span className="text-sm">Read Our Privacy Policy</span>
+      <span className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <span className="text-[15px] font-semibold leading-snug">
+          Read our Privacy Policy
+        </span>
         <span className="text-xs text-white/70">yuna.io/privacy</span>
       </span>
+      <ArrowUpRight
+        size={22}
+        strokeWidth={1.75}
+        aria-hidden
+        className="shrink-0 text-white"
+      />
     </a>
   );
 }
@@ -1538,10 +1539,6 @@ function PushPermissionModal({
 
 function SpeakerOnIcon() {
   return <Volume2 size={16} strokeWidth={1.6} aria-hidden="true" />;
-}
-
-function LinkOutIcon() {
-  return <ArrowUpRight size={13} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function SpeakerOffIcon() {

@@ -1,17 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight,
+  ArrowUp,
   Check,
   Mic,
+  MessageCircle,
   Phone,
+  Settings,
   Volume2,
   VolumeX,
   X,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaMark } from "@/components/YunaMark";
-import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
+import { YunaAvatar } from "@/components/YunaAvatar";
 import {
   AMBIENCE_FILES,
   getAmbience,
@@ -20,6 +22,7 @@ import {
   setLastTopics,
   useYunaIdentity,
 } from "@/lib/yuna-session";
+import { useUserType } from "@/lib/user-type";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import {
@@ -27,7 +30,8 @@ import {
   startRecognition,
   type RecognitionHandle,
 } from "@/lib/speech";
-import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
+import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
+import { VoiceSession } from "@/components/VoiceSession";
 import {
   Dialog,
   DialogContent,
@@ -36,8 +40,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
-import { FIRST_TIME_SUGGESTIONS } from "@/components/SuggestionChips";
-import { SuggestionChip } from "@/components/SuggestionChip";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -47,11 +49,13 @@ export const Route = createFileRoute("/chat")({
     callEnded?: string;
     callDuration?: string;
     revisit?: string;
+    mode?: "text" | "voice";
   } => ({
     q: (s.q as string | undefined) ?? "",
     callEnded: s.callEnded as string | undefined,
     callDuration: s.callDuration as string | undefined,
     revisit: s.revisit as string | undefined,
+    mode: s.mode === "voice" ? "voice" : "text",
   }),
   head: () => ({
     meta: [
@@ -134,8 +138,20 @@ function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
+const REMINISCE_OPENERS = [
+  "Hi, I'm glad you're back. I've been thinking about what you shared last time — how have things felt since?",
+  "Hey you. Last we spoke you were carrying a lot at work — I'd love to hear where that's sitting now.",
+  "Hi again. Something from our last chat has been sitting with me — that bit about wanting more space to breathe. How's that going?",
+];
+
+function isReminisceEntry(initial: string): boolean {
+  const v = initial.trim().toLowerCase();
+  if (!v) return true;
+  return v.includes("start a new chat");
+}
+
 function Chat() {
-  const { q, callEnded, callDuration, revisit } = Route.useSearch();
+  const { q, callEnded, callDuration, revisit, mode } = Route.useSearch();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -146,14 +162,15 @@ function Chat() {
   // TTS drain still calls getVoice() directly so an in-flight queue picks
   // up the latest pick on the next chunk.
   const { avatar } = useYunaIdentity();
-  // Audio on by default — Yuna's replies read aloud unless the user mutes
-  // from the top-left toggle. Same default as the intro screen.
+  const userType = useUserType();
   const [speakerOn, setSpeakerOn] = useState(true);
   const [micOpen, setMicOpen] = useState(false);
   const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [pendingLimitations, setPendingLimitations] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
+  const voiceStartedAtRef = useRef<number | null>(null);
   // Voice-note dictation state. While recording, the input is read-only
   // and the live transcript is rendered into `text` so the user sees what
   // was heard before they tap the check to send.
@@ -221,9 +238,9 @@ function Chat() {
 
     const isReturnFromCall = !!callEnded && !!callDuration;
     const isRevisit = revisit === "1" || revisit === "true";
-    // Returning from a voice call OR revisiting from wrap-up: keep the
-    // existing chat. Anything else (a fresh `q` from Home, or a clean open)
-    // starts a new thread.
+    const isReturningReminisce =
+      userType === "returning" && !isReturnFromCall && !isRevisit && isReminisceEntry(q ?? "");
+
     const seed: Msg[] = isReturnFromCall || isRevisit ? loadStoredMessages() : [];
 
     if (isReturnFromCall) {
@@ -244,16 +261,30 @@ function Chat() {
       // Any non-call, non-revisit entry starts a fresh thread — wipe the
       // persisted log so the next conversation begins clean.
       clearStoredMessages();
-      if (q) {
+      if (!isReturningReminisce && q) {
         seed.push({ id: uid(), from: "you", kind: "text", text: q });
         userTopicsRef.current.push(q);
       }
     }
 
     setMessages(seed);
-    if (q && !isReturnFromCall && !isRevisit) respondToInitial(q);
+    if (isReturningReminisce) {
+      respondReminisce();
+    } else if (q && !isReturnFromCall && !isRevisit) {
+      respondToInitial(q);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const respondReminisce = () => {
+    setTyping(true);
+    const line = REMINISCE_OPENERS[Math.floor(Math.random() * REMINISCE_OPENERS.length)];
+    setTimeout(() => {
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: line }]);
+      setTyping(false);
+      speakIfEnabled(line);
+    }, 900);
+  };
 
   // Persist messages so a roundtrip through the call screen doesn't drop them.
   useEffect(() => {
@@ -640,11 +671,36 @@ function Chat() {
 
   const endChat = () => navigate({ to: "/wrap-up" });
 
-  const openCall = () => {
-    // Hush the chat voice the moment the user commits to switching — the mic
-    // dialog and any subsequent navigation can take a beat, and we don't want
-    // "Want to give me a call?" still finishing while the call screen loads.
+  const switchToText = () => {
+    if (mode !== "voice") return;
+    const startedAt = voiceStartedAtRef.current;
+    voiceStartedAtRef.current = null;
+    const durSec = startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
+    const ended = new Date();
+    const started = new Date(ended.getTime() - durSec * 1000);
+    const mm = String(Math.floor(durSec / 60)).padStart(2, "0");
+    const ss = String(durSec % 60).padStart(2, "0");
+    const restored = loadStoredMessages();
+    setMessages([
+      ...restored,
+      {
+        id: uid(),
+        from: "system",
+        kind: "call-summary",
+        startedAt: fmtTime(started),
+        endedAt: fmtTime(ended),
+        durationLabel: `${mm}:${ss}`,
+      },
+    ]);
+    navigate({ to: "/chat", search: { q: "", mode: "text" } });
+  };
+
+  // Voice-pitch is interactive while in text mode; dismiss it the moment the
+  // user commits to switching so a stray "Continue Over Voice" tap doesn't
+  // get re-rendered behind the mic prompt.
+  const openMicForVoice = () => {
     stopTts();
+    setVoicePitchActive(false);
     setMicState("idle");
     setMicOpen(true);
   };
@@ -655,31 +711,37 @@ function Chat() {
       stream.getTracks().forEach((t) => t.stop());
       setMicState("granted");
       setMicOpen(false);
-      navigate({ to: "/call", search: { returnTo: "chat" } });
+      voiceStartedAtRef.current = Date.now();
+      navigate({ to: "/chat", search: { q: "", mode: "voice" } });
     } catch {
       setMicState("denied");
     }
   };
 
+  const inVoice = mode === "voice";
+
   return (
-    <PhoneFrame backgroundImage="/background.png">
-      <div className="flex-1 flex flex-col yuna-fade-in min-h-0 text-white">
+    <PhoneFrame backgroundImage="/background.png" themed>
+      <div className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white">
         {/* Header */}
-        <div className="grid grid-cols-3 items-center px-5 pt-14 pb-2 border-b border-white/15">
+        <div className="relative grid grid-cols-3 items-center px-5 pt-14 pb-2 shrink-0">
           <div className="justify-self-start">
             <Button
               surface="dark"
               variant="ghost"
               size="icon-lg"
-              pressed={!speakerOn}
-              onClick={() => setSpeakerOn((s) => !s)}
-              aria-label={speakerOn ? "Mute Yuna's voice" : "Unmute Yuna's voice"}
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Open Yuna settings"
             >
-              {speakerOn ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
+              <SettingsIcon />
             </Button>
           </div>
           <div className="justify-self-center">
-            <YunaHeaderTrigger surface="dark" />
+            <ModeToggle
+              mode={inVoice ? "voice" : "text"}
+              onSwitchText={switchToText}
+              onSwitchVoice={openMicForVoice}
+            />
           </div>
           <div className="justify-self-end">
             <Button
@@ -694,136 +756,141 @@ function Chat() {
           </div>
         </div>
 
-        {/* Messages */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-3 transition-[padding] duration-200 ease-out"
-          style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET + 24 } : undefined}
-        >
-          {messages.map((m) => {
-            if (m.kind === "call-summary") return <CallSummary key={m.id} msg={m} />;
-            if (m.kind === "limitations")
-              return (
-                <LimitationsCard
-                  key={m.id}
-                  msg={m}
-                  onCheck={(itemId) => checkLimitation(m.id, itemId)}
-                />
-              );
-            if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} avatar={avatar} />;
-            return <Bubble key={m.id} msg={m} avatar={avatar} />;
-          })}
-          {typing && <TypingBubble avatar={avatar} />}
-        </div>
-
-        {/* Input + Call Yuna footer */}
-        <div
-          className="transition-transform duration-200 ease-out"
-          style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
-        >
-          {voicePitchActive ? (
-            <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
-              <Button surface="dark" variant="primary" fullWidth onClick={openCall}>
-                <PhoneCallIcon />
-                Continue Over Voice
-              </Button>
-              <Button surface="dark" variant="ghost" fullWidth onClick={dismissVoicePitch}>
-                Keep Texting
-              </Button>
-            </div>
-          ) : (
-            <>
-              {!messages.some((m) => m.from === "you") && (
-                <div className="px-5 pt-3 flex flex-col gap-2 items-end">
-                  {FIRST_TIME_SUGGESTIONS.map((s) => (
-                    <SuggestionChip
-                      key={s}
-                      onClick={() => sendText(s)}
-                      disabled={pendingLimitations}
-                      size="sm"
-                      fullWidth={false}
-                    >
-                      {s}
-                    </SuggestionChip>
-                  ))}
-                </div>
+        {!inVoice && (
+          <div className="absolute left-5 top-[112px] z-10">
+            <div
+              aria-hidden="true"
+              className="h-16 w-16 rounded-full overflow-hidden bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center"
+            >
+              {avatar ? (
+                <YunaAvatar variant={avatar} size={64} />
+              ) : (
+                <YunaMark size={28} className="text-white" />
               )}
-              <form onSubmit={send} className="px-5 pt-3">
-                <div
-                  className={
-                    "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-1.5 bg-background text-foreground transition-colors " +
-                    (recordingVoice
-                      ? "border border-foreground"
-                      : "hairline focus-within:border-foreground")
-                  }
-                >
-                  {recordingVoice && (
-                    <span
-                      aria-hidden="true"
-                      className="h-2 w-2 rounded-full bg-destructive shrink-0"
-                      style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSpeakerOn((v) => !v)}
+              aria-label={speakerOn ? "Mute Yuna" : "Unmute Yuna"}
+              aria-pressed={!speakerOn}
+              className="absolute bottom-0 -right-[22px] h-10 w-10 rounded-full bg-white text-neutral-900 flex items-center justify-center active:bg-white/90 transition-colors"
+            >
+              {speakerOn ? (
+                <Volume2 size={18} strokeWidth={1.75} aria-hidden />
+              ) : (
+                <VolumeX size={18} strokeWidth={1.75} aria-hidden />
+              )}
+            </button>
+          </div>
+        )}
+
+        {inVoice ? (
+          <VoiceSession onEndCall={switchToText} />
+        ) : (
+          <>
+            {/* Messages */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-5 pt-16 pb-6 flex flex-col gap-3 transition-[padding] duration-200 ease-out"
+              style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET + 24 } : undefined}
+            >
+              {messages.map((m) => {
+                if (m.kind === "call-summary") return <CallSummary key={m.id} msg={m} />;
+                if (m.kind === "limitations")
+                  return (
+                    <LimitationsCard
+                      key={m.id}
+                      msg={m}
+                      onCheck={(itemId) => checkLimitation(m.id, itemId)}
                     />
-                  )}
-                  <input
-                    ref={inputRef}
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
-                    placeholder={
-                      pendingLimitations
-                        ? "Tap each checkmark above to continue"
-                        : recordingVoice
-                          ? "Listening…"
-                          : "Write to Yuna…"
-                    }
-                    readOnly={recordingVoice}
-                    disabled={pendingLimitations}
-                    className="flex-1 bg-transparent text-sm py-2 outline-none placeholder:text-muted-foreground min-w-0 disabled:opacity-60"
-                  />
-                  <Button
-                    surface="light"
-                    variant={recordingVoice ? "primary" : "ghost"}
-                    size="icon-sm"
-                    type="button"
-                    pressed={recordingVoice}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
-                    aria-label={recordingVoice ? "Stop recording and send" : "Record a voice note"}
-                    disabled={pendingLimitations}
-                  >
-                    {recordingVoice ? <CheckIcon /> : <MicIcon />}
+                  );
+                if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} />;
+                return <Bubble key={m.id} msg={m} />;
+              })}
+              {typing && <TypingBubble />}
+            </div>
+
+            {/* Input + Call Yuna footer */}
+            <div
+              className="transition-transform duration-200 ease-out"
+              style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
+            >
+              {voicePitchActive ? (
+                <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
+                  <Button surface="dark" variant="primary" fullWidth onClick={openMicForVoice}>
+                    <PhoneCallIcon />
+                    Continue Over Voice
                   </Button>
-                  <Button
-                    surface="light"
-                    variant="primary"
-                    size="icon-sm"
-                    type="submit"
-                    onMouseDown={(e) => e.preventDefault()}
-                    aria-label="Send"
-                    disabled={pendingLimitations || recordingVoice || !text.trim()}
-                  >
-                    <ArrowRight size={14} strokeWidth={1.5} />
+                  <Button surface="dark" variant="ghost" fullWidth onClick={dismissVoicePitch}>
+                    Keep Texting
                   </Button>
                 </div>
-              </form>
-
-              <div
-                className={
-                  "px-5 pt-3 pb-6 flex justify-center transition-opacity duration-150 " +
-                  (inputFocused
-                    ? "opacity-0 pointer-events-none h-0 overflow-hidden p-0"
-                    : "opacity-100")
-                }
-              >
-                <Button surface="dark" variant="secondary" size="sm" onClick={openCall}>
-                  <PhoneCallIcon />
-                  Call Yuna
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+              ) : (
+                <form onSubmit={send} className="px-5 pt-3 pb-6">
+                  <div
+                    className={
+                      "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-2 bg-white/10 backdrop-blur-sm transition-colors " +
+                      (recordingVoice
+                        ? "border border-white"
+                        : "border border-white/30 focus-within:border-white")
+                    }
+                  >
+                    {recordingVoice && (
+                      <span
+                        aria-hidden="true"
+                        className="h-2 w-2 rounded-full bg-destructive shrink-0"
+                        style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+                      />
+                    )}
+                    <input
+                      ref={inputRef}
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => setInputFocused(false)}
+                      placeholder={
+                        pendingLimitations
+                          ? "Tap each checkmark above to continue"
+                          : recordingVoice
+                            ? "Listening…"
+                            : "Write to Yuna…"
+                      }
+                      readOnly={recordingVoice}
+                      disabled={pendingLimitations}
+                      className="flex-1 bg-transparent text-sm py-1.5 outline-none text-white placeholder:text-white/50 min-w-0 disabled:opacity-60"
+                    />
+                    <Button
+                      surface="dark"
+                      variant={recordingVoice ? "primary" : "ghost"}
+                      size="icon-sm"
+                      type="button"
+                      pressed={recordingVoice}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
+                      aria-label={
+                        recordingVoice ? "Stop recording and send" : "Record a voice note"
+                      }
+                      disabled={pendingLimitations}
+                    >
+                      {recordingVoice ? <CheckIcon /> : <MicIcon />}
+                    </Button>
+                    <Button
+                      surface="dark"
+                      variant="primary"
+                      size="icon-sm"
+                      type="submit"
+                      onMouseDown={(e) => e.preventDefault()}
+                      aria-label="Send"
+                      disabled={pendingLimitations || recordingVoice || !text.trim()}
+                    >
+                      <ArrowUpIcon />
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       <Dialog open={micOpen} onOpenChange={setMicOpen}>
@@ -868,34 +935,19 @@ function Chat() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <YunaSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
     </PhoneFrame>
   );
 }
 
-function Bubble({
-  msg,
-  avatar,
-}: {
-  msg: Extract<Msg, { kind: "text" }>;
-  avatar: AvatarVariant | null;
-}) {
+function Bubble({ msg }: { msg: Extract<Msg, { kind: "text" }> }) {
   const mine = msg.from === "you";
   return (
-    <div className={"flex items-end gap-2 yuna-rise " + (mine ? "justify-end" : "justify-start")}>
-      {!mine && (
-        <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
-          {avatar ? (
-            <YunaAvatar variant={avatar} size={28} />
-          ) : (
-            <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
-              <YunaMark size={14} className="text-white" />
-            </span>
-          )}
-        </div>
-      )}
+    <div className={"flex yuna-rise " + (mine ? "justify-end" : "justify-start")}>
       <div
         className={
-          "max-w-[78%] px-4 py-2.5 text-sm leading-relaxed rounded-2xl " +
+          "max-w-[82%] px-4 py-2.5 text-sm leading-relaxed rounded-2xl " +
           (mine
             ? "bg-white text-neutral-900 rounded-br-sm"
             : "border border-white/25 bg-white/10 backdrop-blur-sm text-white rounded-bl-sm")
@@ -989,19 +1041,10 @@ function LimitationsCard({
   );
 }
 
-function VoicePitchCard({ avatar }: { avatar: AvatarVariant | null }) {
+function VoicePitchCard() {
   return (
-    <div className="flex items-end gap-2 yuna-rise justify-start">
-      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
-        {avatar ? (
-          <YunaAvatar variant={avatar} size={28} />
-        ) : (
-          <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
-            <YunaMark size={14} className="text-white" />
-          </span>
-        )}
-      </div>
-      <div className="max-w-[78%] border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm overflow-hidden text-white">
+    <div className="flex yuna-rise justify-start">
+      <div className="max-w-[82%] border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm overflow-hidden text-white">
         <p className="text-sm leading-relaxed px-4 pt-3 pb-2">
           People who chat with me over voice are{" "}
           <span className="font-semibold">75% more likely</span> to find value in our conversations.
@@ -1148,24 +1191,72 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TypingBubble({ avatar }: { avatar: AvatarVariant | null }) {
+function TypingBubble() {
   return (
-    <div className="flex items-end gap-2 yuna-fade-in justify-start">
-      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/15">
-        {avatar ? (
-          <YunaAvatar variant={avatar} size={28} />
-        ) : (
-          <span className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
-            <YunaMark size={14} className="text-white" />
-          </span>
-        )}
-      </div>
+    <div className="flex yuna-fade-in justify-start">
       <div className="border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
         <Dot delay={0} />
         <Dot delay={150} />
         <Dot delay={300} />
       </div>
     </div>
+  );
+}
+
+function ModeToggle({
+  mode,
+  onSwitchText,
+  onSwitchVoice,
+}: {
+  mode: "text" | "voice";
+  onSwitchText: () => void;
+  onSwitchVoice: () => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Conversation mode"
+      className="inline-flex items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-sm h-9 p-0.5"
+    >
+      <ModeToggleSegment
+        active={mode === "text"}
+        onClick={mode === "text" ? () => {} : onSwitchText}
+        aria-label="Text mode"
+      >
+        <MessageCircle size={14} strokeWidth={1.6} aria-hidden />
+        <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">Text</span>
+      </ModeToggleSegment>
+      <ModeToggleSegment
+        active={mode === "voice"}
+        onClick={mode === "voice" ? () => {} : onSwitchVoice}
+        aria-label="Voice mode"
+      >
+        <Mic size={14} strokeWidth={1.6} aria-hidden />
+        <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">Voice</span>
+      </ModeToggleSegment>
+    </div>
+  );
+}
+
+function ModeToggleSegment({
+  active,
+  children,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      className={
+        "inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-full transition-colors " +
+        (active
+          ? "bg-white text-neutral-900"
+          : "text-white/80 active:bg-white/10")
+      }
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -1181,14 +1272,14 @@ function Dot({ delay }: { delay: number }) {
   );
 }
 
-function SpeakerOnIcon() {
-  return <Volume2 size={22} strokeWidth={1.5} />;
-}
-function SpeakerOffIcon() {
-  return <VolumeX size={22} strokeWidth={1.5} />;
-}
 function CloseIcon() {
   return <X size={22} strokeWidth={1.6} aria-hidden="true" />;
+}
+function SettingsIcon() {
+  return <Settings size={22} strokeWidth={1.5} aria-hidden="true" />;
+}
+function ArrowUpIcon() {
+  return <ArrowUp size={13} strokeWidth={2} aria-hidden="true" />;
 }
 function MicIcon() {
   return <Mic size={14} strokeWidth={1.5} />;

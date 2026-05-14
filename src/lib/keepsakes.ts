@@ -9,6 +9,7 @@ export type Keepsake = {
   quote: string;
   themes: string[];
   note?: string;
+  reflections?: string[];
   mood: number | null;
   stress: number | null;
   createdAt: number;
