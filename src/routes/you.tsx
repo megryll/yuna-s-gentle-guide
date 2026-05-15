@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { useUserType } from "@/lib/user-type";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/you")({
 
 function YouRoute() {
   const userType = useUserType();
+  if (userType === "new") return <YouEmptyState />;
   const data = getProfileData(userType);
 
   return (
@@ -127,6 +128,117 @@ function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentL
       {insights.map((insight, i) => (
         <InsightCard key={i} insight={insight} accentLeft={accentLeft} />
       ))}
+    </div>
+  );
+}
+
+// ─── Empty state (no conversations yet) ─────────────────────────────────────
+
+function YouEmptyState() {
+  return (
+    <ScreenChrome hideHeader surface="dark">
+      <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-col items-center text-center pt-10">
+          <EmptyHeroGlow />
+          <h1 className="font-display text-[26px] leading-[1.15] tracking-tight mt-6">
+            Your space, just beginning
+          </h1>
+          <p className="text-[15px] leading-[22px] text-white/80 mt-3 max-w-[20rem]">
+            Once we start talking, this is where I'll share what I'm noticing —
+            patterns, shifts in your thinking, and the things worth keeping
+            close.
+          </p>
+        </div>
+
+        <p className="font-sans-ui text-[11px] font-semibold tracking-[0.14em] uppercase text-white/55 text-center mt-12">
+          What will live here
+        </p>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          <PreviewRow
+            heading="Focus Areas"
+            body="Where we'll be working together"
+          />
+          <PreviewRow
+            heading="Breakthroughs"
+            body="Real shifts in your thinking, as they emerge"
+          />
+          <PreviewRow
+            heading="Beliefs & Behaviors"
+            body="Patterns I'll start to notice as we talk"
+          />
+          <PreviewRow
+            heading="Basics"
+            body="The context I'll hold in mind for you"
+          />
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Button surface="dark" variant="primary" asChild>
+            <Link to="/chat">Start your first conversation</Link>
+          </Button>
+        </div>
+      </div>
+    </ScreenChrome>
+  );
+}
+
+function EmptyHeroGlow() {
+  return (
+    <div className="relative" style={{ width: 96, height: 96 }}>
+      <span
+        aria-hidden
+        className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
+        style={{
+          width: 220,
+          height: 220,
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.14) 28%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0) 70%)",
+          animation: "glow-breathe 7.5s ease-in-out infinite",
+          filter: "blur(2px)",
+          transform: "translate(-50%, -50%)",
+          willChange: "transform, opacity",
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
+        style={{
+          width: 72,
+          height: 72,
+          background:
+            "conic-gradient(from 0deg, rgba(255,255,255,0.95), rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.95))",
+          WebkitMask:
+            "radial-gradient(circle, transparent 56%, #000 60%, #000 96%, transparent 100%)",
+          mask: "radial-gradient(circle, transparent 56%, #000 60%, #000 96%, transparent 100%)",
+          animation: "glow-spin 9s linear infinite",
+          filter: "blur(1.5px)",
+          transform: "translate(-50%, -50%)",
+          willChange: "transform",
+        }}
+      />
+      <img
+        src="/avatar.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{ width: 56, height: 56 }}
+      />
+    </div>
+  );
+}
+
+function PreviewRow({ heading, body }: { heading: string; body: string }) {
+  return (
+    <div
+      className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5"
+    >
+      <p className="font-sans-ui text-[11px] font-semibold tracking-[0.1em] uppercase text-white/65">
+        {heading}
+      </p>
+      <p className="text-[14px] leading-[20px] text-white/65 mt-1">
+        {body}
+      </p>
     </div>
   );
 }
