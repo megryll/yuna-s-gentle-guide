@@ -85,7 +85,7 @@ function YouRoute() {
             ) : (
               <EmptyStateCard
                 heading="None yet, keep chatting"
-                body="As your conversations deepen, Yuna will surface the core beliefs shaping how you see the world — and the recurring patterns that tend to follow from them."
+                body="As your conversations deepen, Yuna will surface the core beliefs shaping how you see the world, and the recurring patterns that tend to follow from them."
                 leafSrc="/assets/profile/empty-leaf-1.svg"
               />
             )}
@@ -143,18 +143,9 @@ function YouEmptyState() {
           <h1 className="font-display text-[26px] leading-[1.15] tracking-tight mt-6">
             Your space, just beginning
           </h1>
-          <p className="text-[15px] leading-[22px] text-white/80 mt-3 max-w-[20rem]">
-            Once we start talking, this is where I'll share what I'm noticing —
-            patterns, shifts in your thinking, and the things worth keeping
-            close.
-          </p>
         </div>
 
-        <p className="font-sans-ui text-[11px] font-semibold tracking-[0.14em] uppercase text-white/55 text-center mt-12">
-          What will live here
-        </p>
-
-        <div className="mt-4 flex flex-col gap-2.5">
+        <div className="mt-6 flex flex-col gap-2.5">
           <PreviewRow
             heading="Focus Areas"
             body="Where we'll be working together"
@@ -201,29 +192,16 @@ function EmptyHeroGlow() {
         }}
       />
       <span
-        aria-hidden
-        className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
-        style={{
-          width: 72,
-          height: 72,
-          background:
-            "conic-gradient(from 0deg, rgba(255,255,255,0.95), rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.95))",
-          WebkitMask:
-            "radial-gradient(circle, transparent 56%, #000 60%, #000 96%, transparent 100%)",
-          mask: "radial-gradient(circle, transparent 56%, #000 60%, #000 96%, transparent 100%)",
-          animation: "glow-spin 9s linear infinite",
-          filter: "blur(1.5px)",
-          transform: "translate(-50%, -50%)",
-          willChange: "transform",
-        }}
-      />
-      <img
-        src="/avatar.png"
-        alt=""
         aria-hidden="true"
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 56, height: 56 }}
-      />
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-20 w-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center"
+      >
+        <img
+          src="/assets/profile/emerging.png"
+          alt=""
+          aria-hidden="true"
+          style={{ width: 56, height: 56 }}
+        />
+      </span>
     </div>
   );
 }
