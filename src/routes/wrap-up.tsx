@@ -70,7 +70,6 @@ const EMOTION_COLORS: Record<string, string> = {
   Tenderness: "#F2B4D3",
   Curiosity: "#B5DEDB",
 };
-const TOTAL_EMOTIONS_DETECTED = 53;
 
 // One highlight pairs a quote with the emotions Yuna heard underneath it.
 type Highlight = { quote: string; emotions: string[] };
@@ -258,10 +257,7 @@ function WrapUp() {
                 onToggleReflection={onToggleReflection}
               />
 
-              <HighlightsCard
-                highlights={displayQuotes}
-                totalEmotions={TOTAL_EMOTIONS_DETECTED}
-              />
+              <HighlightsCard highlights={displayQuotes} />
 
               <PlacedForYou
                 items={PLACED_FOR_YOU}
@@ -445,18 +441,12 @@ function ReflectionCard({
 // underneath it — sentiment-tagged highlights instead of a separate chart.
 // The left-edge ribbon picks up the quote's emotion colors so the link
 // between text and feeling is felt before it's read.
-function HighlightsCard({
-  highlights,
-  totalEmotions,
-}: {
-  highlights: Highlight[];
-  totalEmotions: number;
-}) {
+function HighlightsCard({ highlights }: { highlights: Highlight[] }) {
   if (highlights.length === 0) return null;
   return (
     <section className="flex flex-col gap-3 yuna-rise">
       <header>
-        <h2 className="font-display text-[18px] leading-tight text-white">
+        <h2 className="font-display text-[18px] leading-tight text-white text-center">
           Highlights and emotions
         </h2>
       </header>
@@ -464,11 +454,6 @@ function HighlightsCard({
       {highlights.map((h, i) => (
         <HighlightItem key={i} highlight={h} />
       ))}
-
-      <p className="font-sans-ui text-[11px] leading-relaxed text-white/55 pt-1">
-        Drawn from a vocabulary of {totalEmotions}+ emotional textures Yuna
-        tracks across each conversation.
-      </p>
     </section>
   );
 }
@@ -545,11 +530,11 @@ function PlacedForYou({
 }) {
   return (
     <div className="flex flex-col gap-3 yuna-rise">
-      <h2 className="font-display text-[18px] leading-tight text-white">
+      <h2 className="font-display text-[18px] leading-tight text-white text-center">
         New activities
       </h2>
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-5">
         {items.map((c) => (
           <li key={c.id}>
             <HomeCardRow card={c} onClick={onViewAll} />

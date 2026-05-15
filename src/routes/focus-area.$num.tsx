@@ -75,11 +75,8 @@ function FocusAreaRoute() {
           </Button>
         </header>
 
-        <div className="px-6 pt-6 flex flex-col gap-3">
-          <span
-            className="font-sans-ui text-[12px] font-bold tracking-[0.06em] uppercase"
-            style={{ color: GREEN_ACCENT }}
-          >
+        <div className="px-6 pt-6 flex flex-col items-center text-center gap-3">
+          <span className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             {meta.eyebrow}
           </span>
           <h1
@@ -92,9 +89,9 @@ function FocusAreaRoute() {
         </div>
 
         <div className="px-6 mt-8">
-          <p className="font-sans-ui text-[11px] font-bold tracking-[0.08em] uppercase text-white/60 mb-3">
+          <h2 className="font-display text-[18px] leading-tight text-white text-center mb-3">
             Growth Tasks
-          </p>
+          </h2>
           <div className="flex flex-col gap-2">
             {tasks.map((card) => (
               <HomeCardRow key={card.id} card={card} onClick={() => undefined} />
@@ -103,10 +100,10 @@ function FocusAreaRoute() {
         </div>
 
         <div className="px-6 mt-8 pb-12 relative">
-          <div className="flex items-center gap-2 mb-3 relative">
-            <p className="font-sans-ui text-[11px] font-bold tracking-[0.08em] uppercase text-white/60">
+          <div className="relative mb-3 flex items-center justify-center gap-1.5">
+            <h2 className="font-display text-[18px] leading-tight text-white">
               Coming Up Next
-            </p>
+            </h2>
             <button
               type="button"
               onClick={() => setInfoOpen((v) => !v)}
@@ -126,7 +123,7 @@ function FocusAreaRoute() {
                   className="fixed inset-0 z-10 cursor-default"
                 />
                 <div
-                  className="absolute left-0 top-full mt-2 z-20 rounded-2xl bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)]"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 rounded-2xl bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)]"
                   style={{ width: 260 }}
                 >
                   <p className="text-[14px] leading-[22px] text-neutral-900 m-0">

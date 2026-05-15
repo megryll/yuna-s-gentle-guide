@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -60,7 +61,7 @@ export function HomeCardRow({
   const isSnowy = mainBg === "Snowy";
   const natureDarkEnd = isSnowy ? "rgba(255, 255, 255, 0.4)" : "rgba(15, 18, 24, 0.55)";
   const photoPath = card.naturePath ?? meta.naturePath;
-  const background = `linear-gradient(110deg, ${meta.accent}${isSnowy ? "66" : "99"} 0%, ${meta.accent}${isSnowy ? "22" : "40"} 35%, ${natureDarkEnd} 100%), linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(${photoPath})`;
+  const background = `linear-gradient(110deg, ${meta.accent}${isSnowy ? "66" : "99"} 0%, ${meta.accent}${isSnowy ? "22" : "40"} 35%, ${natureDarkEnd} 100%), linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url(${photoPath})`;
 
   return (
     <div className="relative">
@@ -218,22 +219,35 @@ function GratitudeCard({
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "gratitude" }> }) {
   const meta = KIND_META[card.type];
+  const [entries, setEntries] = useState<[string, string, string]>(["", "", ""]);
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col">
-        <p className="mt-4 font-display text-[20px] leading-[1.25] tracking-tight text-white">
+        <p className="mt-3 font-display text-[20px] leading-[1.25] tracking-tight text-white">
           {card.prompt}
         </p>
-        <ul className="mt-4 flex flex-col gap-5">
-          {[1, 2, 3].map((n) => (
-            <li key={n} className="flex items-center gap-3">
-              <span className="font-sans-ui text-[12px] tracking-[0.18em] uppercase text-white/65 w-6">
-                {String(n).padStart(2, "0")}
+        <ul className="mt-4 flex flex-col gap-2.5">
+          {[0, 1, 2].map((i) => (
+            <li key={i} className="flex items-center gap-2.5">
+              <span className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/65 shrink-0 w-5">
+                {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="flex-1 border-b border-white/30 pb-1.5 text-[15px] text-white/60 italic">
-                Type here…
-              </span>
+              <div className="flex-1 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-3.5 py-1 focus-within:border-white transition-colors">
+                <input
+                  value={entries[i]}
+                  onChange={(e) =>
+                    setEntries((prev) => {
+                      const next = [...prev] as [string, string, string];
+                      next[i] = e.target.value;
+                      return next;
+                    })
+                  }
+                  placeholder="Type here…"
+                  aria-label={`Gratitude ${i + 1}`}
+                  className="w-full bg-transparent text-[13px] outline-none text-white placeholder:text-white/50"
+                />
+              </div>
             </li>
           ))}
         </ul>
@@ -241,7 +255,7 @@ function GratitudeCard({
       <CardFooter
         primary={
           <CardCTA tone={meta.tone} onClick={onClick}>
-            See history
+            My Gratitude Journal
           </CardCTA>
         }
         isSaved={isSaved}
@@ -450,7 +464,7 @@ function CardShell({
     ? `linear-gradient(155deg, ${accent}66 0%, ${accent}22 35%, rgba(255, 255, 255, 0.4) 100%)`
     : `linear-gradient(155deg, ${accent}99 0%, ${accent}40 35%, rgba(15, 18, 24, 0.55) 100%)`;
   const background = naturePath
-    ? `${natureOverlay}, linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(${naturePath})`
+    ? `${natureOverlay}, linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url(${naturePath})`
     : isDark
       ? `linear-gradient(155deg, ${accent}CC 0%, ${accent}55 35%, rgba(15, 18, 24, 0.78) 100%)`
       : `linear-gradient(160deg, #F4ECDE 0%, #EFE3CC 100%)`;

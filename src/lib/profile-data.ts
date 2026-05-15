@@ -103,7 +103,7 @@ const james: ProfileData = {
   conversations: 42,
   messages: 128,
   insights: 52,
-  progress: 1.0,
+  progress: 0.9,
   ringIcon: "/assets/profile/rooted.png",
 
   focusArea1: {

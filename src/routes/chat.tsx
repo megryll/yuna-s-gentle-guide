@@ -785,7 +785,7 @@ function Chat() {
         )}
 
         {inVoice ? (
-          <VoiceSession onEndCall={switchToText} />
+          <VoiceSession onEndCall={endChat} />
         ) : (
           <>
             {/* Messages */}
@@ -822,7 +822,7 @@ function Chat() {
                     Continue Over Voice
                   </Button>
                   <Button surface="dark" variant="ghost" fullWidth onClick={dismissVoicePitch}>
-                    Keep Texting
+                    Keep Texting For Now
                   </Button>
                 </div>
               ) : (
@@ -1050,15 +1050,15 @@ function VoicePitchCard() {
           <span className="font-semibold">75% more likely</span> to find value in our conversations.
         </p>
         <div className="px-3 pb-3">
-          <svg viewBox="0 0 280 132" className="w-full block" aria-hidden="true">
+          <svg viewBox="0 -12 280 144" className="w-full block" aria-hidden="true">
             <defs>
               <linearGradient id="vpVoice" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.55" />
-                <stop offset="100%" stopColor="currentColor" stopOpacity="0.06" />
+                <stop offset="0%" stopColor="#cdebb5" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="#cdebb5" stopOpacity="0.005" />
               </linearGradient>
               <linearGradient id="vpText" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.005" />
               </linearGradient>
             </defs>
 
@@ -1100,7 +1100,7 @@ function VoicePitchCard() {
               d="M 22 118 C 60 108, 110 92, 170 80 C 210 74, 246 70, 266 68"
               fill="none"
               stroke="currentColor"
-              strokeOpacity="0.45"
+              strokeOpacity="0.75"
               strokeWidth="1.25"
               strokeLinecap="round"
               strokeDasharray="3 3"
@@ -1114,7 +1114,7 @@ function VoicePitchCard() {
             <path
               d="M 22 118 C 60 92, 100 56, 160 32 C 210 18, 246 12, 266 10"
               fill="none"
-              stroke="currentColor"
+              stroke="#cdebb5"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
@@ -1142,35 +1142,37 @@ function VoicePitchCard() {
             />
 
             {/* endpoint dots */}
-            <circle cx="266" cy="10" r="3" fill="currentColor" />
-            <circle cx="266" cy="68" r="2.5" fill="currentColor" fillOpacity="0.45" />
+            <circle cx="266" cy="10" r="3.5" fill="#cdebb5" />
+            <circle cx="266" cy="68" r="2.75" fill="currentColor" fillOpacity="0.95" />
 
             {/* in-line legend at endpoints */}
             <text
               x="260"
-              y="6"
+              y="4"
               textAnchor="end"
-              fill="currentColor"
-              fontSize="7"
-              letterSpacing="1.6"
+              fill="#cdebb5"
+              fontSize="10"
+              fontWeight="600"
+              letterSpacing="1.8"
               className="font-sans-ui"
             >
               VOICE
             </text>
             <text
               x="260"
-              y="64"
+              y="62"
               textAnchor="end"
               fill="currentColor"
-              fillOpacity="0.55"
-              fontSize="7"
-              letterSpacing="1.6"
+              fillOpacity="0.9"
+              fontSize="10"
+              fontWeight="600"
+              letterSpacing="1.8"
               className="font-sans-ui"
             >
               TEXT
             </text>
           </svg>
-          <p className="font-sans-ui text-[8.5px] tracking-[0.22em] uppercase text-white/70 text-center -mt-1">
+          <p className="font-sans-ui text-[10.5px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
             Reported positive impact
           </p>
         </div>
@@ -1231,7 +1233,7 @@ function ModeToggle({
         onClick={mode === "voice" ? () => {} : onSwitchVoice}
         aria-label="Voice mode"
       >
-        <Mic size={14} strokeWidth={1.6} aria-hidden />
+        <Phone size={14} strokeWidth={1.6} aria-hidden />
         <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">Voice</span>
       </ModeToggleSegment>
     </div>

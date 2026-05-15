@@ -399,12 +399,12 @@ export function VoiceSession({
 
       <div className="mt-6 w-full max-w-[20rem] min-h-[100px] flex flex-col items-center text-center gap-2">
         {yunaSpoken && <p className="text-sm leading-relaxed text-white">{yunaSpoken}</p>}
-        {liveTranscript && (
-          <p className="text-xs leading-relaxed text-white/60 italic">{liveTranscript}</p>
-        )}
       </div>
 
-      <div className="flex-1 w-full flex items-center justify-center min-h-[64px]">
+      <div
+        className="flex-1 flex items-center justify-center min-h-[64px]"
+        style={{ width: "calc(100% + 4rem)", marginLeft: "-2rem", marginRight: "-2rem" }}
+      >
         <VoiceWaveform active={phase === "listening"} />
       </div>
 
@@ -499,7 +499,7 @@ function VoiceWaveform({ active }: { active: boolean }) {
         const t = i / WAVE_SEGMENTS;
         const wave =
           (Math.sin(t * 7 + phase) + Math.sin(t * 13 + phase * 1.4) * 0.35) / 1.35;
-        const taper = Math.sin(t * Math.PI);
+        const taper = 0.3 + 0.7 * Math.sin(t * Math.PI);
         const y = WAVE_MID + wave * amp * taper;
         d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
       }

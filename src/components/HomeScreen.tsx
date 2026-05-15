@@ -314,11 +314,11 @@ function CreatedForYou({
                 <HomeCardItem
                   card={c}
                   isSaved={savedIds.has(c.id)}
-                  onClick={() => onOpen(c)}
+                  onClick={() => {}}
                   onToggleSave={() => onToggleSave(c.id)}
                 />
               ) : (
-                <HomeCardRow card={c} onClick={() => onOpen(c)} />
+                <HomeCardRow card={c} onClick={() => {}} />
               )}
             </li>
           ))}
