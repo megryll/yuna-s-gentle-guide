@@ -70,12 +70,22 @@ function SettingsRoute() {
     setToggles((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="flex-1 flex flex-col text-white min-h-0">
+    <PhoneFrame>
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      <div className="relative flex-1 flex flex-col text-foreground min-h-0">
         <header className="flex items-center justify-between px-6 pt-14 pb-6 shrink-0">
           <div className="flex items-center gap-4">
             <Button
-              surface="dark"
+              surface="light"
               variant="secondary"
               size="icon"
               onClick={() => navigate({ to: "/home" })}
@@ -83,13 +93,13 @@ function SettingsRoute() {
             >
               <ChevronLeft size={14} strokeWidth={1.5} />
             </Button>
-            <h1 className="font-display text-2xl leading-8 tracking-tight text-white">
+            <h1 className="font-display text-2xl leading-8 tracking-tight text-foreground">
               My Account
             </h1>
           </div>
           <button
             type="button"
-            className="rounded-full border border-white/25 bg-white/10 backdrop-blur-sm px-3 h-[26px] text-[12px] text-white/85 active:bg-white/15 transition-colors"
+            className="rounded-full border border-foreground/20 bg-background/60 backdrop-blur-sm px-3 h-[26px] text-[12px] text-foreground/85 active:bg-background/80 transition-colors"
           >
             Share Yuna
           </button>
@@ -134,7 +144,7 @@ function SettingsRoute() {
 
 function CardGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="shrink-0 rounded-2xl overflow-hidden border border-white/15 bg-white/[0.06] backdrop-blur-sm flex flex-col">
+    <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-sm flex flex-col">
       {children}
     </div>
   );
@@ -152,15 +162,15 @@ function SettingsRowItem({
   onToggle: () => void;
 }) {
   const Icon = row.Icon;
-  const borderClass = isLast ? "" : "border-b border-white/10";
+  const borderClass = isLast ? "" : "border-b border-border";
   const baseClass = `flex items-center justify-between gap-3 p-4 shrink-0 ${borderClass}`;
 
   if (row.kind === "toggle") {
     return (
       <div className={baseClass}>
         <div className="flex items-center gap-4">
-          <Icon size={18} strokeWidth={1.5} className="text-white" aria-hidden />
-          <span className="text-[15px] leading-6 font-medium text-white">{row.label}</span>
+          <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
+          <span className="text-[15px] leading-6 font-medium text-foreground">{row.label}</span>
         </div>
         <IOSSwitch checked={!!toggleOn} onChange={onToggle} label={row.label} />
       </div>
@@ -168,12 +178,12 @@ function SettingsRowItem({
   }
 
   return (
-    <button type="button" className={`${baseClass} active:bg-white/[0.05] transition-colors`}>
+    <button type="button" className={`${baseClass} active:bg-foreground/[0.05] transition-colors`}>
       <div className="flex items-center gap-4">
-        <Icon size={18} strokeWidth={1.5} className="text-white" aria-hidden />
-        <span className="text-[15px] leading-6 font-medium text-white">{row.label}</span>
+        <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
+        <span className="text-[15px] leading-6 font-medium text-foreground">{row.label}</span>
       </div>
-      <ChevronRight size={16} strokeWidth={2} className="text-white/70" aria-hidden />
+      <ChevronRight size={16} strokeWidth={2} className="text-foreground/55" aria-hidden />
     </button>
   );
 }
@@ -196,7 +206,7 @@ function IOSSwitch({
       onClick={onChange}
       className={
         "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors " +
-        (checked ? "bg-[#34C759]" : "bg-white/25")
+        (checked ? "bg-[#34C759]" : "bg-foreground/20")
       }
     >
       <span

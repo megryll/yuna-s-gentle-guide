@@ -216,7 +216,12 @@ function WelcomeTooltip({
       onClick={onDismiss}
     >
       <div
-        className="yuna-rise relative rounded-3xl bg-popover text-popover-foreground p-5 shadow-xl w-full max-w-[20rem]"
+        style={{
+          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+        className="yuna-rise relative rounded-3xl text-popover-foreground p-5 shadow-xl w-full max-w-[20rem] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -244,7 +249,7 @@ function WelcomeTooltip({
             onClick={onToggleMute}
             aria-label={muted ? "Unmute Yuna" : "Mute Yuna"}
             aria-pressed={muted}
-            className="h-8 w-8 rounded-full hairline flex items-center justify-center text-muted-foreground active:bg-accent transition-colors"
+            className="h-8 w-8 rounded-full border border-foreground/40 bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground active:bg-background/80 transition-colors"
           >
             {muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
           </button>

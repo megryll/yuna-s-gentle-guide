@@ -55,9 +55,14 @@ const DrawerContent = React.forwardRef<
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
+        style={{
+          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
         className={cn(
           pos +
-            " inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-popover text-popover-foreground",
+            " inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border text-popover-foreground",
           className,
         )}
         {...props}

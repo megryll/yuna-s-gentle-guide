@@ -86,8 +86,13 @@ export function AppMenuDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Account settings"
+        style={{
+          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
         className={
-          "absolute inset-y-0 left-0 w-[88%] max-w-[340px] bg-popover text-popover-foreground border-r border-border flex flex-col transition-transform duration-300 ease-out " +
+          "absolute inset-y-0 left-0 w-[88%] max-w-[340px] text-popover-foreground border-r border-border flex flex-col transition-transform duration-300 ease-out " +
           (open ? "translate-x-0" : "-translate-x-full")
         }
       >
@@ -104,7 +109,7 @@ export function AppMenuDrawer({
 
         <div className="flex-1 overflow-y-auto px-5 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Therapist Match hero */}
-          <div className="rounded-2xl hairline bg-muted/40 p-4 flex items-center gap-3">
+          <div className="rounded-2xl hairline bg-background/70 backdrop-blur-sm p-4 flex items-center gap-3">
             <div className="flex-1">
               <p className="text-sm leading-snug">Therapist Match</p>
               <p className="font-sans-ui text-[11px] text-muted-foreground mt-0.5">
@@ -131,7 +136,7 @@ export function AppMenuDrawer({
               <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2 px-1">
                 {s.title}
               </p>
-              <div className="rounded-2xl hairline overflow-hidden bg-background">
+              <div className="rounded-2xl hairline overflow-hidden bg-background/70 backdrop-blur-sm">
                 {s.rows.map((r, i) => (
                   <button
                     key={r.label}

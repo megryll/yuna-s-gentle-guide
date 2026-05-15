@@ -124,7 +124,7 @@ export function ChoiceList({
 }
 
 export function NavList({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-2xl hairline overflow-hidden bg-background">{children}</div>;
+  return <div className="rounded-2xl hairline overflow-hidden bg-background/40 backdrop-blur-sm">{children}</div>;
 }
 
 export type ImageChoice = {

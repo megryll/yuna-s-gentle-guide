@@ -123,8 +123,13 @@ function FocusAreaRoute() {
                   className="fixed inset-0 z-10 cursor-default"
                 />
                 <div
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 rounded-2xl bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)]"
-                  style={{ width: 260 }}
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 rounded-2xl p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)] overflow-hidden"
+                  style={{
+                    width: 260,
+                    backgroundImage: "url(/light-blur-bg.png)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
                 >
                   <p className="text-[14px] leading-[22px] text-neutral-900 m-0">
                     New growth tasks unlock as you chat with Yuna and complete existing tasks.
