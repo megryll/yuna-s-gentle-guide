@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 
@@ -14,8 +15,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLoaded(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <PhoneFrame backgroundImage="/welcome-forest.png">
+      {loaded && (
+      <>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-44 text-white">
         <div className="yuna-fade-in">
           <img src="/yuna-logo.svg" alt="Yuna" className="h-5 w-auto" />
@@ -122,6 +131,8 @@ function Index() {
           Use Referral Code
         </Button>
       </div>
+      </>
+      )}
     </PhoneFrame>
   );
 }
