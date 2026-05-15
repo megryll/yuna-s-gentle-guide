@@ -5,25 +5,25 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Create account — Yuna" },
-      { name: "description", content: "Create an account to start with Yuna." },
+      { title: "Log in — Yuna" },
+      { name: "description", content: "Log in to your Yuna account." },
     ],
   }),
-  component: AuthScreen,
+  component: LoginScreen,
 });
 
 type Step = "email" | "password";
 
-function AuthScreen() {
+function LoginScreen() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const finish = () => navigate({ to: "/accept-terms" });
+  const finish = () => navigate({ to: "/home" });
   const goBack = () => {
     if (step === "password") setStep("email");
     else navigate({ to: "/" });
@@ -48,7 +48,7 @@ function AuthScreen() {
         <div key={step} className="yuna-fade-in flex flex-col">
           <div className="mt-14 yuna-rise">
             <h1 className="text-[32px] leading-tight tracking-tight text-white">
-              {step === "email" ? "Create your account." : "Create a password."}
+              {step === "email" ? "Welcome back." : "Enter your password."}
             </h1>
             {step === "password" && email && (
               <p className="mt-3 text-sm text-white/70">{email}</p>
@@ -83,7 +83,7 @@ function AuthScreen() {
                   placeholder="your@email.com"
                 />
                 <Button surface="dark" variant="primary" fullWidth type="submit">
-                  Continue with email
+                  Log in with email
                 </Button>
               </form>
             </div>
@@ -96,15 +96,20 @@ function AuthScreen() {
                 surface="dark"
                 type="password"
                 required
-                minLength={8}
                 autoFocus
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="Your password"
               />
               <Button surface="dark" variant="primary" fullWidth type="submit">
-                Continue
+                Log in
               </Button>
+              <button
+                type="button"
+                className="self-center mt-1 text-sm text-white/70 underline underline-offset-4 decoration-white/40"
+              >
+                Forgot password?
+              </button>
             </form>
           )}
         </div>

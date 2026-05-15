@@ -43,7 +43,11 @@ const SURFACE_DARK =
 const SURFACE_LIGHT =
   "border-foreground/30 bg-white/40 focus-within:border-foreground";
 
-const SIZE_MD = "pl-5 py-2 text-sm";
+// Full-size (default). Min-height keeps bare fields the same height as
+// fields with an icon-sm trailing button (h-8), so the pill reads
+// consistently whether or not a trailing control is present.
+const SIZE_MD = "pl-5 py-2 min-h-12 text-sm";
+// Compact — used inside cards (e.g. the gratitude journal rows).
 const SIZE_SM = "pl-4 py-1.5 text-[13px]";
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(

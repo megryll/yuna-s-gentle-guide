@@ -33,10 +33,13 @@ function DSTextFields() {
           </p>
           <h1 className="text-3xl tracking-tight">Text Fields</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
-            A pill-shaped single-line input. Pick a{" "}
-            <code className="font-sans-ui text-xs">surface</code> (the
-            background it sits on) and a{" "}
-            <code className="font-sans-ui text-xs">size</code>; pass{" "}
+            A pill-shaped single-line input in two sizes:{" "}
+            <code className="font-sans-ui text-xs">md</code> (default — auth,
+            intro, chat) and{" "}
+            <code className="font-sans-ui text-xs">sm</code> (compact — for use
+            inside cards). Pick a{" "}
+            <code className="font-sans-ui text-xs">surface</code> for the
+            background it sits on and pass{" "}
             <code className="font-sans-ui text-xs">trailing</code> for an
             inline action.
           </p>
@@ -48,7 +51,7 @@ function DSTextFields() {
         >
           <DarkSurface>
             <div className="flex flex-col gap-4 max-w-sm">
-              <Row label="md (default)">
+              <Row label="md — full size (auth, intro, chat)">
                 <TextField
                   surface="dark"
                   value={a}
@@ -56,7 +59,7 @@ function DSTextFields() {
                   placeholder="Add a note for yourself…"
                 />
               </Row>
-              <Row label="sm (compact)">
+              <Row label="sm — compact (inside cards)">
                 <TextField
                   surface="dark"
                   size="sm"
@@ -121,7 +124,7 @@ function DSTextFields() {
         >
           <LightSurface>
             <div className="flex flex-col gap-4 max-w-sm">
-              <Row label="md (default)">
+              <Row label="md — full size">
                 <TextField
                   surface="light"
                   value={d}
@@ -129,7 +132,7 @@ function DSTextFields() {
                   placeholder="Add a note for yourself…"
                 />
               </Row>
-              <Row label="sm (compact)">
+              <Row label="sm — compact (inside cards)">
                 <TextField
                   surface="light"
                   size="sm"

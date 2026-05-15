@@ -15,6 +15,7 @@ import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EmotionTrendsRouteImport } from './routes/emotion-trends'
@@ -55,6 +56,11 @@ const SessionsRoute = SessionsRouteImport.update({
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntroRoute = IntroRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
+  '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
+  '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/emotion-trends': typeof EmotionTrendsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
+  '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/emotion-trends'
     | '/home'
     | '/intro'
+    | '/login'
     | '/progress'
     | '/sessions'
     | '/settings'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/emotion-trends'
     | '/home'
     | '/intro'
+    | '/login'
     | '/progress'
     | '/sessions'
     | '/settings'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/emotion-trends'
     | '/home'
     | '/intro'
+    | '/login'
     | '/progress'
     | '/sessions'
     | '/settings'
@@ -239,6 +251,7 @@ export interface RootRouteChildren {
   EmotionTrendsRoute: typeof EmotionTrendsRoute
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
+  LoginRoute: typeof LoginRoute
   ProgressRoute: typeof ProgressRoute
   SessionsRoute: typeof SessionsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/intro': {
@@ -394,6 +414,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmotionTrendsRoute: EmotionTrendsRoute,
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
+  LoginRoute: LoginRoute,
   ProgressRoute: ProgressRoute,
   SessionsRoute: SessionsRouteWithChildren,
   SettingsRoute: SettingsRoute,

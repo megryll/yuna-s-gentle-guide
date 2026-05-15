@@ -120,8 +120,8 @@ function Index() {
         style={{ animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 320ms both" }}
       >
         <div className="w-full grid grid-cols-2 gap-3">
-          <Button surface="dark" variant="secondary" fullWidth>
-            Log in
+          <Button surface="dark" variant="secondary" fullWidth asChild>
+            <Link to="/login">Log in</Link>
           </Button>
           <Button surface="dark" variant="primary" fullWidth asChild>
             <Link to="/auth">Get started</Link>

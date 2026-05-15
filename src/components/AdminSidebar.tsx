@@ -9,6 +9,7 @@ type Entry = {
 
 const PAGES: Entry[] = [
   { label: "Welcome", to: "/" },
+  { label: "Log in", to: "/login" },
   { label: "Create account", to: "/auth" },
   { label: "Accept terms", to: "/accept-terms" },
   { label: "Intro", to: "/intro" },
