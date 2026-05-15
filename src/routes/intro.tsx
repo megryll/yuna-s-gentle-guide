@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { setName as saveName, setVoice } from "@/lib/yuna-session";
+import { setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
+import { avatarSrc } from "@/components/YunaAvatar";
+import { setUserType } from "@/lib/user-type";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
@@ -657,7 +659,8 @@ function Intro() {
       goToStep(stepIdx + 1);
       return;
     }
-    // Final step (privacy) — fade out and head to /home.
+    // Final step (privacy) — fade out and head to /home as a new user.
+    setUserType("new");
     setTransitioning(true);
     fadeOutAmbient(1300);
     setTimeout(() => {
@@ -751,7 +754,7 @@ function Intro() {
                   : undefined
               }
             >
-              <YunaAvatarLarge />
+              <YunaAvatarLarge usePhoto={stepIdx >= 4} />
             </div>
             {stepIdx === 4 && (
               <div
@@ -938,7 +941,10 @@ function Intro() {
 
 // ── Yuna avatar (welcome-screen sized halo cluster) ─────────────────────────
 
-function YunaAvatarLarge() {
+function YunaAvatarLarge({ usePhoto = false }: { usePhoto?: boolean }) {
+  const { avatar } = useYunaIdentity();
+  const showPhoto = usePhoto && !!avatar;
+  const src = showPhoto && avatar ? avatarSrc(avatar) : "/avatar.png";
   return (
     <div
       className="relative h-14 w-14 shrink-0"
@@ -994,9 +1000,11 @@ function YunaAvatarLarge() {
         }}
       />
       <img
-        src="/avatar.png"
+        src={src}
         alt="Yuna avatar"
-        className="relative h-14 w-14"
+        className={
+          "relative h-14 w-14 " + (showPhoto ? "rounded-full object-cover" : "")
+        }
       />
     </div>
   );
