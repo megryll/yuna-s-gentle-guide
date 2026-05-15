@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
+import { useAppMode } from "@/lib/theme-prefs";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import {
@@ -476,6 +477,8 @@ const WAVE_LEVEL_GAIN = 6;
 
 function VoiceWaveform({ active }: { active: boolean }) {
   const pathRef = useRef<SVGPathElement>(null);
+  const mode = useAppMode();
+  const stroke = mode === "light" ? "rgba(20, 20, 22, 0.75)" : "rgba(255, 255, 255, 0.7)";
 
   useEffect(() => {
     if (!active) return;
@@ -568,7 +571,7 @@ function VoiceWaveform({ active }: { active: boolean }) {
           ref={pathRef}
           d={`M 0 ${WAVE_MID} L ${WAVE_VIEW_W} ${WAVE_MID}`}
           fill="none"
-          stroke="rgba(255,255,255,0.7)"
+          stroke={stroke}
           strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"

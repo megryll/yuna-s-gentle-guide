@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Share2 } from "lucide-react";
+import * as SliderPrimitive from "@radix-ui/react-slider";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { TextField } from "@/components/TextField";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { HomeCardRow } from "@/components/HomeCards";
+import { SentimentTag, useSentimentToneColor } from "@/components/SentimentTag";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import {
   clearStoredMessages,
@@ -35,41 +38,55 @@ const MIN_LOADING_MS = 1250;
 // Two list-view home cards Yuna surfaces as new activities for this session.
 const PLACED_FOR_YOU: HomeCard[] = HOME_CARDS.filter((c) => c.isNew).slice(0, 2);
 
-// 2×3 grid of self-reflection tags. Emoji + label; emoji first so the row
-// scans as iconography → words.
-const REFLECTION_TAGS: ReadonlyArray<{ label: string; emoji: string }> = [
-  { label: "Improved mood", emoji: "🌤️" },
-  { label: "Relieved stress", emoji: "😮‍💨" },
+// Self-reflection tags. Stress/mood live in the sliders above, so they're
+// omitted here. Positive and negative counts are matched (6/6) so neither
+// cluster pulls visual weight by sheer size.
+const POSITIVE_TAGS: ReadonlyArray<{ label: string; emoji: string }> = [
   { label: "Felt inspired", emoji: "✨" },
-  { label: "Learned something", emoji: "💡" },
+  { label: "Learned", emoji: "💡" },
   { label: "Gained clarity", emoji: "💎" },
   { label: "Felt heard", emoji: "🫶" },
+  { label: "Felt connected", emoji: "🤝" },
+  { label: "Felt energized", emoji: "⚡" },
 ];
 
-// Surfaced only when the user taps "None of these" — gives space for honest
-// negative feedback without making it the default affordance.
 const NEGATIVE_TAGS: ReadonlyArray<{ label: string; emoji: string }> = [
-  { label: "Felt misunderstood", emoji: "😕" },
+  { label: "Misunderstood", emoji: "😕" },
   { label: "Didn't help", emoji: "🙁" },
   { label: "Too generic", emoji: "📋" },
   { label: "Felt rushed", emoji: "⏱️" },
-  { label: "Repeated itself", emoji: "🔁" },
-  { label: "Made things worse", emoji: "💢" },
+  { label: "Repetitive", emoji: "🔁" },
+  { label: "Felt worse", emoji: "💢" },
 ];
+
+// Center-out sliders share these colors. Mint green for the positive
+// direction, warm peach for the negative — both pulled from the wrap-up
+// emotion palette so they sit naturally with the rest of the screen.
+// Mode-aware so the slider tracks match the SentimentTag pills above
+// them in either light or dark mode.
+function useSliderColors() {
+  const toneColor = useSentimentToneColor();
+  return { positive: toneColor("positive"), negative: toneColor("negative") };
+}
 
 // Palette tying each detected emotion to a soft, readable hue. Real impl
 // would classify the transcript server-side; this prototype hardcodes the
-// pairings so the sentiment-tagged-quote pattern reads true.
-const EMOTION_COLORS: Record<string, string> = {
-  Overwhelm: "#F7A7A7",
-  Relief: "#B3D4B0",
-  Resolve: "#E8C77E",
-  Hopefulness: "#A7C7E7",
-  "Self-compassion": "#C5B6E0",
-  Gratitude: "#F4C39F",
-  Tenderness: "#F2B4D3",
-  Curiosity: "#B5DEDB",
-};
+// pairings so the sentiment-tagged-quote pattern reads true. Green +
+// orange-family emotions reuse the SentimentTag palette so positive and
+// negative signals look like the same language across the screen.
+function useEmotionColors(): Record<string, string> {
+  const toneColor = useSentimentToneColor();
+  return {
+    Overwhelm: "#F7A7A7",
+    Relief: toneColor("positive"),
+    Resolve: toneColor("negative"),
+    Hopefulness: "#A7C7E7",
+    "Self-compassion": "#C5B6E0",
+    Gratitude: toneColor("negative"),
+    Tenderness: "#F2B4D3",
+    Curiosity: "#B5DEDB",
+  };
+}
 
 // One highlight pairs a quote with the emotions Yuna heard underneath it.
 type Highlight = { quote: string; emotions: string[] };
@@ -113,6 +130,12 @@ function WrapUp() {
   const [themes, setThemes] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [reflections, setReflections] = useState<string[]>([]);
+  // Sliders default to 0 (center). Touched flags let us persist null when
+  // the user never moved them, so "neutral" stays distinct from "no input."
+  const [stress, setStress] = useState(0);
+  const [mood, setMood] = useState(0);
+  const [stressTouched, setStressTouched] = useState(false);
+  const [moodTouched, setMoodTouched] = useState(false);
 
   const idRef = useRef<string>(keepsakeUid());
 
@@ -197,8 +220,8 @@ function WrapUp() {
       reflections: (overrides?.reflections ?? reflections).length
         ? overrides?.reflections ?? reflections
         : undefined,
-      mood: null,
-      stress: null,
+      mood: moodTouched ? mood : null,
+      stress: stressTouched ? stress : null,
       createdAt: Date.now(),
     };
     saveKeepsake(k);
@@ -239,7 +262,7 @@ function WrapUp() {
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-6 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {isLoading ? (
             <SkeletonScreen />
           ) : (
@@ -250,12 +273,24 @@ function WrapUp() {
                 onShare={onShare}
               />
 
-              <ReflectionCard
-                note={note}
-                onNoteChange={setNote}
+              <ReflectionSection
                 reflections={reflections}
                 onToggleReflection={onToggleReflection}
+                stress={stress}
+                stressTouched={stressTouched}
+                onStressChange={(v) => {
+                  setStress(v);
+                  setStressTouched(true);
+                }}
+                mood={mood}
+                moodTouched={moodTouched}
+                onMoodChange={(v) => {
+                  setMood(v);
+                  setMoodTouched(true);
+                }}
               />
+
+              <NoteCard note={note} onNoteChange={setNote} />
 
               <HighlightsCard highlights={displayQuotes} />
 
@@ -297,11 +332,11 @@ function SessionHero({
 }) {
   return (
     <section className="flex flex-col items-center text-center gap-4 pt-1 pb-2 yuna-fade-in">
-      <p className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+      <p className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65">
         Session complete
       </p>
 
-      <span className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0 ring-1 ring-white/15 drop-shadow-[0_3px_10px_rgba(0,0,0,0.45)]">
+      <span className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0 ring-1 ring-white/15">
         {avatar ? (
           <YunaAvatar variant={avatar} size={64} />
         ) : (
@@ -309,7 +344,7 @@ function SessionHero({
         )}
       </span>
 
-      <p className="font-display italic text-[24px] leading-[1.3] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] max-w-[280px]">
+      <p className="font-display italic text-[24px] leading-[1.3] text-white max-w-[280px]">
         {message}
       </p>
 
@@ -327,112 +362,187 @@ function SessionHero({
   );
 }
 
-// ── Reflection: tags + note ─────────────────────────────────────────────────
-function ReflectionCard({
-  note,
-  onNoteChange,
+// ── Reflection: sliders + tags ──────────────────────────────────────────────
+// Two center-out sliders capture the directional shift Yuna's session may
+// have produced (stress + mood). The tag clusters below capture qualitative
+// signal — positive on top, negative below — at a smaller pill size so both
+// clusters fit without scrolling. Lives outside a card so the section reads
+// at the screen's body width.
+function ReflectionSection({
   reflections,
   onToggleReflection,
+  stress,
+  stressTouched,
+  onStressChange,
+  mood,
+  moodTouched,
+  onMoodChange,
 }: {
-  note: string;
-  onNoteChange: (v: string) => void;
   reflections: string[];
   onToggleReflection: (tag: string) => void;
+  stress: number;
+  stressTouched: boolean;
+  onStressChange: (v: number) => void;
+  mood: number;
+  moodTouched: boolean;
+  onMoodChange: (v: number) => void;
 }) {
-  const [negativeOpen, setNegativeOpen] = useState(false);
-  const anyNegativeSelected = NEGATIVE_TAGS.some((t) =>
-    reflections.includes(t.label),
-  );
-
   return (
-    <section className="rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-sm px-5 py-6 flex flex-col gap-5 yuna-rise">
-      <h2 className="font-['Stara'] text-[18px] leading-tight text-white">
+    <section className="flex flex-col gap-7 yuna-rise">
+      <h2 className="font-display text-[18px] leading-tight text-white text-center">
         How did this session land?
       </h2>
 
-      <div className="grid grid-cols-2 gap-2">
-        {REFLECTION_TAGS.map((tag) => {
-          const active = reflections.includes(tag.label);
-          return (
-            <button
-              key={tag.label}
-              type="button"
-              onClick={() => onToggleReflection(tag.label)}
-              aria-pressed={active}
-              className={
-                "relative w-full min-h-[40px] rounded-full px-3 text-[12px] leading-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors duration-150 active:scale-[0.97] " +
-                (active
-                  ? "bg-white text-neutral-900 border border-transparent shadow-[0_4px_18px_rgba(255,255,255,0.25)] tag-pop"
-                  : "border border-white/25 bg-white/[0.04] text-white/85")
-              }
-            >
-              <span aria-hidden className="text-[14px] leading-none translate-y-[-0.5px]">
-                {tag.emoji}
-              </span>
-              <span className="leading-none">{tag.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setNegativeOpen((o) => !o)}
-        aria-expanded={negativeOpen}
-        className={
-          "self-center text-[12px] leading-none active:text-white transition-colors " +
-          (negativeOpen || anyNegativeSelected ? "text-white/85" : "text-white/65")
-        }
-      >
-        None of these
-      </button>
-
-      {negativeOpen && (
-        <div className="flex flex-col gap-3 yuna-fade-in">
-          <p className="text-[12px] leading-relaxed text-white/75 italic">
-            Sorry this session didn't land — what felt off?
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {NEGATIVE_TAGS.map((tag) => {
-              const active = reflections.includes(tag.label);
-              return (
-                <button
-                  key={tag.label}
-                  type="button"
-                  onClick={() => onToggleReflection(tag.label)}
-                  aria-pressed={active}
-                  className={
-                    "relative w-full min-h-[40px] rounded-full px-3 text-[12px] leading-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors duration-150 active:scale-[0.97] " +
-                    (active
-                      ? "bg-white text-neutral-900 border border-transparent shadow-[0_4px_18px_rgba(255,255,255,0.25)] tag-pop"
-                      : "border border-white/25 bg-white/[0.04] text-white/85")
-                  }
-                >
-                  <span
-                    aria-hidden
-                    className="text-[14px] leading-none translate-y-[-0.5px]"
-                  >
-                    {tag.emoji}
-                  </span>
-                  <span className="leading-none">{tag.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="pt-4 border-t border-white/12">
-        <input
-          type="text"
-          value={note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          placeholder="Add a note for yourself…"
-          className="w-full bg-transparent text-sm py-3 outline-none placeholder:text-white/45 text-white"
-          maxLength={140}
+      <div className="flex flex-col gap-5">
+        <SentimentSlider
+          leftLabel="Increased stress"
+          rightLabel="Decreased stress"
+          value={stress}
+          touched={stressTouched}
+          onChange={onStressChange}
+        />
+        <SentimentSlider
+          leftLabel="Worsened mood"
+          rightLabel="Improved mood"
+          value={mood}
+          touched={moodTouched}
+          onChange={onMoodChange}
         />
       </div>
+
+      <div className="flex flex-wrap justify-center gap-1.5 pt-2">
+        {POSITIVE_TAGS.map((tag) => (
+          <ReflectionTag
+            key={tag.label}
+            tag={tag}
+            tone="positive"
+            active={reflections.includes(tag.label)}
+            onToggle={() => onToggleReflection(tag.label)}
+          />
+        ))}
+        {NEGATIVE_TAGS.map((tag) => (
+          <ReflectionTag
+            key={tag.label}
+            tag={tag}
+            tone="negative"
+            active={reflections.includes(tag.label)}
+            onToggle={() => onToggleReflection(tag.label)}
+          />
+        ))}
+      </div>
     </section>
+  );
+}
+
+function NoteCard({
+  note,
+  onNoteChange,
+}: {
+  note: string;
+  onNoteChange: (v: string) => void;
+}) {
+  return (
+    <section className="yuna-rise">
+      <TextField
+        surface="dark"
+        value={note}
+        onChange={(e) => onNoteChange(e.target.value)}
+        placeholder="Add a note for yourself…"
+        maxLength={140}
+      />
+    </section>
+  );
+}
+
+function ReflectionTag({
+  tag,
+  tone,
+  active,
+  onToggle,
+}: {
+  tag: { label: string; emoji: string };
+  tone: "positive" | "negative";
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <SentimentTag
+      tone={tone}
+      emoji={tag.emoji}
+      label={tag.label}
+      active={active}
+      onClick={onToggle}
+      size="sm"
+    />
+  );
+}
+
+// Center-out slider: thumb starts at 0, fill grows from the center outward
+// in the direction of motion. Mint when shifting positive, peach when
+// shifting negative — the color is the at-a-glance read on the rating.
+function SentimentSlider({
+  leftLabel,
+  rightLabel,
+  value,
+  touched,
+  onChange,
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  value: number;
+  touched: boolean;
+  onChange: (v: number) => void;
+}) {
+  const positive = value > 0;
+  const negative = value < 0;
+  const colors = useSliderColors();
+  // Fill spans from center (50%) outward by |value| * 50%. For negative
+  // values we offset the left edge so the bar grows leftward visually.
+  const fillStart = negative ? 50 + value * 50 : 50;
+  const fillWidth = Math.abs(value) * 50;
+  const fillColor = positive
+    ? colors.positive
+    : negative
+      ? colors.negative
+      : "transparent";
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/65">
+        <span className={negative && touched ? "text-white/90" : ""}>
+          {leftLabel}
+        </span>
+        <span className={positive && touched ? "text-white/90" : ""}>
+          {rightLabel}
+        </span>
+      </div>
+      <SliderPrimitive.Root
+        className="relative flex w-full touch-none select-none items-center h-5"
+        min={-1}
+        max={1}
+        step={0.01}
+        value={[value]}
+        onValueChange={(v) => onChange(v[0] ?? 0)}
+        aria-label={`${leftLabel} to ${rightLabel}`}
+      >
+        <SliderPrimitive.Track className="relative h-2 w-full grow rounded-full bg-white/15 border border-white/12">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-1 h-[16px] w-px bg-white/35"
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute top-0 h-full rounded-full transition-[background-color] duration-150"
+            style={{
+              left: `${fillStart}%`,
+              width: `${fillWidth}%`,
+              backgroundColor: fillColor,
+            }}
+          />
+        </SliderPrimitive.Track>
+        <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60" />
+      </SliderPrimitive.Root>
+    </div>
   );
 }
 
@@ -459,8 +569,9 @@ function HighlightsCard({ highlights }: { highlights: Highlight[] }) {
 }
 
 function HighlightItem({ highlight }: { highlight: Highlight }) {
+  const emotionColors = useEmotionColors();
   const colors = highlight.emotions
-    .map((e) => EMOTION_COLORS[e])
+    .map((e) => emotionColors[e])
     .filter(Boolean);
   const ribbon =
     colors.length === 0
@@ -490,7 +601,7 @@ function HighlightItem({ highlight }: { highlight: Highlight }) {
         }}
       />
       <div className="flex flex-col gap-3">
-        <p className="text-[14px] leading-relaxed text-white/90 italic">
+        <p className="text-[16px] leading-relaxed text-white/90">
           “{highlight.quote}”
         </p>
 
@@ -507,9 +618,10 @@ function HighlightItem({ highlight }: { highlight: Highlight }) {
 }
 
 function EmotionPill({ name }: { name: string }) {
-  const color = EMOTION_COLORS[name] ?? "rgba(255,255,255,0.5)";
+  const emotionColors = useEmotionColors();
+  const color = emotionColors[name] ?? "rgba(255,255,255,0.5)";
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-1 text-[11px] leading-none font-sans-ui text-white/85">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-1 text-[12px] leading-none font-sans-ui text-white/85">
       <span
         aria-hidden
         className="h-1.5 w-1.5 rounded-full shrink-0"
@@ -554,7 +666,7 @@ function SkeletonScreen() {
         <SkeletonBar widthClass="w-[70%]" heightClass="h-3" />
       </div>
 
-      <div className="relative rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-5 py-7 overflow-hidden min-h-[200px]">
+      <div className="relative rounded-2xl border border-white/[0.25] bg-white/[0.06] backdrop-blur-sm px-5 py-7 overflow-hidden min-h-[200px]">
         <span aria-hidden className="absolute inset-0 pointer-events-none keepsake-shimmer" />
         <div className="relative flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -568,7 +680,7 @@ function SkeletonScreen() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-5 py-6 flex flex-col gap-4">
+      <div className="rounded-2xl border border-white/[0.25] bg-white/[0.06] backdrop-blur-sm px-5 py-6 flex flex-col gap-4">
         <SkeletonBar widthClass="w-[60%]" heightClass="h-4" />
         <div className="grid grid-cols-2 gap-2">
           {Array.from({ length: 6 }).map((_, i) => (

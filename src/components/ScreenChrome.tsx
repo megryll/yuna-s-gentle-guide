@@ -6,7 +6,7 @@ import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
-import { isDarkBg, useThemePrefs } from "@/lib/theme-prefs";
+import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 import {
   Dialog,
   DialogContent,
@@ -55,12 +55,12 @@ export function ScreenChrome({
     }
   };
 
-  const { mainBg } = useThemePrefs();
-  // surface="dark" is the photo-bg cluster (Home/You/etc). When the user picks
-  // Snowy, the photo turns light, so cards/buttons need surface="light" to
-  // stay readable. Forest keeps the existing dark-photo styling.
+  const mode = useAppMode();
+  // surface="dark" is the photo-bg cluster (Home/You/etc). In light mode the
+  // photo flips to /light-blur-bg.png, so cards/buttons need surface="light"
+  // to stay readable. Dark mode keeps the existing dark-photo styling.
   const effectiveSurface =
-    surface === "dark" && isDarkBg(mainBg) ? "light" : surface;
+    surface === "dark" && isLightMode(mode) ? "light" : surface;
   const isDark = surface === "dark";
 
   return (
@@ -100,7 +100,7 @@ export function ScreenChrome({
           {children}
         </div>
 
-        <AppBar surface={effectiveSurface} />
+        <AppBar surface={surface} />
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />

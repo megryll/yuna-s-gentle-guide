@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Insight } from "@/lib/profile-data";
+import { useAppMode } from "@/lib/theme-prefs";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { useYunaIdentity } from "@/lib/yuna-session";
 
 // Brand greens (not yet tokenised in styles.css — keep consistent with HomeCards.tsx)
 const GREEN = "#115430";
@@ -29,16 +32,26 @@ export function ProgressRing({
     return () => window.clearTimeout(id);
   }, [target]);
 
+  // Light mode swaps the pale mint stroke for the forest green used on the
+  // insight left-accent — keeps the ring legible on the light photo bg and
+  // visually ties it to the same accent family. The background track also
+  // shifts to fully opaque white so the unfilled portion reads as a clean
+  // ring rather than barely-visible-on-light tinted glass.
+  const mode = useAppMode();
+  const isLight = mode === "light";
+  const ringStroke = isLight ? GREEN_ACCENT : RING_MINT;
+  const trackStroke = isLight ? "#ffffff" : "rgba(255,255,255,0.18)";
+
   return (
     <div className="relative" style={{ width: 89, height: 89 }}>
       <svg viewBox="0 0 92 92" width={89} height={89} className="absolute inset-0">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth={3} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={trackStroke} strokeWidth={3} />
         <circle
           cx={cx}
           cy={cy}
           r={r}
           fill="none"
-          stroke={RING_MINT}
+          stroke={ringStroke}
           strokeWidth={3}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -68,18 +81,15 @@ export function FocusAreaBentoCard({
   title: string;
   taskCount: number;
 }) {
+  const mode = useAppMode();
+  const isLight = mode === "light";
+  const cardBg = isLight ? "bg-white/[0.55]" : "bg-white/[0.06]";
   return (
     <Link
       to="/focus-area/$num"
       params={{ num: String(num) }}
-      className="relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left active:opacity-90 transition-opacity"
-      style={{
-        backgroundImage: `linear-gradient(160deg, ${GREEN}CC 0%, ${GREEN}99 45%, rgba(13,61,34,0.7) 100%), url(/background.png)`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        border: "1px solid rgba(255,255,255,0.08)",
-        minHeight: 168,
-      }}
+      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-sm active:opacity-90 transition-opacity`}
+      style={{ minHeight: 168 }}
     >
       <span
         aria-hidden
@@ -89,29 +99,15 @@ export function FocusAreaBentoCard({
           right: -6,
           fontSize: 96,
           lineHeight: 1,
-          color: "rgba(255,255,255,0.04)",
+          color: isLight ? "rgba(17,84,48,0.08)" : "rgba(255,255,255,0.07)",
           fontVariationSettings: "'SOFT' 0, 'WONK' 0",
         }}
       >
         0{num}
       </span>
-      <span
-        aria-hidden
-        className="absolute pointer-events-none"
-        style={{
-          top: -40,
-          left: -20,
-          width: 160,
-          height: 160,
-          background: `radial-gradient(circle, ${GREEN_ACCENT}26 0%, transparent 70%)`,
-        }}
-      />
       <div className="relative flex-1 flex flex-col justify-between p-4">
         <div className="flex flex-col gap-2">
-          <span
-            className="font-sans-ui text-[12px] font-bold leading-[18px]"
-            style={{ color: GREEN_ACCENT }}
-          >
+          <span className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/65">
             Focus Area {num}
           </span>
           <span
@@ -141,10 +137,15 @@ export function InsightCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { emoji, title, desc, meaning, yunaQuote, date } = insight;
+  const mode = useAppMode();
+  const isLight = mode === "light";
+  const tagText = isLight ? GREEN : "#cdebb5";
+  const cardBg = isLight ? "bg-white/[0.55]" : "bg-white/[0.06]";
+  const { avatar } = useYunaIdentity();
 
   return (
     <div
-      className="rounded-2xl overflow-hidden border border-white/15 bg-white/[0.06] backdrop-blur-sm"
+      className={`rounded-2xl overflow-hidden border border-white/15 ${cardBg} backdrop-blur-sm`}
       style={accentLeft ? { borderLeft: `3px solid ${GREEN_ACCENT}` } : undefined}
     >
       <button
@@ -164,7 +165,7 @@ export function InsightCard({
           {date && (
             <span
               className="font-sans-ui text-[10px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
-              style={{ backgroundColor: `${GREEN_ACCENT}33`, color: "#cdebb5" }}
+              style={{ backgroundColor: `${GREEN_ACCENT}33`, color: tagText }}
             >
               {date}
             </span>
@@ -216,11 +217,16 @@ export function InsightCard({
                 padding: "16px 16px 16px 19px",
               }}
             >
-              <img
-                src="/assets/gp/yuna-avatar.png"
-                alt=""
-                className="h-10 w-10 rounded-full object-cover shrink-0"
-              />
+              <span
+                aria-hidden
+                className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0"
+              >
+                {avatar ? (
+                  <YunaAvatar variant={avatar} size={40} />
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-white" />
+                )}
+              </span>
               <p
                 className="font-display italic m-0 text-white/95"
                 style={{ fontSize: 14, lineHeight: "22px", fontVariationSettings: "'SOFT' 0, 'WONK' 1" }}
@@ -263,14 +269,16 @@ export function EmptyStateCard({
   body: string;
   leafSrc: string;
 }) {
+  const mode = useAppMode();
+  const isLight = mode === "light";
   return (
     <div
-      className="relative rounded-2xl overflow-hidden border border-white/15 backdrop-blur-sm flex flex-col items-center gap-2 p-4"
+      className="relative rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col items-center gap-2 p-4"
       style={{ backgroundColor: `${GREEN_ACCENT}14` }}
     >
       <p
         className="font-sans-ui text-[11px] font-bold tracking-[0.06em] uppercase text-center"
-        style={{ color: "#cdebb5" }}
+        style={{ color: isLight ? GREEN : "#cdebb5" }}
       >
         {heading}
       </p>

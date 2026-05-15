@@ -11,6 +11,7 @@ import {
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
+import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -166,6 +167,7 @@ function WelcomeTooltip({
   onDismiss: () => void;
 }) {
   const { avatar, voice } = useYunaIdentity();
+  const tooltipMode = useAppMode();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
 
@@ -217,11 +219,14 @@ function WelcomeTooltip({
     >
       <div
         style={{
-          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundImage: `url(${APP_MODE_META[tooltipMode].image})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
-        className="yuna-rise relative rounded-3xl text-popover-foreground p-5 shadow-xl w-full max-w-[20rem] overflow-hidden"
+        className={
+          "yuna-rise relative rounded-3xl text-popover-foreground p-5 shadow-xl w-full max-w-[20rem] overflow-hidden " +
+          (tooltipMode === "dark" ? "overlay-on-dark" : "")
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -397,14 +402,30 @@ function ViewToggle({
   mode: "card" | "list";
   onChange: (m: "card" | "list") => void;
 }) {
+  // Rail + active-pill styling mirrors `SegmentedToggle` (Settings light/dark,
+  // Chat text/voice) so the three toggles read as one family. Surface flips
+  // with appMode just like SegmentedToggle does in chat.
+  const appMode = useAppMode();
+  const isDark = appMode === "dark";
+  const railClass = isDark
+    ? "bg-black/15"
+    : "border border-foreground/20 bg-background/60";
+  const railStyle = isDark
+    ? { border: "1px solid rgba(255,255,255,0.25)" }
+    : undefined;
   return (
     <div
       role="group"
       aria-label="View mode"
-      className="inline-flex items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-sm h-8 p-0.5"
+      style={railStyle}
+      className={
+        "inline-flex items-center rounded-full backdrop-blur-sm h-8 p-0.5 " +
+        railClass
+      }
     >
       <ToggleSegmentButton
         active={mode === "card"}
+        isDark={isDark}
         onClick={() => onChange("card")}
         aria-label="Card view"
       >
@@ -412,6 +433,7 @@ function ViewToggle({
       </ToggleSegmentButton>
       <ToggleSegmentButton
         active={mode === "list"}
+        isDark={isDark}
         onClick={() => onChange("list")}
         aria-label="List view"
       >
@@ -423,18 +445,28 @@ function ViewToggle({
 
 function ToggleSegmentButton({
   active,
+  isDark,
   children,
   ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  active: boolean;
+  isDark: boolean;
+}) {
+  // Arbitrary hex values match SegmentedToggle's segments so the active pill
+  // is fully opaque ink in light mode and fully opaque white in dark mode.
+  const activeClass = isDark
+    ? "bg-[#ffffff] text-[#1D1F25]"
+    : "bg-[#1D1F25] text-[#ffffff]";
+  const inactiveClass = isDark
+    ? "text-white active:bg-white/10"
+    : "text-foreground/75 active:bg-foreground/10";
   return (
     <button
       type="button"
       aria-pressed={active}
       className={
         "inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors " +
-        (active
-          ? "bg-white text-neutral-900"
-          : "text-white/75 active:bg-white/10")
+        (active ? activeClass : inactiveClass)
       }
       {...rest}
     >
@@ -454,7 +486,7 @@ function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
         "inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors " +
         (on
           ? "bg-white text-neutral-900"
-          : "border border-white/25 bg-white/10 backdrop-blur-sm text-white/75 active:bg-white/15")
+          : "border border-white/25 text-white/75 active:bg-white/10")
       }
     >
       <Bookmark

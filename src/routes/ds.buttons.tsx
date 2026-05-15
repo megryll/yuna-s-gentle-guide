@@ -13,8 +13,8 @@ export const Route = createFileRoute("/ds/buttons")({
   component: DSButtons,
 });
 
-const VARIANTS = ["primary", "secondary", "ghost"] as const;
-const SIZES = ["md", "sm"] as const;
+const TEXT_SIZES = ["md", "sm", "xs"] as const;
+const ICON_SIZES = ["icon-sm", "icon", "icon-lg"] as const;
 
 function DSButtons() {
   return (
@@ -26,132 +26,143 @@ function DSButtons() {
           </p>
           <h1 className="text-3xl tracking-tight">Buttons</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
-            One root <code className="font-sans-ui text-xs">Button</code> component drives every CTA in the prototype.
+            One root <code className="font-sans-ui text-xs">Button</code> drives every CTA.
             Pick a <code className="font-sans-ui text-xs">surface</code> (the background it sits on), a{" "}
             <code className="font-sans-ui text-xs">variant</code> (fill style), and a{" "}
-            <code className="font-sans-ui text-xs">size</code>.
+            <code className="font-sans-ui text-xs">size</code>. Each variant below is shown on both
+            surfaces.
           </p>
         </header>
 
-        {/* Surface: dark (over photo / dark bg) */}
+        {/* ─── Variants × text sizes ───────────────────────────────────────── */}
         <Section
-          title="Surface: dark"
-          subtitle="Use on photo or dark-gradient screens (Welcome, Create Account, Intro)."
+          title="Primary"
+          subtitle="Solid fill — strongest CTA. Use sparingly: one primary per screen."
         >
-          <DarkSurface>
-            <Matrix surface="dark" />
-          </DarkSurface>
+          <SurfacePair
+            renderRow={(surface) => (
+              <Row>
+                {TEXT_SIZES.map((s) => (
+                  <Button key={s} surface={surface} variant="primary" size={s}>
+                    Continue
+                  </Button>
+                ))}
+              </Row>
+            )}
+          />
         </Section>
 
-        {/* Surface: light (over wireframe / light bg) */}
         <Section
-          title="Surface: light"
-          subtitle="Use on wireframe / light surfaces (Home, You, Activities, Progress)."
+          title="Secondary"
+          subtitle="Outlined, no fill — supporting actions. Also the off-state for toggle buttons."
         >
-          <LightSurface>
-            <Matrix surface="light" />
-          </LightSurface>
+          <SurfacePair
+            renderRow={(surface) => (
+              <Row>
+                {TEXT_SIZES.map((s) => (
+                  <Button key={s} surface={surface} variant="secondary" size={s}>
+                    Continue
+                  </Button>
+                ))}
+              </Row>
+            )}
+          />
         </Section>
 
-        {/* States */}
         <Section
-          title="States"
-          subtitle="Default, pressed, focused, disabled. Tap and hold a button to see its pressed state."
+          title="Ghost"
+          subtitle="No border or fill — text-only affordances."
         >
-          <div className="grid grid-cols-2 gap-6">
-            <DarkSurface>
-              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/60 mb-3">Dark · primary</p>
-              <div className="flex flex-col gap-3">
-                <Button surface="dark" variant="primary" fullWidth>Default</Button>
-                <Button surface="dark" variant="primary" fullWidth autoFocus>Focused</Button>
-                <Button surface="dark" variant="primary" fullWidth disabled>Disabled</Button>
-              </div>
-            </DarkSurface>
-            <LightSurface>
-              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">Light · primary</p>
-              <div className="flex flex-col gap-3">
-                <Button surface="light" variant="primary" fullWidth>Default</Button>
-                <Button surface="light" variant="primary" fullWidth>Focused</Button>
-                <Button surface="light" variant="primary" fullWidth disabled>Disabled</Button>
-              </div>
-            </LightSurface>
-          </div>
+          <SurfacePair
+            renderRow={(surface) => (
+              <Row>
+                {TEXT_SIZES.map((s) => (
+                  <Button key={s} surface={surface} variant="ghost" size={s}>
+                    Use code
+                  </Button>
+                ))}
+              </Row>
+            )}
+          />
         </Section>
 
-        {/* Sizes */}
+        {/* ─── Icon buttons — sizes, toggle, label-below all together ─────── */}
         <Section
-          title="Sizes"
-          subtitle="md (default CTA), sm (compact), icon (h-9), icon-sm (h-8), icon-lg (h-11)."
+          title="Icon buttons"
+          subtitle={
+            <>
+              <code className="font-sans-ui text-[11px]">size="icon-sm" | "icon" | "icon-lg"</code>.
+              Pass <code className="font-sans-ui text-[11px]">pressed</code> to flip into primary (toggle state).
+              Pass <code className="font-sans-ui text-[11px]">label</code> on icon sizes to render a small caption underneath.
+            </>
+          }
         >
-          <LightSurface>
-            <div className="flex items-center gap-4 flex-wrap">
-              <Button surface="light" variant="primary" size="md">Medium</Button>
-              <Button surface="light" variant="primary" size="sm">Small</Button>
-              <Button surface="light" variant="secondary" size="icon-sm" aria-label="Back">
-                <BackArrow />
-              </Button>
-              <Button surface="light" variant="secondary" size="icon" aria-label="Back">
-                <BackArrow />
-              </Button>
-              <Button surface="light" variant="secondary" size="icon-lg" aria-label="Back">
-                <BackArrow />
-              </Button>
-            </div>
-          </LightSurface>
-        </Section>
+          {/* Sizes */}
+          <SurfacePair
+            innerLabel="Sizes"
+            renderRow={(surface) => (
+              <Row>
+                {ICON_SIZES.map((s) => (
+                  <Button key={s} surface={surface} variant="secondary" size={s} aria-label="Back">
+                    <BackArrow />
+                  </Button>
+                ))}
+              </Row>
+            )}
+          />
 
-        {/* Toggle / pressed state */}
-        <Section
-          title="Toggle (pressed)"
-          subtitle="Pass `pressed` to flip a button into the primary look. Use for mute/speaker/voice toggles. aria-pressed is set automatically."
-        >
-          <LightSurface>
-            <ToggleDemo />
-          </LightSurface>
-        </Section>
+          <div className="h-4" />
 
-        {/* Label-below icon button */}
-        <Section
-          title="Icon button with label"
-          subtitle="Pass `label` to an icon-size button to render a small caption below. Caption color follows `surface` (muted on light, white/70 on dark). Use for stacked icon-stacks like the call-screen action bar."
-        >
-          <DarkSurface>
-            <div className="flex items-center justify-center gap-6">
-              <Button surface="dark" variant="secondary" size="icon-lg" label="Mute" aria-label="Mute">
-                <MicGlyph />
-              </Button>
-              <Button surface="dark" variant="secondary" size="icon-lg" pressed label="Speaker" aria-label="Speaker">
-                <SpeakerGlyph />
-              </Button>
-              <Button surface="dark" variant="secondary" size="icon-lg" pressed label="End Call" aria-label="End Call">
-                <EndGlyph />
-              </Button>
-            </div>
-          </DarkSurface>
-          <div className="mt-3">
-            <LightSurface>
-              <div className="flex items-center justify-center gap-6">
-                <Button surface="light" variant="secondary" size="icon-lg" label="Mute" aria-label="Mute">
+          {/* Toggle (pressed) — interactive */}
+          <SurfacePair
+            innerLabel="Toggle — click to flip pressed/unpressed"
+            renderRow={(surface) => <ToggleDemo surface={surface} />}
+          />
+
+          <div className="h-4" />
+
+          {/* Label-below */}
+          <SurfacePair
+            innerLabel="Label below (icon-lg)"
+            renderRow={(surface) => (
+              <Row className="gap-6">
+                <Button surface={surface} variant="secondary" size="icon-lg" label="Default" aria-label="Default">
                   <MicGlyph />
                 </Button>
-                <Button surface="light" variant="secondary" size="icon-lg" pressed label="Speaker" aria-label="Speaker">
+                <Button surface={surface} variant="secondary" size="icon-lg" pressed label="Pressed" aria-label="Pressed">
                   <SpeakerGlyph />
                 </Button>
-                <Button surface="light" variant="secondary" size="icon-lg" pressed label="End Call" aria-label="End Call">
+                <Button surface={surface} variant="secondary" size="icon-lg" pressed label="Pressed" aria-label="Pressed">
                   <EndGlyph />
                 </Button>
-              </div>
-            </LightSurface>
-          </div>
+              </Row>
+            )}
+          />
         </Section>
 
-        {/* Props reference */}
+        {/* ─── States ──────────────────────────────────────────────────────── */}
+        <Section
+          title="States"
+          subtitle="Default, focused, disabled. Tap and hold a button to feel the pressed (active:) state — there are no hover states."
+        >
+          <SurfacePair
+            renderRow={(surface) => (
+              <div className="flex flex-col gap-3 w-full max-w-[220px]">
+                <Button surface={surface} variant="primary" fullWidth>Default</Button>
+                <Button surface={surface} variant="primary" fullWidth autoFocus>Focused</Button>
+                <Button surface={surface} variant="primary" fullWidth disabled>Disabled</Button>
+              </div>
+            )}
+          />
+        </Section>
+
+        {/* ─── Props reference ────────────────────────────────────────────── */}
         <Section title="Props" subtitle="Type signature.">
           <pre className="font-sans-ui text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
 {`<Button
   surface?:  "dark" | "light"                          // default: "light"
   variant?:  "primary" | "secondary" | "ghost"         // default: "primary"
-  size?:     "md" | "sm" | "icon" | "icon-sm" | "icon-lg"   // default: "md"
+  size?:     "md" | "sm" | "xs" | "icon" | "icon-sm" | "icon-lg"   // default: "md"
   fullWidth?: boolean                                  // default: false
   pressed?:  boolean       // toggles into primary look; sets aria-pressed
   label?:    string        // icon sizes only — caption below the circle
@@ -166,95 +177,106 @@ function DSButtons() {
   );
 }
 
+// ─── Layout primitives ──────────────────────────────────────────────────────
+
 function Section({
   title,
   subtitle,
   children,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-12">
+    <section className="mb-14">
       <h2 className="text-lg tracking-tight">{title}</h2>
       {subtitle && (
-        <p className="font-sans-ui text-xs text-muted-foreground mt-1 mb-4">{subtitle}</p>
+        <p className="font-sans-ui text-xs text-muted-foreground mt-1 mb-4 max-w-2xl leading-relaxed">
+          {subtitle}
+        </p>
       )}
       {children}
     </section>
   );
 }
 
-function DarkSurface({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="rounded-2xl p-6 bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "linear-gradient(135deg, rgba(20,30,55,0.95), rgba(50,30,80,0.95))",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function LightSurface({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-2xl p-6 border border-border bg-card">{children}</div>;
-}
-
-function Matrix({ surface }: { surface: "dark" | "light" }) {
-  const labelClass =
-    surface === "dark"
-      ? "font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/60"
-      : "font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground";
-
-  return (
-    <div className="grid grid-cols-[120px_1fr_1fr] gap-x-6 gap-y-4 items-center">
-      <span className={labelClass}>Variant ↓</span>
-      {SIZES.map((s) => (
-        <span key={s} className={labelClass}>
-          {s}
-        </span>
-      ))}
-      {VARIANTS.map((v) => (
-        <RowEntry key={v} surface={surface} variant={v} labelClass={labelClass} />
-      ))}
-    </div>
-  );
-}
-
-function RowEntry({
-  surface,
-  variant,
-  labelClass,
+// Side-by-side dark + light surface panels. `renderRow` receives the surface
+// name and returns the button content for that panel. `innerLabel` lets the
+// caller stack multiple rows inside one Section without losing context.
+function SurfacePair({
+  renderRow,
+  innerLabel,
 }: {
-  surface: "dark" | "light";
-  variant: "primary" | "secondary" | "ghost";
-  labelClass: string;
+  renderRow: (surface: "dark" | "light") => React.ReactNode;
+  innerLabel?: string;
 }) {
   return (
-    <>
-      <span className={labelClass}>{variant}</span>
-      {SIZES.map((s) => (
-        <div key={s}>
-          <Button surface={surface} variant={variant} size={s}>
-            {variant === "ghost" ? "Use code" : "Continue"}
-          </Button>
-        </div>
-      ))}
-    </>
+    <div>
+      {innerLabel && (
+        <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
+          {innerLabel}
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-4">
+        <SurfacePanel tone="dark">{renderRow("dark")}</SurfacePanel>
+        <SurfacePanel tone="light">{renderRow("light")}</SurfacePanel>
+      </div>
+    </div>
   );
 }
 
-function ToggleDemo() {
+function SurfacePanel({
+  tone,
+  children,
+}: {
+  tone: "dark" | "light";
+  children: React.ReactNode;
+}) {
+  const bg = tone === "dark" ? "/background.png" : "/light-blur-bg.png";
+  return (
+    <div className="relative rounded-2xl overflow-hidden border border-border">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${bg})` }}
+      />
+      <div className="relative px-6 py-7 min-h-[96px] flex items-center">
+        <div className="w-full">
+          <p
+            className={
+              "font-sans-ui text-[10px] tracking-[0.25em] uppercase mb-3 " +
+              (tone === "dark" ? "text-white/65" : "text-foreground/65")
+            }
+          >
+            {tone === "dark" ? "Dark surface" : "Light surface"}
+          </p>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`flex items-center flex-wrap gap-3 ${className}`}>{children}</div>;
+}
+
+// ─── Interactive demos ──────────────────────────────────────────────────────
+
+function ToggleDemo({ surface }: { surface: "dark" | "light" }) {
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
   return (
-    <div className="flex items-center gap-6">
+    <Row className="gap-6">
       <Button
-        surface="light"
+        surface={surface}
         variant="secondary"
         size="icon"
         pressed={muted}
@@ -264,7 +286,7 @@ function ToggleDemo() {
         <MicGlyph />
       </Button>
       <Button
-        surface="light"
+        surface={surface}
         variant="ghost"
         size="icon-lg"
         pressed={speakerOn}
@@ -273,13 +295,11 @@ function ToggleDemo() {
       >
         <SpeakerGlyph />
       </Button>
-      <p className="font-sans-ui text-xs text-muted-foreground max-w-xs">
-        Click the buttons to toggle. The off-state respects the variant you pass; the
-        on-state always renders as primary.
-      </p>
-    </div>
+    </Row>
   );
 }
+
+// ─── Icon glyphs ────────────────────────────────────────────────────────────
 
 function BackArrow() {
   return <ChevronLeft size={14} strokeWidth={1.5} />;

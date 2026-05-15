@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
+import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -48,19 +49,21 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
+  const mode = useAppMode();
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
         style={{
-          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundImage: `url(${APP_MODE_META[mode].image})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
         className={cn(
           pos +
             " left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-[360px] translate-x-[-50%] translate-y-[-50%] gap-4 border text-popover-foreground p-6 shadow-lg overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
+          mode === "dark" && "overlay-on-dark",
           className,
         )}
         {...props}

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ArrowUp as ArrowUpIcon } from "lucide-react";
+import { useAppMode } from "@/lib/theme-prefs";
 
 type Variant = "filled" | "outline" | "primary";
 type Size = "md" | "sm" | "lg";
@@ -15,7 +16,8 @@ type Props = {
   fullWidth?: boolean;
 };
 
-const FILLED_BG = "rgba(253, 252, 250, 0.2)";
+const FILLED_BG_DARK = "rgba(253, 252, 250, 0.2)";
+const FILLED_BG_LIGHT = "rgba(255, 255, 255, 0.5)";
 const PRIMARY_BG = "#FFFFFF";
 
 export function SuggestionChip({
@@ -27,6 +29,9 @@ export function SuggestionChip({
   action = "send",
   fullWidth = true,
 }: Props) {
+  const mode = useAppMode();
+  const isLight = mode === "light";
+
   const sizeClasses =
     size === "sm"
       ? "gap-3 pl-3 pr-1.5 py-1.5 text-[14px] leading-tight"
@@ -34,19 +39,25 @@ export function SuggestionChip({
         ? "gap-3 pl-5 pr-3 py-3 text-[16px] leading-snug"
         : "gap-3 pl-4 pr-2 py-2 text-[14px] leading-snug";
 
+  // Borders are pinned via inline style so `.theme-light` can't invert them
+  // to dark — the chips must keep a white hairline + white fill on the pale
+  // photo bg too.
   const variantClass =
     variant === "outline"
-      ? "border border-white/20 text-white"
+      ? "text-white"
       : variant === "primary"
         ? "text-neutral-900"
-        : "border-t border-white/10 text-white";
+        : "text-white";
 
   const inlineStyle =
     variant === "primary"
       ? { backgroundColor: PRIMARY_BG }
       : variant === "outline"
-        ? undefined
-        : { backgroundColor: FILLED_BG };
+        ? { border: "1px solid rgba(255,255,255,0.2)" }
+        : {
+            backgroundColor: isLight ? FILLED_BG_LIGHT : FILLED_BG_DARK,
+            borderTop: `1px solid rgba(255,255,255,${isLight ? 0.7 : 0.1})`,
+          };
 
   return (
     <button

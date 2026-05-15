@@ -103,7 +103,7 @@ function YouRoute() {
           <p className="text-[14px] leading-[22px] text-white/75 text-center max-w-[20rem]">
             Yuna's understanding grows over time. If anything here doesn't feel right, you can help refine it.
           </p>
-          <Button surface="dark" variant="secondary" size="sm" className="mt-1">
+          <Button surface="dark" variant="secondary" size="md" className="mt-1">
             Help Yuna understand you better
           </Button>
         </div>

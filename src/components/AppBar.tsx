@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Bookmark, House, MessageCircle, Pencil, User } from "lucide-react";
 import { useUserType } from "@/lib/user-type";
+import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 
 type Surface = "light" | "dark";
 
@@ -28,6 +29,7 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   // "new content since last visit" framing applies.
   const showNotifications = userType === "returning" && pathname === "/home";
   const isDark = surface === "dark";
+  const isLight = isLightMode(useAppMode());
 
   const tabs = ITEMS.map((it) => {
     const active = it.matches ? it.matches.includes(pathname) : pathname === it.to;
@@ -44,10 +46,19 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   });
 
   if (isDark) {
+    // Arbitrary border color in light mode so `.theme-light`'s
+    // `border-white/25` → dark swap can't kick in and turn the top edge
+    // into a hard dark line over the pale photo bg.
+    const borderClass = isLight
+      ? "border-[rgba(255,255,255,0.65)]"
+      : "border-white/25";
     return (
       <nav
         aria-label="Main"
-        className="rounded-t-3xl bg-white/10 backdrop-blur-md border-t border-white/25 px-2 pt-2 pb-3 grid grid-cols-5 gap-1"
+        className={
+          "rounded-t-3xl bg-white/10 backdrop-blur-md border-t px-2 pt-2 pb-3 grid grid-cols-5 gap-1 " +
+          borderClass
+        }
       >
         {tabs}
       </nav>

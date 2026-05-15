@@ -8,13 +8,18 @@ import {
   FileText,
   Globe,
   MessageSquare,
+  Moon,
   ScanFace,
   Star,
+  Sun,
   User,
   Users,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { SegmentedToggle } from "@/components/SegmentedToggle";
+import { Switch } from "@/components/Switch";
+import { APP_MODE_META, setAppMode, useAppMode } from "@/lib/theme-prefs";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -52,12 +57,13 @@ const GROUP_TWO: Row[] = [
 ];
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "My Account — Yuna" }] }),
+  head: () => ({ meta: [{ title: "Settings — Yuna" }] }),
   component: SettingsRoute,
 });
 
 function SettingsRoute() {
   const navigate = useNavigate();
+  const mode = useAppMode();
   const [toggles, setToggles] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       [...GROUP_ONE, ...GROUP_TWO]
@@ -75,13 +81,18 @@ function SettingsRoute() {
         aria-hidden
         className="absolute inset-0"
         style={{
-          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundImage: `url(${APP_MODE_META[mode].image})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       />
 
-      <div className="relative flex-1 flex flex-col text-foreground min-h-0">
+      <div
+        className={
+          "relative flex-1 flex flex-col text-foreground min-h-0 " +
+          (mode === "dark" ? "overlay-on-dark" : "")
+        }
+      >
         <header className="flex items-center justify-between px-6 pt-14 pb-6 shrink-0">
           <div className="flex items-center gap-4">
             <Button
@@ -94,18 +105,30 @@ function SettingsRoute() {
               <ChevronLeft size={14} strokeWidth={1.5} />
             </Button>
             <h1 className="font-display text-2xl leading-8 tracking-tight text-foreground">
-              My Account
+              Settings
             </h1>
           </div>
-          <button
-            type="button"
-            className="rounded-full border border-foreground/20 bg-background/60 backdrop-blur-sm px-3 h-[26px] text-[12px] text-foreground/85 active:bg-background/80 transition-colors"
+          <Button
+            surface="light"
+            variant="secondary"
+            size="xs"
+            className="bg-background/60 backdrop-blur-sm border-foreground/20 text-foreground/85 active:bg-background/80"
           >
             Share Yuna
-          </button>
+          </Button>
         </header>
 
         <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex justify-center pb-2">
+            <SegmentedToggle
+              value={mode}
+              onChange={setAppMode}
+              surface={mode === "dark" ? "dark" : "light"}
+              ariaLabel="Appearance"
+              options={THEME_TOGGLE_OPTIONS}
+            />
+          </div>
+
           <CardGroup>
             {GROUP_ONE.map((row, i) => (
               <SettingsRowItem
@@ -130,12 +153,14 @@ function SettingsRoute() {
             ))}
           </CardGroup>
 
-          <button
-            type="button"
-            className="self-center mt-2 py-4 px-4 text-[16px] leading-6 font-semibold text-alert-red active:opacity-70 transition-opacity"
+          <Button
+            surface="light"
+            variant="secondary"
+            size="sm"
+            className="self-center mt-2"
           >
             Log Out
-          </button>
+          </Button>
         </div>
       </div>
     </PhoneFrame>
@@ -172,7 +197,7 @@ function SettingsRowItem({
           <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
           <span className="text-[15px] leading-6 font-medium text-foreground">{row.label}</span>
         </div>
-        <IOSSwitch checked={!!toggleOn} onChange={onToggle} label={row.label} />
+        <Switch checked={!!toggleOn} onChange={onToggle} label={row.label} />
       </div>
     );
   }
@@ -188,32 +213,17 @@ function SettingsRowItem({
   );
 }
 
-function IOSSwitch({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={onChange}
-      className={
-        "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors " +
-        (checked ? "bg-[#34C759]" : "bg-foreground/20")
-      }
-    >
-      <span
-        aria-hidden
-        className="absolute top-[2px] left-0 h-[27px] w-[27px] rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.15),0_3px_8px_rgba(0,0,0,0.15)] transition-transform"
-        style={{ transform: checked ? "translateX(22px)" : "translateX(2px)" }}
-      />
-    </button>
-  );
-}
+const THEME_TOGGLE_OPTIONS = [
+  {
+    value: "light" as const,
+    label: "Light",
+    ariaLabel: "Light mode",
+    icon: <Sun size={14} strokeWidth={1.6} aria-hidden />,
+  },
+  {
+    value: "dark" as const,
+    label: "Dark",
+    ariaLabel: "Dark mode",
+    icon: <Moon size={14} strokeWidth={1.6} aria-hidden />,
+  },
+];

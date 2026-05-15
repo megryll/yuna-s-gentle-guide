@@ -38,6 +38,17 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
 10. **Keep things tight.** No new abstractions, helpers, or wrappers unless they're earned by ≥2 call sites. Prefer editing existing files over creating new ones. Don't write comments that just narrate the code; only comment when the *why* isn't obvious.
 
+11. **Minimum text contrast (light + dark mode).** Both photo backgrounds are noisy, so all body copy and labels must clear the floor below. The token shims in `src/styles.css` (`.overlay-on-dark` + `.theme-light` blocks) enforce these floors — call sites should use these tokens, not pick lower opacities ad-hoc.
+
+   | Role | Dark cluster | Light cluster |
+   |---|---|---|
+   | Primary text | `text-white` (1.00) | `text-white` / `text-foreground` (inverts to ink) |
+   | Body / secondary | `text-white/85` | `text-white/85` (→ ink 0.88) |
+   | Meta / value | `text-white/75` (min) | `text-white/70` (→ ink 0.75, min) |
+   | Hint / disabled | `text-white/55` (min) | `text-white/55` (→ ink 0.6, min) |
+
+   Don't reach for `text-white/40` or `text-foreground/55` for any text the user is meant to read — the design needs more weight (heavier icon, fill, layout), not lower ink. Inline-style colors (`#cdebb5` on a pale-green chip, hardcoded green gradients, etc.) must be mode-aware via `useAppMode()` or they fail this rule in the opposite mode.
+
 ## Source of truth — file map
 
 | Concern | File |

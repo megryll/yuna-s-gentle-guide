@@ -30,7 +30,10 @@ const PAGES: Entry[] = [
   { label: "Settings", to: "/settings" },
 ];
 
-const DS_PAGES: Entry[] = [{ label: "Buttons", to: "/ds/buttons" }];
+const DS_PAGES: Entry[] = [
+  { label: "Buttons", to: "/ds/buttons" },
+  { label: "Text Fields", to: "/ds/text-fields" },
+];
 
 function readStep(search: unknown): number | undefined {
   if (!search || typeof search !== "object") return undefined;

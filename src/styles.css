@@ -120,21 +120,25 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-primary-beige: var(--primary-beige);
   --color-alert-red: var(--alert-red);
+  --color-success-green: var(--success-green);
 }
 
 :root {
-  /* Wireframe-minimalist palette: warm off-white, ink, hairline borders */
+  /* Wireframe-minimalist palette: warm off-white, ink, hairline borders.
+     Ink (`--foreground`) is a unified near-black — darker than mid-grey but
+     not pure black — so chat bubbles, primary CTAs, and the segmented
+     toggle's active pill all share one filled tone. */
   --radius: 1.25rem;
   --background: oklch(0.992 0.003 80);
-  --foreground: oklch(0.22 0.02 260);
+  --foreground: oklch(0.18 0.014 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 260);
+  --card-foreground: oklch(0.18 0.014 260);
   --popover: var(--primary-beige);
-  --popover-foreground: oklch(0.22 0.02 260);
+  --popover-foreground: oklch(0.18 0.014 260);
   --primary: oklch(0.55 0.14 255);
   --primary-foreground: oklch(0.99 0.003 80);
   --secondary: oklch(0.97 0.005 80);
-  --secondary-foreground: oklch(0.22 0.02 260);
+  --secondary-foreground: oklch(0.18 0.014 260);
   --muted: oklch(0.96 0.005 80);
   --muted-foreground: oklch(0.5 0.02 260);
   --accent: oklch(0.94 0.02 255);
@@ -159,6 +163,7 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
   --primary-beige: #F5F0ED;
   --alert-red: #E0493F;
+  --success-green: #34C759;
 }
 
 .dark {
@@ -201,6 +206,27 @@
     border-color: var(--color-border);
   }
 
+  /* ─── Design system: minimum text contrast ───────────────────────────────
+     Both photo bgs are noisy at the edges, so all body copy and meta-labels
+     need to clear a contrast floor. Use these tokens; do not invent new
+     opacity stops below the floor.
+
+     Dark cluster (photo bg + .theme-dark / .overlay-on-dark):
+       - Primary text:      text-white          (1.00)
+       - Body / secondary:  text-white/85       (≥0.85)
+       - Meta / value:      text-white/75       (≥0.75)   ← floor for labels
+       - Disabled / hint:   text-white/55       (≥0.55)   ← floor for any text
+
+     Light cluster (.theme-light, light photo bg):
+       - Primary text:      text-foreground / text-white (inverted to ink)
+       - Body / secondary:  text-foreground/85           (≥0.85)
+       - Meta / value:      text-foreground/70           (≥0.70)   ← floor
+       - Disabled / hint:   text-foreground/55           (≥0.55)   ← floor
+
+     The overlay-on-dark + theme-light blocks below remap any tokens that
+     would otherwise fall below these floors. If you reach for a lower
+     opacity, the design needs more weight (icon, fill, layout), not less
+     ink. */
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -326,42 +352,131 @@
     98% { transform: translateX(1.5px); }
   }
 
-  /* ─── Snowy theme (Background = Snowy) ─────────────────────────────────────
+  /* ─── Light mode inversion (.theme-light) ──────────────────────────────────
      Post-onboarding screens use hardcoded `text-white` and white-alpha
-     borders/backgrounds for legibility on the dark forest photo. When the
-     user picks Snowy, the photo flips to light, so we invert those utilities
-     in-place via `.theme-snowy`. Scoped to PhoneFrame's inner div so the
-     admin sidebar and DS pages stay light. */
-  .theme-snowy .text-white { color: rgb(20, 20, 22); }
-  .theme-snowy .text-white\/95 { color: rgba(20, 20, 22, 0.95); }
-  .theme-snowy .text-white\/90 { color: rgba(20, 20, 22, 0.88); }
-  .theme-snowy .text-white\/85 { color: rgba(20, 20, 22, 0.8); }
-  .theme-snowy .text-white\/80 { color: rgba(20, 20, 22, 0.75); }
-  .theme-snowy .text-white\/75 { color: rgba(20, 20, 22, 0.7); }
-  .theme-snowy .text-white\/70 { color: rgba(20, 20, 22, 0.65); }
-  .theme-snowy .text-white\/65 { color: rgba(20, 20, 22, 0.6); }
-  .theme-snowy .text-white\/60 { color: rgba(20, 20, 22, 0.55); }
-  .theme-snowy .text-white\/55 { color: rgba(20, 20, 22, 0.5); }
-  .theme-snowy .text-white\/50 { color: rgba(20, 20, 22, 0.45); }
-  .theme-snowy .text-white\/40 { color: rgba(20, 20, 22, 0.4); }
+     borders/backgrounds for legibility on the dark photo. In light mode the
+     photo flips to /light-blur-bg.png, so we invert those utilities in-place
+     via `.theme-light`. Scoped to PhoneFrame's inner div so the admin sidebar
+     and DS pages stay unaffected. */
+  /* Per the DS contrast rule: light cluster floors at 0.55 for hint text and
+     0.70 for meta/value. White-alpha tokens get remapped to ink-alpha so the
+     floors are enforced even when call sites still use the white-on-dark
+     vocabulary (`text-white/75`, etc.). */
+  /* Ink value matches `--foreground` so light-mode body copy shares the
+     same tone as filled elements (CTAs, chat bubbles, the toggle's active
+     pill). Sits between pure black and mid-grey for warmth on the photo bg. */
+  .theme-light .text-white { color: rgb(29, 31, 37); }
+  .theme-light .text-white\/95 { color: rgba(29, 31, 37, 0.95); }
+  .theme-light .text-white\/90 { color: rgba(29, 31, 37, 0.9); }
+  .theme-light .text-white\/85 { color: rgba(29, 31, 37, 0.88); }
+  .theme-light .text-white\/80 { color: rgba(29, 31, 37, 0.85); }
+  .theme-light .text-white\/75 { color: rgba(29, 31, 37, 0.8); }
+  .theme-light .text-white\/70 { color: rgba(29, 31, 37, 0.75); }
+  .theme-light .text-white\/65 { color: rgba(29, 31, 37, 0.72); }
+  .theme-light .text-white\/60 { color: rgba(29, 31, 37, 0.7); }
+  .theme-light .text-white\/55 { color: rgba(29, 31, 37, 0.6); }
+  .theme-light .text-white\/50 { color: rgba(29, 31, 37, 0.55); }
+  .theme-light .text-white\/45 { color: rgba(29, 31, 37, 0.5); }
+  .theme-light .text-white\/40 { color: rgba(29, 31, 37, 0.45); }
 
-  .theme-snowy .border-white { border-color: rgba(20, 20, 22, 0.9); }
-  .theme-snowy .border-white\/40 { border-color: rgba(20, 20, 22, 0.35); }
-  .theme-snowy .border-white\/30 { border-color: rgba(20, 20, 22, 0.3); }
-  .theme-snowy .border-white\/20 { border-color: rgba(20, 20, 22, 0.2); }
-  .theme-snowy .border-white\/15 { border-color: rgba(20, 20, 22, 0.15); }
-  .theme-snowy .border-white\/10 { border-color: rgba(20, 20, 22, 0.1); }
+  .theme-light .border-white { border-color: rgba(20, 20, 22, 0.9); }
+  .theme-light .border-white\/40 { border-color: rgba(20, 20, 22, 0.35); }
+  .theme-light .border-white\/30 { border-color: rgba(20, 20, 22, 0.3); }
+  .theme-light .border-white\/25 { border-color: rgba(20, 20, 22, 0.25); }
+  .theme-light .border-white\/20 { border-color: rgba(20, 20, 22, 0.2); }
+  .theme-light .border-white\/15 { border-color: rgba(20, 20, 22, 0.15); }
+  .theme-light .border-white\/12 { border-color: rgba(20, 20, 22, 0.12); }
+  .theme-light .border-white\/10 { border-color: rgba(20, 20, 22, 0.1); }
 
-  .theme-snowy .bg-white { background-color: rgba(20, 20, 22, 0.92); }
-  .theme-snowy .bg-white\/25 { background-color: rgba(20, 20, 22, 0.15); }
-  .theme-snowy .bg-white\/20 { background-color: rgba(20, 20, 22, 0.12); }
-  .theme-snowy .bg-white\/15 { background-color: rgba(20, 20, 22, 0.09); }
-  .theme-snowy .bg-white\/10 { background-color: rgba(20, 20, 22, 0.06); }
-  .theme-snowy .bg-white\/5 { background-color: rgba(20, 20, 22, 0.04); }
+  /* Solid white pills (primary CTA bg, user message bubbles, the speaker
+     icon button) flip to fully opaque ink so the dark-on-white pattern
+     becomes white-on-ink against the light photo with the same filled
+     weight as `bg-foreground`. */
+  .theme-light .bg-white { background-color: rgb(29, 31, 37); }
+  /* Frosted surfaces keep their white tint in light mode — flipping them to
+     ink darkens chat bubbles, inputs, and AppBar nav into reading as
+     near-transparent dark, which is the opposite of the frosted-glass feel
+     the design wants on the light photo. Opacities are bumped a touch so the
+     surface still reads as a defined card on the light backdrop. */
+  .theme-light .bg-white\/25 { background-color: rgba(255, 255, 255, 0.6); }
+  .theme-light .bg-white\/20 { background-color: rgba(255, 255, 255, 0.55); }
+  .theme-light .bg-white\/15 { background-color: rgba(255, 255, 255, 0.5); }
+  .theme-light .bg-white\/10 { background-color: rgba(255, 255, 255, 0.45); }
+  .theme-light .bg-white\/5 { background-color: rgba(255, 255, 255, 0.35); }
 
-  .theme-snowy .bg-black\/30 { background-color: rgba(255, 255, 255, 0.55); }
-  .theme-snowy .bg-black\/20 { background-color: rgba(255, 255, 255, 0.45); }
+  .theme-light .bg-black\/30 { background-color: rgba(255, 255, 255, 0.55); }
+  .theme-light .bg-black\/20 { background-color: rgba(255, 255, 255, 0.45); }
 
-  .theme-snowy .active\:bg-white\/10:active { background-color: rgba(20, 20, 22, 0.08); }
-  .theme-snowy .active\:bg-white\/15:active { background-color: rgba(20, 20, 22, 0.1); }
+  /* The white-pill pattern `bg-white text-{neutral-900|foreground}` flips to
+     dark-pill in light mode (bg-white → ink); the foreground needs to invert
+     with it so button labels and the AppBar chat icon stay legible. Targeted
+     at the compound so isolated uses of text-foreground (token-driven body
+     copy) and text-neutral-900 (e.g. dark text on an inline accent bg) keep
+     their dark ink color. */
+  .theme-light .bg-white.text-neutral-900 { color: rgb(255, 255, 255); }
+  .theme-light .bg-white.text-foreground { color: rgb(255, 255, 255); }
+  .theme-light .text-neutral-600 { color: rgba(20, 20, 22, 0.6); }
+
+  .theme-light .placeholder\:text-white\/45::placeholder { color: rgba(20, 20, 22, 0.5); }
+  .theme-light .placeholder\:text-white\/50::placeholder { color: rgba(20, 20, 22, 0.5); }
+  .theme-light .placeholder\:text-white\/40::placeholder { color: rgba(20, 20, 22, 0.4); }
+  .theme-light .placeholder\:text-white\/60::placeholder { color: rgba(20, 20, 22, 0.55); }
+
+  .theme-light .active\:bg-white\/10:active { background-color: rgba(20, 20, 22, 0.08); }
+  .theme-light .active\:bg-white\/15:active { background-color: rgba(20, 20, 22, 0.1); }
+  .theme-light .active\:bg-white\/25:active { background-color: rgba(20, 20, 22, 0.12); }
+
+  /* ─── Overlay-on-dark inversion (.overlay-on-dark) ─────────────────────────
+     In dark mode, drawers/dialogs/tooltips drop their light frosted-glass
+     surfaces and ride the same dark photo bg as the screen. Token-tinted
+     surfaces (`bg-background`, `bg-popover`, `bg-muted`, `text-foreground`,
+     etc.) get re-pointed to white-alpha values so the inner cards become
+     frosted white-on-dark and copy stays legible. Applied by the overlay
+     component when appMode === "dark"; doesn't touch light mode. */
+  .overlay-on-dark { color: rgb(255, 255, 255); }
+  /* Default border color for `border`/`border-t`/etc. with no explicit color
+     class. Without this the base `* { border-color: var(--color-border) }`
+     leaks the light-grey token through, producing the bright top hairline
+     visible on drawers + dialogs in dark mode. */
+  .overlay-on-dark, .overlay-on-dark * { border-color: rgba(255, 255, 255, 0.15); }
+  .overlay-on-dark .text-foreground { color: rgb(255, 255, 255); }
+  .overlay-on-dark .text-foreground\/85 { color: rgba(255, 255, 255, 0.9); }
+  .overlay-on-dark .text-foreground\/75 { color: rgba(255, 255, 255, 0.85); }
+  .overlay-on-dark .text-foreground\/70 { color: rgba(255, 255, 255, 0.8); }
+  .overlay-on-dark .text-foreground\/65 { color: rgba(255, 255, 255, 0.78); }
+  .overlay-on-dark .text-foreground\/60 { color: rgba(255, 255, 255, 0.78); }
+  .overlay-on-dark .text-foreground\/55 { color: rgba(255, 255, 255, 0.75); }
+  .overlay-on-dark .text-popover-foreground { color: rgb(255, 255, 255); }
+  /* Meta / value labels floor at 0.8 (per the DS contrast rule above) so
+     things like the "1.0x" / "English" values in Personalize Yuna stay
+     legible on the dark photo. */
+  .overlay-on-dark .text-muted-foreground { color: rgba(255, 255, 255, 0.8); }
+  .overlay-on-dark .text-neutral-900 { color: rgb(255, 255, 255); }
+  .overlay-on-dark .text-neutral-600 { color: rgba(255, 255, 255, 0.75); }
+  .overlay-on-dark .text-destructive { color: rgb(255, 138, 138); }
+
+  .overlay-on-dark .bg-background { background-color: rgba(255, 255, 255, 0.06); }
+  .overlay-on-dark .bg-background\/80 { background-color: rgba(255, 255, 255, 0.12); }
+  .overlay-on-dark .bg-background\/70 { background-color: rgba(255, 255, 255, 0.10); }
+  .overlay-on-dark .bg-background\/60 { background-color: rgba(255, 255, 255, 0.08); }
+  .overlay-on-dark .bg-background\/40 { background-color: rgba(255, 255, 255, 0.06); }
+  .overlay-on-dark .bg-popover { background-color: rgba(255, 255, 255, 0.10); }
+  .overlay-on-dark .bg-muted { background-color: rgba(255, 255, 255, 0.15); }
+  .overlay-on-dark .bg-card { background-color: rgba(255, 255, 255, 0.08); }
+
+  /* Primary CTA: surface=light primary renders as bg-foreground/text-background.
+     In an overlay-on-dark surface (dialog/drawer/tooltip when appMode is dark),
+     the photo behind is dark, so the dark-on-dark fill becomes invisible.
+     Flip to white-on-ink for legibility. */
+  .overlay-on-dark .bg-foreground { background-color: rgb(255, 255, 255); }
+  .overlay-on-dark .text-background { color: rgb(20, 20, 22); }
+
+  .overlay-on-dark .border-border { border-color: rgba(255, 255, 255, 0.15); }
+  .overlay-on-dark .hairline { border-color: rgba(255, 255, 255, 0.15); }
+  .overlay-on-dark .border-foreground\/20 { border-color: rgba(255, 255, 255, 0.25); }
+  .overlay-on-dark .border-foreground\/40 { border-color: rgba(255, 255, 255, 0.45); }
+
+  .overlay-on-dark .hover\:bg-accent:hover { background-color: rgba(255, 255, 255, 0.08); }
+  .overlay-on-dark .hover\:bg-destructive\/10:hover { background-color: rgba(255, 120, 120, 0.10); }
+  .overlay-on-dark .active\:bg-background\/80:active { background-color: rgba(255, 255, 255, 0.12); }
 }

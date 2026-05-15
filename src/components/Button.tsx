@@ -5,25 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Yuna root Button.
+ * Root Button.
  *
  * surface: which background the button sits on
- *   - "dark"  — photo / dark gradient screens (Welcome, Auth, Intro)
- *   - "light" — wireframe / light surface screens (Home, You, Activities)
+ *   - "dark"  — dark or photo backgrounds
+ *   - "light" — light backgrounds
  *
  * variant: fill style
  *   - "primary"   — strongest CTA (solid fill)
  *   - "secondary" — outlined, no fill
  *   - "ghost"     — no border or fill
  *
- * size: "md" (default CTA) | "sm" | "icon" (h-9) | "icon-sm" (h-8) | "icon-lg" (h-11)
+ * size: "md" (default) | "sm" | "xs" (h-[26px], inline chip) | "icon" (h-9) | "icon-sm" (h-8) | "icon-lg" (h-11)
  *
  * pressed (toggle): when true, button visually flips to the primary variant
- *   for the current surface, regardless of the `variant` prop. aria-pressed is
- *   set automatically. Use for mute/speaker/voice toggles.
+ *   for the current surface, regardless of the `variant` prop. aria-pressed
+ *   is set automatically.
  *
- * label (icon sizes only): renders a small text label below the icon circle.
- *   Use for stacked icon-stacks like the call-screen action bar.
+ * label (icon sizes only): renders a small text caption below the icon circle.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap select-none " +
@@ -37,6 +36,7 @@ const buttonVariants = cva(
       size: {
         md: "px-6 py-3.5 text-sm tracking-wide",
         sm: "px-4 py-2 text-xs tracking-wide",
+        xs: "h-[26px] px-3 text-[12px]",
         icon: "h-9 w-9 p-0",
         "icon-sm": "h-8 w-8 p-0",
         "icon-lg": "h-11 w-11 p-0",
@@ -49,7 +49,7 @@ const buttonVariants = cva(
       variant: { primary: "", secondary: "", ghost: "" },
     },
     compoundVariants: [
-      // ─── Dark surface (over photo / dark backgrounds) ────────────────────
+      // ─── Dark surface ────────────────────────────────────────────────────
       {
         surface: "dark",
         variant: "primary",
@@ -68,7 +68,7 @@ const buttonVariants = cva(
         className:
           "text-white active:bg-white/15 focus-visible:ring-white/60",
       },
-      // ─── Light surface (over wireframe / light backgrounds) ──────────────
+      // ─── Light surface ───────────────────────────────────────────────────
       {
         surface: "light",
         variant: "primary",

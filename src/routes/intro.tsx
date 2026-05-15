@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { TextField } from "@/components/TextField";
 import { setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { avatarSrc } from "@/components/YunaAvatar";
 import { setUserType } from "@/lib/user-type";
+import { setAppMode } from "@/lib/theme-prefs";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
@@ -158,6 +160,11 @@ function Intro() {
   const [inputFocused, setInputFocused] = useState(false);
   const [muted, setMuted] = useState(false);
   const [voiceIdx, setVoiceIdx] = useState(0);
+  // Tracks whether the user has explicitly tapped a card in the voice
+  // carousel. Until then the welcome cluster shows the default Yuna avatar,
+  // regardless of any stale voice/avatar left in localStorage from a prior
+  // run. Once true, the picked voice's photo takes over everywhere.
+  const [voicePicked, setVoicePicked] = useState(false);
   const [voicePlayingIdx, setVoicePlayingIdx] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [messagesExiting, setMessagesExiting] = useState(false);
@@ -660,7 +667,11 @@ function Intro() {
       return;
     }
     // Final step (privacy) — fade out and head to /home as a new user.
+    // The app always boots into dark mode after onboarding so first-run
+    // users land on the dark photo cluster regardless of any stale
+    // light-mode preference left over from a prior session.
     setUserType("new");
+    setAppMode("dark");
     setTransitioning(true);
     fadeOutAmbient(1300);
     setTimeout(() => {
@@ -754,7 +765,12 @@ function Intro() {
                   : undefined
               }
             >
-              <YunaAvatarLarge usePhoto={stepIdx >= 4} />
+              <YunaAvatarLarge
+                usePhoto={stepIdx >= 4}
+                variant={
+                  stepIdx === 4 && !voicePicked ? VOICE_IDS[0] : undefined
+                }
+              />
             </div>
             {stepIdx === 4 && (
               <div
@@ -780,6 +796,7 @@ function Intro() {
                     selectedIdx={voiceIdx}
                     onSelect={(i) => {
                       setVoiceIdx(i);
+                      setVoicePicked(true);
                       const id = VOICE_IDS[i];
                       if (id) setVoice(id);
                       setVoicePlayingIdx(null);
@@ -941,10 +958,20 @@ function Intro() {
 
 // ── Yuna avatar (welcome-screen sized halo cluster) ─────────────────────────
 
-function YunaAvatarLarge({ usePhoto = false }: { usePhoto?: boolean }) {
+function YunaAvatarLarge({
+  usePhoto = false,
+  variant,
+}: {
+  usePhoto?: boolean;
+  /** Explicit variant override — used by the Voice step to show the first
+   *  voice's photo before the user has tapped a card, regardless of any
+   *  stale session avatar. */
+  variant?: VoiceId;
+}) {
   const { avatar } = useYunaIdentity();
-  const showPhoto = usePhoto && !!avatar;
-  const src = showPhoto && avatar ? avatarSrc(avatar) : "/avatar.png";
+  const effective = variant ?? avatar;
+  const showPhoto = usePhoto && !!effective;
+  const src = showPhoto && effective ? avatarSrc(effective) : "/avatar.png";
   return (
     <div
       className="relative h-14 w-14 shrink-0"
@@ -1113,28 +1140,29 @@ function NameForm({
 }) {
   return (
     <form onSubmit={onSubmit} className="flex items-center gap-2 w-full">
-      <div className="flex-1 flex items-center gap-1 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm pl-5 pr-1.5 py-2 focus-within:border-white transition-colors">
-        <input
-          ref={inputRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          placeholder="Enter your name"
-          className="flex-1 bg-transparent text-sm py-1.5 outline-none text-white placeholder:text-white/50 min-w-0"
-        />
-        <Button
-          surface="dark"
-          variant="primary"
-          size="icon-sm"
-          type="submit"
-          onMouseDown={(e) => e.preventDefault()}
-          aria-label="Send"
-          disabled={!value.trim()}
-        >
-          <ArrowUp size={13} strokeWidth={2} />
-        </Button>
-      </div>
+      <TextField
+        ref={inputRef}
+        containerClassName="flex-1"
+        surface="dark"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        placeholder="Enter your name"
+        trailing={
+          <Button
+            surface="dark"
+            variant="primary"
+            size="icon-sm"
+            type="submit"
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Send"
+            disabled={!value.trim()}
+          >
+            <ArrowUp size={13} strokeWidth={2} />
+          </Button>
+        }
+      />
     </form>
   );
 }
@@ -1421,20 +1449,17 @@ function ControlPill({
   value: string;
 }) {
   return (
-    <button
-      type="button"
-      className="flex items-center gap-1.5 px-3.5 h-9 rounded-full border border-white/40 text-white active:bg-white/15 transition-colors"
-    >
+    <Button surface="dark" variant="secondary" size="xs" className="gap-1.5">
       {icon}
-      <span className="text-[12px] text-white/70">{label}</span>
-      <span className="text-[12px] font-semibold text-white">{value}</span>
+      <span className="text-white/70">{label}</span>
+      <span className="font-semibold text-white">{value}</span>
       <ChevronDown
         size={9}
         strokeWidth={1.5}
         aria-hidden="true"
         className="text-white/70"
       />
-    </button>
+    </Button>
   );
 }
 

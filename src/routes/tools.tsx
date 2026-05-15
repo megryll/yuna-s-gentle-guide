@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
+import { useAppMode } from "@/lib/theme-prefs";
 
 type Tool = {
   id: string;
@@ -48,6 +49,16 @@ export const Route = createFileRoute("/tools")({
 });
 
 function ToolsRoute() {
+  const mode = useAppMode();
+  const isLight = mode === "light";
+  // Light mode: lift the photo with a white wash so the title reads dark.
+  // Dark mode: existing tar-to-light gradient keeps the white title legible.
+  const overlay = isLight
+    ? "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.45) 45%, rgba(255,255,255,0.15) 100%)"
+    : "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.10) 100%)";
+  const titleClass = isLight ? "text-foreground" : "text-white";
+  const captionClass = isLight ? "text-foreground/80" : "text-white/90";
+
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pb-6 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -68,7 +79,10 @@ function ToolsRoute() {
                   className="absolute inset-0 h-full w-full object-cover"
                   aria-hidden
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: overlay }}
+                />
                 {t.isNew && (
                   <span
                     className="absolute top-3 left-3 font-sans-ui text-[10px] tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
@@ -78,10 +92,10 @@ function ToolsRoute() {
                   </span>
                 )}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="font-display text-xl leading-tight tracking-tight text-white">
+                  <p className={"font-display text-xl leading-tight tracking-tight " + titleClass}>
                     {t.title}
                   </p>
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug text-white/90">
+                  <p className={"mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug " + captionClass}>
                     <span aria-hidden className="text-[14px] leading-none">
                       {t.emoji}
                     </span>

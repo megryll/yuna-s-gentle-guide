@@ -22,7 +22,9 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SessionsIdRouteImport } from './routes/sessions.$id'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
+import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 
 const YouRoute = YouRouteImport.update({
@@ -90,9 +92,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SessionsIdRoute = SessionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SessionsRoute,
+} as any)
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
   id: '/focus-area/$num',
   path: '/focus-area/$num',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
+  id: '/ds/text-fields',
+  path: '/ds/text-fields',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
@@ -110,13 +122,15 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRoute
+  '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/text-fields': typeof DsTextFieldsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -127,13 +141,15 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRoute
+  '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/text-fields': typeof DsTextFieldsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -145,13 +161,15 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRoute
+  '/sessions': typeof SessionsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/text-fields': typeof DsTextFieldsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,7 +188,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/text-fields'
     | '/focus-area/$num'
+    | '/sessions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,7 +207,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/text-fields'
     | '/focus-area/$num'
+    | '/sessions/$id'
   id:
     | '__root__'
     | '/'
@@ -204,7 +226,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/text-fields'
     | '/focus-area/$num'
+    | '/sessions/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -216,12 +240,13 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
   ProgressRoute: typeof ProgressRoute
-  SessionsRoute: typeof SessionsRoute
+  SessionsRoute: typeof SessionsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  DsTextFieldsRoute: typeof DsTextFieldsRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
 }
 
@@ -318,11 +343,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sessions/$id': {
+      id: '/sessions/$id'
+      path: '/$id'
+      fullPath: '/sessions/$id'
+      preLoaderRoute: typeof SessionsIdRouteImport
+      parentRoute: typeof SessionsRoute
+    }
     '/focus-area/$num': {
       id: '/focus-area/$num'
       path: '/focus-area/$num'
       fullPath: '/focus-area/$num'
       preLoaderRoute: typeof FocusAreaNumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/text-fields': {
+      id: '/ds/text-fields'
+      path: '/ds/text-fields'
+      fullPath: '/ds/text-fields'
+      preLoaderRoute: typeof DsTextFieldsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/buttons': {
@@ -335,6 +374,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SessionsRouteChildren {
+  SessionsIdRoute: typeof SessionsIdRoute
+}
+
+const SessionsRouteChildren: SessionsRouteChildren = {
+  SessionsIdRoute: SessionsIdRoute,
+}
+
+const SessionsRouteWithChildren = SessionsRoute._addFileChildren(
+  SessionsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptTermsRoute: AcceptTermsRoute,
@@ -344,12 +395,13 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
   ProgressRoute: ProgressRoute,
-  SessionsRoute: SessionsRoute,
+  SessionsRoute: SessionsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,
+  DsTextFieldsRoute: DsTextFieldsRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
 }
 export const routeTree = rootRouteImport

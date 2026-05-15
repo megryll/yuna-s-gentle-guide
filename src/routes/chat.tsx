@@ -32,6 +32,7 @@ import {
 } from "@/lib/speech";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 import { VoiceSession } from "@/components/VoiceSession";
+import { SegmentedToggle } from "@/components/SegmentedToggle";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
+import { TextField } from "@/components/TextField";
+import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -153,6 +156,7 @@ function isReminisceEntry(initial: string): boolean {
 function Chat() {
   const { q, callEnded, callDuration, revisit, mode } = Route.useSearch();
   const navigate = useNavigate();
+  const appMode = useAppMode();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
@@ -539,17 +543,20 @@ function Chat() {
   };
 
   // Voice note: tap mic to start dictation, tap the check to stop and send.
-  // The input is locked while recording and shows the live transcript so
-  // the user can confirm what's being heard before commit.
+  // The input stays empty during capture — only the "Listening…" placeholder
+  // and the green dot signal active recording. Hitting stop sends the
+  // accumulated transcript as a single message.
   const startVoiceNote = () => {
     if (recordingVoice || pendingLimitations) return;
     if (!isSpeechRecognitionSupported()) {
       alert("Voice notes need a browser that supports speech recognition (try Chrome or Safari).");
       return;
     }
+    // Kill any in-flight Yuna utterance so the mic doesn't pick up her voice
+    // through the speakers and transcribe it back into the input.
+    stopTts();
     setText("");
     const handle = startRecognition({
-      onTranscript: (live) => setText(live),
       onFinal: (committed) => {
         recognitionRef.current = null;
         setRecordingVoice(false);
@@ -737,10 +744,15 @@ function Chat() {
             </Button>
           </div>
           <div className="justify-self-center">
-            <ModeToggle
-              mode={inVoice ? "voice" : "text"}
-              onSwitchText={switchToText}
-              onSwitchVoice={openMicForVoice}
+            <SegmentedToggle
+              value={inVoice ? "voice" : "text"}
+              onChange={(next) => {
+                if (next === "voice") openMicForVoice();
+                else switchToText();
+              }}
+              surface={appMode === "dark" ? "dark" : "light"}
+              ariaLabel="Conversation mode"
+              options={CHAT_MODE_OPTIONS}
             />
           </div>
           <div className="justify-self-end">
@@ -768,19 +780,21 @@ function Chat() {
                 <YunaMark size={28} className="text-white" />
               )}
             </div>
-            <button
-              type="button"
+            <Button
+              surface="dark"
+              variant="primary"
+              size="icon"
               onClick={() => setSpeakerOn((v) => !v)}
               aria-label={speakerOn ? "Mute Yuna" : "Unmute Yuna"}
               aria-pressed={!speakerOn}
-              className="absolute bottom-0 -right-[22px] h-10 w-10 rounded-full bg-white text-neutral-900 flex items-center justify-center active:bg-white/90 transition-colors"
+              className="absolute bottom-0 -right-[22px]"
             >
               {speakerOn ? (
                 <Volume2 size={18} strokeWidth={1.75} aria-hidden />
               ) : (
                 <VolumeX size={18} strokeWidth={1.75} aria-hidden />
               )}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -827,65 +841,64 @@ function Chat() {
                 </div>
               ) : (
                 <form onSubmit={send} className="px-5 pt-3 pb-6">
-                  <div
-                    className={
-                      "flex items-center gap-1 rounded-full pl-5 pr-1.5 py-2 bg-white/10 backdrop-blur-sm transition-colors " +
-                      (recordingVoice
-                        ? "border border-white"
-                        : "border border-white/30 focus-within:border-white")
+                  <TextField
+                    ref={inputRef}
+                    surface="dark"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
+                    placeholder={
+                      pendingLimitations
+                        ? "Tap each checkmark above to continue"
+                        : recordingVoice
+                          ? "Listening…"
+                          : "Write to Yuna…"
                     }
-                  >
-                    {recordingVoice && (
-                      <span
-                        aria-hidden="true"
-                        className="h-2 w-2 rounded-full bg-destructive shrink-0"
-                        style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
-                      />
-                    )}
-                    <input
-                      ref={inputRef}
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      onFocus={() => setInputFocused(true)}
-                      onBlur={() => setInputFocused(false)}
-                      placeholder={
-                        pendingLimitations
-                          ? "Tap each checkmark above to continue"
-                          : recordingVoice
-                            ? "Listening…"
-                            : "Write to Yuna…"
-                      }
-                      readOnly={recordingVoice}
-                      disabled={pendingLimitations}
-                      className="flex-1 bg-transparent text-sm py-1.5 outline-none text-white placeholder:text-white/50 min-w-0 disabled:opacity-60"
-                    />
-                    <Button
-                      surface="dark"
-                      variant={recordingVoice ? "primary" : "ghost"}
-                      size="icon-sm"
-                      type="button"
-                      pressed={recordingVoice}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
-                      aria-label={
-                        recordingVoice ? "Stop recording and send" : "Record a voice note"
-                      }
-                      disabled={pendingLimitations}
-                    >
-                      {recordingVoice ? <CheckIcon /> : <MicIcon />}
-                    </Button>
-                    <Button
-                      surface="dark"
-                      variant="primary"
-                      size="icon-sm"
-                      type="submit"
-                      onMouseDown={(e) => e.preventDefault()}
-                      aria-label="Send"
-                      disabled={pendingLimitations || recordingVoice || !text.trim()}
-                    >
-                      <ArrowUpIcon />
-                    </Button>
-                  </div>
+                    readOnly={recordingVoice}
+                    disabled={pendingLimitations}
+                    containerClassName={recordingVoice ? "border-white" : undefined}
+                    className="disabled:opacity-60"
+                    leading={
+                      recordingVoice ? (
+                        <span
+                          aria-hidden="true"
+                          className="h-2 w-2 rounded-full bg-success-green shrink-0"
+                          style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
+                        />
+                      ) : undefined
+                    }
+                    trailing={
+                      <>
+                        <Button
+                          surface="dark"
+                          variant={recordingVoice ? "primary" : "ghost"}
+                          size="icon-sm"
+                          type="button"
+                          pressed={recordingVoice}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
+                          aria-label={
+                            recordingVoice ? "Stop recording and send" : "Record a voice note"
+                          }
+                          disabled={pendingLimitations}
+                        >
+                          {recordingVoice ? <CheckIcon /> : <MicIcon />}
+                        </Button>
+                        <Button
+                          surface="dark"
+                          variant="primary"
+                          size="icon-sm"
+                          type="submit"
+                          onMouseDown={(e) => e.preventDefault()}
+                          aria-label="Send"
+                          disabled={pendingLimitations || recordingVoice || !text.trim()}
+                        >
+                          <ArrowUpIcon />
+                        </Button>
+                      </>
+                    }
+                  />
                 </form>
               )}
             </div>
@@ -1042,6 +1055,16 @@ function LimitationsCard({
 }
 
 function VoicePitchCard() {
+  const appMode = useAppMode();
+  // Dark cluster keeps the bright leaf for both stroke and fill. Light
+  // cluster splits them: stroke is a darker olive so the curve reads on the
+  // pale photo bg, fill is the vibrant Yuna brand green (the onboarding
+  // avatar's starting hue) at higher top opacity so the area reads as a
+  // clearly filled shape — not a parallel line.
+  const isDark = appMode === "dark";
+  const voiceStroke = isDark ? "#cdebb5" : "#7C9A4F";
+  const voiceFill = isDark ? "#cdebb5" : "#54B047";
+  const voiceFillTop = isDark ? 0.14 : 0.32;
   return (
     <div className="flex yuna-rise justify-start">
       <div className="max-w-[82%] border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm overflow-hidden text-white">
@@ -1053,8 +1076,8 @@ function VoicePitchCard() {
           <svg viewBox="0 -12 280 144" className="w-full block" aria-hidden="true">
             <defs>
               <linearGradient id="vpVoice" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#cdebb5" stopOpacity="0.14" />
-                <stop offset="100%" stopColor="#cdebb5" stopOpacity="0.005" />
+                <stop offset="0%" stopColor={voiceFill} stopOpacity={voiceFillTop} />
+                <stop offset="100%" stopColor={voiceFill} stopOpacity="0.005" />
               </linearGradient>
               <linearGradient id="vpText" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="currentColor" stopOpacity="0.04" />
@@ -1114,7 +1137,7 @@ function VoicePitchCard() {
             <path
               d="M 22 118 C 60 92, 100 56, 160 32 C 210 18, 246 12, 266 10"
               fill="none"
-              stroke="#cdebb5"
+              stroke={voiceStroke}
               strokeWidth="1.5"
               strokeLinecap="round"
             />
@@ -1142,7 +1165,7 @@ function VoicePitchCard() {
             />
 
             {/* endpoint dots */}
-            <circle cx="266" cy="10" r="3.5" fill="#cdebb5" />
+            <circle cx="266" cy="10" r="3.5" fill={voiceStroke} />
             <circle cx="266" cy="68" r="2.75" fill="currentColor" fillOpacity="0.95" />
 
             {/* in-line legend at endpoints */}
@@ -1150,7 +1173,7 @@ function VoicePitchCard() {
               x="260"
               y="4"
               textAnchor="end"
-              fill="#cdebb5"
+              fill={voiceStroke}
               fontSize="10"
               fontWeight="600"
               letterSpacing="1.8"
@@ -1205,62 +1228,20 @@ function TypingBubble() {
   );
 }
 
-function ModeToggle({
-  mode,
-  onSwitchText,
-  onSwitchVoice,
-}: {
-  mode: "text" | "voice";
-  onSwitchText: () => void;
-  onSwitchVoice: () => void;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="Conversation mode"
-      className="inline-flex items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-sm h-9 p-0.5"
-    >
-      <ModeToggleSegment
-        active={mode === "text"}
-        onClick={mode === "text" ? () => {} : onSwitchText}
-        aria-label="Text mode"
-      >
-        <MessageCircle size={14} strokeWidth={1.6} aria-hidden />
-        <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">Text</span>
-      </ModeToggleSegment>
-      <ModeToggleSegment
-        active={mode === "voice"}
-        onClick={mode === "voice" ? () => {} : onSwitchVoice}
-        aria-label="Voice mode"
-      >
-        <Phone size={14} strokeWidth={1.6} aria-hidden />
-        <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">Voice</span>
-      </ModeToggleSegment>
-    </div>
-  );
-}
-
-function ModeToggleSegment({
-  active,
-  children,
-  ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      className={
-        "inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-full transition-colors " +
-        (active
-          ? "bg-white text-neutral-900"
-          : "text-white/80 active:bg-white/10")
-      }
-      {...rest}
-    >
-      {children}
-    </button>
-  );
-}
+const CHAT_MODE_OPTIONS = [
+  {
+    value: "text" as const,
+    label: "Text",
+    ariaLabel: "Text mode",
+    icon: <MessageCircle size={14} strokeWidth={1.6} aria-hidden />,
+  },
+  {
+    value: "voice" as const,
+    label: "Voice",
+    ariaLabel: "Voice mode",
+    icon: <Phone size={14} strokeWidth={1.6} aria-hidden />,
+  },
+];
 
 function Dot({ delay }: { delay: number }) {
   return (

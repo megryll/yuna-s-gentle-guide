@@ -3,6 +3,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
+import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
 
 const Drawer = ({
   shouldScaleBackground = false,
@@ -50,19 +51,21 @@ const DrawerContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
+  const mode = useAppMode();
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
         style={{
-          backgroundImage: "url(/light-blur-bg.png)",
+          backgroundImage: `url(${APP_MODE_META[mode].image})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
         className={cn(
           pos +
             " inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border text-popover-foreground",
+          mode === "dark" && "overlay-on-dark",
           className,
         )}
         {...props}

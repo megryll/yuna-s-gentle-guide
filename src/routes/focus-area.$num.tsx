@@ -6,9 +6,7 @@ import { Button } from "@/components/Button";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useUserType } from "@/lib/user-type";
 import { getFocusAreaData } from "@/lib/profile-data";
-
-const GREEN = "#115430";
-const GREEN_ACCENT = "#66BA24";
+import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/focus-area/$num")({
   head: ({ params }) => ({
@@ -24,44 +22,10 @@ function FocusAreaRoute() {
   const num: "1" | "2" = raw === "2" ? "2" : "1";
   const { meta, tasks, upcoming } = getFocusAreaData(userType, num);
   const [infoOpen, setInfoOpen] = useState(false);
-  const naturePath = "/background.png";
+  const mode = useAppMode();
 
   return (
-    <PhoneFrame>
-      <div className="absolute inset-0 overflow-hidden" aria-hidden>
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(160deg, ${GREEN}99 0%, ${GREEN}66 45%, rgba(13,61,34,0.55) 100%), url(${naturePath})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        <span
-          className="absolute font-display font-semibold select-none pointer-events-none"
-          style={{
-            top: -40,
-            right: -30,
-            fontSize: 280,
-            lineHeight: 1,
-            color: "rgba(255,255,255,0.03)",
-            fontVariationSettings: "'SOFT' 0, 'WONK' 0",
-          }}
-        >
-          0{num}
-        </span>
-        <span
-          className="absolute pointer-events-none"
-          style={{
-            top: -80,
-            left: -60,
-            width: 400,
-            height: 400,
-            background: `radial-gradient(circle, ${GREEN_ACCENT}1F 0%, transparent 65%)`,
-          }}
-        />
-      </div>
-
+    <PhoneFrame themed>
       <div className="relative flex-1 flex flex-col text-white min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <header className="px-6 pt-14 pb-2 shrink-0">
           <Button
@@ -76,7 +40,7 @@ function FocusAreaRoute() {
         </header>
 
         <div className="px-6 pt-6 flex flex-col items-center text-center gap-3">
-          <span className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+          <span className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65">
             {meta.eyebrow}
           </span>
           <h1
@@ -90,7 +54,7 @@ function FocusAreaRoute() {
 
         <div className="px-6 mt-8">
           <h2 className="font-display text-[18px] leading-tight text-white text-center mb-3">
-            Growth Tasks
+            Created For You
           </h2>
           <div className="flex flex-col gap-2">
             {tasks.map((card) => (
@@ -123,10 +87,13 @@ function FocusAreaRoute() {
                   className="fixed inset-0 z-10 cursor-default"
                 />
                 <div
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 rounded-2xl p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)] overflow-hidden"
+                  className={
+                    "absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 rounded-2xl p-4 shadow-[0_8px_28px_rgba(0,0,0,0.22)] overflow-hidden " +
+                    (mode === "dark" ? "overlay-on-dark" : "")
+                  }
                   style={{
                     width: 260,
-                    backgroundImage: "url(/light-blur-bg.png)",
+                    backgroundImage: `url(${APP_MODE_META[mode].image})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
