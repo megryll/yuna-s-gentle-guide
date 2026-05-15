@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   ArrowUp,
   ArrowUpRight,
@@ -7,12 +7,14 @@ import {
   ChevronLeft,
   Gauge,
   Globe,
+  ScanFace,
   Star,
   Volume2,
   VolumeX,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { Switch } from "@/components/Switch";
 import { TextField } from "@/components/TextField";
 import { setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
@@ -48,7 +50,13 @@ type Card =
   | { kind: "stats" }
   | { kind: "mood-stats" }
   | { kind: "privacy" }
-  | { kind: "push-preview" };
+  | { kind: "push-preview" }
+  | { kind: "faceid" };
+
+const FaceIdCtx = createContext<{ on: boolean; request: (next: boolean) => void }>({
+  on: false,
+  request: () => {},
+});
 
 type BubbleData = {
   id: string;
@@ -92,11 +100,11 @@ const initialRevealsForStep = (
   if (stepIdx === 1) {
     return [
       {
-        text: "I was lovingly created by experienced mental health professionals.",
+        text: "I was developed by experts in psychology and wellness",
         card: { kind: "harvard" },
       },
       {
-        text: "I'm so grateful to be helping people \u{1F60A}",
+        text: "with a mission to help people find support and better mental well-being",
         card: { kind: "stats" },
       },
     ];
@@ -104,7 +112,7 @@ const initialRevealsForStep = (
   if (stepIdx === 2) {
     return [
       {
-        text: "People love when I send them notifications. Want to set them up now?",
+        text: "I'll check in once in a while, want to set up notifications?",
         card: { kind: "push-preview" },
       },
     ];
@@ -124,6 +132,10 @@ const initialRevealsForStep = (
     {
       text: "Everything you share stays between us, guaranteed.",
       card: { kind: "privacy" },
+    },
+    {
+      text: "Want to enable FaceID so only you can open the app?",
+      card: { kind: "faceid" },
     },
   ];
 };
@@ -169,6 +181,8 @@ function Intro() {
   const [transitioning, setTransitioning] = useState(false);
   const [messagesExiting, setMessagesExiting] = useState(false);
   const [pushModalOpen, setPushModalOpen] = useState(false);
+  const [faceIdOn, setFaceIdOn] = useState(false);
+  const [faceIdModalOpen, setFaceIdModalOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -559,11 +573,11 @@ function Intro() {
 
   const REACTION_AMAZING = {
     userText: "Amazing! \u{1F929}",
-    yunaReply: "That means so much \u{1F49A}",
+    yunaReply: "That means so much",
   };
   const REACTION_IMPRESSIVE = {
     userText: "Impressive! \u{1F92F}",
-    yunaReply: "It really does work \u{1F49A}",
+    yunaReply: "It really does work",
   };
 
   const submitNotificationChoice = (wantsPush: boolean, label: string) => {
@@ -592,7 +606,7 @@ function Intro() {
         {
           id: newBubbleId(),
           from: "yuna",
-          text: "Whenever you’re ready \u{1F49A}",
+          text: "Whenever you’re ready",
         },
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
@@ -618,7 +632,7 @@ function Intro() {
         {
           id: newBubbleId(),
           from: "yuna",
-          text: "I’ll keep them gentle \u{1F49A}",
+          text: "I’ll keep them gentle",
         },
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
@@ -679,7 +693,13 @@ function Intro() {
     }, 1400);
   };
 
+  const faceIdRequest = (next: boolean) => {
+    if (next) setFaceIdModalOpen(true);
+    else setFaceIdOn(false);
+  };
+
   return (
+    <FaceIdCtx.Provider value={{ on: faceIdOn, request: faceIdRequest }}>
     <PhoneFrame backgroundImage="/background.png">
       <audio
         ref={audioRef}
@@ -710,6 +730,15 @@ function Intro() {
         <PushPermissionModal
           onAllow={dismissPushModal}
           onDeny={dismissPushModal}
+        />
+      )}
+      {faceIdModalOpen && (
+        <FaceIdPermissionModal
+          onAllow={() => {
+            setFaceIdOn(true);
+            setFaceIdModalOpen(false);
+          }}
+          onDeny={() => setFaceIdModalOpen(false)}
         />
       )}
       <div className="flex-1 flex flex-col text-white min-h-0">
@@ -935,7 +964,7 @@ function Intro() {
                     fullWidth
                     onClick={advance}
                   >
-                    Let’s Start! {"\u{1F49A}"}
+                    Let’s Start!
                   </Button>
                 ) : (
                   <Button
@@ -953,6 +982,7 @@ function Intro() {
         </div>
       </div>
     </PhoneFrame>
+    </FaceIdCtx.Provider>
   );
 }
 
@@ -1170,6 +1200,7 @@ function NameForm({
 // ── Attachments ──────────────────────────────────────────────────────────────
 
 function Attachment({ kind }: { kind: Card["kind"] }) {
+  const { name } = useYunaIdentity();
   if (kind === "harvard") {
     return (
       <div className="flex items-center justify-center">
@@ -1338,18 +1369,21 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-sans-ui text-[13px] font-semibold leading-tight truncate">
-              Check in w/ Yuna
+              Quick gut check
             </span>
             <span className="font-sans-ui text-[11px] text-neutral-500 shrink-0">
               5m ago
             </span>
           </div>
           <p className="text-[13px] leading-snug mt-0.5 text-neutral-800">
-            How did your grad ceremony go?
+            How's tomorrow's meeting sitting with you{name ? `, ${name}` : ""}? If the spiral starts tonight, I'm right here.
           </p>
         </div>
       </div>
     );
+  }
+  if (kind === "faceid") {
+    return <FaceIdToggle />;
   }
   return (
     <a
@@ -1362,21 +1396,34 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         src="/lock.png"
         alt=""
         aria-hidden="true"
-        className="h-28 w-auto object-contain shrink-0"
+        className="h-[76px] w-auto object-contain shrink-0"
       />
       <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="text-[15px] font-semibold leading-snug">
+        <span className="text-[15px] font-semibold leading-snug whitespace-nowrap inline-flex items-center gap-1">
           Read our Privacy Policy
+          <ArrowUpRight
+            size={16}
+            strokeWidth={1.75}
+            aria-hidden
+            className="shrink-0"
+          />
         </span>
-        <span className="text-xs text-white/70">yuna.io/privacy</span>
+        <span className="text-[14px] text-white/70">yuna.io/privacy</span>
       </span>
-      <ArrowUpRight
-        size={22}
-        strokeWidth={1.75}
-        aria-hidden
-        className="shrink-0 text-white"
-      />
     </a>
+  );
+}
+
+function FaceIdToggle() {
+  const { on, request } = useContext(FaceIdCtx);
+  return (
+    <div className="flex items-center gap-3 text-white">
+      <ScanFace size={22} strokeWidth={1.75} aria-hidden className="shrink-0" />
+      <span className="flex-1 min-w-0 text-[15px] font-semibold leading-snug">
+        Face ID
+      </span>
+      <Switch checked={on} onChange={request} label="Enable Face ID" />
+    </div>
   );
 }
 
@@ -1563,6 +1610,62 @@ function PushPermissionModal({
             className="px-3 py-2.5 font-sans-ui text-[15px] font-semibold text-white active:bg-white/10"
           >
             Allow
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FaceIdPermissionModal({
+  onAllow,
+  onDeny,
+}: {
+  onAllow: () => void;
+  onDeny: () => void;
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="faceid-modal-title"
+    >
+      <div
+        className="w-full max-w-[280px] rounded-[14px] overflow-hidden text-white"
+        style={{
+          backgroundColor: "rgba(40, 40, 44, 0.92)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          animation:
+            "welcome-rise 250ms cubic-bezier(0.2, 0.8, 0.2, 1) 0ms both",
+        }}
+      >
+        <div className="px-5 pt-5 pb-4 text-center">
+          <h3
+            id="faceid-modal-title"
+            className="font-sans-ui text-[16px] font-semibold leading-snug"
+          >
+            Do You Want to Allow &ldquo;Yuna&rdquo; to Use Face ID?
+          </h3>
+          <p className="mt-2 font-sans-ui text-[12px] text-white/75 leading-snug">
+            Face ID lets you securely unlock the app so only you can open it.
+          </p>
+        </div>
+        <div className="border-t border-white/15 grid grid-cols-2">
+          <button
+            type="button"
+            onClick={onDeny}
+            className="px-3 py-2.5 font-sans-ui text-[15px] text-white border-r border-white/15 active:bg-white/10"
+          >
+            Don&rsquo;t Allow
+          </button>
+          <button
+            type="button"
+            onClick={onAllow}
+            className="px-3 py-2.5 font-sans-ui text-[15px] font-semibold text-white active:bg-white/10"
+          >
+            OK
           </button>
         </div>
       </div>
