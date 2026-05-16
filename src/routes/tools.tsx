@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { useAppMode } from "@/lib/theme-prefs";
+import { setUserType, useUserType } from "@/lib/user-type";
 
 type Tool = {
   id: string;
@@ -44,6 +46,11 @@ const TOOLS: Tool[] = [
 ];
 
 export const Route = createFileRoute("/tools")({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { tooltips?: string } => ({
+    tooltips: typeof s.tooltips === "string" ? s.tooltips : undefined,
+  }),
   head: () => ({ meta: [{ title: "Tools — Yuna" }] }),
   component: ToolsRoute,
 });
@@ -51,6 +58,15 @@ export const Route = createFileRoute("/tools")({
 function ToolsRoute() {
   const mode = useAppMode();
   const isLight = mode === "light";
+  const userType = useUserType();
+  const { tooltips } = Route.useSearch();
+  const tooltipsActive = tooltips === "1";
+
+  // Mirror the other tooltip routes: ensure returning state so the populated
+  // Tools list renders behind the coachmark.
+  useEffect(() => {
+    if (tooltipsActive && userType !== "returning") setUserType("returning");
+  }, [tooltipsActive, userType]);
   // Light mode: lift the photo with a white wash so the title reads dark.
   // Dark mode: existing tar-to-light gradient keeps the white title legible.
   const overlay = isLight
@@ -60,7 +76,11 @@ function ToolsRoute() {
   const captionClass = isLight ? "text-foreground/80" : "text-white/90";
 
   return (
-    <ScreenChrome hideHeader surface="dark">
+    <ScreenChrome
+      hideHeader
+      surface="dark"
+      tooltipsStep={tooltipsActive ? "tools" : undefined}
+    >
       <div className="flex-1 flex flex-col px-6 pb-6 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">
           Tools

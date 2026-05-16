@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/chat")({
@@ -195,8 +196,6 @@ function Chat() {
   const AMBIENT_VOLUME = 0.18;
   const AMBIENT_DUCK = 0.04;
 
-  const KEYBOARD_OFFSET = 260;
-
   // Mount the chosen ambience bed once. Autoplay may be blocked on direct
   // navigation (no prior gesture); we fall back to starting on the first
   // user gesture anywhere on the page.
@@ -296,8 +295,18 @@ function Chat() {
   }, [messages]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, typing]);
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    // After the keyboard's padding-bottom transition (≈200ms) shrinks the
+    // scroll area, scrollHeight - clientHeight grows — re-anchor to the new
+    // bottom so the latest message lifts above the keyboard instead of being
+    // clipped behind the input bar.
+    const t = window.setTimeout(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }, 240);
+    return () => window.clearTimeout(t);
+  }, [messages, typing, inputFocused]);
 
   // Keep a ref so speakIfEnabled — used inside async callbacks — sees the
   // current toggle without needing to be re-bound on every change.
@@ -499,6 +508,7 @@ function Chat() {
           text: "I'm having trouble connecting right now. Could we try again in a moment?",
         },
       ]);
+      return;
     }
   };
 
@@ -729,7 +739,10 @@ function Chat() {
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white">
+      <div
+        className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white transition-[padding-bottom] duration-200 ease-out"
+        style={inputFocused ? { paddingBottom: KEYBOARD_HEIGHT } : undefined}
+      >
         {/* Header */}
         <div className="relative grid grid-cols-3 items-center px-5 pt-14 pb-2 shrink-0">
           <div className="justify-self-start">
@@ -805,8 +818,7 @@ function Chat() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 pt-20 pb-6 flex flex-col gap-3 transition-[padding] duration-200 ease-out"
-              style={inputFocused ? { paddingBottom: KEYBOARD_OFFSET + 24 } : undefined}
+              className="flex-1 overflow-y-auto px-5 pt-20 pb-6 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {messages.map((m) => {
                 if (m.kind === "call-summary") return <CallSummary key={m.id} msg={m} />;
@@ -825,10 +837,7 @@ function Chat() {
             </div>
 
             {/* Input + Call Yuna footer */}
-            <div
-              className="transition-transform duration-200 ease-out"
-              style={inputFocused ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` } : undefined}
-            >
+            <div>
               {voicePitchActive ? (
                 <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
                   <Button surface="dark" variant="primary" fullWidth onClick={openMicForVoice}>

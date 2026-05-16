@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
-import { useUserType } from "@/lib/user-type";
+import { setUserType, useUserType } from "@/lib/user-type";
 import { getProfileData, type Insight } from "@/lib/profile-data";
+import { getMiddleStateInsight } from "@/lib/middle-state";
 import {
   EmptyStateCard,
   FocusAreaBentoCard,
@@ -12,6 +14,11 @@ import {
 } from "@/components/profile-components";
 
 export const Route = createFileRoute("/you")({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { tooltips?: string } => ({
+    tooltips: typeof s.tooltips === "string" ? s.tooltips : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "You — Yuna" },
@@ -23,11 +30,25 @@ export const Route = createFileRoute("/you")({
 
 function YouRoute() {
   const userType = useUserType();
-  if (userType === "new") return <YouEmptyState />;
+  const { tooltips } = Route.useSearch();
+  const tooltipsActive = tooltips === "1";
+
+  // Deep-linking into the tour must show the populated profile, not the
+  // empty state — otherwise there's nothing for the tooltip to point at.
+  useEffect(() => {
+    if (tooltipsActive && userType !== "returning") setUserType("returning");
+  }, [tooltipsActive, userType]);
+
+  if (userType === "new") return <YouEmptyState tooltipsActive={tooltipsActive} />;
+  if (tooltipsActive) return <YouMiddleState />;
   const data = getProfileData(userType);
 
   return (
-    <ScreenChrome hideHeader surface="dark">
+    <ScreenChrome
+      hideHeader
+      surface="dark"
+      tooltipsStep={tooltipsActive ? "you" : undefined}
+    >
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex justify-center pt-4">
           <ProgressRing progress={data.progress} icon={data.ringIcon} />
@@ -113,6 +134,55 @@ function YouRoute() {
   );
 }
 
+// ─── Tooltip middle state ───────────────────────────────────────────────────
+// Mirrors the layout of the populated YouRoute but trims to what would
+// realistically exist after one conversation: a barely-started ring, single-
+// digit stats, and one early insight. Used as the background while the
+// tooltips coach is active so the tour doesn't oversell what Yuna knows.
+
+function YouMiddleState() {
+  const insight = getMiddleStateInsight();
+  return (
+    <ScreenChrome hideHeader surface="dark" tooltipsStep="you">
+      <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex justify-center pt-4">
+          <ProgressRing progress={0.05} icon="/assets/profile/emerging.png" />
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          {[
+            { value: 1, label: "Conversations" },
+            { value: 8, label: "Messages" },
+            { value: 1, label: "Insights" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex-1 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm py-5 px-2 flex flex-col items-center gap-1"
+            >
+              <span
+                className="font-display font-normal text-white"
+                style={{ fontSize: 26, lineHeight: "30px" }}
+              >
+                {stat.value}
+              </span>
+              <span className="font-sans-ui text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 mt-10">
+          <h2 className="font-display text-[20px] leading-7 text-white text-center">
+            What I'm starting to notice
+          </h2>
+          <InsightCard insight={insight} />
+        </div>
+      </div>
+    </ScreenChrome>
+  );
+}
+
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
@@ -134,9 +204,13 @@ function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentL
 
 // ─── Empty state (no conversations yet) ─────────────────────────────────────
 
-function YouEmptyState() {
+function YouEmptyState({ tooltipsActive }: { tooltipsActive: boolean }) {
   return (
-    <ScreenChrome hideHeader surface="dark">
+    <ScreenChrome
+      hideHeader
+      surface="dark"
+      tooltipsStep={tooltipsActive ? "you" : undefined}
+    >
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center text-center pt-10">
           <EmptyHeroGlow />

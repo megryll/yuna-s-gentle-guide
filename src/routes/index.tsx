@@ -1,8 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Building2, User } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,7 +22,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1800);
     return () => clearTimeout(t);
@@ -123,8 +132,13 @@ function Index() {
           <Button surface="dark" variant="secondary" fullWidth asChild>
             <Link to="/login">Log in</Link>
           </Button>
-          <Button surface="dark" variant="primary" fullWidth asChild>
-            <Link to="/auth">Get started</Link>
+          <Button
+            surface="dark"
+            variant="primary"
+            fullWidth
+            onClick={() => setJoinOpen(true)}
+          >
+            Get started
           </Button>
         </div>
         <Button surface="dark" variant="ghost">
@@ -133,6 +147,58 @@ function Index() {
       </div>
       </>
       )}
+
+      <Drawer open={joinOpen} onOpenChange={setJoinOpen}>
+        <DrawerContent className="rounded-t-[1.75rem] pb-2">
+          <DrawerHeader className="text-left px-6 pt-4 pb-2">
+            <DrawerTitle className="font-serif font-normal text-[26px] leading-[1.15] tracking-tight">
+              How would you like to join?
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="px-6 pt-4 pb-6 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setJoinOpen(false);
+                navigate({ to: "/employer-access" });
+              }}
+              className="rounded-2xl hairline bg-background/70 backdrop-blur-sm py-9 flex flex-col items-center gap-4 transition-transform duration-100 ease-out active:scale-[0.99]"
+            >
+              <span className="h-12 w-12 rounded-full bg-foreground text-background flex items-center justify-center">
+                <Building2 size={20} strokeWidth={1.75} />
+              </span>
+              <span className="text-[17px] font-semibold">
+                I have access through my employer
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setJoinOpen(false);
+                navigate({ to: "/auth" });
+              }}
+              className="rounded-2xl hairline bg-background/70 backdrop-blur-sm py-9 flex flex-col items-center gap-4 transition-transform duration-100 ease-out active:scale-[0.99]"
+            >
+              <span className="h-12 w-12 rounded-full bg-foreground text-background flex items-center justify-center">
+                <User size={20} strokeWidth={1.75} />
+              </span>
+              <span className="text-[17px] font-semibold">
+                I am signing up myself
+              </span>
+            </button>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                onClick={() => setJoinOpen(false)}
+                className="text-foreground font-semibold"
+              >
+                Log in here
+              </Link>
+            </p>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </PhoneFrame>
   );
 }

@@ -4,10 +4,9 @@ import { Share2 } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { TextField } from "@/components/TextField";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { HomeCardRow } from "@/components/HomeCards";
-import { SentimentTag, useSentimentToneColor } from "@/components/SentimentTag";
+import { useSentimentToneColor } from "@/components/SentimentTag";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import {
   clearStoredMessages,
@@ -37,27 +36,6 @@ const MIN_LOADING_MS = 1250;
 
 // Two list-view home cards Yuna surfaces as new activities for this session.
 const PLACED_FOR_YOU: HomeCard[] = HOME_CARDS.filter((c) => c.isNew).slice(0, 2);
-
-// Self-reflection tags. Stress/mood live in the sliders above, so they're
-// omitted here. Positive and negative counts are matched (6/6) so neither
-// cluster pulls visual weight by sheer size.
-const POSITIVE_TAGS: ReadonlyArray<{ label: string; emoji: string }> = [
-  { label: "Felt inspired", emoji: "✨" },
-  { label: "Learned", emoji: "💡" },
-  { label: "Gained clarity", emoji: "💎" },
-  { label: "Felt heard", emoji: "🫶" },
-  { label: "Felt connected", emoji: "🤝" },
-  { label: "Felt energized", emoji: "⚡" },
-];
-
-const NEGATIVE_TAGS: ReadonlyArray<{ label: string; emoji: string }> = [
-  { label: "Misunderstood", emoji: "😕" },
-  { label: "Didn't help", emoji: "🙁" },
-  { label: "Too generic", emoji: "📋" },
-  { label: "Felt rushed", emoji: "⏱️" },
-  { label: "Repetitive", emoji: "🔁" },
-  { label: "Felt worse", emoji: "💢" },
-];
 
 // Center-out sliders share these colors. Mint green for the positive
 // direction, warm peach for the negative — both pulled from the wrap-up
@@ -128,8 +106,6 @@ function WrapUp() {
   const [status, setStatus] = useState<Status>("loading");
   const [keepsake, setKeepsake] = useState<string>("");
   const [themes, setThemes] = useState<string[]>([]);
-  const [note, setNote] = useState("");
-  const [reflections, setReflections] = useState<string[]>([]);
   // Sliders default to 0 (center). Touched flags let us persist null when
   // the user never moved them, so "neutral" stays distinct from "no input."
   const [stress, setStress] = useState(0);
@@ -211,26 +187,16 @@ function WrapUp() {
     };
   }, []);
 
-  const persist = (overrides?: { reflections?: string[] }) => {
+  const persist = () => {
     const k: Keepsake = {
       id: idRef.current,
       quote: keepsake,
       themes,
-      note: note.trim() || undefined,
-      reflections: (overrides?.reflections ?? reflections).length
-        ? overrides?.reflections ?? reflections
-        : undefined,
       mood: moodTouched ? mood : null,
       stress: stressTouched ? stress : null,
       createdAt: Date.now(),
     };
     saveKeepsake(k);
-  };
-
-  const onToggleReflection = (tag: string) => {
-    setReflections((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
   };
 
   const onShare = () => {
@@ -246,7 +212,9 @@ function WrapUp() {
     if (keepsake) persist();
     clearStoredMessages();
     setUserType("returning");
-    navigate({ to: "/home" });
+    // Hand off to the home tooltips tour — first-time wrap-up is the only
+    // place we pivot into the tour automatically.
+    navigate({ to: "/home", search: { tooltips: "1" } as never });
   };
 
   const onViewActivities = () => {
@@ -274,8 +242,6 @@ function WrapUp() {
               />
 
               <ReflectionSection
-                reflections={reflections}
-                onToggleReflection={onToggleReflection}
                 stress={stress}
                 stressTouched={stressTouched}
                 onStressChange={(v) => {
@@ -289,8 +255,6 @@ function WrapUp() {
                   setMoodTouched(true);
                 }}
               />
-
-              <NoteCard note={note} onNoteChange={setNote} />
 
               <HighlightsCard highlights={displayQuotes} />
 
@@ -369,8 +333,6 @@ function SessionHero({
 // clusters fit without scrolling. Lives outside a card so the section reads
 // at the screen's body width.
 function ReflectionSection({
-  reflections,
-  onToggleReflection,
   stress,
   stressTouched,
   onStressChange,
@@ -378,8 +340,6 @@ function ReflectionSection({
   moodTouched,
   onMoodChange,
 }: {
-  reflections: string[];
-  onToggleReflection: (tag: string) => void;
   stress: number;
   stressTouched: boolean;
   onStressChange: (v: number) => void;
@@ -409,71 +369,7 @@ function ReflectionSection({
           onChange={onMoodChange}
         />
       </div>
-
-      <div className="flex flex-wrap justify-center gap-1.5 pt-2">
-        {POSITIVE_TAGS.map((tag) => (
-          <ReflectionTag
-            key={tag.label}
-            tag={tag}
-            tone="positive"
-            active={reflections.includes(tag.label)}
-            onToggle={() => onToggleReflection(tag.label)}
-          />
-        ))}
-        {NEGATIVE_TAGS.map((tag) => (
-          <ReflectionTag
-            key={tag.label}
-            tag={tag}
-            tone="negative"
-            active={reflections.includes(tag.label)}
-            onToggle={() => onToggleReflection(tag.label)}
-          />
-        ))}
-      </div>
     </section>
-  );
-}
-
-function NoteCard({
-  note,
-  onNoteChange,
-}: {
-  note: string;
-  onNoteChange: (v: string) => void;
-}) {
-  return (
-    <section className="yuna-rise">
-      <TextField
-        surface="dark"
-        value={note}
-        onChange={(e) => onNoteChange(e.target.value)}
-        placeholder="Add a note for yourself…"
-        maxLength={140}
-      />
-    </section>
-  );
-}
-
-function ReflectionTag({
-  tag,
-  tone,
-  active,
-  onToggle,
-}: {
-  tag: { label: string; emoji: string };
-  tone: "positive" | "negative";
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <SentimentTag
-      tone={tone}
-      emoji={tag.emoji}
-      label={tag.label}
-      active={active}
-      onClick={onToggle}
-      size="sm"
-    />
   );
 }
 

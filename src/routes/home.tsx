@@ -14,6 +14,7 @@ export const Route = createFileRoute("/home")({
 
 function HomeRoute() {
   const userType = useUserType();
+
   return (
     <HomeScreen
       variant={userType}

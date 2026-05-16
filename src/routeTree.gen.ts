@@ -18,6 +18,7 @@ import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as EmployerAccessRouteImport } from './routes/employer-access'
 import { Route as EmotionTrendsRouteImport } from './routes/emotion-trends'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -73,6 +74,11 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerAccessRoute = EmployerAccessRouteImport.update({
+  id: '/employer-access',
+  path: '/employer-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmotionTrendsRoute = EmotionTrendsRouteImport.update({
   id: '/emotion-trends',
   path: '/emotion-trends',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/emotion-trends': typeof EmotionTrendsRoute
+  '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/emotion-trends': typeof EmotionTrendsRoute
+  '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/emotion-trends': typeof EmotionTrendsRoute
+  '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/emotion-trends'
+    | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/emotion-trends'
+    | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/emotion-trends'
+    | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   EmotionTrendsRoute: typeof EmotionTrendsRoute
+  EmployerAccessRoute: typeof EmployerAccessRoute
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
   LoginRoute: typeof LoginRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer-access': {
+      id: '/employer-access'
+      path: '/employer-access'
+      fullPath: '/employer-access'
+      preLoaderRoute: typeof EmployerAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/emotion-trends': {
@@ -412,6 +432,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   EmotionTrendsRoute: EmotionTrendsRoute,
+  EmployerAccessRoute: EmployerAccessRoute,
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
   LoginRoute: LoginRoute,

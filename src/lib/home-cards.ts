@@ -168,9 +168,9 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
 export const HOME_CARDS: HomeCard[] = [
   {
     type: "guided-session",
-    id: "bedtime-blocker",
-    title: "Reframe thoughts about bedtime being a blocker",
-    subtitle: "You've mentioned struggling to wind down a few times this week — let's untangle it.",
+    id: "intro-session",
+    title: "An introductory session",
+    subtitle: "A gentle place to start — share a little, and I'll listen for what matters to you.",
     naturePath: "/nature/Background-2.png",
     isNew: true,
   },

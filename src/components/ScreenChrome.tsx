@@ -6,6 +6,7 @@ import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
+import { TooltipsCoach, type TooltipStep } from "@/components/TooltipsCoach";
 import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 import {
   Dialog,
@@ -27,10 +28,12 @@ export function ScreenChrome({
   children,
   hideHeader = false,
   surface = "light",
+  tooltipsStep,
 }: {
   children: ReactNode;
   hideHeader?: boolean;
   surface?: "light" | "dark";
+  tooltipsStep?: TooltipStep;
 }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -148,6 +151,7 @@ export function ScreenChrome({
         </DialogContent>
       </Dialog>
 
+      {tooltipsStep && <TooltipsCoach step={tooltipsStep} />}
     </PhoneFrame>
   );
 }

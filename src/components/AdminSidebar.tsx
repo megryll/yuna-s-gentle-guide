@@ -10,6 +10,7 @@ type Entry = {
 const PAGES: Entry[] = [
   { label: "Welcome", to: "/" },
   { label: "Log in", to: "/login" },
+  { label: "Employer access", to: "/employer-access" },
   { label: "Create account", to: "/auth" },
   { label: "Accept terms", to: "/accept-terms" },
   { label: "Intro", to: "/intro" },
@@ -23,6 +24,7 @@ const PAGES: Entry[] = [
   { label: "Session", to: "/chat" },
   { label: "Wrap-up", to: "/wrap-up" },
   { label: "Profile", to: "/you" },
+  { label: "Profile tooltips", to: "/you", search: { tooltips: "1" }, sub: true },
   { label: "Focus area 1", to: "/focus-area/1", sub: true },
   { label: "Focus area 2", to: "/focus-area/2", sub: true },
   { label: "Tools", to: "/tools" },
@@ -36,29 +38,52 @@ const DS_PAGES: Entry[] = [
   { label: "Text Fields", to: "/ds/text-fields" },
 ];
 
-function readStep(search: unknown): number | undefined {
-  if (!search || typeof search !== "object") return undefined;
-  const raw = (search as Record<string, unknown>).step;
-  const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
-  return Number.isFinite(n) ? n : undefined;
+function readSearchObject(search: unknown): Record<string, unknown> {
+  if (!search || typeof search !== "object") return {};
+  return search as Record<string, unknown>;
 }
 
-function isEntryActive(
-  entry: Entry,
-  currentPath: string,
-  currentStep: number | undefined,
+function entryMatchesSearch(
+  entrySearch: Record<string, unknown> | undefined,
+  currentSearch: Record<string, unknown>,
 ): boolean {
-  if (currentPath !== entry.to) return false;
-  const entryStep = (entry.search as { step?: number } | undefined)?.step;
-  if (entry.sub) return entryStep === currentStep;
-  if (entry.to === "/intro") return currentStep === undefined;
-  return true;
+  if (!entrySearch) return true;
+  return Object.entries(entrySearch).every(
+    ([k, v]) => String(currentSearch[k] ?? "") === String(v),
+  );
+}
+
+// Pick the single most-specific matching entry for the current location.
+// Specificity = (entry is a sub) + number of search keys it constrains, so
+// `/you?tooltips=1` resolves to "Profile tooltips" rather than the bare
+// "Profile" entry.
+function findActiveIndex(
+  entries: Entry[],
+  currentPath: string,
+  currentSearch: Record<string, unknown>,
+): number {
+  let bestIndex = -1;
+  let bestScore = -1;
+  entries.forEach((entry, i) => {
+    if (entry.to !== currentPath) return;
+    if (!entryMatchesSearch(entry.search, currentSearch)) return;
+    const keyCount = entry.search ? Object.keys(entry.search).length : 0;
+    const score = (entry.sub ? 1 : 0) + keyCount;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  });
+  return bestIndex;
 }
 
 export function AdminSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
-  const currentStep = readStep(location.search);
+  const currentSearch = readSearchObject(location.search);
+
+  const activePagesIndex = findActiveIndex(PAGES, currentPath, currentSearch);
+  const activeDsIndex = findActiveIndex(DS_PAGES, currentPath, currentSearch);
 
   return (
     <aside
@@ -69,18 +94,14 @@ export function AdminSidebar() {
         Pages
       </div>
       {PAGES.map((p, i) => (
-        <NavLink
-          key={`${p.to}-${i}`}
-          entry={p}
-          active={isEntryActive(p, currentPath, currentStep)}
-        />
+        <NavLink key={`${p.to}-${i}`} entry={p} active={i === activePagesIndex} />
       ))}
 
       <div className="font-sans-ui text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 mt-6 px-2">
         Design System
       </div>
-      {DS_PAGES.map((p) => (
-        <NavLink key={p.to} entry={p} active={isEntryActive(p, currentPath, currentStep)} />
+      {DS_PAGES.map((p, i) => (
+        <NavLink key={p.to} entry={p} active={i === activeDsIndex} />
       ))}
     </aside>
   );

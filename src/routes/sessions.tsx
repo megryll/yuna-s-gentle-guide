@@ -1,25 +1,49 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { useEffect } from "react";
+import { MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
-import { SentimentTag } from "@/components/SentimentTag";
+import { PastSessionCard } from "@/components/PastSessionCard";
 import { PAST_SESSIONS, type PastSession } from "@/lib/sessions";
-import { useUserType } from "@/lib/user-type";
-import { useAppMode } from "@/lib/theme-prefs";
+import { setUserType, useUserType } from "@/lib/user-type";
+import { getMiddleStateSession } from "@/lib/middle-state";
 
 export const Route = createFileRoute("/sessions")({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { tooltips?: string } => ({
+    tooltips: typeof s.tooltips === "string" ? s.tooltips : undefined,
+  }),
   head: () => ({ meta: [{ title: "Sessions — Yuna" }] }),
   component: SessionsRoute,
 });
 
 function SessionsRoute() {
   const userType = useUserType();
-  return userType === "returning" ? <SessionsReturning /> : <SessionsNew />;
+  const { tooltips } = Route.useSearch();
+  const tooltipsActive = tooltips === "1";
+
+  // Tooltips deep-link sets the user type so the populated screen renders
+  // behind the coachmark — pointing at a "no past sessions yet" empty state
+  // would defeat the purpose of the tour.
+  useEffect(() => {
+    if (tooltipsActive && userType !== "returning") setUserType("returning");
+  }, [tooltipsActive, userType]);
+
+  return userType === "returning" ? (
+    <SessionsReturning tooltipsActive={tooltipsActive} />
+  ) : (
+    <SessionsNew tooltipsActive={tooltipsActive} />
+  );
 }
 
-function SessionsNew() {
+function SessionsNew({ tooltipsActive }: { tooltipsActive: boolean }) {
   return (
-    <ScreenChrome hideHeader surface="dark">
+    <ScreenChrome
+      hideHeader
+      surface="dark"
+      tooltipsStep={tooltipsActive ? "sessions" : undefined}
+    >
       <div className="flex-1 flex flex-col justify-center px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center text-center">
           <span
@@ -49,99 +73,42 @@ function SessionsNew() {
   );
 }
 
-function SessionsReturning() {
+function SessionsReturning({ tooltipsActive }: { tooltipsActive: boolean }) {
   const navigate = useNavigate();
-  const mode = useAppMode();
-  const isLight = mode === "light";
-  const openSession = (s: PastSession) => {
+  const openSession = (s: Pick<PastSession, "id">) => {
     navigate({ to: "/sessions/$id", params: { id: s.id } });
   };
 
+  // During the post-wrap-up tour, show a single "fresh from your first
+  // session" card derived from the latest keepsake — the populated list
+  // would lie about how much history this user actually has.
+  const sessions = tooltipsActive
+    ? [getMiddleStateSession()]
+    : PAST_SESSIONS;
+
   return (
-    <ScreenChrome hideHeader surface="dark">
+    <ScreenChrome
+      hideHeader
+      surface="dark"
+      tooltipsStep={tooltipsActive ? "sessions" : undefined}
+    >
       <div className="flex-1 flex flex-col px-6 pb-8 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">
           Past sessions
         </h1>
 
         <ul className="mt-6 flex flex-col gap-7">
-          {PAST_SESSIONS.map((s, i) => {
-            const accent = SESSION_ACCENTS[i % SESSION_ACCENTS.length];
-            const natureBg = SESSION_NATURE_BGS[i % SESSION_NATURE_BGS.length];
-            const cornerStop = isLight
-              ? "rgba(255, 255, 255, 0.78)"
-              : "rgba(15, 18, 24, 0.55)";
-            // Wash over the nature photo so light mode reads light, dark
-            // mode reads dark. Sits between the accent gradient (top) and
-            // the photo (bottom).
-            const tint = isLight
-              ? "rgba(255, 255, 255, 0.88)"
-              : "rgba(15, 18, 24, 0.86)";
-            return (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  onClick={() => openSession(s)}
-                  style={{
-                    animationDelay: `${i * 60}ms`,
-                    backgroundImage:
-                      `linear-gradient(110deg, ${accent}99 0%, ${accent}40 35%, ${cornerStop} 100%), ` +
-                      `linear-gradient(${tint}, ${tint}), ` +
-                      `url(${natureBg})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                  className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative active:opacity-90 transition-opacity"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/70">
-                      {s.date} · {s.length}
-                    </p>
-                  </div>
-                  <p className="font-display text-xl leading-tight tracking-tight text-white pr-12">
-                    {s.title}
-                  </p>
-
-                  {s.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pr-12">
-                      {s.tags.map((tag) => (
-                        <SentimentTag
-                          key={tag.label}
-                          tone={tag.tone}
-                          emoji={tag.emoji}
-                          label={tag.label}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <span
-                    aria-hidden
-                    className="absolute bottom-4 right-4 shrink-0 h-9 w-9 rounded-full border border-white/30 text-white inline-flex items-center justify-center"
-                  >
-                    <ArrowRight size={14} strokeWidth={2} />
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {sessions.map((s, i) => (
+            <li key={s.id}>
+              <PastSessionCard
+                session={s}
+                index={i}
+                onClick={() => openSession(s)}
+              />
+            </li>
+          ))}
         </ul>
       </div>
     </ScreenChrome>
   );
 }
-
-// Cycled per session so each card lands on a slightly different hue —
-// mirrors the home-row gradient palette.
-const SESSION_ACCENTS = ["#7E84CC", "#5E9389", "#C7916A", "#7BB068"];
-
-// Photo bgs layered behind each card's accent gradient. Cycle for variety
-// so cards don't all read identically; the gradient + mode tint keep them
-// from clashing.
-const SESSION_NATURE_BGS = [
-  "/nature/Background-3.png",
-  "/nature/Background-7.png",
-  "/nature/Background-11.png",
-  "/nature/Background-15.png",
-  "/nature/Background-19.png",
-];
