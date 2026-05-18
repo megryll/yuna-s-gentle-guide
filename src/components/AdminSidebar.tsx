@@ -4,6 +4,7 @@ type Entry = {
   label: string;
   to: string;
   search?: Record<string, unknown>;
+  params?: Record<string, string>;
   sub?: boolean;
 };
 
@@ -34,8 +35,13 @@ const PAGES: Entry[] = [
 ];
 
 const DS_PAGES: Entry[] = [
+  { label: "Typography", to: "/ds/typography" },
   { label: "Buttons", to: "/ds/buttons" },
   { label: "Text Fields", to: "/ds/text-fields" },
+  { label: "Switches", to: "/ds/switches" },
+  { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
+  { label: "Sentiment Tags", to: "/ds/sentiment-tags" },
+  { label: "Prompt Suggestions", to: "/ds/suggestion-chips" },
 ];
 
 function readSearchObject(search: unknown): Record<string, unknown> {
@@ -53,6 +59,16 @@ function entryMatchesSearch(
   );
 }
 
+// Resolve `$param` segments in an entry's `to` against its params, so a
+// pattern like `/sessions/$id` with `{ id: "s-04" }` becomes `/sessions/s-04`
+// and can be compared to the live pathname.
+function resolveEntryPath(entry: Entry): string {
+  if (!entry.params) return entry.to;
+  return entry.to.replace(/\$(\w+)/g, (_, key: string) =>
+    entry.params?.[key] ?? `$${key}`,
+  );
+}
+
 // Pick the single most-specific matching entry for the current location.
 // Specificity = (entry is a sub) + number of search keys it constrains, so
 // `/you?tooltips=1` resolves to "Profile tooltips" rather than the bare
@@ -65,7 +81,7 @@ function findActiveIndex(
   let bestIndex = -1;
   let bestScore = -1;
   entries.forEach((entry, i) => {
-    if (entry.to !== currentPath) return;
+    if (resolveEntryPath(entry) !== currentPath) return;
     if (!entryMatchesSearch(entry.search, currentSearch)) return;
     const keyCount = entry.search ? Object.keys(entry.search).length : 0;
     const score = (entry.sub ? 1 : 0) + keyCount;
@@ -90,14 +106,14 @@ export function AdminSidebar() {
       className="hidden md:flex fixed left-0 top-0 h-screen w-44 flex-col gap-1 px-4 py-6 border-r border-border bg-background/60 backdrop-blur-sm z-50 overflow-y-auto"
       aria-label="Admin navigation"
     >
-      <div className="font-sans-ui text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 px-2">
+      <div className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 px-2">
         Pages
       </div>
       {PAGES.map((p, i) => (
         <NavLink key={`${p.to}-${i}`} entry={p} active={i === activePagesIndex} />
       ))}
 
-      <div className="font-sans-ui text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 mt-6 px-2">
+      <div className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 mt-6 px-2">
         Design System
       </div>
       {DS_PAGES.map((p, i) => (
@@ -109,7 +125,7 @@ export function AdminSidebar() {
 
 function NavLink({ entry, active }: { entry: Entry; active: boolean }) {
   const base =
-    "font-sans-ui rounded-md transition-colors " +
+    "rounded-md transition-colors " +
     (entry.sub
       ? "text-[10px] tracking-wide ml-3 pl-3 pr-2 py-1 border-l border-border/60 "
       : "text-[11px] tracking-wide px-2 py-1.5 ");
@@ -119,6 +135,7 @@ function NavLink({ entry, active }: { entry: Entry; active: boolean }) {
       // TanStack's typed Link doesn't accept arbitrary search shapes here;
       // the route's validateSearch coerces step at runtime.
       search={entry.search as never}
+      params={entry.params as never}
       className={
         base +
         (active

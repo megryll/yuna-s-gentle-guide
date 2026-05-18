@@ -26,7 +26,7 @@ export function YunaWordmark({ className }: { className?: string }) {
   return (
     <div className={"flex items-center gap-2 " + (className ?? "")}>
       <YunaMark size={20} />
-      <span className="font-sans-ui text-sm tracking-[0.2em] uppercase">Yuna</span>
+      <span className="text-sm tracking-[0.2em] uppercase">Yuna</span>
     </div>
   );
 }

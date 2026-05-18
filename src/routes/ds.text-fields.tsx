@@ -28,19 +28,19 @@ function DSTextFields() {
     <main className="ml-44 min-h-screen bg-background text-foreground">
       <div className="max-w-5xl mx-auto px-10 py-12">
         <header className="mb-10">
-          <p className="font-sans-ui text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
             Design System
           </p>
           <h1 className="text-3xl tracking-tight">Text Fields</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
             A pill-shaped single-line input in two sizes:{" "}
-            <code className="font-sans-ui text-xs">md</code> (default — auth,
+            <code className="text-xs">md</code> (default — auth,
             intro, chat) and{" "}
-            <code className="font-sans-ui text-xs">sm</code> (compact — for use
+            <code className="text-xs">sm</code> (compact — for use
             inside cards). Pick a{" "}
-            <code className="font-sans-ui text-xs">surface</code> for the
+            <code className="text-xs">surface</code> for the
             background it sits on and pass{" "}
-            <code className="font-sans-ui text-xs">trailing</code> for an
+            <code className="text-xs">trailing</code> for an
             inline action.
           </p>
         </header>
@@ -146,7 +146,7 @@ function DSTextFields() {
         </Section>
 
         <Section title="Props" subtitle="Type signature.">
-          <pre className="font-sans-ui text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
+          <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
 {`<TextField
   surface?:  "dark" | "light"          // default: "dark"
   size?:     "md" | "sm"               // default: "md"
@@ -175,7 +175,7 @@ function Section({
     <section className="mb-12">
       <h2 className="text-lg tracking-tight">{title}</h2>
       {subtitle && (
-        <p className="font-sans-ui text-xs text-muted-foreground mt-1 mb-4">
+        <p className="text-xs text-muted-foreground mt-1 mb-4">
           {subtitle}
         </p>
       )}
@@ -193,7 +193,7 @@ function Row({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-current opacity-60">
+      <span className="text-[10px] tracking-[0.25em] uppercase text-current opacity-60">
         {label}
       </span>
       {children}

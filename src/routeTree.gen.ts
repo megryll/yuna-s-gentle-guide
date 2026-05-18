@@ -24,9 +24,13 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SessionsIdRouteImport } from './routes/sessions.$id'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
+import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
+import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
+import { Route as DsSuggestionChipsRouteImport } from './routes/ds.suggestion-chips'
+import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
+import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 
 const YouRoute = YouRouteImport.update({
@@ -104,19 +108,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SessionsIdRoute = SessionsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => SessionsRoute,
-} as any)
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
   id: '/focus-area/$num',
   path: '/focus-area/$num',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsTypographyRoute = DsTypographyRouteImport.update({
+  id: '/ds/typography',
+  path: '/ds/typography',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
   id: '/ds/text-fields',
   path: '/ds/text-fields',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsSwitchesRoute = DsSwitchesRouteImport.update({
+  id: '/ds/switches',
+  path: '/ds/switches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsSuggestionChipsRoute = DsSuggestionChipsRouteImport.update({
+  id: '/ds/suggestion-chips',
+  path: '/ds/suggestion-chips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsSentimentTagsRoute = DsSentimentTagsRouteImport.update({
+  id: '/ds/sentiment-tags',
+  path: '/ds/sentiment-tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
+  id: '/ds/segmented-toggle',
+  path: '/ds/segmented-toggle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
@@ -136,15 +160,19 @@ export interface FileRoutesByFullPath {
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRouteWithChildren
+  '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
+  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
+  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
-  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -157,15 +185,19 @@ export interface FileRoutesByTo {
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRouteWithChildren
+  '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
+  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
+  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
-  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,15 +211,19 @@ export interface FileRoutesById {
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
   '/progress': typeof ProgressRoute
-  '/sessions': typeof SessionsRouteWithChildren
+  '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
+  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
+  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
-  '/sessions/$id': typeof SessionsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,9 +244,13 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/segmented-toggle'
+    | '/ds/sentiment-tags'
+    | '/ds/suggestion-chips'
+    | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/typography'
     | '/focus-area/$num'
-    | '/sessions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,9 +269,13 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/segmented-toggle'
+    | '/ds/sentiment-tags'
+    | '/ds/suggestion-chips'
+    | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/typography'
     | '/focus-area/$num'
-    | '/sessions/$id'
   id:
     | '__root__'
     | '/'
@@ -250,9 +294,13 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/you'
     | '/ds/buttons'
+    | '/ds/segmented-toggle'
+    | '/ds/sentiment-tags'
+    | '/ds/suggestion-chips'
+    | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/typography'
     | '/focus-area/$num'
-    | '/sessions/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -266,13 +314,18 @@ export interface RootRouteChildren {
   IntroRoute: typeof IntroRoute
   LoginRoute: typeof LoginRoute
   ProgressRoute: typeof ProgressRoute
-  SessionsRoute: typeof SessionsRouteWithChildren
+  SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
+  DsSentimentTagsRoute: typeof DsSentimentTagsRoute
+  DsSuggestionChipsRoute: typeof DsSuggestionChipsRoute
+  DsSwitchesRoute: typeof DsSwitchesRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
+  DsTypographyRoute: typeof DsTypographyRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
 }
 
@@ -383,13 +436,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sessions/$id': {
-      id: '/sessions/$id'
-      path: '/$id'
-      fullPath: '/sessions/$id'
-      preLoaderRoute: typeof SessionsIdRouteImport
-      parentRoute: typeof SessionsRoute
-    }
     '/focus-area/$num': {
       id: '/focus-area/$num'
       path: '/focus-area/$num'
@@ -397,11 +443,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FocusAreaNumRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/typography': {
+      id: '/ds/typography'
+      path: '/ds/typography'
+      fullPath: '/ds/typography'
+      preLoaderRoute: typeof DsTypographyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/text-fields': {
       id: '/ds/text-fields'
       path: '/ds/text-fields'
       fullPath: '/ds/text-fields'
       preLoaderRoute: typeof DsTextFieldsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/switches': {
+      id: '/ds/switches'
+      path: '/ds/switches'
+      fullPath: '/ds/switches'
+      preLoaderRoute: typeof DsSwitchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/suggestion-chips': {
+      id: '/ds/suggestion-chips'
+      path: '/ds/suggestion-chips'
+      fullPath: '/ds/suggestion-chips'
+      preLoaderRoute: typeof DsSuggestionChipsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/sentiment-tags': {
+      id: '/ds/sentiment-tags'
+      path: '/ds/sentiment-tags'
+      fullPath: '/ds/sentiment-tags'
+      preLoaderRoute: typeof DsSentimentTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/segmented-toggle': {
+      id: '/ds/segmented-toggle'
+      path: '/ds/segmented-toggle'
+      fullPath: '/ds/segmented-toggle'
+      preLoaderRoute: typeof DsSegmentedToggleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/buttons': {
@@ -414,18 +495,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface SessionsRouteChildren {
-  SessionsIdRoute: typeof SessionsIdRoute
-}
-
-const SessionsRouteChildren: SessionsRouteChildren = {
-  SessionsIdRoute: SessionsIdRoute,
-}
-
-const SessionsRouteWithChildren = SessionsRoute._addFileChildren(
-  SessionsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptTermsRoute: AcceptTermsRoute,
@@ -437,13 +506,18 @@ const rootRouteChildren: RootRouteChildren = {
   IntroRoute: IntroRoute,
   LoginRoute: LoginRoute,
   ProgressRoute: ProgressRoute,
-  SessionsRoute: SessionsRouteWithChildren,
+  SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,
+  DsSegmentedToggleRoute: DsSegmentedToggleRoute,
+  DsSentimentTagsRoute: DsSentimentTagsRoute,
+  DsSuggestionChipsRoute: DsSuggestionChipsRoute,
+  DsSwitchesRoute: DsSwitchesRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
+  DsTypographyRoute: DsTypographyRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
 }
 export const routeTree = rootRouteImport

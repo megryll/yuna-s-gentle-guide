@@ -58,7 +58,7 @@ function ToggleButton({
       disabled={disabled}
       aria-pressed={active}
       className={
-        "font-sans-ui text-[11px] tracking-wide px-3 py-1 rounded-full transition-colors " +
+        "text-[11px] tracking-wide px-3 py-1 rounded-full transition-colors " +
         (active
           ? "bg-foreground text-background"
           : disabled

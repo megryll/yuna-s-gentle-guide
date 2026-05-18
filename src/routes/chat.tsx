@@ -989,7 +989,7 @@ function CallSummary({ msg }: { msg: Extract<Msg, { kind: "call-summary" }> }) {
           <div className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
             <PhoneIcon />
           </div>
-          <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/70">
+          <p className="text-[10px] tracking-[0.25em] uppercase text-white/70">
             Voice call · ended
           </p>
         </div>
@@ -1186,7 +1186,7 @@ function VoicePitchCard() {
               fontSize="10"
               fontWeight="600"
               letterSpacing="1.8"
-              className="font-sans-ui"
+              className=""
             >
               VOICE
             </text>
@@ -1199,12 +1199,12 @@ function VoicePitchCard() {
               fontSize="10"
               fontWeight="600"
               letterSpacing="1.8"
-              className="font-sans-ui"
+              className=""
             >
               TEXT
             </text>
           </svg>
-          <p className="font-sans-ui text-[10.5px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
+          <p className="text-[10.5px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
             Reported positive impact
           </p>
         </div>
@@ -1218,7 +1218,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-sm text-white">{value}</p>
-      <p className="font-sans-ui text-[9px] tracking-[0.2em] uppercase text-white/70 mt-0.5">
+      <p className="text-[9px] tracking-[0.2em] uppercase text-white/70 mt-0.5">
         {label}
       </p>
     </div>
@@ -1239,16 +1239,16 @@ function TypingBubble() {
 
 const CHAT_MODE_OPTIONS = [
   {
-    value: "text" as const,
-    label: "Text",
-    ariaLabel: "Text mode",
-    icon: <MessageCircle size={14} strokeWidth={1.6} aria-hidden />,
-  },
-  {
     value: "voice" as const,
     label: "Voice",
     ariaLabel: "Voice mode",
     icon: <Phone size={14} strokeWidth={1.6} aria-hidden />,
+  },
+  {
+    value: "text" as const,
+    label: "Text",
+    ariaLabel: "Text mode",
+    icon: <MessageCircle size={14} strokeWidth={1.6} aria-hidden />,
   },
 ];
 

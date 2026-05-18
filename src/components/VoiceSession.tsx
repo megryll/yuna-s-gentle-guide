@@ -393,7 +393,7 @@ export function VoiceSession({
 
       <div className="mt-8 text-center">
         <h1 className="text-xl tracking-tight text-white">{PHASE_LABEL[phase]}</h1>
-        <p className="mt-1 font-sans-ui text-xs tracking-[0.2em] uppercase text-white/70 tabular-nums">
+        <p className="mt-1 text-xs tracking-[0.2em] uppercase text-white/70 tabular-nums">
           {mm}:{ss}
         </p>
       </div>

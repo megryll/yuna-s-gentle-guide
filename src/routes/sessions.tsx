@@ -1,10 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { PastSessionCard } from "@/components/PastSessionCard";
-import { PAST_SESSIONS, type PastSession } from "@/lib/sessions";
+import { PAST_SESSIONS } from "@/lib/sessions";
 import { setUserType, useUserType } from "@/lib/user-type";
 import { getMiddleStateSession } from "@/lib/middle-state";
 
@@ -74,11 +74,6 @@ function SessionsNew({ tooltipsActive }: { tooltipsActive: boolean }) {
 }
 
 function SessionsReturning({ tooltipsActive }: { tooltipsActive: boolean }) {
-  const navigate = useNavigate();
-  const openSession = (s: Pick<PastSession, "id">) => {
-    navigate({ to: "/sessions/$id", params: { id: s.id } });
-  };
-
   // During the post-wrap-up tour, show a single "fresh from your first
   // session" card derived from the latest keepsake — the populated list
   // would lie about how much history this user actually has.
@@ -100,11 +95,7 @@ function SessionsReturning({ tooltipsActive }: { tooltipsActive: boolean }) {
         <ul className="mt-6 flex flex-col gap-7">
           {sessions.map((s, i) => (
             <li key={s.id}>
-              <PastSessionCard
-                session={s}
-                index={i}
-                onClick={() => openSession(s)}
-              />
+              <PastSessionCard session={s} index={i} />
             </li>
           ))}
         </ul>

@@ -1219,7 +1219,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline gap-1.5">
             <span className="font-display text-[22px] leading-none">4.7</span>
-            <span className="font-sans-ui text-[11px] tracking-[0.08em] uppercase text-white/70">
+            <span className="text-[11px] tracking-[0.08em] uppercase text-white/70">
               Out of 5
             </span>
           </div>
@@ -1227,7 +1227,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         </div>
         <div className="ml-auto flex flex-col gap-1.5 items-center">
           <span className="font-display text-[22px] leading-none">60k</span>
-          <span className="font-sans-ui text-[11px] tracking-[0.08em] uppercase text-white/70">
+          <span className="text-[11px] tracking-[0.08em] uppercase text-white/70">
             Happy users
           </span>
         </div>

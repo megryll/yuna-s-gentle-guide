@@ -65,7 +65,7 @@ export function SegmentedToggle<V extends string>({
             ariaLabel={opt.ariaLabel ?? opt.label}
           >
             {opt.icon}
-            <span className="font-sans-ui text-[11px] tracking-[0.16em] uppercase">
+            <span className="text-[11px] tracking-[0.16em] uppercase">
               {opt.label}
             </span>
           </Segment>

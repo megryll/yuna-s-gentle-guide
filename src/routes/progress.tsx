@@ -96,7 +96,7 @@ function ProgressReturning() {
                 className="yuna-rise w-full text-left rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 active:bg-white/15 transition-colors flex items-center gap-3"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/70">
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/70">
                     {s.date} · {s.length}
                   </p>
                   <p className="mt-1 text-[14px] leading-snug font-medium text-white truncate">
@@ -191,7 +191,7 @@ function ProgressNew() {
           className="mt-3 yuna-rise w-full text-left rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-3 active:bg-white/[0.08] transition-colors flex items-center gap-3"
         >
           <div className="flex-1 min-w-0">
-            <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/55">
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/55">
               No sessions yet
             </p>
             <p className="mt-1 text-[14px] leading-snug text-white/80">
@@ -258,7 +258,7 @@ function AssessmentCard({
 
       <div className="mt-3 flex gap-3">
         <div
-          className="flex flex-col justify-between font-sans-ui text-[9px] tracking-[0.12em] uppercase text-white/65 py-0.5"
+          className="flex flex-col justify-between text-[9px] tracking-[0.12em] uppercase text-white/65 py-0.5"
           style={{ height: 96 }}
         >
           {assessment.levels.map((l) => (
@@ -398,7 +398,7 @@ function SectionLabel({
   className?: string;
 }) {
   const labelText = (
-    <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/65">
+    <p className="text-[10px] tracking-[0.25em] uppercase text-white/65">
       {children}
     </p>
   );
@@ -406,7 +406,7 @@ function SectionLabel({
     return (
       <p
         className={
-          "font-sans-ui text-[10px] tracking-[0.25em] uppercase text-white/65 " +
+          "text-[10px] tracking-[0.25em] uppercase text-white/65 " +
           className
         }
       >

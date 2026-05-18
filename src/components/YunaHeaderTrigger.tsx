@@ -27,7 +27,7 @@ export function YunaHeaderTrigger({
         onClick={() => setOpen(true)}
         aria-label="Open Yuna settings"
         className={
-          "font-sans-ui h-9 px-3 rounded-full flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase transition-colors " +
+          "h-9 px-3 rounded-full flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase transition-colors " +
           (isDark
             ? "border border-white/40 text-white active:bg-white/15"
             : "hairline hover:bg-accent")

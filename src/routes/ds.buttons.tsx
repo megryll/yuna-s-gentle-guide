@@ -21,15 +21,15 @@ function DSButtons() {
     <main className="ml-44 min-h-screen bg-background text-foreground">
       <div className="max-w-5xl mx-auto px-10 py-12">
         <header className="mb-10">
-          <p className="font-sans-ui text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
             Design System
           </p>
           <h1 className="text-3xl tracking-tight">Buttons</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
-            One root <code className="font-sans-ui text-xs">Button</code> drives every CTA.
-            Pick a <code className="font-sans-ui text-xs">surface</code> (the background it sits on), a{" "}
-            <code className="font-sans-ui text-xs">variant</code> (fill style), and a{" "}
-            <code className="font-sans-ui text-xs">size</code>. Each variant below is shown on both
+            One root <code className="text-xs">Button</code> drives every CTA.
+            Pick a <code className="text-xs">surface</code> (the background it sits on), a{" "}
+            <code className="text-xs">variant</code> (fill style), and a{" "}
+            <code className="text-xs">size</code>. Each variant below is shown on both
             surfaces.
           </p>
         </header>
@@ -91,9 +91,9 @@ function DSButtons() {
           title="Icon buttons"
           subtitle={
             <>
-              <code className="font-sans-ui text-[11px]">size="icon-sm" | "icon" | "icon-lg"</code>.
-              Pass <code className="font-sans-ui text-[11px]">pressed</code> to flip into primary (toggle state).
-              Pass <code className="font-sans-ui text-[11px]">label</code> on icon sizes to render a small caption underneath.
+              <code className="text-[11px]">size="icon-sm" | "icon" | "icon-lg"</code>.
+              Pass <code className="text-[11px]">pressed</code> to flip into primary (toggle state).
+              Pass <code className="text-[11px]">label</code> on icon sizes to render a small caption underneath.
             </>
           }
         >
@@ -158,7 +158,7 @@ function DSButtons() {
 
         {/* ─── Props reference ────────────────────────────────────────────── */}
         <Section title="Props" subtitle="Type signature.">
-          <pre className="font-sans-ui text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
+          <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
 {`<Button
   surface?:  "dark" | "light"                          // default: "light"
   variant?:  "primary" | "secondary" | "ghost"         // default: "primary"
@@ -192,7 +192,7 @@ function Section({
     <section className="mb-14">
       <h2 className="text-lg tracking-tight">{title}</h2>
       {subtitle && (
-        <p className="font-sans-ui text-xs text-muted-foreground mt-1 mb-4 max-w-2xl leading-relaxed">
+        <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-2xl leading-relaxed">
           {subtitle}
         </p>
       )}
@@ -214,7 +214,7 @@ function SurfacePair({
   return (
     <div>
       {innerLabel && (
-        <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
+        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
           {innerLabel}
         </p>
       )}
@@ -245,7 +245,7 @@ function SurfacePanel({
         <div className="w-full">
           <p
             className={
-              "font-sans-ui text-[10px] tracking-[0.25em] uppercase mb-3 " +
+              "text-[10px] tracking-[0.25em] uppercase mb-3 " +
               (tone === "dark" ? "text-white/65" : "text-foreground/65")
             }
           >

@@ -169,7 +169,7 @@ export function ImagePicker({
             <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
               <p className="text-sm font-medium text-white">{o.label}</p>
               {o.description && (
-                <p className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
+                <p className="text-[10px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
                   {o.description}
                 </p>
               )}
@@ -209,7 +209,7 @@ export function NavRow({
       </span>
       <span className="flex-1 text-sm">{label}</span>
       {value && (
-        <span className="font-sans-ui text-xs text-muted-foreground">{value}</span>
+        <span className="text-xs text-muted-foreground">{value}</span>
       )}
       {imageSrc && (
         <img
@@ -265,7 +265,7 @@ export function PaceSlider({
 
   return (
     <div className="rounded-2xl hairline bg-background p-5">
-      <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-4">
+      <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-4">
         Voice pace
       </p>
 
@@ -326,7 +326,7 @@ export function PaceSlider({
             key={s}
             onClick={() => onChange(i)}
             className={
-              "font-sans-ui text-xs text-center transition-colors " +
+              "text-xs text-center transition-colors " +
               (i === value ? "text-foreground font-medium" : "text-muted-foreground")
             }
           >
@@ -575,7 +575,7 @@ function VoiceIntroCard({
           aria-label={playing ? "Pause voice preview" : "Play voice preview"}
         >
           {playing ? <PausePill /> : <PlayPill />}
-          <span className="font-sans-ui text-[10px] tracking-[0.1em] uppercase text-white">
+          <span className="text-[10px] tracking-[0.1em] uppercase text-white">
             {playing ? "Pause" : "Play"}
           </span>
         </button>

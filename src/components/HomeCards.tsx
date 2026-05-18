@@ -71,7 +71,7 @@ export function HomeCardRow({
     <div className="relative">
       {card.isNew && (
         <span
-          className="absolute -top-1.5 left-3 z-10 font-sans-ui text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
+          className="absolute -top-1.5 left-3 z-10 text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
           style={{ backgroundColor: "#66BA24" }}
         >
           New
@@ -98,7 +98,7 @@ export function HomeCardRow({
             {title}
           </p>
           <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <span className={`font-sans-ui text-[11px] tracking-[0.12em] uppercase ${isLight ? "text-foreground/80" : "text-white"} inline-flex items-center gap-1.5`}>
+            <span className={`text-[11px] tracking-[0.12em] uppercase ${isLight ? "text-foreground/80" : "text-white"} inline-flex items-center gap-1.5`}>
               {isGuided && avatar ? (
                 <YunaAvatar variant={avatar} size={15} />
               ) : (
@@ -234,7 +234,7 @@ function GratitudeCard({
         <ul className="mt-4 flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-center gap-2.5">
-              <span className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/85 shrink-0 w-5">
+              <span className="text-[10px] tracking-[0.18em] uppercase text-white/85 shrink-0 w-5">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <TextField
@@ -416,7 +416,7 @@ function BookCard({
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white">
+          <p className="text-[10px] tracking-[0.18em] uppercase text-white">
             {card.author}
           </p>
           <p className="mt-1 font-display text-[18px] leading-[1.25] tracking-tight text-white">
@@ -480,7 +480,7 @@ function CardShell({
     <div className="relative">
       {isNew && (
         <span
-          className="absolute -top-2 left-4 z-10 font-sans-ui text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
+          className="absolute -top-2 left-4 z-10 text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
           style={{ backgroundColor: "#66BA24" }}
         >
           New
@@ -526,7 +526,7 @@ function CardHeader({
       <div className="min-w-0 flex flex-row items-center gap-3 flex-wrap">
         <p
           className={
-            "font-sans-ui text-[10px] tracking-[0.14em] uppercase inline-flex items-center gap-1.5 " +
+            "text-[10px] tracking-[0.14em] uppercase inline-flex items-center gap-1.5 " +
             eyebrowColor
           }
         >
@@ -595,7 +595,7 @@ function CardFooter({
         {meta && (
           <span
             className={
-              "font-sans-ui text-[10px] tracking-[0.18em] uppercase " +
+              "text-[10px] tracking-[0.18em] uppercase " +
               (isDark ? "text-white/65" : "text-neutral-600")
             }
           >
@@ -623,7 +623,7 @@ function CardCTA({
       type="button"
       onClick={onClick}
       className={
-        "inline-flex items-center justify-center rounded-full px-5 h-10 font-sans-ui text-[11px] tracking-[0.18em] uppercase border active:bg-white/10 transition-colors " +
+        "inline-flex items-center justify-center rounded-full px-5 h-10 text-[11px] tracking-[0.18em] uppercase border active:bg-white/10 transition-colors " +
         (isDark
           ? "border-white/30 text-white"
           : "border-neutral-900/30 text-neutral-900")
@@ -639,7 +639,7 @@ function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
   return (
     <span
       className={
-        "inline-flex items-center gap-1 font-sans-ui text-[10px] tracking-[0.12em] uppercase " +
+        "inline-flex items-center gap-1 text-[10px] tracking-[0.12em] uppercase " +
         (isDark ? "text-white" : "text-neutral-900")
       }
     >

@@ -19,7 +19,7 @@ export function PastSessionCard({
 }: {
   session: Pick<PastSession, "id" | "date" | "length" | "title">;
   index?: number;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
   const mode = useAppMode();
   const isLight = mode === "light";
@@ -31,23 +31,20 @@ export function PastSessionCard({
     : "rgba(15, 18, 24, 0.55)";
   const tint = isLight ? "rgba(255, 255, 255, 0.88)" : "rgba(15, 18, 24, 0.86)";
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        animationDelay: `${index * 60}ms`,
-        backgroundImage:
-          `linear-gradient(110deg, ${accent}99 0%, ${accent}40 35%, ${cornerStop} 100%), ` +
-          `linear-gradient(${tint}, ${tint}), ` +
-          `url(${natureBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-      className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative active:opacity-90 transition-opacity"
-    >
+  const style = {
+    animationDelay: `${index * 60}ms`,
+    backgroundImage:
+      `linear-gradient(110deg, ${accent}99 0%, ${accent}40 35%, ${cornerStop} 100%), ` +
+      `linear-gradient(${tint}, ${tint}), ` +
+      `url(${natureBg})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+
+  const inner = (
+    <>
       <div className="flex items-center justify-between gap-2">
-        <p className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/70">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-white/70">
           {session.date} · {session.length}
         </p>
       </div>
@@ -61,6 +58,28 @@ export function PastSessionCard({
       >
         <ArrowRight size={14} strokeWidth={2} />
       </span>
-    </button>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={style}
+        className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative active:opacity-90 transition-opacity"
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      style={style}
+      className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative"
+    >
+      {inner}
+    </div>
   );
 }

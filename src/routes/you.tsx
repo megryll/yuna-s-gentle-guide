@@ -70,7 +70,7 @@ function YouRoute() {
               >
                 {stat.value}
               </span>
-              <span className="font-sans-ui text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
+              <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
                 {stat.label}
               </span>
             </div>
@@ -165,7 +165,7 @@ function YouMiddleState() {
               >
                 {stat.value}
               </span>
-              <span className="font-sans-ui text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
+              <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
                 {stat.label}
               </span>
             </div>
@@ -285,7 +285,7 @@ function PreviewRow({ heading, body }: { heading: string; body: string }) {
     <div
       className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5"
     >
-      <p className="font-sans-ui text-[11px] font-semibold tracking-[0.1em] uppercase text-white/65">
+      <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-white/65">
         {heading}
       </p>
       <p className="text-[14px] leading-[20px] text-white/65 mt-1">

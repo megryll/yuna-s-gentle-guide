@@ -116,7 +116,7 @@ export function AppMenuDrawer({
           <div className="rounded-2xl hairline bg-background/70 backdrop-blur-sm p-4 flex items-center gap-3">
             <div className="flex-1">
               <p className="text-sm leading-snug">Therapist Match</p>
-              <p className="font-sans-ui text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[11px] text-muted-foreground mt-0.5">
                 Find a real therapist who fits you
               </p>
               <Button
@@ -137,7 +137,7 @@ export function AppMenuDrawer({
           {/* Sections */}
           {SECTIONS.map((s) => (
             <div key={s.title} className="mt-6">
-              <p className="font-sans-ui text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2 px-1">
+              <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2 px-1">
                 {s.title}
               </p>
               <div className="rounded-2xl hairline overflow-hidden bg-background/70 backdrop-blur-sm">
@@ -155,7 +155,7 @@ export function AppMenuDrawer({
                     </span>
                     <span className="flex-1 text-sm">{r.label}</span>
                     {r.value && (
-                      <span className="font-sans-ui text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {r.value}
                       </span>
                     )}

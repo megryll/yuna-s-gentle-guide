@@ -107,7 +107,7 @@ export function FocusAreaBentoCard({
       </span>
       <div className="relative flex-1 flex flex-col justify-between p-4">
         <div className="flex flex-col gap-2">
-          <span className="font-sans-ui text-[10px] tracking-[0.2em] uppercase text-white/65">
+          <span className="text-[10px] tracking-[0.2em] uppercase text-white/65">
             Focus Area {num}
           </span>
           <span
@@ -164,7 +164,7 @@ export function InsightCard({
           <span className="text-[14px] font-normal leading-[22px] text-white truncate">{title}</span>
           {date && (
             <span
-              className="font-sans-ui text-[10px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
+              className="text-[10px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
               style={{ backgroundColor: `${GREEN_ACCENT}33`, color: tagText }}
             >
               {date}
@@ -190,7 +190,7 @@ export function InsightCard({
 
           {meaning.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="font-sans-ui text-[11px] font-semibold tracking-[0.08em] uppercase text-white/60">
+              <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-white/60">
                 What this might mean
               </p>
               <ul className="flex flex-col gap-2">
@@ -250,7 +250,7 @@ export function MoreButton({ count, onClick }: { count: number; onClick?: () => 
       onClick={onClick}
       className="w-full inline-flex items-center justify-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 active:bg-white/5 transition-colors"
     >
-      <span className="font-sans-ui text-[11px] font-bold tracking-[0.08em] uppercase text-white/70">
+      <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-white/70">
         +{count} more
       </span>
       <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
@@ -277,7 +277,7 @@ export function EmptyStateCard({
       style={{ backgroundColor: `${GREEN_ACCENT}14` }}
     >
       <p
-        className="font-sans-ui text-[11px] font-bold tracking-[0.06em] uppercase text-center"
+        className="text-[11px] font-bold tracking-[0.06em] uppercase text-center"
         style={{ color: isLight ? GREEN : "#cdebb5" }}
       >
         {heading}

@@ -296,7 +296,7 @@ function SessionHero({
 }) {
   return (
     <section className="flex flex-col items-center text-center gap-4 pt-1 pb-2 yuna-fade-in">
-      <p className="font-sans-ui text-[10px] tracking-[0.32em] uppercase text-white/65">
+      <p className="text-[10px] tracking-[0.32em] uppercase text-white/65">
         Session complete
       </p>
 
@@ -404,7 +404,7 @@ function SentimentSlider({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between font-sans-ui text-[10px] tracking-[0.18em] uppercase text-white/65">
+      <div className="flex items-center justify-between text-[10px] tracking-[0.18em] uppercase text-white/65">
         <span className={negative && touched ? "text-white/90" : ""}>
           {leftLabel}
         </span>
@@ -517,7 +517,7 @@ function EmotionPill({ name }: { name: string }) {
   const emotionColors = useEmotionColors();
   const color = emotionColors[name] ?? "rgba(255,255,255,0.5)";
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-1 text-[12px] leading-none font-sans-ui text-white/85">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-1 text-[12px] leading-none text-white/85">
       <span
         aria-hidden
         className="h-1.5 w-1.5 rounded-full shrink-0"
