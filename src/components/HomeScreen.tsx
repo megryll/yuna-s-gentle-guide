@@ -1,17 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Bookmark,
-  LayoutGrid,
-  List,
-  Menu,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
-import { YunaMark } from "@/components/YunaMark";
-import { YunaAvatar } from "@/components/YunaAvatar";
+import { Bookmark, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
-import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -21,18 +12,16 @@ import { SuggestionChip } from "@/components/SuggestionChip";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 
-const WELCOME_TOOLTIP_TEXT =
+const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around — I'll be here when you're ready to chat.";
 
-const NEW_USER_SUGGESTIONS = [
-  "I want to talk about something specific.",
-  "I want you to guide our first conversation.",
-  "Tell me more about how Yuna works.",
-] as const;
+const PRIMARY_SUGGESTION = { label: "Chat Now", primary: true } as const;
 
-const RETURNING_SUGGESTIONS = [
-  { label: "Start A New Chat", primary: true },
-] as const;
+// First card is the "An introductory session" guided-session — the only card
+// a brand-new user sees, and intentionally skipped in the returning feed so
+// it doesn't sit beneath richer, personalized content.
+const INTRO_CARD = HOME_CARDS[0];
+const POST_INTRO_CARDS = HOME_CARDS.slice(1);
 
 export function HomeScreen({
   variant,
@@ -42,15 +31,14 @@ export function HomeScreen({
   showWelcome?: boolean;
 }) {
   const navigate = useNavigate();
-  const { name } = useYunaIdentity();
-  const [welcomeOpen, setWelcomeOpen] = useState(showWelcome);
-  const [welcomeMuted, setWelcomeMuted] = useState(false);
+  const { name, voice } = useYunaIdentity();
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
+  const cards = variant === "new" ? [INTRO_CARD] : POST_INTRO_CARDS;
   const initialSavedIds = useMemo(
     () =>
-      new Set(HOME_CARDS.filter((c) => c.isSaved).map((c) => c.id)),
-    [],
+      new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
+    [cards],
   );
   const [savedIds, setSavedIds] = useState<Set<string>>(initialSavedIds);
   const toggleSave = (id: string) =>
@@ -61,9 +49,7 @@ export function HomeScreen({
       return next;
     });
 
-  useEffect(() => {
-    setWelcomeOpen(showWelcome);
-  }, [showWelcome]);
+  useWelcomeAudio(showWelcome, voice);
 
   const returning = variant === "returning";
 
@@ -94,185 +80,85 @@ export function HomeScreen({
                 ? name
                   ? `Welcome back, ${name}.`
                   : "Welcome back."
-                : "Where shall we begin?"}
+                : "Welcome in."}
             </h1>
             <p className="mt-2 text-sm text-white/80 max-w-[18rem]">
               {returning
                 ? "What should we dig into?"
-                : "Pick a thread, or start one of your own."}
+                : "I'll be here when you're ready to chat."}
             </p>
           </div>
 
           <div className="mt-5 flex flex-col gap-2.5">
-            {returning
-              ? RETURNING_SUGGESTIONS.map((s, i) => (
-                  <div
-                    key={s.label}
-                    className="yuna-rise"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <SuggestionChip
-                      variant={s.primary ? "primary" : "filled"}
-                      onClick={() => open(s.label)}
-                    >
-                      {s.label}
-                    </SuggestionChip>
-                  </div>
-                ))
-              : NEW_USER_SUGGESTIONS.map((s, i) => (
-                  <div
-                    key={s}
-                    className="yuna-rise"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <SuggestionChip onClick={() => open(s)}>{s}</SuggestionChip>
-                  </div>
-                ))}
+            <div className="yuna-rise">
+              <SuggestionChip
+                variant="primary"
+                onClick={() => open(PRIMARY_SUGGESTION.label)}
+              >
+                {PRIMARY_SUGGESTION.label}
+              </SuggestionChip>
+            </div>
           </div>
 
-          {returning && (
-            <CreatedForYou
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              savedOnly={savedOnly}
-              setSavedOnly={setSavedOnly}
-              savedIds={savedIds}
-              onToggleSave={toggleSave}
-              onOpen={(c) => open(openPrompt(c))}
-            />
-          )}
+          <CreatedForYou
+            cards={cards}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            savedOnly={savedOnly}
+            setSavedOnly={setSavedOnly}
+            savedIds={savedIds}
+            onToggleSave={toggleSave}
+            onOpen={(c) => open(openPrompt(c))}
+            showFeedback={returning}
+          />
         </div>
 
         <AppBar surface="dark" />
       </div>
-
-      {welcomeOpen && (
-        <WelcomeTooltip
-          muted={welcomeMuted}
-          onToggleMute={() => setWelcomeMuted((m) => !m)}
-          onDismiss={() => setWelcomeOpen(false)}
-        />
-      )}
     </PhoneFrame>
   );
 }
 
-function WelcomeTooltip({
-  muted,
-  onToggleMute,
-  onDismiss,
-}: {
-  muted: boolean;
-  onToggleMute: () => void;
-  onDismiss: () => void;
-}) {
-  const { avatar, voice } = useYunaIdentity();
-  const tooltipMode = useAppMode();
+// Fires the welcome TTS once when the home page mounts with showWelcome.
+// The visual popup that previously paired with this audio is gone; the
+// greeting now lives in the home header copy itself.
+function useWelcomeAudio(enabled: boolean, voice: string | null) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (muted) {
-      audioRef.current?.pause();
-      return;
-    }
+    if (!enabled || !voice) return;
     let cancelled = false;
-    if (!voice) return;
-    const cfg = VOICES[voice];
+    const cfg = VOICES[voice as keyof typeof VOICES];
+    if (!cfg) return;
     (async () => {
       try {
-        if (!blobUrlRef.current) {
-          blobUrlRef.current = await fetchTtsBlobUrl(
-            cfg.elevenlabsId,
-            WELCOME_TOOLTIP_TEXT,
-          );
+        const url = await fetchTtsBlobUrl(cfg.elevenlabsId, WELCOME_AUDIO_TEXT);
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
         }
-        if (cancelled) return;
-        const el = audioRef.current ?? new Audio();
+        blobUrlRef.current = url;
+        const el = new Audio(url);
         audioRef.current = el;
-        el.src = blobUrlRef.current;
-        el.currentTime = 0;
         await el.play();
-      } catch (err) {
-        console.error("Welcome TTS failed", err);
+      } catch {
+        // Prototype: silent fallback if TTS or autoplay fails.
       }
     })();
     return () => {
       cancelled = true;
-    };
-  }, [muted, voice]);
-
-  useEffect(() => {
-    return () => {
       audioRef.current?.pause();
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
     };
-  }, []);
-
-  return (
-    <div
-      className="absolute inset-0 z-40 flex items-center justify-center px-5 yuna-fade-in"
-      style={{ background: "rgba(0,0,0,0.32)" }}
-      role="dialog"
-      aria-label="Welcome"
-      onClick={onDismiss}
-    >
-      <div
-        style={{
-          backgroundImage: `url(${APP_MODE_META[tooltipMode].image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-        className={
-          "yuna-rise relative rounded-3xl text-popover-foreground p-5 shadow-xl w-full max-w-[20rem] overflow-hidden " +
-          (tooltipMode === "dark" ? "overlay-on-dark" : "")
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start gap-3">
-          <span className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-            {avatar ? (
-              <YunaAvatar variant={avatar} size={40} />
-            ) : (
-              <span className="h-10 w-10 rounded-full hairline flex items-center justify-center">
-                <YunaMark size={20} className="text-foreground" />
-              </span>
-            )}
-          </span>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-[15px] font-semibold leading-snug">
-              Welcome in.
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              Take a look around, I'll be here when you're ready to chat.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onToggleMute}
-            aria-label={muted ? "Unmute Yuna" : "Mute Yuna"}
-            aria-pressed={muted}
-            className="h-8 w-8 rounded-full border border-foreground/40 bg-background/60 backdrop-blur-sm flex items-center justify-center text-foreground active:bg-background/80 transition-colors"
-          >
-            {muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
-          </button>
-          <Button
-            surface="light"
-            variant="primary"
-            size="sm"
-            onClick={onDismiss}
-          >
-            Got it
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+  }, [enabled, voice]);
 }
 
 function CreatedForYou({
+  cards,
   viewMode,
   setViewMode,
   savedOnly,
@@ -280,7 +166,9 @@ function CreatedForYou({
   savedIds,
   onToggleSave,
   onOpen,
+  showFeedback,
 }: {
+  cards: HomeCard[];
   viewMode: "card" | "list";
   setViewMode: (m: "card" | "list") => void;
   savedOnly: boolean;
@@ -288,10 +176,9 @@ function CreatedForYou({
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
   onOpen: (c: HomeCard) => void;
+  showFeedback: boolean;
 }) {
-  const items = savedOnly
-    ? HOME_CARDS.filter((c) => savedIds.has(c.id))
-    : HOME_CARDS;
+  const items = savedOnly ? cards.filter((c) => savedIds.has(c.id)) : cards;
 
   return (
     <div className="mt-10">
@@ -335,7 +222,7 @@ function CreatedForYou({
         </ul>
       )}
 
-      <ExperienceFeedback />
+      {showFeedback && <ExperienceFeedback />}
     </div>
   );
 }
@@ -501,13 +388,5 @@ function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 
 function MenuIcon() {
   return <Menu size={22} strokeWidth={1.6} aria-hidden="true" />;
-}
-
-function SpeakerOnIcon() {
-  return <Volume2 size={16} strokeWidth={1.6} aria-hidden="true" />;
-}
-
-function SpeakerOffIcon() {
-  return <VolumeX size={16} strokeWidth={1.6} aria-hidden="true" />;
 }
 
