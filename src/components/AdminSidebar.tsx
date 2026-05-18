@@ -25,7 +25,6 @@ const PAGES: Entry[] = [
   { label: "Session", to: "/chat" },
   { label: "Wrap-up", to: "/wrap-up" },
   { label: "Profile", to: "/you" },
-  { label: "Profile tooltips", to: "/you", search: { tooltips: "1" }, sub: true },
   { label: "Focus area 1", to: "/focus-area/1", sub: true },
   { label: "Focus area 2", to: "/focus-area/2", sub: true },
   { label: "Tools", to: "/tools" },
@@ -70,9 +69,7 @@ function resolveEntryPath(entry: Entry): string {
 }
 
 // Pick the single most-specific matching entry for the current location.
-// Specificity = (entry is a sub) + number of search keys it constrains, so
-// `/you?tooltips=1` resolves to "Profile tooltips" rather than the bare
-// "Profile" entry.
+// Specificity = (entry is a sub) + number of search keys it constrains.
 function findActiveIndex(
   entries: Entry[],
   currentPath: string,

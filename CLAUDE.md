@@ -16,7 +16,8 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
    Never propagate before updating the source. Never let the DS page drift from reality.
 
 4. **Padding conventions.** These are the agreed values — don't pick new ones without justification:
-   - **Photo-bg hero screens** (Welcome, Auth, Intro): `px-8 pt-14 pb-10` — every section (header, scroll area, footer) shares the same `px-8` so the back arrow + CTAs sit on a single vertical edge.
+   - **Photo-bg hero screens, short / no-scroll** (Welcome, Auth, Intro): `px-8 pt-14 pb-10` — every section (header, scroll area, footer) shares the same `px-8` so the back arrow + CTAs sit on a single vertical edge.
+   - **Photo-bg scrolling screens** (Focus area, Wrap-up, returning You): horizontal padding follows the cluster (`px-8` or `px-6`), but **don't** add hero-style `pt-14` / `pb-10` to the scroll wrapper — that gutter eats viewport and clips content. Put `pt-14` on a back-arrow header if one exists; let scroll content own its own vertical padding (`pb-6` inside the scroll area is enough for end-of-scroll breathing room).
    - **Tab screens** (Home, You, Progress, Activities): body `px-6`
    - **Header bars** for light app screens (chat, call, ScreenChrome): `px-5 pt-14 pb-2`
    - **Chat conversational scroll**: `px-5` (chat is in the light cluster, denser than hero)

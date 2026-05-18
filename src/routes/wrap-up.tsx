@@ -212,9 +212,7 @@ function WrapUp() {
     if (keepsake) persist();
     clearStoredMessages();
     setUserType("returning");
-    // Hand off to the home tooltips tour — first-time wrap-up is the only
-    // place we pivot into the tour automatically.
-    navigate({ to: "/home", search: { tooltips: "1" } as never });
+    navigate({ to: "/home" });
   };
 
   const onViewActivities = () => {
@@ -229,8 +227,8 @@ function WrapUp() {
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 flex flex-col px-8 text-white min-h-0">
+        <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {isLoading ? (
             <SkeletonScreen />
           ) : (

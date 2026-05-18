@@ -1,49 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { PastSessionCard } from "@/components/PastSessionCard";
 import { PAST_SESSIONS } from "@/lib/sessions";
-import { setUserType, useUserType } from "@/lib/user-type";
-import { getMiddleStateSession } from "@/lib/middle-state";
+import { useUserType } from "@/lib/user-type";
 
 export const Route = createFileRoute("/sessions")({
-  validateSearch: (
-    s: Record<string, unknown>,
-  ): { tooltips?: string } => ({
-    tooltips: typeof s.tooltips === "string" ? s.tooltips : undefined,
-  }),
   head: () => ({ meta: [{ title: "Sessions — Yuna" }] }),
   component: SessionsRoute,
 });
 
 function SessionsRoute() {
   const userType = useUserType();
-  const { tooltips } = Route.useSearch();
-  const tooltipsActive = tooltips === "1";
 
-  // Tooltips deep-link sets the user type so the populated screen renders
-  // behind the coachmark — pointing at a "no past sessions yet" empty state
-  // would defeat the purpose of the tour.
-  useEffect(() => {
-    if (tooltipsActive && userType !== "returning") setUserType("returning");
-  }, [tooltipsActive, userType]);
-
-  return userType === "returning" ? (
-    <SessionsReturning tooltipsActive={tooltipsActive} />
-  ) : (
-    <SessionsNew tooltipsActive={tooltipsActive} />
-  );
+  return userType === "returning" ? <SessionsReturning /> : <SessionsNew />;
 }
 
-function SessionsNew({ tooltipsActive }: { tooltipsActive: boolean }) {
+function SessionsNew() {
   return (
-    <ScreenChrome
-      hideHeader
-      surface="dark"
-      tooltipsStep={tooltipsActive ? "sessions" : undefined}
-    >
+    <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col justify-center px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center text-center">
           <span
@@ -73,27 +49,16 @@ function SessionsNew({ tooltipsActive }: { tooltipsActive: boolean }) {
   );
 }
 
-function SessionsReturning({ tooltipsActive }: { tooltipsActive: boolean }) {
-  // During the post-wrap-up tour, show a single "fresh from your first
-  // session" card derived from the latest keepsake — the populated list
-  // would lie about how much history this user actually has.
-  const sessions = tooltipsActive
-    ? [getMiddleStateSession()]
-    : PAST_SESSIONS;
-
+function SessionsReturning() {
   return (
-    <ScreenChrome
-      hideHeader
-      surface="dark"
-      tooltipsStep={tooltipsActive ? "sessions" : undefined}
-    >
+    <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pb-8 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">
           Past sessions
         </h1>
 
         <ul className="mt-6 flex flex-col gap-7">
-          {sessions.map((s, i) => (
+          {PAST_SESSIONS.map((s, i) => (
             <li key={s.id}>
               <PastSessionCard session={s} index={i} />
             </li>
