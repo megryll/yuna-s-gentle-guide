@@ -149,7 +149,7 @@ function Index() {
       )}
 
       <Drawer open={joinOpen} onOpenChange={setJoinOpen}>
-        <DrawerContent className="rounded-t-[1.75rem] pb-2">
+        <DrawerContent mode="dark" className="rounded-t-[1.75rem] pb-2">
           <DrawerHeader className="text-left px-6 pt-4 pb-2">
             <DrawerTitle className="font-serif font-normal text-[26px] leading-[1.15] tracking-tight">
               How would you like to join?

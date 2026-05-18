@@ -3,7 +3,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
-import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
+import { APP_MODE_META, useAppMode, type AppMode } from "@/lib/theme-prefs";
 
 const Drawer = ({
   shouldScaleBackground = false,
@@ -47,11 +47,14 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+    mode?: AppMode;
+  }
+>(({ className, children, mode: modeProp, ...props }, ref) => {
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
-  const mode = useAppMode();
+  const appMode = useAppMode();
+  const mode = modeProp ?? appMode;
   return (
     <DrawerPortal>
       <DrawerOverlay />
