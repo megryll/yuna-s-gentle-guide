@@ -44,6 +44,7 @@ import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode } from "@/lib/theme-prefs";
+import { QuestionnaireModal } from "@/components/QuestionnaireModal";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -77,6 +78,7 @@ import {
   saveStoredMessages,
   type ChatMsg as Msg,
   type LimitationItem,
+  type QuestionnaireAnswer,
 } from "@/lib/chat-store";
 
 const LIMITATIONS_PROMPT =
@@ -142,6 +144,44 @@ function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
+const CHAT_NOW_ASK_LINE =
+  "Before we start, can you answer 4 quick questions? It'll help me know where to begin.";
+
+function chatNowWelcomeLine(name: string | null): string {
+  const trimmed = name?.trim();
+  return trimmed
+    ? `It's just us here, ${trimmed} — what you share stays between us.`
+    : "It's just us here — what you share stays between us.";
+}
+
+function isChatNowOpener(initial: string): boolean {
+  return initial.trim().toLowerCase() === "chat now";
+}
+
+function composeQuestionnaireResponse(answers: QuestionnaireAnswer[]): string {
+  const byId = (id: string) => answers.find((a) => a.questionId === id)?.option ?? "";
+  const heaviest = byId("heaviest-area");
+  const support = byId("support-style");
+  const bringYou = byId("bring-you-here");
+
+  const parts: string[] = ["Thank you for sharing all of that."];
+  if (heaviest) {
+    parts.push(
+      `It sounds like ${heaviest.toLowerCase()} is sitting heaviest for you right now`,
+    );
+    if (support) {
+      parts[parts.length - 1] +=
+        `, and you'd like me to ${support.toLowerCase()} — I'll honor that.`;
+    } else {
+      parts[parts.length - 1] += ".";
+    }
+  } else if (bringYou) {
+    parts.push(`It means a lot that you came in — ${bringYou.toLowerCase()}.`);
+  }
+  parts.push("Before we continue —");
+  return parts.join(" ");
+}
+
 const REMINISCE_OPENERS = [
   "Hi, I'm glad you're back. I've been thinking about what you shared last time — how have things felt since?",
   "Hey you. Last we spoke you were carrying a lot at work — I'd love to hear where that's sitting now.",
@@ -166,7 +206,7 @@ function Chat() {
   // indicator, and the voice-pitch card without remounting the chat. The
   // TTS drain still calls getVoice() directly so an in-flight queue picks
   // up the latest pick on the next chunk.
-  const { avatar } = useYunaIdentity();
+  const { avatar, name: yunaUserName } = useYunaIdentity();
   const userType = useUserType();
   const [speakerOn, setSpeakerOn] = useState(true);
   const [micOpen, setMicOpen] = useState(false);
@@ -175,6 +215,8 @@ function Chat() {
   const [inputFocused, setInputFocused] = useState(false);
   const [pendingLimitations, setPendingLimitations] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
+  const [questionnaireActive, setQuestionnaireActive] = useState(false);
+  const [questionnaireModalOpen, setQuestionnaireModalOpen] = useState(false);
   const voiceStartedAtRef = useRef<number | null>(null);
   // Voice-note dictation state. While recording, the input is read-only
   // and the live transcript is rendered into `text` so the user sees what
@@ -241,6 +283,7 @@ function Chat() {
 
     const isReturnFromCall = !!callEnded && !!callDuration;
     const isRevisit = revisit === "1" || revisit === "true";
+    const isChatNow = isChatNowOpener(q ?? "");
     const isReturningReminisce =
       userType === "returning" && !isReturnFromCall && !isRevisit && isReminisceEntry(q ?? "");
 
@@ -264,7 +307,9 @@ function Chat() {
       // Any non-call, non-revisit entry starts a fresh thread — wipe the
       // persisted log so the next conversation begins clean.
       clearStoredMessages();
-      if (!isReturningReminisce && q) {
+      // "Chat Now" isn't an actual user share — don't seed a user bubble for
+      // it; Yuna opens the conversation with the welcome flow instead.
+      if (!isReturningReminisce && !isChatNow && q) {
         seed.push({ id: uid(), from: "you", kind: "text", text: q });
         userTopicsRef.current.push(q);
       }
@@ -273,6 +318,8 @@ function Chat() {
     setMessages(seed);
     if (isReturningReminisce) {
       respondReminisce();
+    } else if (isChatNow && !isReturnFromCall && !isRevisit) {
+      respondToChatNow();
     } else if (q && !isReturnFromCall && !isRevisit) {
       respondToInitial(q);
     }
@@ -512,6 +559,83 @@ function Chat() {
     }
   };
 
+  const transitionToVoicePitch = (delay = 1100) => {
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((m) => [...m, { id: uid(), from: "system", kind: "voice-pitch" }]);
+      setTyping(false);
+      setVoicePitchActive(true);
+      VOICE_PITCH_SPOKEN_LINES.forEach(speakIfEnabled);
+    }, delay);
+  };
+
+  const respondToChatNow = () => {
+    setTyping(true);
+    const welcome = chatNowWelcomeLine(yunaUserName);
+    const ask = CHAT_NOW_ASK_LINE;
+    setTimeout(() => {
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: welcome }]);
+      setTyping(false);
+      speakIfEnabled(welcome);
+      setTimeout(() => {
+        setTyping(true);
+        setTimeout(() => {
+          setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ask }]);
+          setTyping(false);
+          speakIfEnabled(ask);
+          setTimeout(() => {
+            setMessages((m) => [
+              ...m,
+              { id: uid(), from: "system", kind: "intro-questionnaire", state: "pending" },
+            ]);
+            setQuestionnaireActive(true);
+          }, 600);
+        }, 900);
+      }, 700);
+    }, 900);
+  };
+
+  const startQuestionnaire = () => {
+    setQuestionnaireModalOpen(true);
+  };
+
+  const dismissQuestionnaire = () => {
+    setQuestionnaireActive(false);
+    setMessages((m) =>
+      m.map((x) =>
+        x.kind === "intro-questionnaire" ? { ...x, state: "dismissed" as const } : x,
+      ),
+    );
+    setTyping(true);
+    setTimeout(() => {
+      const text = "No worries — we can get to know each other as we go. What's on your mind?";
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text }]);
+      setTyping(false);
+      speakIfEnabled(text);
+      setTimeout(() => transitionToVoicePitch(), 700);
+    }, 900);
+  };
+
+  const finishQuestionnaire = (answers: QuestionnaireAnswer[]) => {
+    setQuestionnaireModalOpen(false);
+    setQuestionnaireActive(false);
+    setMessages((m) => {
+      const next: Msg[] = m.map((x) =>
+        x.kind === "intro-questionnaire" ? { ...x, state: "completed" as const } : x,
+      );
+      next.push({ id: uid(), from: "you", kind: "questionnaire-answers", answers });
+      return next;
+    });
+    setTyping(true);
+    setTimeout(() => {
+      const text = composeQuestionnaireResponse(answers);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text }]);
+      setTyping(false);
+      speakIfEnabled(text);
+      setTimeout(() => transitionToVoicePitch(1200), 800);
+    }, 1000);
+  };
+
   const respondToInitial = (initial: string) => {
     initialPromptRef.current = initial;
     setTyping(true);
@@ -533,7 +657,7 @@ function Chat() {
   };
 
   const sendText = (value: string) => {
-    if (!value.trim() || pendingLimitations) return;
+    if (!value.trim() || pendingLimitations || questionnaireActive) return;
     const isFirstUserMessage = !messages.some((m) => m.from === "you");
     setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: value }]);
     setText("");
@@ -831,6 +955,17 @@ function Chat() {
                     />
                   );
                 if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} />;
+                if (m.kind === "intro-questionnaire")
+                  return (
+                    <IntroQuestionnaireCard
+                      key={m.id}
+                      msg={m}
+                      onStart={startQuestionnaire}
+                      onDismiss={dismissQuestionnaire}
+                    />
+                  );
+                if (m.kind === "questionnaire-answers")
+                  return <QuestionnaireAnswersBubble key={m.id} />;
                 return <Bubble key={m.id} msg={m} />;
               })}
               {typing && <TypingBubble />}
@@ -860,12 +995,14 @@ function Chat() {
                     placeholder={
                       pendingLimitations
                         ? "Tap each checkmark above to continue"
-                        : recordingVoice
-                          ? "Listening…"
-                          : "Write to Yuna…"
+                        : questionnaireActive
+                          ? "Tap a card above to continue"
+                          : recordingVoice
+                            ? "Listening…"
+                            : "Write to Yuna…"
                     }
                     readOnly={recordingVoice}
-                    disabled={pendingLimitations}
+                    disabled={pendingLimitations || questionnaireActive}
                     containerClassName={recordingVoice ? "border-white" : undefined}
                     className="disabled:opacity-60"
                     leading={
@@ -890,7 +1027,7 @@ function Chat() {
                           aria-label={
                             recordingVoice ? "Stop recording and send" : "Record a voice note"
                           }
-                          disabled={pendingLimitations}
+                          disabled={pendingLimitations || questionnaireActive}
                         >
                           {recordingVoice ? <CheckIcon /> : <MicIcon />}
                         </Button>
@@ -901,7 +1038,12 @@ function Chat() {
                           type="submit"
                           onMouseDown={(e) => e.preventDefault()}
                           aria-label="Send"
-                          disabled={pendingLimitations || recordingVoice || !text.trim()}
+                          disabled={
+                            pendingLimitations ||
+                            questionnaireActive ||
+                            recordingVoice ||
+                            !text.trim()
+                          }
                         >
                           <ArrowUpIcon />
                         </Button>
@@ -959,6 +1101,12 @@ function Chat() {
       </Dialog>
 
       <YunaSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      <QuestionnaireModal
+        open={questionnaireModalOpen}
+        onOpenChange={setQuestionnaireModalOpen}
+        onFinish={finishQuestionnaire}
+      />
     </PhoneFrame>
   );
 }
@@ -1059,6 +1207,97 @@ function LimitationsCard({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function IntroQuestionnaireCard({
+  msg,
+  onStart,
+  onDismiss,
+}: {
+  msg: Extract<Msg, { kind: "intro-questionnaire" }>;
+  onStart: () => void;
+  onDismiss: () => void;
+}) {
+  if (msg.state === "completed") return null;
+
+  if (msg.state === "dismissed") {
+    return (
+      <div className="yuna-rise w-full flex justify-end">
+        <div className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 text-xs text-white/85">
+          <span
+            aria-hidden="true"
+            className="shrink-0 h-4 w-4 rounded-full bg-white text-neutral-900 flex items-center justify-center"
+          >
+            <Check size={10} strokeWidth={2.6} />
+          </span>
+          Skipped check-in for now
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex yuna-rise justify-start">
+      <div className="max-w-[88%] w-full rounded-2xl bg-white/90 backdrop-blur-sm text-neutral-900 shadow-lg overflow-hidden">
+        <div className="px-4 pt-3 pb-2 flex items-center gap-1.5">
+          <span aria-hidden>🌿</span>
+          <span className="text-[10px] tracking-[0.18em] uppercase text-neutral-600">
+            Questionnaire
+          </span>
+        </div>
+        <div className="px-3 pb-3">
+          <div
+            className="rounded-xl px-5 py-6"
+            style={{
+              backgroundImage:
+                "linear-gradient(155deg, #2D4B33 0%, #1E3625 50%, #16261C 100%)",
+            }}
+          >
+            <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
+              A quick intro check-in
+            </h3>
+            <p className="mt-2 text-[12.5px] leading-relaxed text-white/80">
+              4 questions · about 1 minute
+            </p>
+          </div>
+        </div>
+        <div className="px-3 pb-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="flex-1 rounded-full border border-neutral-300 py-2.5 text-[11px] tracking-[0.18em] uppercase text-neutral-700 active:bg-neutral-100 transition-colors"
+          >
+            No, Thanks
+          </button>
+          <button
+            type="button"
+            onClick={onStart}
+            className="flex-1 rounded-full py-2.5 text-[11px] tracking-[0.18em] uppercase text-white active:opacity-85 transition-opacity"
+            style={{ backgroundColor: "#1F4E2A" }}
+          >
+            Start
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuestionnaireAnswersBubble() {
+  return (
+    <div className="flex yuna-rise justify-end">
+      <div className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 text-xs text-white/85">
+        <span
+          aria-hidden="true"
+          className="shrink-0 h-4 w-4 rounded-full text-white inline-flex items-center justify-center"
+          style={{ backgroundColor: "#66BA24" }}
+        >
+          <Check size={10} strokeWidth={2.6} />
+        </span>
+        You completed the questionnaire
+      </div>
     </div>
   );
 }

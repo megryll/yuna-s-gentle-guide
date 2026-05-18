@@ -7,6 +7,8 @@
 
 export type LimitationItem = { id: string; text: string; checked: boolean };
 
+export type QuestionnaireAnswer = { questionId: string; option: string };
+
 export type ChatMsg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
   | {
@@ -27,6 +29,18 @@ export type ChatMsg =
       id: string;
       from: "system";
       kind: "voice-pitch";
+    }
+  | {
+      id: string;
+      from: "system";
+      kind: "intro-questionnaire";
+      state: "pending" | "completed" | "dismissed";
+    }
+  | {
+      id: string;
+      from: "you";
+      kind: "questionnaire-answers";
+      answers: QuestionnaireAnswer[];
     };
 
 export const CHAT_STORE_KEY = "yuna.chatMessages";

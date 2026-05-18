@@ -119,7 +119,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     naturePath: "/nature/Background-17.png",
   },
   "self-discovery": {
-    label: "Self-Discovery",
+    label: "Questionnaire",
     emoji: "🌿",
     accent: "#5E9389",
     tone: "dark",
@@ -167,10 +167,11 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
 
 export const HOME_CARDS: HomeCard[] = [
   {
-    type: "guided-session",
-    id: "intro-session",
-    title: "An introductory session",
-    subtitle: "A gentle place to start — share a little, and I'll listen for what matters to you.",
+    type: "self-discovery",
+    id: "first-check-in",
+    title: "What brings you in?",
+    description: "Tell me what's going on — we'll find a place to start.",
+    duration: "1 minute",
     naturePath: "/nature/Background-2.png",
     isNew: true,
   },
