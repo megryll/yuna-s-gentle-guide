@@ -18,7 +18,7 @@ export function UserTypeToggle() {
 
   return (
     <div
-      className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-1 rounded-full border border-border bg-background/80 backdrop-blur-md p-1 shadow-sm"
+      className="hidden md:flex items-center gap-1 rounded-full border border-border bg-background/80 backdrop-blur-md p-1 shadow-sm"
       role="group"
       aria-label="Simulated user type"
     >

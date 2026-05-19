@@ -20,7 +20,7 @@ import { setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-sessi
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { avatarSrc } from "@/components/YunaAvatar";
 import { setUserType } from "@/lib/user-type";
-import { setAppMode } from "@/lib/theme-prefs";
+import { setAppMode, useDarkBlurImage } from "@/lib/theme-prefs";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
@@ -153,6 +153,7 @@ const newBubbleId = () => `b${++bubbleIdSeq}`;
 function Intro() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  const darkBg = useDarkBlurImage();
   const clampStep = (n: number) =>
     Math.max(0, Math.min(TOTAL_STEPS - 1, Math.floor(n)));
   const [stepIdx, setStepIdx] = useState(
@@ -700,7 +701,7 @@ function Intro() {
 
   return (
     <FaceIdCtx.Provider value={{ on: faceIdOn, request: faceIdRequest }}>
-    <PhoneFrame backgroundImage="/background.png">
+    <PhoneFrame backgroundImage={darkBg}>
       <audio
         ref={audioRef}
         src="/forest-background.m4a"
@@ -712,8 +713,7 @@ function Intro() {
         <div
           className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.42)), url(/background.png)",
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.42)), url(${darkBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

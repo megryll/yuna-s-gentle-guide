@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/Button";
-import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 type Row = {
   label: string;
@@ -68,6 +68,7 @@ export function AppMenuDrawer({
   }, [open, onOpenChange]);
 
   const mode = useAppMode();
+  const bgImage = useModeImage();
 
   return (
     <div
@@ -90,7 +91,7 @@ export function AppMenuDrawer({
         aria-modal="true"
         aria-label="Account settings"
         style={{
-          backgroundImage: `url(${APP_MODE_META[mode].image})`,
+          backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

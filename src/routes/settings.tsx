@@ -19,7 +19,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { Switch } from "@/components/Switch";
-import { APP_MODE_META, setAppMode, useAppMode } from "@/lib/theme-prefs";
+import { setAppMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -64,6 +64,7 @@ export const Route = createFileRoute("/settings")({
 function SettingsRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
+  const bgImage = useModeImage();
   const [toggles, setToggles] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       [...GROUP_ONE, ...GROUP_TWO]
@@ -81,7 +82,7 @@ function SettingsRoute() {
         aria-hidden
         className="absolute inset-0"
         style={{
-          backgroundImage: `url(${APP_MODE_META[mode].image})`,
+          backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

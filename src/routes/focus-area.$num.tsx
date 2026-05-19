@@ -6,7 +6,7 @@ import { Button } from "@/components/Button";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useUserType } from "@/lib/user-type";
 import { getFocusAreaData } from "@/lib/profile-data";
-import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/focus-area/$num")({
   head: ({ params }) => ({
@@ -23,6 +23,7 @@ function FocusAreaRoute() {
   const { meta, tasks, upcoming } = getFocusAreaData(userType, num);
   const [infoOpen, setInfoOpen] = useState(false);
   const mode = useAppMode();
+  const bgImage = useModeImage();
 
   return (
     <PhoneFrame themed>
@@ -93,7 +94,7 @@ function FocusAreaRoute() {
                   }
                   style={{
                     width: 260,
-                    backgroundImage: `url(${APP_MODE_META[mode].image})`,
+                    backgroundImage: `url(${bgImage})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}

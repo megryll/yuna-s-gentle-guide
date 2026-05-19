@@ -5,6 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
+import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/employer-access")({
   head: () => ({
@@ -27,6 +28,7 @@ const FOCUS_SHIFT = KEYBOARD_HEIGHT - 70;
 
 function EmployerAccessScreen() {
   const navigate = useNavigate();
+  const darkBg = useDarkBlurImage();
   const [code, setCode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
@@ -38,7 +40,7 @@ function EmployerAccessScreen() {
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png">
+    <PhoneFrame backgroundImage={darkBg}>
       <div
         className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white yuna-fade-in transition-transform duration-200 ease-out"
         style={

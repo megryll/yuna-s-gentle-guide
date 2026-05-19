@@ -4,6 +4,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { useDarkBlurImage } from "@/lib/theme-prefs";
 import type { QuestionnaireAnswer } from "@/lib/chat-store";
 
 export type IntroQuestion = {
@@ -69,6 +70,7 @@ export function QuestionnaireModal({
   onFinish: (answers: QuestionnaireAnswer[]) => void;
 }) {
   const phoneContainer = usePhoneFrameContainer();
+  const darkBg = useDarkBlurImage();
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<Record<string, string>>({});
   const [otherText, setOtherText] = useState<Record<string, string>>({});
@@ -137,8 +139,7 @@ export function QuestionnaireModal({
           aria-describedby={undefined}
           className="absolute inset-0 z-50 flex flex-col text-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(/background.png)",
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${darkBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

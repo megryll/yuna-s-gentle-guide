@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Check, ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/accept-terms")({
   head: () => ({
@@ -27,6 +28,7 @@ const TERMS: string[] = [
 
 function AcceptTerms() {
   const navigate = useNavigate();
+  const darkBg = useDarkBlurImage();
   const [acceptedCount, setAcceptedCount] = useState(0);
 
   const allAccepted = acceptedCount >= TERMS.length;
@@ -41,7 +43,7 @@ function AcceptTerms() {
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png">
+    <PhoneFrame backgroundImage={darkBg}>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white min-h-0">
         <div className="flex items-center justify-between">
           <Button

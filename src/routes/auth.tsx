@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -19,6 +20,7 @@ type Step = "email" | "password";
 
 function AuthScreen() {
   const navigate = useNavigate();
+  const darkBg = useDarkBlurImage();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +32,7 @@ function AuthScreen() {
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png">
+    <PhoneFrame backgroundImage={darkBg}>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white">
         <div className="flex items-center justify-between">
           <Button

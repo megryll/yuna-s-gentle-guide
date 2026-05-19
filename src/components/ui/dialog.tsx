@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
-import { APP_MODE_META, useAppMode } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -50,13 +50,14 @@ const DialogContent = React.forwardRef<
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
   const mode = useAppMode();
+  const bgImage = useModeImage();
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
         style={{
-          backgroundImage: `url(${APP_MODE_META[mode].image})`,
+          backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { KeyboardSimulator } from "@/components/KeyboardSimulator";
-import { APP_MODE_META, isLightMode, useAppMode } from "@/lib/theme-prefs";
+import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 const PhoneFrameContext = createContext<HTMLElement | null>(null);
 
@@ -28,7 +28,8 @@ export function PhoneFrame({
 }) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const mode = useAppMode();
-  const themedBg = themed ? APP_MODE_META[mode].image : undefined;
+  const modeImage = useModeImage();
+  const themedBg = themed ? modeImage : undefined;
   const bg = themedBg ?? backgroundImage;
   const light = themed && isLightMode(mode);
 

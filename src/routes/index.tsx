@@ -10,6 +10,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { useWelcomeImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+  const welcomeBg = useWelcomeImage();
   const [loaded, setLoaded] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   useEffect(() => {
@@ -31,7 +33,7 @@ function Index() {
   }, []);
 
   return (
-    <PhoneFrame backgroundImage="/welcome-forest.png">
+    <PhoneFrame backgroundImage={welcomeBg}>
       {loaded && (
       <>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-44 text-white">
