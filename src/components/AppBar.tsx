@@ -1,7 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Bookmark, House, MessageCircle, Pencil, User } from "lucide-react";
+import { History, House, MessageCircle, Pencil, User } from "lucide-react";
 import { useUserType } from "@/lib/user-type";
-import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 
 type Surface = "light" | "dark";
 
@@ -13,6 +12,28 @@ type Item = {
   matches?: string[];
   notify?: boolean;
 };
+
+// Bulge silhouette from the AppBar background SVG. The original path drew
+// the bar's flat top at y=16 with the bulge curving up from there, which
+// left small L-shaped cutouts between the rounded corners and the bulge —
+// those exposed the dark photo behind the AppBar as a band. This version
+// shifts the top half so the bar's flat top sits at y=0 (bounding box top),
+// the rounded corners terminate at the top edge, and the bulge protrudes
+// above y=0 into the area where the backdrop is extended over the nav.
+// viewBox effectively becomes 393 × 109.34 (-18.21 to 91.13).
+const APPBAR_BULGE_PATH =
+  "M0 10.1631C0 4.6403 4.47715 0.1631 10 0.1631H98.3359H148.465C153.456 0.1631 158.357 -1.1711 162.659 -3.7014L172.306 -9.37508C187.3 -18.19316 205.891 -18.20933 220.901 -9.41736L230.701 -3.6767C234.993 -1.1623 239.878 0.1631 244.853 0.1631H295.008H383.344C388.867 0.1631 393.344 4.6403 393.344 10.1631V81.1291C393.344 86.652 388.867 91.129 383.344 91.129H10C4.47715 91.129 0 86.652 0 81.1291V10.1631Z";
+
+// Mask via inline SVG data URI rather than a referenced `<clipPath>`. WebKit
+// in particular fails to honor `clip-path: url(#…)` against `backdrop-filter`
+// — the backdrop blur paints unclipped as a rectangle behind the bar — but
+// `mask-image` clips both the element's own paint and its backdrop reliably.
+// `preserveAspectRatio="none"` lets the path stretch to whatever the nav's
+// width is; mask-size 100% 100% then fills the element.
+const APPBAR_MASK_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -18.20933 393.344 109.33833' preserveAspectRatio='none'><path d='${APPBAR_BULGE_PATH}' fill='black'/></svg>`;
+const APPBAR_MASK_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(
+  APPBAR_MASK_SVG,
+)}")`;
 
 const ITEMS: Item[] = [
   { label: "Home", to: "/home", icon: HomeIcon, matches: ["/home"] },
@@ -29,7 +50,6 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   // "new content since last visit" framing applies.
   const showNotifications = userType === "returning" && pathname === "/home";
   const isDark = surface === "dark";
-  const isLight = isLightMode(useAppMode());
 
   const tabs = ITEMS.map((it) => {
     const active = it.matches ? it.matches.includes(pathname) : pathname === it.to;
@@ -46,20 +66,30 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   });
 
   if (isDark) {
-    // Arbitrary border color in light mode so `.theme-light`'s
-    // `border-white/25` → dark swap can't kick in and turn the top edge
-    // into a hard dark line over the pale photo bg.
-    const borderClass = isLight
-      ? "border-[rgba(255,255,255,0.65)]"
-      : "border-white/25";
+    // The backdrop extends 20% of nav height above the nav top — that's the
+    // portion of the path's bounding box (109.34 tall) that sits above the
+    // bar (91.13 tall). The bar portion lands on the nav exactly; the bulge
+    // protrudes up into the scroll area. Because the path now fills its full
+    // bounding-box width at y=0 (no L-shaped cutouts), the visible bar reads
+    // as a clean rounded rectangle with a bump on top.
     return (
       <nav
         aria-label="Main"
-        className={
-          "rounded-t-3xl bg-white/10 backdrop-blur-md border-t px-2 pt-2 pb-3 grid grid-cols-5 gap-1 " +
-          borderClass
-        }
+        className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1"
       >
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 bottom-0 -z-10 bg-white/10 backdrop-blur-md"
+          style={{
+            top: "-20%",
+            maskImage: APPBAR_MASK_URL,
+            WebkitMaskImage: APPBAR_MASK_URL,
+            maskSize: "100% 100%",
+            WebkitMaskSize: "100% 100%",
+            maskRepeat: "no-repeat",
+            WebkitMaskRepeat: "no-repeat",
+          }}
+        />
         {tabs}
       </nav>
     );
@@ -90,18 +120,22 @@ function Tab({
   const isDark = surface === "dark";
 
   if (item.emphasized) {
-    // The emphasized chat tab scales 25% larger than the inactive tabs' icon
-    // box (h-10 -> h-[50px]) so it reads as the primary action. It still fits
-    // inside the icon+label stack height of the other tabs, so the AppBar's
-    // vertical padding stays untouched.
+    // The emphasized chat tab is a 60px circle (~50% larger than the inactive
+    // tabs' h-10 icon box) so it reads as the primary action. The translateY
+    // lifts the button so the chat icon sits on the same horizontal line as
+    // the other tab icons (their centers land ~16px below link-top; button
+    // center is link-center ≈ 28px, so −12px brings them flush) — the upper
+    // half then protrudes into the bulge cradle naturally. Light surface
+    // keeps the button flat inside the bar.
     return (
       <Link
         to={item.to}
         className="flex flex-col items-center justify-center"
+        style={isDark ? { transform: "translateY(-12px)" } : undefined}
         aria-current={active ? "page" : undefined}
       >
         <span
-          className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[50px] w-[50px]"
+          className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]"
         >
           <Icon />
           {notify && <NotificationDot surface={surface} />}
@@ -173,7 +207,7 @@ function PersonIcon() {
 function ChatIcon() {
   return (
     <MessageCircle
-      size={24}
+      size={26}
       strokeWidth={1.6}
       aria-hidden="true"
     />
@@ -185,5 +219,5 @@ function ToolsIcon() {
 }
 
 function SessionsIcon() {
-  return <Bookmark size={22} strokeWidth={1.6} aria-hidden="true" />;
+  return <History size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
