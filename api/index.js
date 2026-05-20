@@ -1,4 +1,8 @@
-import server from "../dist/server/server.js";
+// Imports from ./_ssr/server.js (mirrored from dist/server by the build
+// script) so Vercel's function tracer naturally bundles the SSR output.
+// The previous `../dist/server/server.js` import relied on a `includeFiles`
+// glob that was not actually packing the file into /var/task on deploy.
+import server from "./_ssr/server.js";
 
 export const config = { runtime: "nodejs" };
 

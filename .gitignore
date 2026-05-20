@@ -16,6 +16,10 @@ dist-ssr
 .nitro
 *.local
 
+# SSR bundle mirror — produced by scripts/copy-ssr-output.mjs so the Vercel
+# function tracer can follow the relative import from api/index.js.
+api/_ssr
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

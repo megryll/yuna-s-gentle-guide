@@ -1,10 +1,5 @@
 {
   "outputDirectory": "dist/client",
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "dist/server/**"
-    }
-  },
   "routes": [
     { "handle": "filesystem" },
     { "src": "/api/tts", "dest": "/api/tts" },
