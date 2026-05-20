@@ -7,6 +7,7 @@ import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
 import { isLightMode, useAppMode } from "@/lib/theme-prefs";
+import { getMicGranted, setMicGranted } from "@/lib/yuna-session";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,13 @@ export function ScreenChrome({
   const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
 
   const openCall = () => {
+    // Once the user has granted mic access once, skip the explainer dialog
+    // and go straight to the call — the browser already remembers its own
+    // grant so getUserMedia (via the recognizer) won't re-prompt either.
+    if (getMicGranted()) {
+      navigate({ to: "/chat", search: { mode: "voice" } });
+      return;
+    }
     setMicState("idle");
     setMicOpen(true);
   };
@@ -47,6 +55,7 @@ export function ScreenChrome({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
+      setMicGranted();
       setMicState("granted");
       setMicOpen(false);
       navigate({ to: "/chat", search: { mode: "voice" } });

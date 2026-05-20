@@ -129,12 +129,21 @@ export function HomeScreen({
 // Fires the welcome TTS once when the home page mounts with showWelcome.
 // The visual popup that previously paired with this audio is gone; the
 // greeting now lives in the home header copy itself.
+//
+// Module-level flag: persists across navigations (so re-mounting home
+// doesn't replay the audio) but resets on page reload — which matches the
+// "only plays once unless I do a hard refresh" requirement, since both
+// regular and hard refresh blow away module state.
+let welcomeAudioPlayed = false;
+
 function useWelcomeAudio(enabled: boolean, voice: string | null) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!enabled || !voice) return;
+    if (welcomeAudioPlayed) return;
+    welcomeAudioPlayed = true;
     let cancelled = false;
     const cfg = VOICES[voice as keyof typeof VOICES];
     if (!cfg) return;
@@ -239,17 +248,27 @@ function ExperienceFeedback() {
   const faces = ["😠", "😞", "😐", "🙂", "😊"] as const;
   const labels = ["Angry", "Sad", "Neutral", "Good", "Great"] as const;
 
+  const hasPick = picked !== null;
   return (
     <div className="mt-8 yuna-rise px-1 py-4 text-center text-white">
       <p className="font-display text-[20px] leading-snug tracking-tight max-w-[18rem] mx-auto">
-        What was your Yuna experience like today?
+        {hasPick
+          ? "Thank you for sharing."
+          : "What was your Yuna experience like today?"}
       </p>
-      <p className="mt-2 text-[13px] leading-relaxed text-white/75">
-        Our team reads every submission
+      <p className="mt-2 text-[14px] leading-relaxed text-white/75">
+        {hasPick
+          ? "Your feedback helps us improve!"
+          : "Our team reads every submission"}
       </p>
       <div className="mt-5 flex items-center justify-between gap-2 max-w-[18rem] mx-auto">
         {faces.map((emoji, i) => {
           const active = picked === i;
+          const scaleClass = active
+            ? "scale-150"
+            : hasPick
+              ? "scale-90"
+              : "scale-100";
           return (
             <button
               key={emoji}
@@ -257,12 +276,14 @@ function ExperienceFeedback() {
               onClick={() => setPicked(i)}
               aria-label={labels[i]}
               aria-pressed={active}
-              className={
-                "h-11 w-11 text-[26px] leading-none inline-flex items-center justify-center transition-opacity " +
-                (active ? "opacity-100" : "opacity-80 active:opacity-100")
-              }
+              className="h-11 w-11 text-[26px] leading-none inline-flex items-center justify-center"
             >
-              <span aria-hidden>{emoji}</span>
+              <span
+                aria-hidden
+                className={`inline-block transition-transform duration-200 ease-out ${scaleClass}`}
+              >
+                {emoji}
+              </span>
             </button>
           );
         })}

@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -13,10 +19,8 @@ import {
 import {
   chatUid,
   loadStoredMessages,
-  saveStoredMessages,
   type ChatMsg,
 } from "@/lib/chat-store";
-import { Button } from "@/components/Button";
 
 type Phase =
   | "connecting"
@@ -37,10 +41,17 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 const TURN_END_SILENCE_MS = 1500;
 
-export function VoiceSession({
-  onEndCall,
-  initialGreetingLines,
-}: {
+export type VoiceSessionHandle = {
+  /**
+   * Imperatively make Yuna speak a line and resume listening — used when an
+   * outside-the-session event (e.g. completing the intro questionnaire)
+   * needs to drive Yuna's verbal reply instead of waiting for the user to
+   * say something first.
+   */
+  speakYunaLine: (text: string) => Promise<void>;
+};
+
+type VoiceSessionProps = {
   onEndCall: (durationSec: number) => void;
   /**
    * Optional spoken opener. When provided, VoiceSession speaks these lines
@@ -49,7 +60,26 @@ export function VoiceSession({
    * ask that the text-mode flow types out.
    */
   initialGreetingLines?: string[];
-}) {
+  /**
+   * Called each time a voice turn (Yuna or user) is added to the conversation
+   * so the parent can mirror it into the chat thread. The parent owns
+   * persistence — VoiceSession no longer writes to sessionStorage directly,
+   * which avoids two writers stomping each other.
+   */
+  onMessageAppended?: (msg: ChatMsg) => void;
+  /**
+   * Fires the moment Yuna's TTS for a given line actually starts playing
+   * (audio `onplaying` event). Lets the parent sync visual state — e.g.
+   * surfacing the questionnaire card — with the exact spoken cue.
+   */
+  onSpeechStart?: (text: string) => void;
+};
+
+export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
+  function VoiceSession(
+    { onEndCall, initialGreetingLines, onMessageAppended, onSpeechStart },
+    ref,
+  ) {
   const { avatar } = useYunaIdentity();
   const [phase, setPhase] = useState<Phase>("connecting");
   const [speakerOn, setSpeakerOn] = useState(true);
@@ -65,7 +95,15 @@ export function VoiceSession({
   const phaseRef = useRef<Phase>(phase);
   const endedRef = useRef(false);
   const secondsRef = useRef(0);
+  const onMessageAppendedRef = useRef(onMessageAppended);
+  const onSpeechStartRef = useRef(onSpeechStart);
 
+  useEffect(() => {
+    onMessageAppendedRef.current = onMessageAppended;
+  }, [onMessageAppended]);
+  useEffect(() => {
+    onSpeechStartRef.current = onSpeechStart;
+  }, [onSpeechStart]);
   useEffect(() => {
     speakerOnRef.current = speakerOn;
   }, [speakerOn]);
@@ -102,6 +140,11 @@ export function VoiceSession({
     try {
       const blobUrl = await fetchTtsBlobUrl(cfg.elevenlabsId, text);
       if (endedRef.current) return;
+      // Bail if a newer speak() call has superseded us — without this,
+      // a StrictMode double-mount (or any concurrent invocation) can leave
+      // two audio elements both calling play() once their blob fetches
+      // resolve, producing the "two voices at once" echo.
+      if (ttsAudioRef.current !== el) return;
       el.src = blobUrl;
       el.currentTime = 0;
       await new Promise<void>((resolve) => {
@@ -112,7 +155,9 @@ export function VoiceSession({
           resolve();
         };
         el.onplaying = () => {
-          if (!endedRef.current) setPhase("speaking");
+          if (endedRef.current) return;
+          setPhase("speaking");
+          onSpeechStartRef.current?.(text);
         };
         el.onended = done;
         el.onerror = done;
@@ -204,7 +249,7 @@ export function VoiceSession({
         text: userText,
       };
       turnsRef.current = [...turnsRef.current, userMsg];
-      saveStoredMessages(turnsRef.current);
+      onMessageAppendedRef.current?.(userMsg);
 
       const conversation = turnsRef.current
         .filter((m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text")
@@ -271,7 +316,7 @@ export function VoiceSession({
           text: replyText,
         };
         turnsRef.current = [...turnsRef.current, yunaMsg];
-        saveStoredMessages(turnsRef.current);
+        onMessageAppendedRef.current?.(yunaMsg);
 
         setPhase("speaking");
         await speak(replyText);
@@ -288,6 +333,43 @@ export function VoiceSession({
         if (!endedRef.current && phaseRef.current !== "muted") beginListening();
       }
     },
+    [beginListening, speak],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      speakYunaLine: async (text: string) => {
+        if (endedRef.current) return;
+        if (!text.trim()) return;
+        // Tear down any in-flight recognition turn so Yuna doesn't talk over
+        // the user's mic input and the silence timer doesn't fire mid-speech.
+        recognitionRef.current?.abort();
+        recognitionRef.current = null;
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        setLiveTranscript("");
+        setPhase("speaking");
+
+        const yunaMsg: ChatMsg = {
+          id: chatUid(),
+          from: "yuna",
+          kind: "text",
+          text,
+        };
+        turnsRef.current = [...turnsRef.current, yunaMsg];
+        onMessageAppendedRef.current?.(yunaMsg);
+
+        setYunaSpoken(text);
+        await speak(text);
+        if (endedRef.current) return;
+        // Stay muted if the user had toggled mute; otherwise resume listening
+        // so the conversation continues without a manual tap.
+        if (phaseRef.current !== "muted") beginListening();
+      },
+    }),
     [beginListening, speak],
   );
 
@@ -311,7 +393,7 @@ export function VoiceSession({
         text,
       }));
       turnsRef.current = [...turnsRef.current, ...newTurns];
-      saveStoredMessages(turnsRef.current);
+      for (const m of newTurns) onMessageAppendedRef.current?.(m);
 
       for (const line of lines) {
         if (cancelled || endedRef.current) return;
@@ -324,35 +406,14 @@ export function VoiceSession({
 
     return () => {
       cancelled = true;
+      // Pause any in-flight greeting audio so a StrictMode double-mount (or
+      // unmount mid-utterance) doesn't leave the first invocation playing
+      // alongside the second. The supersession check inside speak() handles
+      // the racing-fetch case; this handles the already-playing case.
+      ttsAudioRef.current?.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const toggleMute = () => {
-    if (phase === "muted") {
-      setPhase("listening");
-      beginListening();
-    } else {
-      recognitionRef.current?.abort();
-      recognitionRef.current = null;
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      setLiveTranscript("");
-      setPhase("muted");
-    }
-  };
-
-  const toggleSpeaker = () => {
-    setSpeakerOn((s) => {
-      const next = !s;
-      if (!next) {
-        ttsAudioRef.current?.pause();
-      }
-      return next;
-    });
-  };
 
   const requestEnd = useCallback(() => {
     if (endedRef.current) return;
@@ -425,66 +486,9 @@ export function VoiceSession({
       >
         <VoiceWaveform active={phase === "listening"} />
       </div>
-
-      <div className="w-full grid grid-cols-3 gap-4 px-2 shrink-0">
-        <CallButton
-          label={phase === "muted" ? "Unmute" : "Mute"}
-          active={phase === "muted"}
-          onClick={toggleMute}
-          icon={phase === "muted" ? <MicOffIcon /> : <MicIcon />}
-        />
-        <CallButton
-          label={speakerOn ? "Speaker" : "Silent"}
-          active={!speakerOn}
-          onClick={toggleSpeaker}
-          icon={<SpeakerIcon />}
-        />
-        <CallButton label="End Call" destructive onClick={requestEnd} icon={<EndIcon />} />
-      </div>
     </div>
   );
-}
-
-function CallButton({
-  label,
-  icon,
-  onClick,
-  active,
-  destructive,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  active?: boolean;
-  destructive?: boolean;
-}) {
-  return (
-    <Button
-      surface="dark"
-      variant="secondary"
-      size="icon-lg"
-      pressed={destructive ? true : active}
-      label={label}
-      onClick={onClick}
-      aria-label={label}
-    >
-      {icon}
-    </Button>
-  );
-}
-
-function MicIcon() {
-  return <Mic size={18} strokeWidth={1.5} />;
-}
-function MicOffIcon() {
-  return <MicOff size={18} strokeWidth={1.5} />;
-}
-function SpeakerIcon() {
-  return <Volume2 size={18} strokeWidth={1.5} />;
-}
-function EndIcon() {
-  return <PhoneOff size={18} strokeWidth={1.5} />;
-}
+});
 
 const WAVE_VIEW_W = 400;
 const WAVE_VIEW_H = 120;
