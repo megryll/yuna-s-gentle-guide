@@ -18,7 +18,7 @@ export function BackgroundVariantToggle() {
         aria-hidden="true"
         className="text-[11px] tracking-wide text-muted-foreground px-1.5"
       >
-        BG
+        Background
       </span>
       {BG_VARIANTS.map((v) => (
         <ToggleButton

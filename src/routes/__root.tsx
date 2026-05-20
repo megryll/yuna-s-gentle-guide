@@ -4,6 +4,7 @@ import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
 import { BackgroundVariantToggle } from "@/components/BackgroundVariantToggle";
+import { IntroVariantToggle } from "@/components/IntroVariantToggle";
 
 function NotFoundComponent() {
   return (
@@ -86,6 +87,7 @@ function RootComponent() {
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <UserTypeToggle />
         <BackgroundVariantToggle />
+        <IntroVariantToggle />
       </div>
       <Outlet />
     </>
