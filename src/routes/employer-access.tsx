@@ -123,6 +123,7 @@ function EmployerAccessScreen() {
                 fullWidth
                 type="submit"
                 disabled={!code.trim()}
+                onMouseDown={(e) => e.preventDefault()}
               >
                 Unlock my pass
               </Button>
