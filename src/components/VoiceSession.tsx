@@ -24,6 +24,7 @@ import {
 
 type Phase =
   | "connecting"
+  | "idle"
   | "listening"
   | "thinking"
   | "speaking"
@@ -32,14 +33,13 @@ type Phase =
 
 const PHASE_LABEL: Record<Phase, string> = {
   connecting: "Connecting…",
+  idle: "Hold the mic to talk",
   listening: "Listening",
   thinking: "Thinking…",
   speaking: "Yuna",
   muted: "Muted",
   ending: "Wrapping up…",
 };
-
-const TURN_END_SILENCE_MS = 1500;
 
 export type VoiceSessionHandle = {
   /**
@@ -90,6 +90,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
   const recognitionRef = useRef<RecognitionHandle | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chatAbortRef = useRef<AbortController | null>(null);
   const turnsRef = useRef<ChatMsg[]>(loadStoredMessages());
   const speakerOnRef = useRef(speakerOn);
   const phaseRef = useRef<Phase>(phase);
@@ -185,45 +186,30 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
     setLiveTranscript("");
     setPhase("listening");
 
-    const clearSilenceTimer = () => {
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-    };
-
     const handle = startRecognition({
       onTranscript: (live) => {
         setLiveTranscript(live);
-        clearSilenceTimer();
-        if (live.trim()) {
-          silenceTimerRef.current = setTimeout(() => {
-            recognitionRef.current?.stop();
-          }, TURN_END_SILENCE_MS);
-        }
       },
       onFinal: (committed) => {
-        clearSilenceTimer();
         recognitionRef.current = null;
         const text = committed.trim();
         if (!text) {
-          if (!endedRef.current && phaseRef.current !== "muted") {
-            beginListening();
+          if (!endedRef.current && phaseRef.current === "listening") {
+            setPhase("idle");
           }
           return;
         }
         void handleUserTurn(text);
       },
       onError: (err) => {
-        clearSilenceTimer();
         recognitionRef.current = null;
         if (err.error === "not-allowed" || err.error === "service-not-allowed") {
           console.warn("Call mic permission denied");
           requestEnd();
           return;
         }
-        if (!endedRef.current && phaseRef.current !== "muted") {
-          setTimeout(() => beginListening(), 400);
+        if (!endedRef.current && phaseRef.current === "listening") {
+          setPhase("idle");
         }
       },
     });
@@ -234,6 +220,46 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
     }
     recognitionRef.current = handle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const stopYunaSpeaking = useCallback(() => {
+    const el = ttsAudioRef.current;
+    if (el) {
+      el.onended = null;
+      el.onerror = null;
+      el.onplaying = null;
+      el.pause();
+      try {
+        el.removeAttribute("src");
+        el.load();
+      } catch {
+        /* ignore */
+      }
+      ttsAudioRef.current = null;
+    }
+    chatAbortRef.current?.abort();
+    chatAbortRef.current = null;
+    setYunaSpoken("");
+  }, []);
+
+  const startHold = useCallback(() => {
+    if (endedRef.current) return;
+    const p = phaseRef.current;
+    if (p === "listening" || p === "ending" || p === "muted") return;
+    if (p === "speaking" || p === "thinking") {
+      stopYunaSpeaking();
+    }
+    beginListening();
+  }, [beginListening, stopYunaSpeaking]);
+
+  const endHold = useCallback(() => {
+    if (endedRef.current) return;
+    const handle = recognitionRef.current;
+    if (handle) {
+      handle.stop();
+    } else if (phaseRef.current === "listening") {
+      setPhase("idle");
+    }
   }, []);
 
   const handleUserTurn = useCallback(
@@ -259,11 +285,14 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
         }));
 
       let buffer = "";
+      const ctrl = new AbortController();
+      chatAbortRef.current = ctrl;
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: conversation }),
+          signal: ctrl.signal,
         });
         if (!res.ok || !res.body) throw new Error(`chat ${res.status}`);
 
@@ -303,9 +332,10 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
           }
         }
         if (endedRef.current) return;
+        if (phaseRef.current === "listening") return;
         const replyText = (finalText || buffer).trim();
         if (!replyText) {
-          beginListening();
+          setPhase("idle");
           return;
         }
 
@@ -321,19 +351,24 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
         setPhase("speaking");
         await speak(replyText);
         if (endedRef.current) return;
-        if (phaseRef.current !== "muted") beginListening();
+        if (phaseRef.current === "speaking") setPhase("idle");
       } catch (err) {
         if (endedRef.current) return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        if (phaseRef.current === "listening") return;
         console.error("Call chat error", err);
         const fallback =
           "I'm having trouble connecting right now. Could we try again in a moment?";
         setYunaSpoken(fallback);
         setPhase("speaking");
         await speak(fallback);
-        if (!endedRef.current && phaseRef.current !== "muted") beginListening();
+        if (endedRef.current) return;
+        if (phaseRef.current === "speaking") setPhase("idle");
+      } finally {
+        if (chatAbortRef.current === ctrl) chatAbortRef.current = null;
       }
     },
-    [beginListening, speak],
+    [speak],
   );
 
   useImperativeHandle(
@@ -365,12 +400,10 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
         setYunaSpoken(text);
         await speak(text);
         if (endedRef.current) return;
-        // Stay muted if the user had toggled mute; otherwise resume listening
-        // so the conversation continues without a manual tap.
-        if (phaseRef.current !== "muted") beginListening();
+        if (phaseRef.current !== "muted") setPhase("idle");
       },
     }),
-    [beginListening, speak],
+    [speak],
   );
 
   useEffect(() => {
@@ -401,7 +434,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
         await speak(line);
       }
       if (cancelled || endedRef.current) return;
-      beginListening();
+      setPhase("idle");
     })();
 
     return () => {
@@ -481,14 +514,102 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(
       </div>
 
       <div
-        className="flex-1 flex items-center justify-center min-h-[64px]"
-        style={{ width: "calc(100% + 4rem)", marginLeft: "-2rem", marginRight: "-2rem" }}
+        className="flex-1 flex items-end justify-center min-h-[64px] w-full"
       >
-        <VoiceWaveform active={phase === "listening"} />
+        <div
+          className="w-full"
+          style={{ marginLeft: "-2rem", marginRight: "-2rem", width: "calc(100% + 4rem)" }}
+        >
+          <VoiceWaveform active={phase === "listening"} />
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col items-center gap-3 shrink-0">
+        <HoldToTalkButton
+          phase={phase}
+          onPressStart={startHold}
+          onPressEnd={endHold}
+        />
+        <p className="text-[11px] uppercase tracking-[0.18em] text-white/65">
+          {phase === "listening" ? "Release to send" : "Hold to talk"}
+        </p>
       </div>
     </div>
   );
 });
+
+function HoldToTalkButton({
+  phase,
+  onPressStart,
+  onPressEnd,
+}: {
+  phase: Phase;
+  onPressStart: () => void;
+  onPressEnd: () => void;
+}) {
+  const holding = phase === "listening";
+  const disabled = phase === "ending" || phase === "muted";
+
+  return (
+    <button
+      type="button"
+      aria-label={holding ? "Release to send" : "Hold to talk"}
+      disabled={disabled}
+      onPointerDown={(e) => {
+        if (disabled) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onPressStart();
+      }}
+      onPointerUp={(e) => {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        onPressEnd();
+      }}
+      onPointerCancel={onPressEnd}
+      onContextMenu={(e) => e.preventDefault()}
+      className={
+        "relative h-20 w-20 rounded-full flex items-center justify-center select-none transition-transform duration-150 " +
+        (disabled
+          ? "bg-white/15 text-white/40 cursor-not-allowed"
+          : holding
+            ? "bg-white text-foreground scale-110 shadow-[0_0_0_10px_rgba(255,255,255,0.12)]"
+            : "bg-white text-foreground active:scale-95")
+      }
+    >
+      {holding && (
+        <>
+          <span className="absolute inset-0 rounded-full border border-white/30 yuna-pulse-ring" />
+          <span
+            className="absolute -inset-2 rounded-full border border-white/20 yuna-pulse-ring"
+            style={{ animationDelay: "500ms" }}
+          />
+        </>
+      )}
+      <MicGlyph />
+    </button>
+  );
+}
+
+function MicGlyph() {
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </svg>
+  );
+}
 
 const WAVE_VIEW_W = 400;
 const WAVE_VIEW_H = 120;
