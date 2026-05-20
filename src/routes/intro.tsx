@@ -4,7 +4,6 @@ import {
   ArrowUp,
   ArrowUpRight,
   ChevronDown,
-  ChevronLeft,
   Gauge,
   Globe,
   ScanFace,
@@ -75,18 +74,6 @@ const INTRO_BETWEEN_BUBBLES_MS = 100;
 const FIRST_STEP_AVATAR_DELAY_MS = 400;
 const SUBSEQUENT_STEP_DELAY_MS = 300;
 const POST_NAME_DELAY_MS = 500;
-
-// Slide-up + fade used both by the chat-style messages exit and by the
-// voice-step elements (bubble, picker, CTA) when transitioning to privacy.
-// Snappy on purpose — the user has already committed to leaving the step,
-// so we get out of the way fast.
-const EXIT_SLIDE_UP_STYLE: React.CSSProperties = {
-  transform: "translateY(-120%)",
-  opacity: 0,
-  transition:
-    "transform 380ms cubic-bezier(0.4, 0, 1, 1), opacity 280ms ease-in",
-};
-const EXIT_ANIM_MS = 400;
 
 const initialRevealsForStep = (
   stepIdx: number,
@@ -180,11 +167,11 @@ function Intro() {
   const [voicePicked, setVoicePicked] = useState(false);
   const [voicePlayingIdx, setVoicePlayingIdx] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
-  const [messagesExiting, setMessagesExiting] = useState(false);
   const [pushModalOpen, setPushModalOpen] = useState(false);
   const [faceIdOn, setFaceIdOn] = useState(false);
   const [faceIdModalOpen, setFaceIdModalOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const voiceCacheRef = useRef<Map<VoiceId, string>>(new Map());
@@ -377,12 +364,12 @@ function Intro() {
     };
   }, []);
 
-  // On step change: clear, then play the initial Yuna reveals for this step
+  // On step change: append the new Yuna reveals onto the existing chat.
+  // Bubbles persist across steps so the whole conversation stays visible
+  // and scrollable like a messaging app.
   useEffect(() => {
-    setBubbles([]);
     setTyping(false);
     setPhase("reveal");
-    setMessagesExiting(false);
     setPushModalOpen(false);
 
     let cancelled = false;
@@ -444,6 +431,14 @@ function Intro() {
     const t = setTimeout(() => nameInputRef.current?.focus(), 200);
     return () => clearTimeout(t);
   }, [phase]);
+
+  // Auto-scroll the chat to the latest bubble (or typing indicator) so the
+  // most recent reveal is always in view as the conversation accumulates.
+  useEffect(() => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [bubbles, typing]);
 
   // Enter advances the Continue CTA on every step where it's the active
   // action. Step 0 lives in "wait-input" with a name form that handles
@@ -527,17 +522,13 @@ function Intro() {
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
     const t3 = setTimeout(() => {
-      setMessagesExiting(true);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
-    const t4 = setTimeout(() => {
       goToStep(1);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      clearTimeout(t4);
     };
   };
 
@@ -565,11 +556,8 @@ function Intro() {
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
     setTimeout(() => {
-      setMessagesExiting(true);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
-    setTimeout(() => {
       goToStep(stepIdx + 1);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
   };
 
   const REACTION_AMAZING = {
@@ -612,11 +600,8 @@ function Intro() {
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
     setTimeout(() => {
-      setMessagesExiting(true);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
-    setTimeout(() => {
       goToStep(stepIdx + 1);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
   };
 
   const dismissPushModal = () => {
@@ -638,11 +623,8 @@ function Intro() {
       ]);
     }, POST_NAME_DELAY_MS + TYPING_MS);
     setTimeout(() => {
-      setMessagesExiting(true);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
-    setTimeout(() => {
       goToStep(stepIdx + 1);
-    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS + EXIT_ANIM_MS);
+    }, POST_NAME_DELAY_MS + TYPING_MS + READ_DELAY_MS);
   };
 
   const fadeOutAmbient = (ms: number) => {
@@ -670,10 +652,15 @@ function Intro() {
     const id = VOICE_IDS[voiceIdx];
     if (id) setVoice(id);
     stopVoicePreview();
-    // Slide the avatar, the bubble, the picker, and the CTA up off-screen
-    // before navigating so the voice step exits like the chat-style steps.
-    setMessagesExiting(true);
-    setTimeout(() => goToStep(stepIdx + 1), EXIT_ANIM_MS);
+    playSendPop();
+    setBubbles((prev) => [
+      ...prev,
+      { id: newBubbleId(), from: "you", text: "✓ You chose a voice" },
+    ]);
+    // Hide the picker + CTA immediately so the screen lands on the sent
+    // bubble before step 5 starts revealing.
+    setPhase("reveal");
+    setTimeout(() => goToStep(stepIdx + 1), 600);
   };
 
   const advance = () => {
@@ -742,21 +729,8 @@ function Intro() {
         />
       )}
       <div className="flex-1 flex flex-col text-white min-h-0">
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 pt-14 pb-2">
-          <Button
-            surface="dark"
-            variant="secondary"
-            size="icon"
-            onClick={() => {
-              if (stepIdx > 0) goToStep(stepIdx - 1);
-              else navigate({ to: "/accept-terms" });
-            }}
-            aria-label="Back"
-          >
-            <ChevronLeft size={14} strokeWidth={1.5} />
-          </Button>
-          <ProgressDots current={stepIdx + 1} total={TOTAL_STEPS} />
+        {/* Header — chat-app feel: just the mute toggle, no back or dots. */}
+        <div className="flex items-center justify-end px-8 pt-14 pb-2">
           <Button
             surface="dark"
             variant="secondary"
@@ -769,120 +743,76 @@ function Intro() {
           </Button>
         </div>
 
-        {/* Body — the avatar wrapper is re-keyed by stepIdx so it unmounts
-            and remounts between steps, firing intro-avatar-rise fresh each
-            time. The matching intro-avatar-exit is applied via the wrapper
-            style while messagesExiting is true. The voice step uses a tighter
-            top padding so the avatar+bubble row sits higher and the carousel
-            below gets the full available height. */}
+        {/* Body — persistent chat: avatar pinned at top, bubbles scroll in
+            the middle, action area (form / buttons / voice picker) at the
+            bottom. The voice step uses a tighter top padding so the picker
+            has room to breathe in the action area. */}
         <div
           className={
             "flex-1 flex flex-col px-8 pb-10 min-h-0 " +
             (stepIdx === 4 ? "pt-8" : "pt-[72px]")
           }
         >
-          <div className="flex items-center gap-3">
-            <div
-              key={`avatar-${stepIdx}`}
-              className="shrink-0"
-              style={
-                messagesExiting
-                  ? {
-                      animation:
-                        "intro-avatar-exit 380ms cubic-bezier(0.4, 0, 1, 1) forwards",
-                    }
-                  : undefined
+          <div className="flex items-center gap-3 shrink-0">
+            <YunaAvatarLarge
+              usePhoto={stepIdx >= 4}
+              variant={
+                stepIdx === 4 && !voicePicked ? VOICE_IDS[0] : undefined
               }
-            >
-              <YunaAvatarLarge
-                usePhoto={stepIdx >= 4}
-                variant={
-                  stepIdx === 4 && !voicePicked ? VOICE_IDS[0] : undefined
-                }
-              />
-            </div>
-            {stepIdx === 4 && (
-              <div
-                className="flex-1 flex flex-col gap-3 min-w-0"
-                style={messagesExiting ? EXIT_SLIDE_UP_STYLE : undefined}
-              >
-                {bubbles.map((b) => (
-                  <Bubble key={b.id} bubble={b} />
-                ))}
-                {typing && <TypingBubble />}
-              </div>
-            )}
+            />
           </div>
 
-          {stepIdx === 4 ? (
-            <div
-              className="flex-1 flex flex-col justify-center -mx-8 min-h-0"
-              style={messagesExiting ? EXIT_SLIDE_UP_STYLE : undefined}
-            >
-              {phase === "wait-tap" && (
-                <div className="yuna-rise">
-                  <VoicePicker
-                    selectedIdx={voiceIdx}
-                    onSelect={(i) => {
-                      setVoiceIdx(i);
-                      setVoicePicked(true);
-                      const id = VOICE_IDS[i];
-                      if (id) setVoice(id);
-                      setVoicePlayingIdx(null);
-                      stopVoicePreview();
-                    }}
-                    playingIdx={voicePlayingIdx}
-                    onTogglePlay={(i) => {
-                      const turningOff = voicePlayingIdx === i;
-                      setVoicePlayingIdx(turningOff ? null : i);
-                      if (turningOff) {
-                        stopVoicePreview();
-                      } else {
-                        void playVoicePreview(i);
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div
-              className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0"
-              style={
-                messagesExiting
-                  ? {
-                      transform: "translateY(-120%)",
-                      opacity: 0,
-                      transition:
-                        "transform 700ms cubic-bezier(0.4, 0, 0.7, 1), opacity 600ms ease-in",
-                      paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
-                    }
-                  : {
-                      transition: "padding 200ms ease-out",
-                      paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
-                    }
-              }
-            >
-              {bubbles.map((b) => (
-                <Bubble key={b.id} bubble={b} />
-              ))}
-              {typing && <TypingBubble />}
-            </div>
-          )}
-
-          {/* CTA — translates up to sit above the keyboard when input is focused.
-              On the voice step, it joins the rest of the screen in sliding up
-              off-screen when the user picks a voice and we transition out. */}
+          {/* Persistent scrolling chat — bubbles accumulate across every step
+              so the whole onboarding reads as one ongoing conversation. */}
           <div
-            className="pt-4 min-h-[60px] transition-transform duration-200 ease-out"
+            ref={chatScrollRef}
+            className="mt-6 flex-1 w-full flex flex-col gap-3 min-h-0 overflow-y-auto"
+            style={{
+              transition: "padding 200ms ease-out",
+              paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
+            }}
+          >
+            {bubbles.map((b) => (
+              <Bubble key={b.id} bubble={b} />
+            ))}
+            {typing && <TypingBubble />}
+          </div>
+
+          {/* Action area — voice picker (step 4) + the CTA / form for every
+              step. Slides above the keyboard when the name input is focused. */}
+          <div
+            className="pt-4 shrink-0 transition-transform duration-200 ease-out"
             style={
-              stepIdx === 4 && messagesExiting
-                ? EXIT_SLIDE_UP_STYLE
-                : inputFocused
-                  ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` }
-                  : undefined
+              inputFocused
+                ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` }
+                : undefined
             }
           >
+            {stepIdx === 4 && phase === "wait-tap" && (
+              <div className="yuna-rise -mx-8 mb-4">
+                <VoicePicker
+                  selectedIdx={voiceIdx}
+                  onSelect={(i) => {
+                    setVoiceIdx(i);
+                    setVoicePicked(true);
+                    const id = VOICE_IDS[i];
+                    if (id) setVoice(id);
+                    setVoicePlayingIdx(null);
+                    stopVoicePreview();
+                  }}
+                  playingIdx={voicePlayingIdx}
+                  onTogglePlay={(i) => {
+                    const turningOff = voicePlayingIdx === i;
+                    setVoicePlayingIdx(turningOff ? null : i);
+                    if (turningOff) {
+                      stopVoicePreview();
+                    } else {
+                      void playVoicePreview(i);
+                    }
+                  }}
+                />
+              </div>
+            )}
             {phase === "wait-input" && (
               <div className="yuna-rise">
                 <NameForm
@@ -932,7 +862,7 @@ function Intro() {
                       variant="primary"
                       fullWidth
                       onClick={() =>
-                        submitNotificationChoice(true, "Set them up \u{2728}")
+                        submitNotificationChoice(true, "✓ You set up notifications")
                       }
                     >
                       Set them up {"\u{2728}"}
@@ -1129,24 +1059,6 @@ function TypingBubble() {
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-// ── Progress dots ────────────────────────────────────────────────────────────
-
-function ProgressDots({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="flex items-center gap-1.5" aria-label={`Step ${current} of ${total}`}>
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className={
-            "h-1.5 w-1.5 rounded-full transition-colors " +
-            (i < current ? "bg-white" : "bg-white/30")
-          }
-        />
-      ))}
     </div>
   );
 }
