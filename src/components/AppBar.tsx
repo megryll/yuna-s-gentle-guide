@@ -11,6 +11,7 @@ type Item = {
   emphasized?: boolean;
   matches?: string[];
   notify?: boolean;
+  search?: Record<string, string>;
 };
 
 // Bulge silhouette from the AppBar background SVG. The original path drew
@@ -38,7 +39,7 @@ const APPBAR_MASK_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(
 const ITEMS: Item[] = [
   { label: "Home", to: "/home", icon: HomeIcon, matches: ["/home"] },
   { label: "You", to: "/you", icon: PersonIcon, notify: true },
-  { label: "Chat", to: "/chat", icon: ChatIcon, emphasized: true },
+  { label: "Chat", to: "/chat", icon: ChatIcon, emphasized: true, search: { mode: "voice" } },
   { label: "Tools", to: "/tools", icon: ToolsIcon, matches: ["/tools"] },
   { label: "Sessions", to: "/sessions", icon: SessionsIcon, matches: ["/sessions"] },
 ];
@@ -130,6 +131,7 @@ function Tab({
     return (
       <Link
         to={item.to}
+        search={item.search}
         className="flex flex-col items-center justify-center"
         style={isDark ? { transform: "translateY(-12px)" } : undefined}
         aria-current={active ? "page" : undefined}
@@ -159,6 +161,7 @@ function Tab({
   return (
     <Link
       to={item.to}
+      search={item.search}
       className="flex flex-col items-center gap-1 py-1 group"
       aria-current={active ? "page" : undefined}
     >

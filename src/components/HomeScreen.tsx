@@ -55,7 +55,14 @@ export function HomeScreen({
 
   const open = (initial: string) => {
     if (!initial.trim()) return;
-    navigate({ to: "/chat", search: { q: initial } });
+    // Chat Now is the first-session entry — it routes straight into voice mode
+    // (matching the AppBar chat icon). Other openers (card prompts) still drop
+    // into text mode so the user can see Yuna's reply before committing to a call.
+    const search =
+      initial.trim().toLowerCase() === "chat now"
+        ? { q: initial, mode: "voice" as const }
+        : { q: initial };
+    navigate({ to: "/chat", search });
   };
 
   return (

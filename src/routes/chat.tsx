@@ -536,6 +536,8 @@ function Chat() {
   };
 
   const transitionToVoicePitch = (delay = 1100) => {
+    // No point pitching voice when the user is already on a call.
+    if (mode === "voice") return;
     setTyping(true);
     setTimeout(() => {
       setMessages((m) => [...m, { id: uid(), from: "system", kind: "voice-pitch" }]);
@@ -546,6 +548,21 @@ function Chat() {
   };
 
   const respondToChatNow = () => {
+    // Voice mode delegates the verbal greeting to VoiceSession's own TTS
+    // pipeline, so we don't double-speak from here. The questionnaire card
+    // just slides up at the bottom after a short beat — Yuna's voice greeting
+    // and the visual prompt happen in parallel.
+    if (mode === "voice") {
+      setTimeout(() => {
+        setMessages((m) => [
+          ...m,
+          { id: uid(), from: "system", kind: "intro-questionnaire", state: "pending" },
+        ]);
+        setQuestionnaireActive(true);
+      }, 1200);
+      return;
+    }
+
     setTyping(true);
     const welcome = chatNowWelcomeLine(yunaUserName);
     const ask = CHAT_NOW_ASK_LINE;
@@ -582,6 +599,9 @@ function Chat() {
         x.kind === "intro-questionnaire" ? { ...x, state: "dismissed" as const } : x,
       ),
     );
+    // Voice mode: card just slides away; VoiceSession is already listening
+    // so there's no text-bubble follow-up or voice-pitch to render.
+    if (mode === "voice") return;
     setTyping(true);
     setTimeout(() => {
       const text = "No worries — we can get to know each other as we go. What's on your mind?";
@@ -602,6 +622,9 @@ function Chat() {
       next.push({ id: uid(), from: "you", kind: "questionnaire-answers", answers });
       return next;
     });
+    // Voice mode: skip the typed acknowledgement + voice-pitch transition —
+    // VoiceSession's TTS pipeline owns the verbal flow once the card is gone.
+    if (mode === "voice") return;
     setTyping(true);
     setTimeout(() => {
       const text = composeQuestionnaireResponse(answers);
@@ -620,6 +643,7 @@ function Chat() {
       setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ackText }]);
       setTyping(false);
       speakIfEnabled(ackText);
+      if (mode === "voice") return;
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
@@ -731,6 +755,7 @@ function Chat() {
       setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: thanksText }]);
       setTyping(false);
       speakIfEnabled(thanksText);
+      if (mode === "voice") return;
       setTimeout(() => {
         setTyping(true);
         setTimeout(() => {
@@ -893,7 +918,24 @@ function Chat() {
         )}
 
         {inVoice ? (
-          <VoiceSession onEndCall={endChat} />
+          <>
+            <VoiceSession onEndCall={endChat} />
+            {questionnaireActive && (
+              <div className="absolute left-0 right-0 bottom-0 z-30 px-5 pb-6 yuna-slide-up">
+                <IntroQuestionnaireCard
+                  msg={{
+                    id: "voice-intro",
+                    from: "system",
+                    kind: "intro-questionnaire",
+                    state: "pending",
+                  }}
+                  onStart={startQuestionnaire}
+                  onDismiss={dismissQuestionnaire}
+                  variant="sheet"
+                />
+              </div>
+            )}
+          </>
         ) : (
           <>
             {/* Messages */}
@@ -1146,10 +1188,17 @@ function IntroQuestionnaireCard({
   msg,
   onStart,
   onDismiss,
+  variant = "chat",
 }: {
   msg: Extract<Msg, { kind: "intro-questionnaire" }>;
   onStart: () => void;
   onDismiss: () => void;
+  /**
+   * "chat" — sits inline in the bubble stream (max-w-[88%], left-aligned).
+   * "sheet" — full-width bottom sheet used in voice mode where there's no
+   *   bubble flow to slot into.
+   */
+  variant?: "chat" | "sheet";
 }) {
   const appMode = useAppMode();
   const isDark = appMode === "dark";
@@ -1186,50 +1235,56 @@ function IntroQuestionnaireCard({
     : "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))";
   const heroBackground = `${natureOverlay}, ${tintLayer}, url(/nature/Background-2.png)`;
 
-  return (
-    <div className="flex yuna-rise justify-start">
-      <div className="max-w-[88%] w-full rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md overflow-hidden">
-        <div className="px-4 pt-3 pb-2 flex items-center gap-1.5">
-          <span aria-hidden>📋</span>
-          <span className="text-[10px] tracking-[0.18em] uppercase text-white/65">
-            Questionnaire
-          </span>
-        </div>
-        <div className="px-3 pb-3">
-          <div
-            className="rounded-xl px-5 py-6"
-            style={{
-              backgroundImage: heroBackground,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
-              Let's get to know each other
-            </h3>
-            <p className="mt-2 text-[14px] leading-relaxed text-white/80">
-              4 questions · about 1 minute
-            </p>
-          </div>
-        </div>
-        <div className="px-3 pb-3 flex gap-2">
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="flex-1 rounded-full border border-white/30 py-2.5 text-[11px] tracking-[0.18em] uppercase text-white/85 active:bg-white/15 transition-colors"
-          >
-            No, Thanks
-          </button>
-          <button
-            type="button"
-            onClick={onStart}
-            className="flex-1 rounded-full py-2.5 text-[11px] tracking-[0.18em] uppercase bg-white text-neutral-900 active:opacity-85 transition-opacity"
-          >
-            Start
-          </button>
+  const card = (
+    <div className="w-full rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md overflow-hidden">
+      <div className="px-4 pt-3 pb-2 flex items-center gap-1.5">
+        <span aria-hidden>📋</span>
+        <span className="text-[10px] tracking-[0.18em] uppercase text-white/65">
+          Questionnaire
+        </span>
+      </div>
+      <div className="px-3 pb-3">
+        <div
+          className="rounded-xl px-5 py-6"
+          style={{
+            backgroundImage: heroBackground,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
+            Let's get to know each other
+          </h3>
+          <p className="mt-2 text-[14px] leading-relaxed text-white/80">
+            4 questions · about 1 minute
+          </p>
         </div>
       </div>
+      <div className="px-3 pb-3 flex gap-2">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="flex-1 rounded-full border border-white/30 py-2.5 text-[11px] tracking-[0.18em] uppercase text-white/85 active:bg-white/15 transition-colors"
+        >
+          No, Thanks
+        </button>
+        <button
+          type="button"
+          onClick={onStart}
+          className="flex-1 rounded-full py-2.5 text-[11px] tracking-[0.18em] uppercase bg-white text-neutral-900 active:opacity-85 transition-opacity"
+        >
+          Start
+        </button>
+      </div>
+    </div>
+  );
+
+  if (variant === "sheet") return card;
+
+  return (
+    <div className="flex yuna-rise justify-start">
+      <div className="max-w-[88%] w-full">{card}</div>
     </div>
   );
 }
