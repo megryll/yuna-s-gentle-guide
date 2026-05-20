@@ -1,6 +1,6 @@
 // Shared session-storage schema for the chat thread. Used by chat.tsx for
-// persistence across navigations and by call.tsx so any spoken turns
-// during a call become text bubbles in the chat thread when the call ends.
+// persistence across navigations and by VoiceSession so any spoken turns
+// during a call survive as text bubbles in the chat thread.
 //
 // Persisted in sessionStorage (not localStorage) on purpose — the chat is
 // scoped to one browsing session for this prototype.
@@ -11,14 +11,6 @@ export type QuestionnaireAnswer = { questionId: string; option: string };
 
 export type ChatMsg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
-  | {
-      id: string;
-      from: "system";
-      kind: "call-summary";
-      startedAt: string;
-      endedAt: string;
-      durationLabel: string;
-    }
   | {
       id: string;
       from: "system";

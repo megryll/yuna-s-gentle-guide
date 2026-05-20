@@ -120,7 +120,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   "self-discovery": {
     label: "Questionnaire",
-    emoji: "🌿",
+    emoji: "📋",
     accent: "#5E9389",
     tone: "dark",
     action: "arrow",

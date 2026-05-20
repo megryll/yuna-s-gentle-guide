@@ -48,9 +48,11 @@ export function HomeCardItem(props: ItemProps) {
 export function HomeCardRow({
   card,
   onClick,
+  interactive = true,
 }: {
   card: HomeCard;
   onClick: () => void;
+  interactive?: boolean;
 }) {
   const meta = KIND_META[card.type];
   const title = rowTitle(card);
@@ -63,8 +65,8 @@ export function HomeCardRow({
   const natureDarkEnd = isLight ? "rgba(255, 255, 255, 0.4)" : "rgba(15, 18, 24, 0.55)";
   const photoPath = card.naturePath ?? meta.naturePath;
   const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82))"
-    : "linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45))";
+    ? "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))"
+    : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))";
   const background = `linear-gradient(110deg, ${meta.accent}${isLight ? "66" : "99"} 0%, ${meta.accent}${isLight ? "22" : "40"} 35%, ${natureDarkEnd} 100%), ${tintLayer}, url(${photoPath})`;
 
   return (
@@ -79,8 +81,12 @@ export function HomeCardRow({
       )}
       <button
         type="button"
-        onClick={onClick}
-        className="relative w-full text-left rounded-xl px-4 py-3.5 active:opacity-90 transition-opacity flex items-center gap-4 overflow-hidden"
+        onClick={interactive ? onClick : undefined}
+        disabled={!interactive}
+        className={
+          "relative w-full text-left rounded-xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden " +
+          (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
+        }
         style={{
           backgroundImage: background,
           backgroundSize: "cover",
@@ -91,14 +97,14 @@ export function HomeCardRow({
         <div className="flex-1 min-w-0">
           <p
             className={
-              `text-[16px] leading-snug ${isLight ? "text-foreground" : "text-white"} ` +
-              (isQuote ? "italic" : "font-medium")
+              `font-display text-[18px] leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
+              (isQuote ? "italic" : "")
             }
           >
             {title}
           </p>
-          <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <span className={`text-[11px] tracking-[0.12em] uppercase ${isLight ? "text-foreground/80" : "text-white"} inline-flex items-center gap-1.5`}>
+          <div className="mt-3.5 flex items-center gap-3 flex-wrap">
+            <span className={`text-[12px] font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
               {isGuided && avatar ? (
                 <YunaAvatar variant={avatar} size={15} />
               ) : (
@@ -227,8 +233,8 @@ function GratitudeCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
-      <div className="flex-1 flex flex-col">
-        <p className="mt-3 font-display text-[20px] leading-[1.25] tracking-tight text-white">
+      <div className="flex-1 flex flex-col justify-center">
+        <p className="font-display text-[20px] leading-[1.25] tracking-tight text-white">
           {card.prompt}
         </p>
         <ul className="mt-4 flex flex-col gap-2.5">
@@ -312,7 +318,7 @@ function AffirmationCard({
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center">
-        <p className="font-display text-[17px] leading-[1.4] tracking-tight text-white">
+        <p className="font-display text-[22px] leading-[1.3] tracking-tight text-white">
           “{card.quote}”
         </p>
       </div>
@@ -345,7 +351,7 @@ function LearnSkillCard({
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center">
-        <h3 className="font-display text-[24px] leading-[1.25] tracking-tight text-white text-center">
+        <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white text-center">
           {card.title}
         </h3>
       </div>
@@ -373,7 +379,7 @@ function AccountabilityCard({
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center">
-        <p className="font-display text-[20px] leading-[1.3] tracking-tight text-white text-center">
+        <p className="font-display text-[22px] leading-[1.25] tracking-tight text-white text-center">
           “{card.goal}”
         </p>
       </div>
@@ -419,7 +425,7 @@ function BookCard({
           <p className="text-[10px] tracking-[0.18em] uppercase text-white">
             {card.author}
           </p>
-          <p className="mt-1 font-display text-[18px] leading-[1.25] tracking-tight text-white">
+          <p className="mt-1 font-display text-[22px] leading-[1.2] tracking-tight text-white">
             {card.title}
           </p>
           <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-white/85">
@@ -468,8 +474,8 @@ function CardShell({
     ? `linear-gradient(155deg, ${accent}66 0%, ${accent}22 35%, rgba(255, 255, 255, 0.4) 100%)`
     : `linear-gradient(155deg, ${accent}99 0%, ${accent}40 35%, rgba(15, 18, 24, 0.55) 100%)`;
   const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82))"
-    : "linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45))";
+    ? "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))"
+    : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))";
   const background = naturePath
     ? `${natureOverlay}, ${tintLayer}, url(${naturePath})`
     : isDark
@@ -526,7 +532,7 @@ function CardHeader({
       <div className="min-w-0 flex flex-row items-center gap-3 flex-wrap">
         <p
           className={
-            "text-[10px] tracking-[0.14em] uppercase inline-flex items-center gap-1.5 " +
+            "text-[12px] font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 " +
             eyebrowColor
           }
         >
@@ -541,7 +547,7 @@ function CardHeader({
         onClick={(e) => e.stopPropagation()}
         className={"transition-colors shrink-0 " + iconColor}
       >
-        <MoreHorizontal size={16} strokeWidth={1.75} aria-hidden />
+        <MoreHorizontal size={20} strokeWidth={2} aria-hidden />
       </button>
     </div>
   );
@@ -580,23 +586,23 @@ function CardFooter({
             className={"transition-colors " + iconColor}
           >
             <Bookmark
-              size={16}
-              strokeWidth={1.75}
+              size={20}
+              strokeWidth={2}
               fill={isSaved ? "currentColor" : "none"}
               aria-hidden
             />
           </button>
         )}
         <span aria-hidden className={iconColor}>
-          <Share2 size={16} strokeWidth={1.75} />
+          <Share2 size={20} strokeWidth={2} />
         </span>
       </div>
       <div className="flex items-center gap-3 min-w-0">
         {meta && (
           <span
             className={
-              "text-[10px] tracking-[0.18em] uppercase " +
-              (isDark ? "text-white/65" : "text-neutral-600")
+              "text-[12px] font-medium tracking-[0.08em] uppercase " +
+              (isDark ? "text-white/80" : "text-neutral-700")
             }
           >
             {meta}
@@ -623,10 +629,10 @@ function CardCTA({
       type="button"
       onClick={onClick}
       className={
-        "inline-flex items-center justify-center rounded-full px-5 h-10 text-[11px] tracking-[0.18em] uppercase border active:bg-white/10 transition-colors " +
+        "inline-flex items-center justify-center rounded-full px-5 h-10 text-[12.5px] font-medium tracking-[0.1em] uppercase border-[1.5px] active:bg-white/10 transition-colors " +
         (isDark
-          ? "border-white/30 text-white"
-          : "border-neutral-900/30 text-neutral-900")
+          ? "border-white/40 text-white"
+          : "border-neutral-900/55 text-neutral-900")
       }
     >
       {children}
@@ -639,7 +645,7 @@ function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
   return (
     <span
       className={
-        "inline-flex items-center gap-1 text-[10px] tracking-[0.12em] uppercase " +
+        "inline-flex items-center gap-1 text-[12px] font-medium tracking-[0.12em] uppercase " +
         (isDark ? "text-white" : "text-neutral-900")
       }
     >
@@ -655,13 +661,13 @@ function ActionCircle({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
     <span
       aria-hidden
       className={
-        "shrink-0 h-9 w-9 rounded-full border inline-flex items-center justify-center " +
+        "shrink-0 h-9 w-9 rounded-full border-[1.5px] inline-flex items-center justify-center " +
         (isDark
-          ? "border-white/30 text-white"
-          : "border-neutral-900/30 text-neutral-900")
+          ? "border-white/40 text-white"
+          : "border-neutral-900/55 text-neutral-900")
       }
     >
-      <ArrowRight size={14} strokeWidth={2} />
+      <ArrowRight size={16} strokeWidth={2.25} />
     </span>
   );
 }

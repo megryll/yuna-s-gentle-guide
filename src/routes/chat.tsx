@@ -51,14 +51,10 @@ export const Route = createFileRoute("/chat")({
     s: Record<string, unknown>,
   ): {
     q?: string;
-    callEnded?: string;
-    callDuration?: string;
     revisit?: string;
     mode?: "text" | "voice";
   } => ({
     q: (s.q as string | undefined) ?? "",
-    callEnded: s.callEnded as string | undefined,
-    callDuration: s.callDuration as string | undefined,
     revisit: s.revisit as string | undefined,
     mode: s.mode === "voice" ? "voice" : "text",
   }),
@@ -140,10 +136,6 @@ function isCustomInitial(initial: string): boolean {
   return true;
 }
 
-function fmtTime(d: Date) {
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
 const CHAT_NOW_ASK_LINE =
   "Before we start, can you answer 4 quick questions? It'll help me know where to begin.";
 
@@ -195,7 +187,7 @@ function isReminisceEntry(initial: string): boolean {
 }
 
 function Chat() {
-  const { q, callEnded, callDuration, revisit, mode } = Route.useSearch();
+  const { q, revisit, mode } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -217,7 +209,6 @@ function Chat() {
   const [voicePitchActive, setVoicePitchActive] = useState(false);
   const [questionnaireActive, setQuestionnaireActive] = useState(false);
   const [questionnaireModalOpen, setQuestionnaireModalOpen] = useState(false);
-  const voiceStartedAtRef = useRef<number | null>(null);
   // Voice-note dictation state. While recording, the input is read-only
   // and the live transcript is rendered into `text` so the user sees what
   // was heard before they tap the check to send.
@@ -281,31 +272,16 @@ function Chat() {
     bootedRef.current = true;
     setHasChatted();
 
-    const isReturnFromCall = !!callEnded && !!callDuration;
     const isRevisit = revisit === "1" || revisit === "true";
     const isChatNow = isChatNowOpener(q ?? "");
     const isReturningReminisce =
-      userType === "returning" && !isReturnFromCall && !isRevisit && isReminisceEntry(q ?? "");
+      userType === "returning" && !isRevisit && isReminisceEntry(q ?? "");
 
-    const seed: Msg[] = isReturnFromCall || isRevisit ? loadStoredMessages() : [];
+    const seed: Msg[] = isRevisit ? loadStoredMessages() : [];
 
-    if (isReturnFromCall) {
-      const ended = new Date(Number(callEnded));
-      const durSec = Number(callDuration);
-      const started = new Date(ended.getTime() - durSec * 1000);
-      const mm = String(Math.floor(durSec / 60)).padStart(2, "0");
-      const ss = String(durSec % 60).padStart(2, "0");
-      seed.push({
-        id: uid(),
-        from: "system",
-        kind: "call-summary",
-        startedAt: fmtTime(started),
-        endedAt: fmtTime(ended),
-        durationLabel: `${mm}:${ss}`,
-      });
-    } else if (!isRevisit) {
-      // Any non-call, non-revisit entry starts a fresh thread — wipe the
-      // persisted log so the next conversation begins clean.
+    if (!isRevisit) {
+      // Any non-revisit entry starts a fresh thread — wipe the persisted
+      // log so the next conversation begins clean.
       clearStoredMessages();
       // "Chat Now" isn't an actual user share — don't seed a user bubble for
       // it; Yuna opens the conversation with the welcome flow instead.
@@ -318,9 +294,9 @@ function Chat() {
     setMessages(seed);
     if (isReturningReminisce) {
       respondReminisce();
-    } else if (isChatNow && !isReturnFromCall && !isRevisit) {
+    } else if (isChatNow && !isRevisit) {
       respondToChatNow();
-    } else if (q && !isReturnFromCall && !isRevisit) {
+    } else if (q && !isRevisit) {
       respondToInitial(q);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -533,8 +509,8 @@ function Chat() {
 
   const respondClaude = async (newUserText: string) => {
     // Build the conversation Claude sees: every prior text turn plus the
-    // user's just-sent message. System messages (limitations, voice-pitch,
-    // call-summary) are UI artifacts and don't belong in the API call.
+    // user's just-sent message. System messages (limitations, voice-pitch)
+    // are UI artifacts and don't belong in the API call.
     const conversation = [
       ...messages
         .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
@@ -814,25 +790,7 @@ function Chat() {
 
   const switchToText = () => {
     if (mode !== "voice") return;
-    const startedAt = voiceStartedAtRef.current;
-    voiceStartedAtRef.current = null;
-    const durSec = startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
-    const ended = new Date();
-    const started = new Date(ended.getTime() - durSec * 1000);
-    const mm = String(Math.floor(durSec / 60)).padStart(2, "0");
-    const ss = String(durSec % 60).padStart(2, "0");
-    const restored = loadStoredMessages();
-    setMessages([
-      ...restored,
-      {
-        id: uid(),
-        from: "system",
-        kind: "call-summary",
-        startedAt: fmtTime(started),
-        endedAt: fmtTime(ended),
-        durationLabel: `${mm}:${ss}`,
-      },
-    ]);
+    setMessages(loadStoredMessages());
     navigate({ to: "/chat", search: { q: "", mode: "text" } });
   };
 
@@ -852,7 +810,6 @@ function Chat() {
       stream.getTracks().forEach((t) => t.stop());
       setMicState("granted");
       setMicOpen(false);
-      voiceStartedAtRef.current = Date.now();
       navigate({ to: "/chat", search: { q: "", mode: "voice" } });
     } catch {
       setMicState("denied");
@@ -945,7 +902,6 @@ function Chat() {
               className="flex-1 overflow-y-auto px-5 pt-20 pb-6 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {messages.map((m) => {
-                if (m.kind === "call-summary") return <CallSummary key={m.id} msg={m} />;
                 if (m.kind === "limitations")
                   return (
                     <LimitationsCard
@@ -1129,31 +1085,6 @@ function Bubble({ msg }: { msg: Extract<Msg, { kind: "text" }> }) {
   );
 }
 
-function CallSummary({ msg }: { msg: Extract<Msg, { kind: "call-summary" }> }) {
-  return (
-    <div className="yuna-rise flex justify-center">
-      <div className="w-full max-w-[92%] rounded-2xl border border-white/25 bg-white/10 backdrop-blur-sm px-5 py-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-full border border-white/30 flex items-center justify-center">
-            <PhoneIcon />
-          </div>
-          <p className="text-[10px] tracking-[0.25em] uppercase text-white/70">
-            Voice call · ended
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <Stat label="Started" value={msg.startedAt} />
-          <Stat label="Ended" value={msg.endedAt} />
-          <Stat label="Length" value={msg.durationLabel} />
-        </div>
-        <Button surface="dark" variant="secondary" size="sm" fullWidth className="mt-4">
-          View transcript
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function LimitationsCard({
   msg,
   onCheck,
@@ -1242,7 +1173,7 @@ function IntroQuestionnaireCard({
     <div className="flex yuna-rise justify-start">
       <div className="max-w-[88%] w-full rounded-2xl bg-white/90 backdrop-blur-sm text-neutral-900 shadow-lg overflow-hidden">
         <div className="px-4 pt-3 pb-2 flex items-center gap-1.5">
-          <span aria-hidden>🌿</span>
+          <span aria-hidden>📋</span>
           <span className="text-[10px] tracking-[0.18em] uppercase text-neutral-600">
             Questionnaire
           </span>
@@ -1255,10 +1186,16 @@ function IntroQuestionnaireCard({
                 "linear-gradient(155deg, #2D4B33 0%, #1E3625 50%, #16261C 100%)",
             }}
           >
-            <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
+            <h3
+              className="font-display text-[22px] leading-[1.2] tracking-tight"
+              style={{ color: "#ffffff" }}
+            >
               A quick intro check-in
             </h3>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-white/80">
+            <p
+              className="mt-2 text-[14px] leading-relaxed"
+              style={{ color: "rgba(255,255,255,0.8)" }}
+            >
               4 questions · about 1 minute
             </p>
           </div>
@@ -1453,17 +1390,6 @@ function VoicePitchCard() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-sm text-white">{value}</p>
-      <p className="text-[9px] tracking-[0.2em] uppercase text-white/70 mt-0.5">
-        {label}
-      </p>
-    </div>
-  );
-}
-
 function TypingBubble() {
   return (
     <div className="flex yuna-fade-in justify-start">
@@ -1517,9 +1443,6 @@ function MicIcon() {
 }
 function CheckIcon() {
   return <Check size={14} strokeWidth={2.2} />;
-}
-function PhoneIcon() {
-  return <Phone size={14} strokeWidth={1.5} />;
 }
 function PhoneCallIcon() {
   return (

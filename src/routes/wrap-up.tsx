@@ -215,13 +215,6 @@ function WrapUp() {
     navigate({ to: "/home" });
   };
 
-  const onViewActivities = () => {
-    if (keepsake) persist();
-    clearStoredMessages();
-    setUserType("returning");
-    navigate({ to: "/tools" });
-  };
-
   const isLoading = status === "loading";
   const displayQuotes = highlights.length > 0 ? highlights : FALLBACK_HIGHLIGHTS;
 
@@ -256,10 +249,7 @@ function WrapUp() {
 
               <HighlightsCard highlights={displayQuotes} />
 
-              <PlacedForYou
-                items={PLACED_FOR_YOU}
-                onViewAll={onViewActivities}
-              />
+              <PlacedForYou items={PLACED_FOR_YOU} />
 
               <div className="pt-2 pb-2">
                 <Button
@@ -346,12 +336,12 @@ function ReflectionSection({
   onMoodChange: (v: number) => void;
 }) {
   return (
-    <section className="flex flex-col gap-7 yuna-rise">
+    <section className="flex flex-col gap-10 yuna-rise py-2">
       <h2 className="font-display text-[18px] leading-tight text-white text-center">
         How did this session land?
       </h2>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-9">
         <SentimentSlider
           leftLabel="Increased stress"
           rightLabel="Decreased stress"
@@ -401,17 +391,17 @@ function SentimentSlider({
       : "transparent";
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between text-[10px] tracking-[0.18em] uppercase text-white/65">
-        <span className={negative && touched ? "text-white/90" : ""}>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between text-[13px] font-medium tracking-[0.04em] uppercase text-white/75">
+        <span className={negative && touched ? "text-white/95" : ""}>
           {leftLabel}
         </span>
-        <span className={positive && touched ? "text-white/90" : ""}>
+        <span className={positive && touched ? "text-white/95" : ""}>
           {rightLabel}
         </span>
       </div>
       <SliderPrimitive.Root
-        className="relative flex w-full touch-none select-none items-center h-5"
+        className="relative flex w-full touch-none select-none items-center h-7"
         min={-1}
         max={1}
         step={0.01}
@@ -419,10 +409,10 @@ function SentimentSlider({
         onValueChange={(v) => onChange(v[0] ?? 0)}
         aria-label={`${leftLabel} to ${rightLabel}`}
       >
-        <SliderPrimitive.Track className="relative h-2 w-full grow rounded-full bg-white/15 border border-white/12">
+        <SliderPrimitive.Track className="relative h-3 w-full grow rounded-full bg-white/15 border border-white/12">
           <span
             aria-hidden
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-1 h-[16px] w-px bg-white/35"
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-1.5 h-[24px] w-px bg-white/35"
           />
           <span
             aria-hidden
@@ -434,7 +424,7 @@ function SentimentSlider({
             }}
           />
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60" />
+        <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60" />
       </SliderPrimitive.Root>
     </div>
   );
@@ -527,13 +517,9 @@ function EmotionPill({ name }: { name: string }) {
 }
 
 // ── Activities Yuna placed for you ──────────────────────────────────────────
-function PlacedForYou({
-  items,
-  onViewAll,
-}: {
-  items: HomeCard[];
-  onViewAll: () => void;
-}) {
+// Cards are display-only here — the wrap-up reflection isn't a launch surface,
+// so the visual stays the same but the tile doesn't react to taps.
+function PlacedForYou({ items }: { items: HomeCard[] }) {
   return (
     <div className="flex flex-col gap-3 yuna-rise">
       <h2 className="font-display text-[18px] leading-tight text-white text-center">
@@ -543,7 +529,7 @@ function PlacedForYou({
       <ul className="flex flex-col gap-5">
         {items.map((c) => (
           <li key={c.id}>
-            <HomeCardRow card={c} onClick={onViewAll} />
+            <HomeCardRow card={c} onClick={() => undefined} interactive={false} />
           </li>
         ))}
       </ul>
