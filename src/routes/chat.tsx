@@ -842,6 +842,13 @@ function Chat() {
   };
 
   const inVoice = mode === "voice";
+  // Chat-now landing in voice mode: hand VoiceSession the same welcome + ask
+  // lines text mode types out, so Yuna's verbal greeting matches the card
+  // sliding up below.
+  const isChatNowVoice = inVoice && isChatNowOpener(q ?? "") && revisit !== "1" && revisit !== "true";
+  const chatNowVoiceGreeting = isChatNowVoice
+    ? [chatNowWelcomeLine(yunaUserName), CHAT_NOW_ASK_LINE]
+    : undefined;
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
@@ -919,7 +926,10 @@ function Chat() {
 
         {inVoice ? (
           <>
-            <VoiceSession onEndCall={endChat} />
+            <VoiceSession
+              onEndCall={endChat}
+              initialGreetingLines={chatNowVoiceGreeting}
+            />
             {questionnaireActive && (
               <div className="absolute left-0 right-0 bottom-0 z-30 px-5 pb-6 yuna-slide-up">
                 <IntroQuestionnaireCard

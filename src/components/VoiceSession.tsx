@@ -39,8 +39,16 @@ const TURN_END_SILENCE_MS = 1500;
 
 export function VoiceSession({
   onEndCall,
+  initialGreetingLines,
 }: {
   onEndCall: (durationSec: number) => void;
+  /**
+   * Optional spoken opener. When provided, VoiceSession speaks these lines
+   * in sequence on mount instead of calling composeGreeting. Used by the
+   * chat-now → voice flow so Yuna says the same welcome + questionnaire
+   * ask that the text-mode flow types out.
+   */
+  initialGreetingLines?: string[];
 }) {
   const { avatar } = useYunaIdentity();
   const [phase, setPhase] = useState<Phase>("connecting");
@@ -287,20 +295,29 @@ export function VoiceSession({
     endedRef.current = false;
     let cancelled = false;
     (async () => {
-      const greeting = await composeGreeting(turnsRef.current);
+      // Caller-provided lines (chat-now → voice) skip the API roundtrip so
+      // Yuna says the exact same welcome + ask as the text-mode flow.
+      const lines =
+        initialGreetingLines && initialGreetingLines.length > 0
+          ? initialGreetingLines
+          : [await composeGreeting(turnsRef.current)];
+
       if (cancelled || endedRef.current) return;
 
-      setYunaSpoken(greeting);
-      const yunaMsg: ChatMsg = {
+      const newTurns: ChatMsg[] = lines.map((text) => ({
         id: chatUid(),
         from: "yuna",
         kind: "text",
-        text: greeting,
-      };
-      turnsRef.current = [...turnsRef.current, yunaMsg];
+        text,
+      }));
+      turnsRef.current = [...turnsRef.current, ...newTurns];
       saveStoredMessages(turnsRef.current);
 
-      await speak(greeting);
+      for (const line of lines) {
+        if (cancelled || endedRef.current) return;
+        setYunaSpoken(line);
+        await speak(line);
+      }
       if (cancelled || endedRef.current) return;
       beginListening();
     })();
