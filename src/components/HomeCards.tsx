@@ -175,7 +175,7 @@ function GuidedSessionCard({
           {card.title}
         </h3>
         {card.subtitle && (
-          <p className="mt-4 text-[13.5px] leading-relaxed text-white/85 max-w-[18rem]">
+          <p className="mt-4 text-[14px] leading-relaxed text-white/85 max-w-[18rem]">
             {card.subtitle}
           </p>
         )}
@@ -289,7 +289,7 @@ function SelfDiscoveryCard({
         <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
           {card.title}
         </h3>
-        <p className="mt-3 text-[13px] leading-relaxed text-white/80 max-w-[20rem]">
+        <p className="mt-3 text-[14px] leading-relaxed text-white/80 max-w-[20rem]">
           {card.description}
         </p>
       </div>

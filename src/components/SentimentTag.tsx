@@ -54,7 +54,7 @@ export function SentimentTag({
     <span
       className={
         "inline-flex items-center justify-center whitespace-nowrap " +
-        "h-8 rounded-full px-3 text-[12.5px] leading-none gap-1.5 " +
+        "h-8 rounded-full px-3 text-[14px] leading-none gap-1.5 " +
         surfaceClass
       }
     >
