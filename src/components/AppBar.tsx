@@ -39,7 +39,7 @@ const APPBAR_MASK_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(
 const ITEMS: Item[] = [
   { label: "Home", to: "/home", icon: HomeIcon, matches: ["/home"] },
   { label: "You", to: "/you", icon: PersonIcon, notify: true },
-  { label: "Chat", to: "/chat", icon: ChatIcon, emphasized: true, search: { mode: "voice" } },
+  { label: "Chat", to: "/chat", icon: ChatIcon, emphasized: true, search: { q: "Chat Now", mode: "voice" } },
   { label: "Tools", to: "/tools", icon: ToolsIcon, matches: ["/tools"] },
   { label: "Sessions", to: "/sessions", icon: SessionsIcon, matches: ["/sessions"] },
 ];
