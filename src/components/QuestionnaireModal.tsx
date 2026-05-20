@@ -223,7 +223,7 @@ export function QuestionnaireModal({
                         onClick={() => pick(option)}
                         aria-pressed={active}
                         className={
-                          "w-full flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors backdrop-blur-sm bg-white/[0.06] " +
+                          "w-full flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors backdrop-blur-sm bg-white/[0.04] " +
                           (active ? "" : "border-white/20 active:bg-white/10")
                         }
                         style={

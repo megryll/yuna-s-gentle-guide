@@ -391,7 +391,7 @@ function SentimentSlider({
       : "transparent";
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between text-[13px] font-medium tracking-[0.04em] uppercase text-white/75">
         <span className={negative && touched ? "text-white/95" : ""}>
           {leftLabel}

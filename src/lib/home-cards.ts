@@ -169,7 +169,7 @@ export const HOME_CARDS: HomeCard[] = [
   {
     type: "self-discovery",
     id: "first-check-in",
-    title: "What brings you in?",
+    title: "Let's get to know each other",
     description: "Tell me what's going on — we'll find a place to start.",
     duration: "1 minute",
     naturePath: "/nature/Background-2.png",

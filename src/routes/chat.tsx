@@ -142,8 +142,8 @@ const CHAT_NOW_ASK_LINE =
 function chatNowWelcomeLine(name: string | null): string {
   const trimmed = name?.trim();
   return trimmed
-    ? `It's just us here, ${trimmed} — what you share stays between us.`
-    : "It's just us here — what you share stays between us.";
+    ? `Hi ${trimmed} — I'm so glad you're here.`
+    : "Hi there — I'm so glad you're here.";
 }
 
 function isChatNowOpener(initial: string): boolean {
@@ -1151,6 +1151,9 @@ function IntroQuestionnaireCard({
   onStart: () => void;
   onDismiss: () => void;
 }) {
+  const appMode = useAppMode();
+  const isDark = appMode === "dark";
+
   if (msg.state === "completed") return null;
 
   if (msg.state === "dismissed") {
@@ -1169,12 +1172,26 @@ function IntroQuestionnaireCard({
     );
   }
 
+  // Mirrors the home self-discovery card's nature-photo composition
+  // (CardShell in HomeCards.tsx) — accent #5E9389 + Background-2.png — so
+  // the chat card and the Home tile read as the same artifact. text-white
+  // on the inner block auto-flips to dark ink in light mode via the
+  // .theme-light shim, exactly like the home card does.
+  const accent = "#5E9389";
+  const natureOverlay = isDark
+    ? `linear-gradient(155deg, ${accent}99 0%, ${accent}40 35%, rgba(15, 18, 24, 0.55) 100%)`
+    : `linear-gradient(155deg, ${accent}66 0%, ${accent}22 35%, rgba(255, 255, 255, 0.4) 100%)`;
+  const tintLayer = isDark
+    ? "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))"
+    : "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))";
+  const heroBackground = `${natureOverlay}, ${tintLayer}, url(/nature/Background-2.png)`;
+
   return (
     <div className="flex yuna-rise justify-start">
-      <div className="max-w-[88%] w-full rounded-2xl bg-white/90 backdrop-blur-sm text-neutral-900 shadow-lg overflow-hidden">
+      <div className="max-w-[88%] w-full rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md overflow-hidden">
         <div className="px-4 pt-3 pb-2 flex items-center gap-1.5">
           <span aria-hidden>📋</span>
-          <span className="text-[10px] tracking-[0.18em] uppercase text-neutral-600">
+          <span className="text-[10px] tracking-[0.18em] uppercase text-white/65">
             Questionnaire
           </span>
         </div>
@@ -1182,20 +1199,16 @@ function IntroQuestionnaireCard({
           <div
             className="rounded-xl px-5 py-6"
             style={{
-              backgroundImage:
-                "linear-gradient(155deg, #2D4B33 0%, #1E3625 50%, #16261C 100%)",
+              backgroundImage: heroBackground,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
             }}
           >
-            <h3
-              className="font-display text-[22px] leading-[1.2] tracking-tight"
-              style={{ color: "#ffffff" }}
-            >
-              A quick intro check-in
+            <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
+              Let's get to know each other
             </h3>
-            <p
-              className="mt-2 text-[14px] leading-relaxed"
-              style={{ color: "rgba(255,255,255,0.8)" }}
-            >
+            <p className="mt-2 text-[14px] leading-relaxed text-white/80">
               4 questions · about 1 minute
             </p>
           </div>
@@ -1204,15 +1217,14 @@ function IntroQuestionnaireCard({
           <button
             type="button"
             onClick={onDismiss}
-            className="flex-1 rounded-full border border-neutral-300 py-2.5 text-[11px] tracking-[0.18em] uppercase text-neutral-700 active:bg-neutral-100 transition-colors"
+            className="flex-1 rounded-full border border-white/30 py-2.5 text-[11px] tracking-[0.18em] uppercase text-white/85 active:bg-white/15 transition-colors"
           >
             No, Thanks
           </button>
           <button
             type="button"
             onClick={onStart}
-            className="flex-1 rounded-full py-2.5 text-[11px] tracking-[0.18em] uppercase text-white active:opacity-85 transition-opacity"
-            style={{ backgroundColor: "#1F4E2A" }}
+            className="flex-1 rounded-full py-2.5 text-[11px] tracking-[0.18em] uppercase bg-white text-neutral-900 active:opacity-85 transition-opacity"
           >
             Start
           </button>
