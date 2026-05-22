@@ -484,7 +484,25 @@ function Chat() {
     const t = window.setTimeout(() => {
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }, 240);
-    return () => window.clearTimeout(t);
+    // Stara loads via @font-face with font-display: swap. The swap grows
+    // bubble line heights after the initial scroll lands, leaving the last
+    // bubble a few pixels below the visible bottom — re-anchor once fonts
+    // are ready. Guarded by a near-bottom check so we don't yank a user
+    // who's scrolled up to read earlier messages.
+    let cancelled = false;
+    document.fonts?.ready?.then(() => {
+      if (cancelled) return;
+      const cur = scrollRef.current;
+      if (!cur) return;
+      const slack = cur.scrollHeight - cur.scrollTop - cur.clientHeight;
+      if (slack > 0 && slack < 120) {
+        cur.scrollTo({ top: cur.scrollHeight, behavior: "instant" });
+      }
+    });
+    return () => {
+      window.clearTimeout(t);
+      cancelled = true;
+    };
   }, [messages, typing, inputFocused, questionnaireActive, questionnaireIndex]);
 
   // Keep a ref so speakIfEnabled — used inside async callbacks — sees the
@@ -1183,12 +1201,15 @@ function Chat() {
               ) : questionnaireActive &&
                   voicePanelVisible &&
                   questionnaireIndex < INTRO_QUESTIONS.length ? (
-                <AnswerChips
-                  key={questionnaireIndex}
-                  question={INTRO_QUESTIONS[questionnaireIndex]}
-                  onPick={pickAnswer}
-                  onSkip={dismissQuestionnaire}
-                />
+                <>
+                  <QuestionHeader index={questionnaireIndex} align="center" />
+                  <AnswerChips
+                    key={questionnaireIndex}
+                    question={INTRO_QUESTIONS[questionnaireIndex]}
+                    onPick={pickAnswer}
+                    onSkip={dismissQuestionnaire}
+                  />
+                </>
               ) : null
             }
             micEnabled={voiceUnlocked}
@@ -1198,7 +1219,7 @@ function Chat() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 pt-20 pb-6 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex-1 overflow-y-auto px-5 pt-20 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {messages.map((m) => {
                 if (m.kind === "limitations")
@@ -1218,18 +1239,6 @@ function Chat() {
                 return <Bubble key={m.id} msg={m} />;
               })}
               {typing && <TypingBubble />}
-              {questionnaireActive && questionnaireIndex < INTRO_QUESTIONS.length && (
-                <div className="flex justify-center yuna-fade-in">
-                  <div className="max-w-[82%] w-full">
-                    <AnswerChips
-                      key={questionnaireIndex}
-                      question={INTRO_QUESTIONS[questionnaireIndex]}
-                      onPick={pickAnswer}
-                      onSkip={dismissQuestionnaire}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Input + Call Yuna footer */}
@@ -1244,7 +1253,17 @@ function Chat() {
                     Keep Texting For Now
                   </Button>
                 </div>
-              ) : questionnaireActive && questionnaireIndex < INTRO_QUESTIONS.length ? null : (
+              ) : questionnaireActive && questionnaireIndex < INTRO_QUESTIONS.length ? (
+                <div className="px-5 pt-3 pb-6 yuna-fade-in flex flex-col gap-3">
+                  <QuestionHeader index={questionnaireIndex} align="left" />
+                  <AnswerChips
+                    key={questionnaireIndex}
+                    question={INTRO_QUESTIONS[questionnaireIndex]}
+                    onPick={pickAnswer}
+                    onSkip={dismissQuestionnaire}
+                  />
+                </div>
+              ) : (
                 <form onSubmit={send} className="px-5 pt-3 pb-6">
                   <TextField
                     ref={inputRef}
@@ -1437,6 +1456,30 @@ function LimitationsCard({
   );
 }
 
+// Counter (1/4) + the question prompt itself, shown above the chips in
+// both voice and text modes so the user can always see what they're
+// answering — voice centers it under the avatar; text left-aligns it
+// above the chip stack at the bottom of the screen.
+function QuestionHeader({
+  index,
+  align,
+}: {
+  index: number;
+  align: "center" | "left";
+}) {
+  const total = INTRO_QUESTIONS.length;
+  const prompt = INTRO_QUESTIONS[index].prompt;
+  const alignClass = align === "center" ? "items-center text-center" : "items-start text-left";
+  return (
+    <div className={"flex flex-col gap-1.5 " + alignClass}>
+      <span className="font-sans-ui text-[11px] tracking-[0.2em] uppercase text-white/75">
+        {index + 1}/{total}
+      </span>
+      <p className="text-lg leading-snug text-white">{prompt}</p>
+    </div>
+  );
+}
+
 // Renders the answer chip stack that replaces the chat input bar while the
 // inline questionnaire is active. Tapping a chip commits the answer; the
 // "Other" branch swaps to a small text-field form (for Q3's free-text).
@@ -1514,7 +1557,7 @@ function AnswerChips({
           }}
           className="w-full flex items-center justify-between gap-3 rounded-full border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
         >
-          <span className="flex-1 text-sm leading-snug text-white/95">{option}</span>
+          <span className="flex-1 text-base leading-snug text-white/95">{option}</span>
           <ChevronRight
             size={16}
             strokeWidth={1.6}
