@@ -312,6 +312,36 @@
     to   { transform: rotate(360deg); }
   }
 
+  /* Haptic edge-pulse. Used in voice mode to symbolize the device buzz
+     when a new questionnaire prompt surfaces. Three thin rings scale out
+     in quick sequence from the phone's outer edge into the surrounding
+     browser area — render INTO the PhoneFrame outer-overlay container,
+     not as a child of the inner phone (rings need to extend past the
+     overflow-hidden clip). The overlay sits behind the phone in paint
+     order, so each ring is invisible until its scaled-up edge emerges
+     past the phone outline. */
+  .yuna-haptic-rings {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .yuna-haptic-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    border: 1px solid rgba(20, 20, 22, 0.55);
+    opacity: 0;
+    transform: scale(1);
+    animation: yuna-haptic-ring 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  @media (min-width: 640px) {
+    .yuna-haptic-ring { border-radius: 2.25rem; }
+  }
+  @keyframes yuna-haptic-ring {
+    0%   { transform: scale(1);    opacity: 0.85; }
+    100% { transform: scale(1.09); opacity: 0; }
+  }
+
   /* Slow gradient sweep used by the wrap-up's "ready to reveal" card. The
      animated background is layered on top of the card's own surface so
      content underneath stays readable. */

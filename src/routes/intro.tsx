@@ -753,20 +753,44 @@ function IntroContinuous() {
             CTA / form. The scroll container owns the horizontal padding so
             the carousel can break out to the phone edges via -mx-8 without
             being clipped by an outer px-8. */}
-        <div className="flex-1 flex flex-col pb-10 min-h-0">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Persistent scrolling chat — avatar is sticky at the mute-button
               row so it starts at its initial position below the header,
               drifts up with the conversation as the user scrolls, then locks
               alongside the mute icon while bubbles flow underneath it.
-              Scrollbar is hidden. */}
+              Scrollbar is hidden. The scroll fills the full body so there's
+              no static strip below it — bottom breathing room lives inside
+              via paddingBottom, which expands when the keyboard opens. */}
           <div
             ref={chatScrollRef}
             className="flex-1 w-full flex flex-col gap-3 min-h-0 px-8 overflow-y-auto overflow-x-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{
               transition: "padding 200ms ease-out",
-              paddingBottom: inputFocused ? KEYBOARD_OFFSET : undefined,
+              paddingBottom: inputFocused
+                ? KEYBOARD_OFFSET
+                : phase === "reveal"
+                  ? 140
+                  : 40,
             }}
           >
+            {/* Blur fade overlay — sticks at the top of the scroll port and
+                softens bubbles passing beneath the avatar/mute cluster. The
+                mask gradient dissolves the blur into the photo background
+                so there's no hard clipping edge. Negative margin + gap math
+                makes it contribute zero vertical space to flow. */}
+            <div
+              className="sticky top-0 -mx-8 -mb-[172px] shrink-0 pointer-events-none z-[5]"
+              aria-hidden
+              style={{
+                height: 160,
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                maskImage:
+                  "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+              }}
+            />
             {/* Spacer pushes the avatar's initial position below the mute
                 button row. Kept as a real flex item (not padding) so the
                 sticky avatar's `top` measures from the scroll port edge,
@@ -813,20 +837,13 @@ function IntroContinuous() {
                 />
               </div>
             )}
-          </div>
-
-          {/* Action area — CTA / form for every step. Slides above the
-              keyboard when the name input is focused. */}
-          <div
-            className="px-8 pt-4 shrink-0 transition-transform duration-200 ease-out"
-            style={
-              inputFocused
-                ? { transform: `translateY(-${KEYBOARD_OFFSET}px)` }
-                : undefined
-            }
-          >
+            {/* CTA / form lives at the tail of the conversation so it reads
+                as part of the same flow — no separate footer container that
+                would visually mask the bubbles above it. Keyboard offset is
+                handled by the scroll's own paddingBottom, which lifts this
+                item above the keyboard once auto-scroll lands. */}
             {phase === "wait-input" && (
-              <div className="yuna-rise">
+              <div className="yuna-rise mt-5 shrink-0">
                 <NameForm
                   inputRef={nameInputRef}
                   value={nameInput}
@@ -838,7 +855,7 @@ function IntroContinuous() {
               </div>
             )}
             {phase === "wait-tap" && (
-              <div className="yuna-rise">
+              <div className="yuna-rise mt-5 shrink-0">
                 {stepIdx === 1 ? (
                   <Button
                     surface="dark"
