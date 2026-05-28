@@ -1341,7 +1341,7 @@ function Chat() {
                       <Button
                         surface="dark"
                         variant="primary"
-                        size={text.trim() && !recordingVoice ? "icon-sm" : "sm"}
+                        size={text.trim() && !recordingVoice ? "icon" : "md"}
                         type={text.trim() && !recordingVoice ? "submit" : "button"}
                         pressed={recordingVoice}
                         className={recordingVoice ? "opacity-80" : undefined}

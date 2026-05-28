@@ -170,8 +170,8 @@ function GuidedSessionCard({
         }
       />
 
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-1">
-        <h3 className="font-display text-[24px] leading-[1.15] tracking-tight text-white max-w-[18rem]">
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
+        <h3 className="font-display text-[24px] leading-[1.75] tracking-tight text-white max-w-[18rem]">
           {card.title}
         </h3>
         {card.subtitle && (
@@ -204,8 +204,8 @@ function MeditationCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
-      <div className="flex-1 flex items-center justify-center">
-        <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white text-center">
+      <div className="flex-1 flex items-center justify-center px-6 pt-9">
+        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
           {card.title}
         </h3>
       </div>
@@ -234,7 +234,7 @@ function GratitudeCard({
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col justify-center">
-        <p className="font-display text-[20px] leading-[1.25] tracking-tight text-white">
+        <p className="font-display text-[20px] leading-[1.75] tracking-tight text-white">
           {card.prompt}
         </p>
         <ul className="mt-4 flex flex-col gap-2.5">
@@ -285,8 +285,8 @@ function SelfDiscoveryCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} />
-      <div className="flex-1 flex flex-col justify-center">
-        <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white">
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
+        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white">
           {card.title}
         </h3>
         <p className="mt-3 text-[14px] leading-relaxed text-white/80 max-w-[20rem]">
@@ -317,8 +317,8 @@ function AffirmationCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
-      <div className="flex-1 flex items-center">
-        <p className="font-display text-[22px] leading-[1.3] tracking-tight text-white">
+      <div className="flex-1 flex items-center justify-center px-6 pt-9">
+        <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
           “{card.quote}”
         </p>
       </div>
@@ -350,8 +350,8 @@ function LearnSkillCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
-      <div className="flex-1 flex items-center justify-center">
-        <h3 className="font-display text-[22px] leading-[1.2] tracking-tight text-white text-center">
+      <div className="flex-1 flex items-center justify-center px-6 pt-9">
+        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
           {card.title}
         </h3>
       </div>
@@ -378,8 +378,8 @@ function AccountabilityCard({
   return (
     <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
-      <div className="flex-1 flex items-center justify-center">
-        <p className="font-display text-[22px] leading-[1.25] tracking-tight text-white text-center">
+      <div className="flex-1 flex items-center justify-center px-6 pt-9">
+        <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
           “{card.goal}”
         </p>
       </div>
@@ -425,7 +425,7 @@ function BookCard({
           <p className="text-[11px] tracking-[0.18em] uppercase text-white">
             {card.author}
           </p>
-          <p className="mt-1 font-display text-[22px] leading-[1.2] tracking-tight text-white">
+          <p className="mt-1 font-display text-[22px] leading-[1.75] tracking-tight text-white">
             {card.title}
           </p>
           <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-white/85">
