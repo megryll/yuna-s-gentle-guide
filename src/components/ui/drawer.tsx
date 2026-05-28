@@ -3,7 +3,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
-import { modeImage, useAppMode, useBgVariant, type AppMode } from "@/lib/theme-prefs";
+import { modeImage, useAppMode, type AppMode } from "@/lib/theme-prefs";
 
 const Drawer = ({
   shouldScaleBackground = false,
@@ -54,7 +54,6 @@ const DrawerContent = React.forwardRef<
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
   const appMode = useAppMode();
-  const bgVariant = useBgVariant();
   const mode = modeProp ?? appMode;
   return (
     <DrawerPortal>
@@ -62,7 +61,7 @@ const DrawerContent = React.forwardRef<
       <DrawerPrimitive.Content
         ref={ref}
         style={{
-          backgroundImage: `url(${modeImage(mode, bgVariant)})`,
+          backgroundImage: `url(${modeImage(mode)})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

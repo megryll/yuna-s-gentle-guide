@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Gauge,
   Globe,
+  Lock,
   ScanFace,
   Star,
   Volume2,
@@ -23,8 +24,12 @@ import { setAppMode, useDarkBlurImage } from "@/lib/theme-prefs";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
 import { IntroVoicePicker } from "@/components/yuna-settings-shared";
-import { IntroStepped } from "@/components/IntroStepped";
-import { useIntroVariant } from "@/lib/intro-variant";
+import {
+  AMBIENT_VOLUME,
+  fadeAmbientTo,
+  pauseAmbient,
+  startAmbient,
+} from "@/lib/ambient-audio";
 
 export const Route = createFileRoute("/intro")({
   validateSearch: (s: Record<string, unknown>): { step?: number } => {
@@ -45,13 +50,6 @@ export const Route = createFileRoute("/intro")({
   }),
   component: Intro,
 });
-
-// Top-level dispatcher: routes to either the polished continuous chat or the
-// production stepped flow based on the admin /intro-variant/ toggle.
-function Intro() {
-  const variant = useIntroVariant();
-  return variant === "stepped" ? <IntroStepped /> : <IntroContinuous />;
-}
 
 type Card =
   | { kind: "harvard" }
@@ -116,7 +114,7 @@ const initialRevealsForStep = (
   if (stepIdx === 3) {
     return [
       {
-        text: "91% of people reported improved mood and stress after 4 weeks of working together.",
+        text: "91% of people felt better after just one session.",
         card: { kind: "mood-stats" },
       },
     ];
@@ -146,7 +144,7 @@ const ctaLabelForStep = (stepIdx: number): string => {
 let bubbleIdSeq = 0;
 const newBubbleId = () => `b${++bubbleIdSeq}`;
 
-function IntroContinuous() {
+function Intro() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const darkBg = useDarkBlurImage();
@@ -181,18 +179,14 @@ function IntroContinuous() {
   const [faceIdModalOpen, setFaceIdModalOpen] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const voiceCacheRef = useRef<Map<VoiceId, string>>(new Map());
   // Monotonically increases on every play/stop so an in-flight fetch or a
   // pending el.play() promise can detect that it's stale and bail out.
   const voicePlayGenRef = useRef(0);
-  const fadeRafRef = useRef<number | null>(null);
   const mutedRef = useRef(muted);
 
   const KEYBOARD_OFFSET = 260;
-  const AMBIENT_VOLUME = 0.35;
-  const AMBIENT_FADE_IN_MS = 1000;
 
   // Keep a ref of `muted` for setTimeout-scheduled callbacks (closure freshness)
   useEffect(() => {
@@ -205,33 +199,6 @@ function IntroContinuous() {
 
   const playSendPop = () => {
     playUserSendSound({ muted: mutedRef.current });
-  };
-
-  const cancelAmbientFade = () => {
-    if (fadeRafRef.current != null) {
-      cancelAnimationFrame(fadeRafRef.current);
-      fadeRafRef.current = null;
-    }
-  };
-
-  // Smoothly fade the ambient bed to `target` over `ms`. Used to duck the
-  // forest sound while a voice preview plays so the voice cuts through.
-  const fadeAmbientTo = (target: number, ms: number) => {
-    cancelAmbientFade();
-    const el = audioRef.current;
-    if (!el) return;
-    const startVol = el.volume;
-    const startT = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min((t - startT) / ms, 1);
-      el.volume = startVol + (target - startVol) * p;
-      if (p < 1) {
-        fadeRafRef.current = requestAnimationFrame(tick);
-      } else {
-        fadeRafRef.current = null;
-      }
-    };
-    fadeRafRef.current = requestAnimationFrame(tick);
   };
 
   const stopVoicePreview = () => {
@@ -298,80 +265,17 @@ function IntroContinuous() {
     }
   };
 
-  // Forest ambient — file is pre-trimmed; we fade in volume on first start.
-  // If autoplay is blocked (refresh / direct sidebar nav), we wait for the
-  // first user gesture anywhere on the page and start then.
+  // Forest ambient lives in a module singleton (src/lib/ambient-audio.ts) so
+  // it survives the intro→home transition. Mute toggles pause/resume the
+  // singleton; we deliberately do NOT pause on unmount so the bed keeps
+  // playing once the user lands on /home.
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-
     if (muted) {
-      cancelAmbientFade();
-      el.pause();
+      pauseAmbient();
       return;
     }
-
-    let listenersBound = false;
-
-    const fadeInTo = (target: number, ms: number) => {
-      cancelAmbientFade();
-      const startVol = el.volume;
-      const startT = performance.now();
-      const tick = (t: number) => {
-        const p = Math.min((t - startT) / ms, 1);
-        el.volume = startVol + (target - startVol) * p;
-        if (p < 1) {
-          fadeRafRef.current = requestAnimationFrame(tick);
-        } else {
-          fadeRafRef.current = null;
-        }
-      };
-      fadeRafRef.current = requestAnimationFrame(tick);
-    };
-
-    const attemptStart = () => {
-      el.volume = 0;
-      el
-        .play()
-        .then(() => fadeInTo(AMBIENT_VOLUME, AMBIENT_FADE_IN_MS))
-        .catch(() => bindGestureListeners());
-    };
-
-    const startOnGesture = () => {
-      unbindGestureListeners();
-      attemptStart();
-    };
-
-    const bindGestureListeners = () => {
-      if (listenersBound) return;
-      listenersBound = true;
-      document.addEventListener("pointerdown", startOnGesture, true);
-      document.addEventListener("keydown", startOnGesture, true);
-      document.addEventListener("touchstart", startOnGesture, true);
-    };
-
-    const unbindGestureListeners = () => {
-      if (!listenersBound) return;
-      listenersBound = false;
-      document.removeEventListener("pointerdown", startOnGesture, true);
-      document.removeEventListener("keydown", startOnGesture, true);
-      document.removeEventListener("touchstart", startOnGesture, true);
-    };
-
-    attemptStart();
-
-    return () => {
-      unbindGestureListeners();
-      cancelAmbientFade();
-    };
+    startAmbient();
   }, [muted]);
-
-  useEffect(() => {
-    return () => {
-      cancelAmbientFade();
-      audioRef.current?.pause();
-    };
-  }, []);
 
   // On step change: append the new Yuna reveals onto the existing chat.
   // Bubbles persist across steps so the whole conversation stays visible
@@ -563,11 +467,11 @@ function IntroContinuous() {
   };
 
   const REACTION_AMAZING = {
-    userText: "Amazing! \u{1F929}",
+    userText: "Tell me more \u{1F440}",
     yunaReply: "That means so much",
   };
   const REACTION_IMPRESSIVE = {
-    userText: "Impressive! \u{1F92F}",
+    userText: "I'm listening \u{1F442}",
     yunaReply: "It really does work",
   };
 
@@ -628,25 +532,6 @@ function IntroContinuous() {
     }, POST_NAME_DELAY_MS + TYPING_MS);
   };
 
-  const fadeOutAmbient = (ms: number) => {
-    cancelAmbientFade();
-    const el = audioRef.current;
-    if (!el) return;
-    const startVol = el.volume;
-    const startT = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min((t - startT) / ms, 1);
-      el.volume = startVol * (1 - p);
-      if (p < 1) {
-        fadeRafRef.current = requestAnimationFrame(tick);
-      } else {
-        el.pause();
-        fadeRafRef.current = null;
-      }
-    };
-    fadeRafRef.current = requestAnimationFrame(tick);
-  };
-
   const submitVoiceChoice = () => {
     // Persist whichever card the user landed on, even if they never tapped
     // to change the default, and tear down any in-flight preview.
@@ -676,7 +561,6 @@ function IntroContinuous() {
     setUserType("new");
     setAppMode("dark");
     setTransitioning(true);
-    fadeOutAmbient(1300);
     setTimeout(() => {
       navigate({ to: "/home" });
     }, 1400);
@@ -690,13 +574,6 @@ function IntroContinuous() {
   return (
     <FaceIdCtx.Provider value={{ on: faceIdOn, request: faceIdRequest }}>
     <PhoneFrame backgroundImage={darkBg}>
-      <audio
-        ref={audioRef}
-        src="/forest-background.m4a"
-        loop
-        preload="auto"
-        aria-hidden="true"
-      />
       {transitioning && (
         <div
           className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
@@ -868,7 +745,7 @@ function IntroContinuous() {
                       )
                     }
                   >
-                    Amazing! {"\u{1F929}"}
+                    Tell me more {"\u{1F440}"}
                   </Button>
                 ) : stepIdx === 3 ? (
                   <Button
@@ -882,7 +759,7 @@ function IntroContinuous() {
                       )
                     }
                   >
-                    Impressive! {"\u{1F92F}"}
+                    I'm listening {"\u{1F442}"}
                   </Button>
                 ) : stepIdx === 2 ? (
                   <div className="flex flex-col gap-2.5">
@@ -1061,6 +938,10 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
             </div>
           ) : bubble.card.kind === "push-preview" ? (
             <div className="border-t border-white/20 bg-white/5 px-3 py-3">
+              <Attachment kind={bubble.card.kind} />
+            </div>
+          ) : bubble.card.kind === "privacy" ? (
+            <div className="border-t border-white/20 bg-white/10 px-4 py-4">
               <Attachment kind={bubble.card.kind} />
             </div>
           ) : (
@@ -1281,17 +1162,11 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
           />
 
           <g fontSize="11" fill={labelText}>
-            <text x="24" y="160" textAnchor="middle">
-              Week 1
+            <text x="24" y="160" textAnchor="start">
+              Session Start
             </text>
-            <text x="88" y="160" textAnchor="middle">
-              Week 2
-            </text>
-            <text x="152" y="160" textAnchor="middle">
-              Week 3
-            </text>
-            <text x="216" y="160" textAnchor="middle">
-              Week 4
+            <text x="216" y="160" textAnchor="end">
+              Session End
             </text>
           </g>
         </svg>
@@ -1333,24 +1208,16 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
       rel="noopener noreferrer"
       className="flex items-center gap-3 text-white active:opacity-80 transition-opacity"
     >
-      <img
-        src="/lock.png"
-        alt=""
-        aria-hidden="true"
-        className="h-[76px] w-auto object-contain shrink-0"
-      />
-      <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="text-[15px] font-semibold leading-snug whitespace-nowrap inline-flex items-center gap-1">
-          Read our Privacy Policy
-          <ArrowUpRight
-            size={16}
-            strokeWidth={1.75}
-            aria-hidden
-            className="shrink-0"
-          />
-        </span>
-        <span className="text-[14px] text-white/70">yuna.io/privacy</span>
+      <Lock size={22} strokeWidth={1.75} aria-hidden className="shrink-0" />
+      <span className="flex-1 min-w-0 text-[15px] font-semibold leading-snug">
+        Read our Privacy Policy
       </span>
+      <ArrowUpRight
+        size={18}
+        strokeWidth={1.75}
+        aria-hidden
+        className="shrink-0"
+      />
     </a>
   );
 }

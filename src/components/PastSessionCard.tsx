@@ -2,14 +2,12 @@ import { ArrowRight } from "lucide-react";
 import { useAppMode } from "@/lib/theme-prefs";
 import type { PastSession } from "@/lib/sessions";
 
-const SESSION_ACCENTS = ["#7E84CC", "#5E9389", "#C7916A", "#7BB068"];
-
 const SESSION_NATURE_BGS = [
   "/nature/Background-3.png",
   "/nature/Background-7.png",
   "/nature/Background-11.png",
   "/nature/Background-15.png",
-  "/nature/Background-19.png",
+  "/nature/Background-16.png",
 ];
 
 export function PastSessionCard({
@@ -24,19 +22,16 @@ export function PastSessionCard({
   const mode = useAppMode();
   const isLight = mode === "light";
 
-  const accent = SESSION_ACCENTS[index % SESSION_ACCENTS.length];
   const natureBg = SESSION_NATURE_BGS[index % SESSION_NATURE_BGS.length];
-  const cornerStop = isLight
-    ? "rgba(255, 255, 255, 0.78)"
-    : "rgba(15, 18, 24, 0.55)";
-  const tint = isLight ? "rgba(255, 255, 255, 0.88)" : "rgba(15, 18, 24, 0.86)";
+  const tint = isLight ? "rgba(255, 255, 255, 0.72)" : "rgba(0, 0, 0, 0.55)";
+
+  const strokeClass = isLight
+    ? "ring-1 ring-black/10"
+    : "ring-1 ring-white/15";
 
   const style = {
     animationDelay: `${index * 60}ms`,
-    backgroundImage:
-      `linear-gradient(110deg, ${accent}99 0%, ${accent}40 35%, ${cornerStop} 100%), ` +
-      `linear-gradient(${tint}, ${tint}), ` +
-      `url(${natureBg})`,
+    backgroundImage: `linear-gradient(${tint}, ${tint}), url(${natureBg})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };
@@ -44,7 +39,7 @@ export function PastSessionCard({
   const inner = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-white/70">
+        <p className="text-[12px] tracking-[0.2em] uppercase text-white/70">
           {session.date} · {session.length}
         </p>
       </div>
@@ -54,7 +49,7 @@ export function PastSessionCard({
 
       <span
         aria-hidden
-        className="absolute bottom-4 right-4 shrink-0 h-9 w-9 rounded-full border border-white/30 text-white inline-flex items-center justify-center"
+        className="absolute top-1/2 -translate-y-1/2 right-4 shrink-0 h-9 w-9 rounded-full border border-white/30 text-white inline-flex items-center justify-center"
       >
         <ArrowRight size={14} strokeWidth={2} />
       </span>
@@ -67,7 +62,7 @@ export function PastSessionCard({
         type="button"
         onClick={onClick}
         style={style}
-        className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative active:opacity-90 transition-opacity"
+        className={`yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass} active:opacity-90 transition-opacity`}
       >
         {inner}
       </button>
@@ -77,7 +72,7 @@ export function PastSessionCard({
   return (
     <div
       style={style}
-      className="yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative"
+      className={`yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass}`}
     >
       {inner}
     </div>

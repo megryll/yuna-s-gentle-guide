@@ -57,7 +57,7 @@ function SessionsReturning() {
           Past sessions
         </h1>
 
-        <ul className="mt-6 flex flex-col gap-7">
+        <ul className="mt-6 flex flex-col gap-4">
           {PAST_SESSIONS.map((s, i) => (
             <li key={s.id}>
               <PastSessionCard session={s} index={i} />

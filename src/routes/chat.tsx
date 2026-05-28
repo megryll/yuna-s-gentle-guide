@@ -37,6 +37,7 @@ import {
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 import { VoiceSession, type VoiceSessionHandle } from "@/components/VoiceSession";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
+import { pauseAmbient } from "@/lib/ambient-audio";
 import {
   Dialog,
   DialogContent,
@@ -291,8 +292,10 @@ function Chat() {
 
   // Mount the chosen ambience bed once. Autoplay may be blocked on direct
   // navigation (no prior gesture); we fall back to starting on the first
-  // user gesture anywhere on the page.
+  // user gesture anywhere on the page. Pause the shared home/intro ambient
+  // singleton first so the two beds don't double up.
   useEffect(() => {
+    pauseAmbient();
     const ambience = getAmbience();
     const file = AMBIENCE_FILES[ambience];
     if (!file) return;

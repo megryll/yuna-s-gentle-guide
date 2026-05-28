@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Share2 } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -199,15 +198,6 @@ function WrapUp() {
     saveKeepsake(k);
   };
 
-  const onShare = () => {
-    const shareText = keepsake
-      ? `From my Yuna session: "${keepsake}"`
-      : "Just had a great session with Yuna.";
-    if (typeof navigator !== "undefined" && "share" in navigator) {
-      navigator.share({ text: shareText }).catch(() => {});
-    }
-  };
-
   const onDone = () => {
     if (keepsake) persist();
     clearStoredMessages();
@@ -226,11 +216,7 @@ function WrapUp() {
             <SkeletonScreen />
           ) : (
             <>
-              <SessionHero
-                avatar={avatar}
-                message={keepsake}
-                onShare={onShare}
-              />
+              <SessionHero avatar={avatar} message={keepsake} />
 
               <ReflectionSection
                 stress={stress}
@@ -270,20 +256,18 @@ function WrapUp() {
 }
 
 // ── Session hero ────────────────────────────────────────────────────────────
-// Floating (no card) hero: tiny eyebrow, Yuna avatar, the personalized AI
-// keepsake as the headline, and a Share action. White text gets a soft
-// drop shadow so it stays legible against bright spots of the photo bg.
+// Floating (no card) hero: tiny eyebrow, Yuna avatar, and the personalized
+// AI keepsake as the headline. White text gets a soft drop shadow so it
+// stays legible against bright spots of the photo bg.
 function SessionHero({
   avatar,
   message,
-  onShare,
 }: {
   avatar: AvatarVariant | null;
   message: string;
-  onShare: () => void;
 }) {
   return (
-    <section className="flex flex-col items-center text-center gap-4 pt-1 pb-2 yuna-fade-in">
+    <section className="flex flex-col items-center text-center gap-4 pt-20 pb-10 yuna-fade-in">
       <p className="text-[10px] tracking-[0.32em] uppercase text-white/65">
         Session complete
       </p>
@@ -296,20 +280,9 @@ function SessionHero({
         )}
       </span>
 
-      <p className="font-display italic text-[24px] leading-[1.3] text-white max-w-[280px]">
+      <p className="font-display italic text-[24px] leading-[1.3] text-white max-w-[280px] drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
         {message}
       </p>
-
-      <Button
-        surface="dark"
-        variant="secondary"
-        size="sm"
-        onClick={onShare}
-        className="mt-1"
-      >
-        <Share2 size={14} strokeWidth={1.75} aria-hidden />
-        Share
-      </Button>
     </section>
   );
 }
@@ -336,7 +309,7 @@ function ReflectionSection({
   onMoodChange: (v: number) => void;
 }) {
   return (
-    <section className="flex flex-col gap-10 yuna-rise py-2">
+    <section className="flex flex-col gap-9 yuna-rise pt-5 pb-14">
       <h2 className="font-display text-[18px] leading-tight text-white text-center">
         How did this session land?
       </h2>
@@ -438,16 +411,16 @@ function SentimentSlider({
 function HighlightsCard({ highlights }: { highlights: Highlight[] }) {
   if (highlights.length === 0) return null;
   return (
-    <section className="flex flex-col gap-3 yuna-rise">
-      <header>
-        <h2 className="font-display text-[18px] leading-tight text-white text-center">
-          Highlights and emotions
-        </h2>
-      </header>
+    <section className="flex flex-col gap-9 yuna-rise">
+      <h2 className="font-display text-[18px] leading-tight text-white text-center">
+        Highlights and emotions
+      </h2>
 
-      {highlights.map((h, i) => (
-        <HighlightItem key={i} highlight={h} />
-      ))}
+      <div className="flex flex-col gap-3">
+        {highlights.map((h, i) => (
+          <HighlightItem key={i} highlight={h} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -521,7 +494,7 @@ function EmotionPill({ name }: { name: string }) {
 // so the visual stays the same but the tile doesn't react to taps.
 function PlacedForYou({ items }: { items: HomeCard[] }) {
   return (
-    <div className="flex flex-col gap-3 yuna-rise">
+    <div className="flex flex-col gap-9 yuna-rise">
       <h2 className="font-display text-[18px] leading-tight text-white text-center">
         New activities
       </h2>

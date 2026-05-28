@@ -229,7 +229,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(circle, rgba(255,255,255,0.18) 0.9px, transparent 1.2px)",
+            "radial-gradient(circle, rgba(255,255,255,0.10) 0.9px, transparent 1.2px)",
           backgroundSize: "12px 12px",
           WebkitMaskImage:
             "radial-gradient(ellipse 70% 65% at 15% 95%, black 0%, transparent 65%), radial-gradient(ellipse 65% 60% at 92% 8%, black 0%, transparent 65%)",
@@ -286,13 +286,10 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
           >
             {unlocked ? "Active" : "Awaiting Verification"}
           </span>
-          <span className="text-[10px] tracking-[0.2em] uppercase text-white/70">
-            24/7 · Private
-          </span>
         </div>
 
-        <div className="mt-3.5 flex items-center gap-4 text-[13px] text-white/90">
-          {["Unlimited sessions", "Anytime", "100% Free"].map((label) => (
+        <div className="mt-3.5 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-[13px] text-white/90">
+          {["Unlimited sessions", "24/7", "Private"].map((label) => (
             <div key={label} className="flex items-center gap-1.5">
               <Check
                 size={13}
@@ -325,11 +322,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
           />
         </div>
 
-        <div className="mt-5 flex items-end justify-between">
-          <Waveform
-            pattern={[7, 11, 5, 13, 9, 14, 6, 11, 8, 12, 7, 10, 5, 9]}
-            tinted={unlocked}
-          />
+        <div className="mt-5 flex items-end justify-end">
           <Waveform
             pattern={[10, 6, 13, 8, 14, 7, 11, 9, 5, 12, 8, 10, 6, 11]}
             tinted={unlocked}

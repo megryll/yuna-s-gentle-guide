@@ -206,7 +206,7 @@ export const HOME_CARDS: HomeCard[] = [
     quote:
       "I have the strength to overcome obstacles—each step forward is progress. Embrace challenges and keep moving confidently.",
     cadence: "Daily",
-    naturePath: "/nature/Background-19.png",
+    naturePath: "/nature/Background-18.png",
     isSaved: true,
   },
   {
@@ -221,7 +221,7 @@ export const HOME_CARDS: HomeCard[] = [
     id: "daily-agenda",
     goal: "I will prepare a daily agenda every morning this week",
     eyebrow: "Your Goal",
-    naturePath: "/nature/Background-20.png",
+    naturePath: "/nature/Background-17.png",
   },
   {
     type: "book",
@@ -230,7 +230,7 @@ export const HOME_CARDS: HomeCard[] = [
     author: "Kristin Neff",
     rating: 4.6,
     cover: "/books/self-compassion.jpg",
-    naturePath: "/nature/Background-3.png",
+    naturePath: "/nature/Background-19.png",
   },
   {
     type: "guided-session",
@@ -268,7 +268,7 @@ export const HOME_CARDS: HomeCard[] = [
     quote:
       "Rest isn't a reward I earn—it's how I stay rooted enough to keep showing up. Softness today is strength tomorrow.",
     cadence: "Daily",
-    naturePath: "/nature/Background-18.png",
+    naturePath: "/nature/Background-13.png",
   },
   {
     type: "learn-skill",

@@ -107,7 +107,7 @@ export function FocusAreaBentoCard({
       </span>
       <div className="relative flex-1 flex flex-col justify-between p-4">
         <div className="flex flex-col gap-2">
-          <span className="text-[10px] tracking-[0.2em] uppercase text-white/65">
+          <span className="text-[12px] tracking-[0.2em] uppercase text-white/65">
             Focus Area {num}
           </span>
           <span

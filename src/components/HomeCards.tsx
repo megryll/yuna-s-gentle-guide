@@ -62,12 +62,11 @@ export function HomeCardRow({
 
   const mode = useAppMode();
   const isLight = mode === "light";
-  const natureDarkEnd = isLight ? "rgba(255, 255, 255, 0.4)" : "rgba(15, 18, 24, 0.55)";
   const photoPath = card.naturePath ?? meta.naturePath;
   const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))"
-    : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))";
-  const background = `linear-gradient(110deg, ${meta.accent}${isLight ? "66" : "99"} 0%, ${meta.accent}${isLight ? "22" : "40"} 35%, ${natureDarkEnd} 100%), ${tintLayer}, url(${photoPath})`;
+    ? "linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72))"
+    : "linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55))";
+  const background = `${tintLayer}, url(${photoPath})`;
 
   return (
     <div className="relative">
@@ -84,7 +83,8 @@ export function HomeCardRow({
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
         className={
-          "relative w-full text-left rounded-xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden " +
+          "relative w-full text-left rounded-xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden ring-1 " +
+          (isLight ? "ring-black/10 " : "ring-white/15 ") +
           (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
         }
         style={{
@@ -470,14 +470,11 @@ function CardShell({
   const isDark = tone === "dark";
   const isLight = mode === "light";
 
-  const natureOverlay = isLight
-    ? `linear-gradient(155deg, ${accent}66 0%, ${accent}22 35%, rgba(255, 255, 255, 0.4) 100%)`
-    : `linear-gradient(155deg, ${accent}99 0%, ${accent}40 35%, rgba(15, 18, 24, 0.55) 100%)`;
   const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85))"
-    : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))";
+    ? "linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72))"
+    : "linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55))";
   const background = naturePath
-    ? `${natureOverlay}, ${tintLayer}, url(${naturePath})`
+    ? `${tintLayer}, url(${naturePath})`
     : isDark
       ? `linear-gradient(155deg, ${accent}CC 0%, ${accent}55 35%, rgba(15, 18, 24, 0.78) 100%)`
       : `linear-gradient(160deg, #F4ECDE 0%, #EFE3CC 100%)`;
@@ -494,7 +491,8 @@ function CardShell({
       )}
       <div
         className={
-          "rounded-2xl p-5 aspect-square flex flex-col overflow-hidden " +
+          "rounded-2xl p-5 aspect-square flex flex-col overflow-hidden ring-1 " +
+          (isLight ? "ring-black/10 " : "ring-white/15 ") +
           (isDark ? "text-white" : "text-neutral-900")
         }
         style={{

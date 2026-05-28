@@ -11,6 +11,7 @@ import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
+import { startAmbient } from "@/lib/ambient-audio";
 
 const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around — I'll be here when you're ready to chat.";
@@ -50,6 +51,13 @@ export function HomeScreen({
     });
 
   useWelcomeAudio(showWelcome, voice);
+
+  // Continue the forest ambient bed that started during /intro. No-op if it's
+  // already playing; on direct nav to /home (no prior intro) this also kicks
+  // it off so the home surface always feels live.
+  useEffect(() => {
+    startAmbient();
+  }, []);
 
   const returning = variant === "returning";
 
