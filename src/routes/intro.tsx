@@ -106,10 +106,22 @@ const REACTION_AMAZING = {
   yunaReply:
     "I'm an emotionally intelligent chatbot, trained in well-tested types of therapy, here to listen and guide you. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
 };
-const REACTION_IMPRESSIVE = {
-  userText: "I'm listening \u{1F442}",
-  yunaReply: "It really does work",
-};
+// Stress check-in options offered after the mood-stats card. Replies are
+// tiered by intensity so a low-stress choice doesn't get an "I'm sorry"
+// acknowledgement that would land wrong.
+const STRESS_REPLY_HIGH =
+  "I'm sorry to hear that. It's a great thing you're here then.\n\nI'll wrap this up quick so we can talk about that.";
+const STRESS_REPLY_MED =
+  "Thanks for sharing.\n\nI'll wrap this up quick so we can dig into it together.";
+const STRESS_REPLY_LOW =
+  "Glad to hear it.\n\nI'll wrap this up quick so we can get started.";
+
+const STRESS_OPTIONS: { label: string; reply: string }[] = [
+  { label: "\u{1F616} Barely hanging in", reply: STRESS_REPLY_HIGH },
+  { label: "\u{1F61F} Stressed out", reply: STRESS_REPLY_HIGH },
+  { label: "\u{1F610} Some stress", reply: STRESS_REPLY_MED },
+  { label: "\u{1F642} Feeling pretty good", reply: STRESS_REPLY_LOW },
+];
 
 const initialRevealsForStep = (
   stepIdx: number,
@@ -146,6 +158,7 @@ const initialRevealsForStep = (
         text: "91% of people felt better after just one session.",
         card: { kind: "mood-stats" },
       },
+      { text: "On that note, how's your stress today?" },
     ];
   }
   if (stepIdx === 4) {
@@ -420,15 +433,12 @@ function Intro() {
         );
         return;
       }
-      if (stepIdx === 3) {
-        submitChatReaction(
-          REACTION_IMPRESSIVE.userText,
-          REACTION_IMPRESSIVE.yunaReply,
-        );
-        return;
-      }
       if (stepIdx === 2) {
         // Two-button choice step — let the user click explicitly.
+        return;
+      }
+      if (stepIdx === 3) {
+        // Multi-option stress check — let the user click explicitly.
         return;
       }
       if (stepIdx === 4) {
@@ -508,6 +518,12 @@ function Intro() {
 
   const submitSkipToSetup = () => {
     setPhase("reveal");
+    playSendPop();
+    setBubbles((prev) => [
+      ...prev,
+      { id: newBubbleId(), from: "you", text: "Skip to Setup" },
+    ]);
+
     setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
     setTimeout(() => {
       setTyping(false);
@@ -517,7 +533,7 @@ function Intro() {
         {
           id: newBubbleId(),
           from: "yuna",
-          text: "Here's how it works — chat with me anytime, voice or text, and I'll listen and help you work through what's on your mind.",
+          text: "Setup it is!",
         },
       ]);
       goToStep(2);
@@ -592,10 +608,23 @@ function Intro() {
       ...prev,
       { id: newBubbleId(), from: "you", text: "✓ You chose a voice" },
     ]);
-    // Hide the picker + CTA immediately so the screen lands on the sent
-    // bubble before step 5 starts revealing.
+    // Hide the picker + CTA so the screen lands on the sent bubble before
+    // Yuna's acknowledgement reveals and the privacy step begins.
     setPhase("reveal");
-    setTimeout(() => goToStep(stepIdx + 1), 600);
+    setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
+    setTimeout(() => {
+      setTyping(false);
+      playBubblePop();
+      setBubbles((prev) => [
+        ...prev,
+        {
+          id: newBubbleId(),
+          from: "yuna",
+          text: "Great choice! Last couple of things…",
+        },
+      ]);
+      goToStep(stepIdx + 1);
+    }, POST_NAME_DELAY_MS + TYPING_MS);
   };
 
   const advance = () => {
@@ -807,19 +836,19 @@ function Intro() {
                     </Button>
                   </div>
                 ) : stepIdx === 3 ? (
-                  <Button
-                    surface="dark"
-                    variant="primary"
-                    fullWidth
-                    onClick={() =>
-                      submitChatReaction(
-                        REACTION_IMPRESSIVE.userText,
-                        REACTION_IMPRESSIVE.yunaReply,
-                      )
-                    }
-                  >
-                    I'm listening {"\u{1F442}"}
-                  </Button>
+                  <div className="flex flex-col gap-2.5">
+                    {STRESS_OPTIONS.map((o) => (
+                      <Button
+                        key={o.label}
+                        surface="dark"
+                        variant="secondary"
+                        fullWidth
+                        onClick={() => submitChatReaction(o.label, o.reply)}
+                      >
+                        {o.label}
+                      </Button>
+                    ))}
+                  </div>
                 ) : stepIdx === 2 ? (
                   <div className="flex flex-col gap-2.5">
                     <Button
@@ -982,7 +1011,8 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
       >
         <p
           className={
-            (mine ? "text-[18px]" : "text-[20px]") + " leading-[1.4] px-4 py-3"
+            (mine ? "text-[18px]" : "text-[20px]") +
+            " leading-[1.4] px-4 py-3 whitespace-pre-line"
           }
         >
           {bubble.text}
