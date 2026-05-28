@@ -78,13 +78,13 @@ function SwitchStates({ surface }: { surface: "dark" | "light" }) {
     <div className="flex items-center gap-8">
       <div className="flex flex-col items-center gap-2">
         <Switch checked={on} onChange={setOn} label="On example" />
-        <span className={`text-[10px] tracking-[0.2em] uppercase ${labelClass}`}>
+        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
           On
         </span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <Switch checked={off} onChange={setOff} label="Off example" />
-        <span className={`text-[10px] tracking-[0.2em] uppercase ${labelClass}`}>
+        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
           Off
         </span>
       </div>

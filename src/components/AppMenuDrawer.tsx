@@ -138,7 +138,7 @@ export function AppMenuDrawer({
           {/* Sections */}
           {SECTIONS.map((s) => (
             <div key={s.title} className="mt-6">
-              <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2 px-1">
+              <p className="text-[11px] tracking-[0.25em] uppercase text-muted-foreground mb-2 px-1">
                 {s.title}
               </p>
               <div className="rounded-2xl hairline overflow-hidden bg-background/70 backdrop-blur-sm">

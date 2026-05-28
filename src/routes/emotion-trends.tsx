@@ -106,7 +106,7 @@ function TrendCard({ trend }: { trend: EmotionTrend }) {
         <p className="font-display text-[17px] leading-tight text-white">
           {trend.label}
         </p>
-        <p className="mt-1 text-[10px] tracking-[0.18em] uppercase text-white/65">
+        <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-white/65">
           {trend.count} this window
         </p>
         <p className="mt-2 text-[12px] leading-snug text-white/75 italic">

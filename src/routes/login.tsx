@@ -67,7 +67,7 @@ function LoginScreen() {
                 <img src="/logos/google.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
                 Continue with Google
               </Button>
-              <div className="flex items-center gap-3 my-2 text-[10px] tracking-[0.2em] uppercase text-white/60">
+              <div className="flex items-center gap-3 my-2 text-[11px] tracking-[0.2em] uppercase text-white/60">
                 <span className="flex-1 h-px bg-white/25" />
                 or
                 <span className="flex-1 h-px bg-white/25" />

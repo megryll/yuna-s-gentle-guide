@@ -273,7 +273,11 @@ function Chat() {
   // and the live transcript is rendered into `text` so the user sees what
   // was heard before they tap the check to send.
   const [recordingVoice, setRecordingVoice] = useState(false);
+  const [voiceAnalyser, setVoiceAnalyser] = useState<AnalyserNode | null>(null);
+  const [keyboardLatched, setKeyboardLatched] = useState(false);
   const recognitionRef = useRef<RecognitionHandle | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
   const voiceSessionRef = useRef<VoiceSessionHandle | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -885,10 +889,42 @@ function Chat() {
     sendText(text.trim());
   };
 
-  // Voice note: tap mic to start dictation, tap the check to stop and send.
-  // The input stays empty during capture — only the "Listening…" placeholder
-  // and the green dot signal active recording. Hitting stop sends the
-  // accumulated transcript as a single message.
+  // Voice note: press-and-hold the mic to record, release to send. The input
+  // stays empty during capture — a live waveform driven by the actual mic
+  // signal renders inside the pill. Releasing flushes the accumulated
+  // transcript through onFinal as a single message.
+  const stopAudioAnalyser = () => {
+    audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+    audioStreamRef.current = null;
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    setVoiceAnalyser(null);
+  };
+
+  const startAudioAnalyser = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+      const Ctor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!Ctor) return;
+      const ctx = new Ctor();
+      audioCtxRef.current = ctx;
+      if (ctx.state === "suspended") await ctx.resume();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.6;
+      source.connect(analyser);
+      setVoiceAnalyser(analyser);
+    } catch {
+      // Mic blocked or unavailable — Waveform falls back to its default bars.
+    }
+  };
+
   const startVoiceNote = () => {
     if (recordingVoice || pendingLimitations) return;
     if (!isSpeechRecognitionSupported()) {
@@ -899,10 +935,14 @@ function Chat() {
     // through the speakers and transcribe it back into the input.
     stopTts();
     setText("");
+    // Latch the keyboard up so it doesn't dismiss while the input briefly
+    // loses focus during the press-and-hold gesture.
+    if (inputFocused) setKeyboardLatched(true);
     const handle = startRecognition({
       onFinal: (committed) => {
         recognitionRef.current = null;
         setRecordingVoice(false);
+        stopAudioAnalyser();
         const trimmed = committed.trim();
         if (trimmed) sendText(trimmed);
         else setText("");
@@ -910,6 +950,7 @@ function Chat() {
       onError: (err) => {
         recognitionRef.current = null;
         setRecordingVoice(false);
+        stopAudioAnalyser();
         if (err.error !== "aborted" && err.error !== "no-speech") {
           console.error("Voice note recognition error", err);
         }
@@ -918,10 +959,16 @@ function Chat() {
     if (!handle) return;
     recognitionRef.current = handle;
     setRecordingVoice(true);
+    startAudioAnalyser();
   };
 
   const finishVoiceNote = () => {
     recognitionRef.current?.stop();
+    // Restore focus so the keyboard stays up after release if it was up.
+    if (keyboardLatched) {
+      inputRef.current?.focus();
+      setKeyboardLatched(false);
+    }
   };
 
   // If the user navigates away or the limitations gate trips while recording,
@@ -931,6 +978,7 @@ function Chat() {
     return () => {
       recognitionRef.current?.abort();
       recognitionRef.current = null;
+      stopAudioAnalyser();
       stopTts();
     };
   }, []);
@@ -1108,7 +1156,7 @@ function Chat() {
     <PhoneFrame backgroundImage="/background.png" themed>
       <div
         className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white transition-[padding-bottom] duration-200 ease-out"
-        style={inputFocused ? { paddingBottom: KEYBOARD_HEIGHT } : undefined}
+        style={inputFocused || keyboardLatched ? { paddingBottom: KEYBOARD_HEIGHT } : undefined}
       >
         {/* Header */}
         <div className="relative grid grid-cols-3 items-center px-5 pt-14 pb-2 shrink-0">
@@ -1271,59 +1319,66 @@ function Chat() {
                   <TextField
                     ref={inputRef}
                     surface="dark"
-                    value={text}
+                    value={recordingVoice ? "" : text}
                     onChange={(e) => setText(e.target.value)}
                     onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
+                    onBlur={() => {
+                      if (!keyboardLatched) setInputFocused(false);
+                    }}
                     placeholder={
                       pendingLimitations
                         ? "Tap each checkmark above to continue"
                         : recordingVoice
-                          ? "Listening…"
-                          : "Write to Yuna…"
+                          ? ""
+                          : "Type a Message..."
                     }
                     readOnly={recordingVoice}
                     disabled={pendingLimitations}
                     containerClassName={recordingVoice ? "border-white" : undefined}
-                    className="disabled:opacity-60"
-                    leading={
-                      recordingVoice ? (
-                        <span
-                          aria-hidden="true"
-                          className="h-2 w-2 rounded-full bg-success-green shrink-0"
-                          style={{ animation: "yuna-fade 900ms ease-in-out infinite alternate" }}
-                        />
-                      ) : undefined
-                    }
+                    className={recordingVoice ? "hidden" : "disabled:opacity-60"}
+                    leading={recordingVoice ? <Waveform analyser={voiceAnalyser} /> : undefined}
                     trailing={
-                      <>
-                        <Button
-                          surface="dark"
-                          variant={recordingVoice ? "primary" : "ghost"}
-                          size="icon-sm"
-                          type="button"
-                          pressed={recordingVoice}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={recordingVoice ? finishVoiceNote : startVoiceNote}
-                          aria-label={
-                            recordingVoice ? "Stop recording and send" : "Record a voice note"
-                          }
-                          disabled={pendingLimitations}
-                        >
-                          {recordingVoice ? <CheckIcon /> : <MicIcon />}
-                        </Button>
-                        <Button
-                          surface="dark"
-                          variant="primary"
-                          size="icon-sm"
-                          type="submit"
-                          onMouseDown={(e) => e.preventDefault()}
-                          aria-label="Send"
-                          disabled={pendingLimitations || recordingVoice || !text.trim()}
-                        >
+                      <Button
+                        surface="dark"
+                        variant="primary"
+                        size={text.trim() && !recordingVoice ? "icon-sm" : "sm"}
+                        type={text.trim() && !recordingVoice ? "submit" : "button"}
+                        pressed={recordingVoice}
+                        className={recordingVoice ? "opacity-80" : undefined}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onTouchStart={(e) => e.preventDefault()}
+                        onPointerDown={(e) => {
+                          if (text.trim() || pendingLimitations || recordingVoice) return;
+                          e.preventDefault();
+                          startVoiceNote();
+                        }}
+                        onPointerUp={() => {
+                          if (recordingVoice) finishVoiceNote();
+                        }}
+                        onPointerCancel={() => {
+                          if (recordingVoice) finishVoiceNote();
+                        }}
+                        onPointerLeave={() => {
+                          if (recordingVoice) finishVoiceNote();
+                        }}
+                        aria-label={
+                          recordingVoice
+                            ? "Release to send voice note"
+                            : text.trim()
+                              ? "Send"
+                              : "Hold to record voice note"
+                        }
+                        disabled={pendingLimitations}
+                      >
+                        {text.trim() && !recordingVoice ? (
                           <ArrowUpIcon />
-                        </Button>
-                      </>
+                        ) : (
+                          <>
+                            <MicIcon />
+                            Hold to talk
+                          </>
+                        )}
+                      </Button>
                     }
                   />
                 </form>
@@ -1735,7 +1790,7 @@ function VoicePitchCard() {
               y="4"
               textAnchor="end"
               fill={voiceStroke}
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
               letterSpacing="1.8"
               className=""
@@ -1748,7 +1803,7 @@ function VoicePitchCard() {
               textAnchor="end"
               fill="currentColor"
               fillOpacity="0.9"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
               letterSpacing="1.8"
               className=""
@@ -1756,7 +1811,7 @@ function VoicePitchCard() {
               TEXT
             </text>
           </svg>
-          <p className="text-[10.5px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
+          <p className="text-[11px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
             Reported positive impact
           </p>
         </div>
@@ -1817,12 +1872,65 @@ function ArrowUpIcon() {
 function MicIcon() {
   return <Mic size={14} strokeWidth={1.5} />;
 }
-function CheckIcon() {
-  return <Check size={14} strokeWidth={2.2} />;
-}
 function PhoneCallIcon() {
   return <Phone size={14} strokeWidth={1.5} fill="currentColor" aria-hidden="true" />;
 }
 function MicLargeIcon() {
   return <Mic size={32} strokeWidth={1.5} />;
+}
+
+// Voice-note waveform. When an AnalyserNode is connected, bars read from
+// the live time-domain signal (peak amplitude per chunk → bar height) so
+// the row tracks the user's actual voice. With no analyser, bars sit at a
+// quiet baseline.
+const WAVE_BAR_COUNT = 36;
+function Waveform({ analyser }: { analyser?: AnalyserNode | null }) {
+  const barsRef = useRef<Array<HTMLSpanElement | null>>([]);
+
+  useEffect(() => {
+    if (!analyser) return;
+    const buf = new Uint8Array(analyser.fftSize);
+    let raf = 0;
+    const tick = () => {
+      analyser.getByteTimeDomainData(buf);
+      const chunk = Math.floor(buf.length / WAVE_BAR_COUNT);
+      for (let i = 0; i < WAVE_BAR_COUNT; i++) {
+        let peak = 0;
+        const start = i * chunk;
+        for (let j = 0; j < chunk; j++) {
+          // 128 is silence in 8-bit time domain. Center on 0 then normalize.
+          const v = Math.abs(buf[start + j] - 128) / 128;
+          if (v > peak) peak = v;
+        }
+        // Aggressive compression curve so normal speech fills most of the
+        // range. Small noise floor keeps the bars at rest when silent.
+        const cleaned = Math.max(0, peak - 0.015);
+        const boosted = Math.pow(cleaned, 0.35) * 1.8;
+        const h = Math.max(0.1, Math.min(1, boosted));
+        const el = barsRef.current[i];
+        if (el) el.style.height = `${Math.round(h * 100)}%`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [analyser]);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="flex-1 flex items-center justify-between h-6 overflow-hidden"
+    >
+      {Array.from({ length: WAVE_BAR_COUNT }).map((_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            barsRef.current[i] = el;
+          }}
+          className="w-[2px] rounded-full bg-white"
+          style={{ height: "12%", transition: "height 70ms linear" }}
+        />
+      ))}
+    </div>
+  );
 }

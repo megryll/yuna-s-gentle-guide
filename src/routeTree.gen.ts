@@ -28,7 +28,7 @@ import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
-import { Route as DsSuggestionChipsRouteImport } from './routes/ds.suggestion-chips'
+import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
@@ -128,9 +128,9 @@ const DsSwitchesRoute = DsSwitchesRouteImport.update({
   path: '/ds/switches',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DsSuggestionChipsRoute = DsSuggestionChipsRouteImport.update({
-  id: '/ds/suggestion-chips',
-  path: '/ds/suggestion-chips',
+const DsSliderRoute = DsSliderRouteImport.update({
+  id: '/ds/slider',
+  path: '/ds/slider',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsSentimentTagsRoute = DsSentimentTagsRouteImport.update({
@@ -168,7 +168,7 @@ export interface FileRoutesByFullPath {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
-  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -193,7 +193,7 @@ export interface FileRoutesByTo {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
-  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -219,7 +219,7 @@ export interface FileRoutesById {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
-  '/ds/suggestion-chips': typeof DsSuggestionChipsRoute
+  '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -246,7 +246,7 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
-    | '/ds/suggestion-chips'
+    | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/typography'
@@ -271,7 +271,7 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
-    | '/ds/suggestion-chips'
+    | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/typography'
@@ -296,7 +296,7 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
-    | '/ds/suggestion-chips'
+    | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/typography'
@@ -322,7 +322,7 @@ export interface RootRouteChildren {
   DsButtonsRoute: typeof DsButtonsRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSentimentTagsRoute: typeof DsSentimentTagsRoute
-  DsSuggestionChipsRoute: typeof DsSuggestionChipsRoute
+  DsSliderRoute: typeof DsSliderRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
   DsTypographyRoute: typeof DsTypographyRoute
@@ -464,11 +464,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSwitchesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ds/suggestion-chips': {
-      id: '/ds/suggestion-chips'
-      path: '/ds/suggestion-chips'
-      fullPath: '/ds/suggestion-chips'
-      preLoaderRoute: typeof DsSuggestionChipsRouteImport
+    '/ds/slider': {
+      id: '/ds/slider'
+      path: '/ds/slider'
+      fullPath: '/ds/slider'
+      preLoaderRoute: typeof DsSliderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/sentiment-tags': {
@@ -514,7 +514,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsButtonsRoute: DsButtonsRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSentimentTagsRoute: DsSentimentTagsRoute,
-  DsSuggestionChipsRoute: DsSuggestionChipsRoute,
+  DsSliderRoute: DsSliderRoute,
   DsSwitchesRoute: DsSwitchesRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
   DsTypographyRoute: DsTypographyRoute,

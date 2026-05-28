@@ -207,7 +207,7 @@ function CreatedForYou({
   return (
     <div className="mt-10">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <p className="text-[10px] tracking-[0.25em] uppercase text-white/70">
+        <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">
           Created For You
         </p>
         <div className="flex items-center gap-2">

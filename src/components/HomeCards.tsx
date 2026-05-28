@@ -240,7 +240,7 @@ function GratitudeCard({
         <ul className="mt-4 flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-center gap-2.5">
-              <span className="text-[10px] tracking-[0.18em] uppercase text-white/85 shrink-0 w-5">
+              <span className="text-[11px] tracking-[0.18em] uppercase text-white/85 shrink-0 w-5">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <TextField
@@ -416,13 +416,13 @@ function BookCard({
         ) : (
           <span
             aria-hidden
-            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-white/30 shadow-md flex items-center justify-center text-[10px] font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
+            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-white/30 shadow-md flex items-center justify-center text-[11px] font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
           >
             {card.title}
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] tracking-[0.18em] uppercase text-white">
+          <p className="text-[11px] tracking-[0.18em] uppercase text-white">
             {card.author}
           </p>
           <p className="mt-1 font-display text-[22px] leading-[1.2] tracking-tight text-white">

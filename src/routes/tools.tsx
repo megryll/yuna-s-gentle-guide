@@ -85,7 +85,7 @@ function ToolsRoute() {
                 />
                 {t.isNew && (
                   <span
-                    className="absolute top-3 left-3 text-[10px] tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
+                    className="absolute top-3 left-3 text-[11px] tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
                     style={{ backgroundColor: "#66BA24" }}
                   >
                     New

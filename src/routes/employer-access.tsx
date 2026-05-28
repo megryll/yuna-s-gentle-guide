@@ -278,7 +278,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
         <div className="mt-3.5 flex items-center gap-3">
           <span
             className={
-              "text-[10px] tracking-[0.2em] uppercase px-2.5 h-6 inline-flex items-center rounded-full " +
+              "text-[11px] tracking-[0.2em] uppercase px-2.5 h-6 inline-flex items-center rounded-full " +
               (unlocked
                 ? "bg-success-green text-white shadow-[0_0_10px_rgba(102,186,36,0.55)]"
                 : "bg-transparent text-white border border-white/40")
@@ -346,7 +346,7 @@ function PassField({
 }) {
   return (
     <div>
-      <p className="text-[10px] tracking-[0.22em] uppercase text-white/60">
+      <p className="text-[11px] tracking-[0.22em] uppercase text-white/60">
         {label}
       </p>
       <div className="mt-2 h-[18px] flex items-center">

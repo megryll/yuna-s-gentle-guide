@@ -17,6 +17,12 @@ const PAGES: Entry[] = [
   { label: "Intro", to: "/intro" },
   { label: "Name", to: "/intro", search: { step: 0 }, sub: true },
   { label: "Credentials + Ratings", to: "/intro", search: { step: 1 }, sub: true },
+  {
+    label: "Tell me more about Yuna",
+    to: "/intro",
+    search: { step: 2, branch: "tellMeMore" },
+    sub: true,
+  },
   { label: "Notifications", to: "/intro", search: { step: 2 }, sub: true },
   { label: "Mood data", to: "/intro", search: { step: 3 }, sub: true },
   { label: "Voice", to: "/intro", search: { step: 4 }, sub: true },
@@ -38,9 +44,9 @@ const DS_PAGES: Entry[] = [
   { label: "Buttons", to: "/ds/buttons" },
   { label: "Text Fields", to: "/ds/text-fields" },
   { label: "Switches", to: "/ds/switches" },
+  { label: "Slider", to: "/ds/slider" },
   { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
   { label: "Sentiment Tags", to: "/ds/sentiment-tags" },
-  { label: "Prompt Suggestions", to: "/ds/suggestion-chips" },
 ];
 
 function readSearchObject(search: unknown): Record<string, unknown> {
@@ -124,7 +130,7 @@ function NavLink({ entry, active }: { entry: Entry; active: boolean }) {
   const base =
     "rounded-md transition-colors " +
     (entry.sub
-      ? "text-[10px] tracking-wide ml-3 pl-3 pr-2 py-1 border-l border-border/60 "
+      ? "text-[11px] tracking-wide ml-3 pl-3 pr-2 py-1 border-l border-border/60 "
       : "text-[11px] tracking-wide px-2 py-1.5 ");
   return (
     <Link

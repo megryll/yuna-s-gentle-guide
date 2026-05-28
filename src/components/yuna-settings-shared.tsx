@@ -15,7 +15,7 @@ import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
-export type Choice = { id: string; label: string; description: string };
+export type Choice = { id: string; label: string; description?: string };
 
 export type IntroVoice = {
   id: VoiceId;
@@ -45,10 +45,9 @@ export const INTRO_VOICES: IntroVoice[] = VOICE_IDS.map((id) => ({
 }));
 
 export const LANGUAGE_OPTIONS: Choice[] = [
-  { id: "English", label: "English", description: "EN" },
-  { id: "Español", label: "Español", description: "ES" },
-  { id: "Français", label: "Français", description: "FR" },
-  { id: "Deutsch", label: "Deutsch", description: "DE" },
+  { id: "English", label: "English" },
+  { id: "Español", label: "Español" },
+  { id: "Français", label: "Français" },
 ];
 
 export const PACE_STEPS = ["0.5x", "0.75x", "1.0x", "1.25x", "1.5x"] as const;
@@ -102,13 +101,15 @@ export function ChoiceList({
             onClick={() => onChange(o.id)}
             className={
               "w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors " +
-              (selected ? "bg-accent/70 text-foreground" : "hover:bg-accent/40 text-foreground") +
+              (selected ? "bg-accent/70 text-foreground" : "active:bg-accent/40 text-foreground") +
               (i > 0 ? " border-t border-border" : "")
             }
           >
             <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0">
               <span className="text-sm font-medium">{o.label}</span>
-              <span className="text-xs text-muted-foreground">{o.description}</span>
+              {o.description && (
+                <span className="text-xs text-muted-foreground">{o.description}</span>
+              )}
             </span>
             <span
               aria-hidden="true"
@@ -169,7 +170,7 @@ export function ImagePicker({
             <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
               <p className="text-sm font-medium text-white">{o.label}</p>
               {o.description && (
-                <p className="text-[10px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
+                <p className="text-[11px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
                   {o.description}
                 </p>
               )}
@@ -222,119 +223,6 @@ export function NavRow({
       )}
       <ChevronRightIcon />
     </button>
-  );
-}
-
-// ── Pace slider ──────────────────────────────────────────────────────────────
-
-export function PaceSlider({
-  steps,
-  value,
-  onChange,
-}: {
-  steps: readonly string[];
-  value: number;
-  onChange: (idx: number) => void;
-}) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const draggingRef = useRef(false);
-
-  const stepFromPointer = (clientX: number) => {
-    const el = trackRef.current;
-    if (!el) return value;
-    const rect = el.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return Math.round(ratio * (steps.length - 1));
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    draggingRef.current = true;
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    onChange(stepFromPointer(e.clientX));
-  };
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!draggingRef.current) return;
-    onChange(stepFromPointer(e.clientX));
-  };
-  const handlePointerUp = (e: React.PointerEvent) => {
-    draggingRef.current = false;
-    (e.target as Element).releasePointerCapture?.(e.pointerId);
-  };
-
-  const fillPct = (value / (steps.length - 1)) * 100;
-
-  return (
-    <div className="rounded-2xl hairline bg-background p-5">
-      <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-4">
-        Voice pace
-      </p>
-
-      <div
-        ref={trackRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        className="relative h-12 rounded-full bg-muted touch-none cursor-pointer select-none"
-        role="slider"
-        aria-valuemin={0}
-        aria-valuemax={steps.length - 1}
-        aria-valuenow={value}
-        aria-valuetext={steps[value]}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowRight" || e.key === "ArrowUp") {
-            e.preventDefault();
-            onChange(Math.min(steps.length - 1, value + 1));
-          } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
-            e.preventDefault();
-            onChange(Math.max(0, value - 1));
-          }
-        }}
-      >
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-foreground transition-[width] duration-150 ease-out"
-          style={{ width: `calc(${fillPct}% + 6px)` }}
-        />
-
-        {steps.map((_, i) => {
-          const pct = (i / (steps.length - 1)) * 100;
-          const beforeHandle = i <= value;
-          return (
-            <span
-              key={i}
-              aria-hidden="true"
-              className={
-                "absolute top-1/2 -translate-y-1/2 w-px h-3 " +
-                (beforeHandle ? "bg-background/60" : "bg-foreground/25")
-              }
-              style={{ left: `${pct}%` }}
-            />
-          );
-        })}
-
-        <span
-          aria-hidden="true"
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-11 w-11 rounded-full bg-foreground border-[3px] border-background shadow-md transition-[left] duration-150 ease-out"
-          style={{ left: `${fillPct}%` }}
-        />
-      </div>
-
-      <div className="grid grid-cols-5 mt-3 px-0">
-        {steps.map((s, i) => (
-          <button
-            key={s}
-            onClick={() => onChange(i)}
-            className={
-              "text-xs text-center transition-colors " +
-              (i === value ? "text-foreground font-medium" : "text-muted-foreground")
-            }
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -575,7 +463,7 @@ function VoiceIntroCard({
           aria-label={playing ? "Pause voice preview" : "Play voice preview"}
         >
           {playing ? <PausePill /> : <PlayPill />}
-          <span className="text-[10px] tracking-[0.1em] uppercase text-white">
+          <span className="text-[11px] tracking-[0.1em] uppercase text-white">
             {playing ? "Pause" : "Play"}
           </span>
         </button>

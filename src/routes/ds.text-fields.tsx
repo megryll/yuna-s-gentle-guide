@@ -28,7 +28,7 @@ function DSTextFields() {
     <main className="ml-44 min-h-screen bg-background text-foreground">
       <div className="max-w-5xl mx-auto px-10 py-12">
         <header className="mb-10">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+          <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
             Design System
           </p>
           <h1 className="text-3xl tracking-tight">Text Fields</h1>
@@ -193,7 +193,7 @@ function Row({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[10px] tracking-[0.25em] uppercase text-current opacity-60">
+      <span className="text-[11px] tracking-[0.25em] uppercase text-current opacity-60">
         {label}
       </span>
       {children}

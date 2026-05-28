@@ -89,7 +89,7 @@ useSentimentToneColor(): (tone: SentimentTone) => string`}</PropsBlock>
               />
               <div className="flex flex-col">
                 <span className="text-[13px]">{p.name}</span>
-                <code className="text-[10.5px] text-muted-foreground">
+                <code className="text-[11px] text-muted-foreground">
                   {p.dotColor}
                   {p.tone ? ` · tone="${p.tone}"` : ""}
                 </code>

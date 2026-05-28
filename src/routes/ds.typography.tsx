@@ -33,8 +33,7 @@ const SCALE: ScaleRow[] = [
   { size: "text-[13px]", px: 13, family: "body", role: "Inline body, sentiment tag md" },
   { size: "text-xs", px: 12, family: "body", role: "Meta text, captions" },
   { size: "text-[12px]", px: 12, family: "body", role: "Suggestion chip label" },
-  { size: "text-[11px]", px: 11, family: "body", role: "Button labels, tracked uppercase" },
-  { size: "text-[10px]", px: 10, family: "body", role: "Eyebrow — section labels" },
+  { size: "text-[11px]", px: 11, family: "body", role: "Button labels, eyebrows, tracked uppercase" },
 ];
 
 function DSTypography() {
@@ -121,55 +120,70 @@ function DSTypography() {
         <SurfacePair
           align="start"
           innerLabel="Display — Fraunces"
-          renderRow={() => (
-            <div className="flex flex-col gap-2">
-              <p className="font-display text-3xl tracking-tight text-white">
-                Quiet space
-              </p>
-              <p className="font-display text-2xl tracking-tight text-white">
-                Section heading
-              </p>
-              <p className="font-display text-xl tracking-tight text-white">
-                Card heading
-              </p>
-            </div>
-          )}
+          renderRow={(surface) => {
+            const ink = surface === "dark" ? "text-white" : "text-foreground";
+            return (
+              <div className="flex flex-col gap-2">
+                <p className={`font-display text-3xl tracking-tight ${ink}`}>
+                  Quiet space
+                </p>
+                <p className={`font-display text-2xl tracking-tight ${ink}`}>
+                  Section heading
+                </p>
+                <p className={`font-display text-xl tracking-tight ${ink}`}>
+                  Card heading
+                </p>
+              </div>
+            );
+          }}
         />
         <div className="h-4" />
         <SurfacePair
           align="start"
           innerLabel="Body — Stara"
-          renderRow={() => (
-            <div className="flex flex-col gap-2">
-              <p className="text-[18px] leading-snug text-white">
-                Here to listen, reflect, and grow with you.
-              </p>
-              <p className="text-[15px] leading-snug text-white/85">
-                Body / secondary at 85% (floor).
-              </p>
-              <p className="text-[13px] leading-snug text-white/75">
-                Meta / value at 75% (floor on dark, 70% on light).
-              </p>
-              <p className="text-[13px] leading-snug text-white/55">
-                Disabled / hint at 55% (floor).
-              </p>
-            </div>
-          )}
+          renderRow={(surface) => {
+            const isDark = surface === "dark";
+            const primary = isDark ? "text-white" : "text-foreground";
+            const secondary = isDark ? "text-white/85" : "text-foreground/85";
+            const meta = isDark ? "text-white/75" : "text-foreground/75";
+            const hint = isDark ? "text-white/55" : "text-foreground/60";
+            return (
+              <div className="flex flex-col gap-2">
+                <p className={`text-[18px] leading-snug ${primary}`}>
+                  Here to listen, reflect, and grow with you.
+                </p>
+                <p className={`text-[15px] leading-snug ${secondary}`}>
+                  Body / secondary at 85% (floor).
+                </p>
+                <p className={`text-[13px] leading-snug ${meta}`}>
+                  Meta / value at 75% (floor on dark, 70% on light).
+                </p>
+                <p className={`text-[13px] leading-snug ${hint}`}>
+                  Disabled / hint at 55% (floor).
+                </p>
+              </div>
+            );
+          }}
         />
         <div className="h-4" />
         <SurfacePair
           align="start"
           innerLabel="Tracked uppercase — Stara"
-          renderRow={() => (
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-white/65">
-                Eyebrow label
-              </p>
-              <p className="text-[11px] tracking-[0.16em] uppercase text-white">
-                Toggle label
-              </p>
-            </div>
-          )}
+          renderRow={(surface) => {
+            const isDark = surface === "dark";
+            const eyebrow = isDark ? "text-white/65" : "text-foreground/65";
+            const toggle = isDark ? "text-white" : "text-foreground";
+            return (
+              <div className="flex flex-col gap-2">
+                <p className={`text-[11px] tracking-[0.3em] uppercase ${eyebrow}`}>
+                  Eyebrow label
+                </p>
+                <p className={`text-[11px] tracking-[0.16em] uppercase ${toggle}`}>
+                  Toggle label
+                </p>
+              </div>
+            );
+          }}
         />
       </Section>
 
@@ -180,7 +194,7 @@ function DSTypography() {
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-2xl border border-border p-5">
-            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
+            <p className="text-[11px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
               Stara
             </p>
             <div className="flex flex-col gap-1.5 text-[16px]">
@@ -192,7 +206,7 @@ function DSTypography() {
             </div>
           </div>
           <div className="rounded-2xl border border-border p-5">
-            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
+            <p className="text-[11px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
               Fraunces (variable)
             </p>
             <div className="flex flex-col gap-1.5 text-[16px] font-display">

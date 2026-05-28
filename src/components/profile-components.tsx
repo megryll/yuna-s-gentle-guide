@@ -164,7 +164,7 @@ export function InsightCard({
           <span className="text-[14px] font-normal leading-[22px] text-white truncate">{title}</span>
           {date && (
             <span
-              className="text-[10px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
+              className="text-[11px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
               style={{ backgroundColor: `${GREEN_ACCENT}33`, color: tagText }}
             >
               {date}

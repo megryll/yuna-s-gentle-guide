@@ -268,7 +268,7 @@ function SessionHero({
 }) {
   return (
     <section className="flex flex-col items-center text-center gap-4 pt-20 pb-10 yuna-fade-in">
-      <p className="text-[10px] tracking-[0.32em] uppercase text-white/65">
+      <p className="text-[11px] tracking-[0.32em] uppercase text-white/65">
         Session complete
       </p>
 

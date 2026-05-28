@@ -12,11 +12,11 @@ import {
   NavList,
   NavRow,
   PACE_STEPS,
-  PaceSlider,
   SpeedIcon,
   SubScreen,
   useVoicePreview,
 } from "@/components/yuna-settings-shared";
+import { Slider } from "@/components/Slider";
 
 const DEFAULT_PACE_IDX = 2;
 const DEFAULT_VOICE_ID: VoiceId = VOICE_IDS[0];
@@ -126,7 +126,12 @@ export function YunaSettingsDrawer({
               </div>
             )}
             {screen === "pace" && (
-              <PaceSlider steps={PACE_STEPS} value={paceIdx} onChange={setPaceIdx} />
+              <Slider
+                steps={PACE_STEPS}
+                value={paceIdx}
+                onChange={setPaceIdx}
+                label="Voice pace"
+              />
             )}
             {screen === "language" && (
               <ChoiceList value={language} onChange={setLanguage} options={LANGUAGE_OPTIONS} />

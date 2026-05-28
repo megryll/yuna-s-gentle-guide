@@ -23,7 +23,20 @@ import { setUserType } from "@/lib/user-type";
 import { setAppMode, useDarkBlurImage } from "@/lib/theme-prefs";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { playYunaBubbleSound, playUserSendSound } from "@/lib/bubble-sound";
-import { IntroVoicePicker } from "@/components/yuna-settings-shared";
+import {
+  ChoiceList,
+  DEFAULT_PACE_IDX,
+  IntroVoicePicker,
+  LANGUAGE_OPTIONS,
+  PACE_STEPS,
+} from "@/components/yuna-settings-shared";
+import { Slider } from "@/components/Slider";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   AMBIENT_VOLUME,
   fadeAmbientTo,
@@ -32,7 +45,9 @@ import {
 } from "@/lib/ambient-audio";
 
 export const Route = createFileRoute("/intro")({
-  validateSearch: (s: Record<string, unknown>): { step?: number } => {
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { step?: number; branch?: "tellMeMore" } => {
     const raw = s.step;
     const n =
       typeof raw === "number"
@@ -40,7 +55,11 @@ export const Route = createFileRoute("/intro")({
         : typeof raw === "string"
           ? Number(raw)
           : NaN;
-    return Number.isFinite(n) ? { step: n } : {};
+    const branch = s.branch === "tellMeMore" ? ("tellMeMore" as const) : undefined;
+    return {
+      ...(Number.isFinite(n) ? { step: n } : {}),
+      ...(branch ? { branch } : {}),
+    };
   },
   head: () => ({
     meta: [
@@ -82,6 +101,16 @@ const FIRST_STEP_AVATAR_DELAY_MS = 400;
 const SUBSEQUENT_STEP_DELAY_MS = 300;
 const POST_NAME_DELAY_MS = 500;
 
+const REACTION_AMAZING = {
+  userText: "Tell me more about Yuna \u{1F440}",
+  yunaReply:
+    "I'm an emotionally intelligent chatbot, trained in well-tested types of therapy, here to listen and guide you. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
+};
+const REACTION_IMPRESSIVE = {
+  userText: "I'm listening \u{1F442}",
+  yunaReply: "It really does work",
+};
+
 const initialRevealsForStep = (
   stepIdx: number,
 ): { text: string; card?: Card }[] => {
@@ -94,11 +123,11 @@ const initialRevealsForStep = (
   if (stepIdx === 1) {
     return [
       {
-        text: "I was developed by experts in psychology and wellness",
+        text: "Let me introduce myself too. I was developed by experts in psychology and wellness, from some of the leading US universities.",
         card: { kind: "harvard" },
       },
       {
-        text: "with a mission to help people find support and better mental well-being",
+        text: "Our mission is to help people find support and better mental well-being.",
         card: { kind: "stats" },
       },
     ];
@@ -160,7 +189,18 @@ function Intro() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.step]);
-  const [bubbles, setBubbles] = useState<BubbleData[]>([]);
+  const [bubbles, setBubbles] = useState<BubbleData[]>(() => {
+    // Deep-link: ?branch=tellMeMore pre-populates the chat with the
+    // "Tell me more about Yuna" exchange so the sidebar entry lands on
+    // the reveal state instead of just the empty step.
+    if (search.branch === "tellMeMore") {
+      return [
+        { id: newBubbleId(), from: "you", text: REACTION_AMAZING.userText },
+        { id: newBubbleId(), from: "yuna", text: REACTION_AMAZING.yunaReply },
+      ];
+    }
+    return [];
+  });
   const [typing, setTyping] = useState(false);
   const [phase, setPhase] = useState<Phase>("reveal");
   const [nameInput, setNameInput] = useState("");
@@ -430,7 +470,7 @@ function Intro() {
         {
           id: newBubbleId(),
           from: "yuna",
-          text: `I'm looking forward to getting to know you, ${value}.`,
+          text: `It's great to meet you, ${value}!`,
         },
       ]);
       goToStep(1);
@@ -466,13 +506,22 @@ function Intro() {
     }, POST_NAME_DELAY_MS + TYPING_MS);
   };
 
-  const REACTION_AMAZING = {
-    userText: "Tell me more \u{1F440}",
-    yunaReply: "That means so much",
-  };
-  const REACTION_IMPRESSIVE = {
-    userText: "I'm listening \u{1F442}",
-    yunaReply: "It really does work",
+  const submitSkipToSetup = () => {
+    setPhase("reveal");
+    setTimeout(() => setTyping(true), POST_NAME_DELAY_MS);
+    setTimeout(() => {
+      setTyping(false);
+      playBubblePop();
+      setBubbles((prev) => [
+        ...prev,
+        {
+          id: newBubbleId(),
+          from: "yuna",
+          text: "Here's how it works — chat with me anytime, voice or text, and I'll listen and help you work through what's on your mind.",
+        },
+      ]);
+      goToStep(2);
+    }, POST_NAME_DELAY_MS + TYPING_MS);
   };
 
   const submitNotificationChoice = (wantsPush: boolean, label: string) => {
@@ -734,19 +783,29 @@ function Intro() {
             {phase === "wait-tap" && (
               <div className="yuna-rise mt-5 shrink-0">
                 {stepIdx === 1 ? (
-                  <Button
-                    surface="dark"
-                    variant="primary"
-                    fullWidth
-                    onClick={() =>
-                      submitChatReaction(
-                        REACTION_AMAZING.userText,
-                        REACTION_AMAZING.yunaReply,
-                      )
-                    }
-                  >
-                    Tell me more {"\u{1F440}"}
-                  </Button>
+                  <div className="flex flex-col gap-2.5">
+                    <Button
+                      surface="dark"
+                      variant="primary"
+                      fullWidth
+                      onClick={() =>
+                        submitChatReaction(
+                          REACTION_AMAZING.userText,
+                          REACTION_AMAZING.yunaReply,
+                        )
+                      }
+                    >
+                      Tell me more about Yuna {"\u{1F440}"}
+                    </Button>
+                    <Button
+                      surface="dark"
+                      variant="secondary"
+                      fullWidth
+                      onClick={submitSkipToSetup}
+                    >
+                      Skip to Setup
+                    </Button>
+                  </div>
                 ) : stepIdx === 3 ? (
                   <Button
                     surface="dark"
@@ -1271,6 +1330,14 @@ function VoicePicker({
   playingIdx: number | null;
   onTogglePlay: (idx: number) => void;
 }) {
+  const [paceIdx, setPaceIdx] = useState(DEFAULT_PACE_IDX);
+  const [language, setLanguage] = useState("English");
+  const [langOpen, setLangOpen] = useState(false);
+  const [paceOpen, setPaceOpen] = useState(false);
+
+  const languageLabel =
+    LANGUAGE_OPTIONS.find((o) => o.id === language)?.label ?? language;
+
   return (
     <div className="flex flex-col gap-7">
       <IntroVoicePicker
@@ -1280,16 +1347,56 @@ function VoicePicker({
         onTogglePlay={onTogglePlay}
         surface="dark"
       />
-      <VoiceControlPills />
+      <VoiceControlPills
+        languageLabel={languageLabel}
+        paceLabel={PACE_STEPS[paceIdx]}
+        onOpenLanguage={() => setLangOpen(true)}
+        onOpenPace={() => setPaceOpen(true)}
+      />
+      <LanguageDrawer
+        open={langOpen}
+        onOpenChange={setLangOpen}
+        value={language}
+        onChange={(v) => {
+          setLanguage(v);
+          setLangOpen(false);
+        }}
+      />
+      <PaceDrawer
+        open={paceOpen}
+        onOpenChange={setPaceOpen}
+        value={paceIdx}
+        onChange={setPaceIdx}
+      />
     </div>
   );
 }
 
-function VoiceControlPills() {
+function VoiceControlPills({
+  languageLabel,
+  paceLabel,
+  onOpenLanguage,
+  onOpenPace,
+}: {
+  languageLabel: string;
+  paceLabel: string;
+  onOpenLanguage: () => void;
+  onOpenPace: () => void;
+}) {
   return (
     <div className="flex items-center justify-center gap-2 px-8">
-      <ControlPill icon={<GlobePillIcon />} label="Language" value="English" />
-      <ControlPill icon={<SpeedPillIcon />} label="Pace" value="1.0x" />
+      <ControlPill
+        icon={<GlobePillIcon />}
+        label="Language"
+        value={languageLabel}
+        onClick={onOpenLanguage}
+      />
+      <ControlPill
+        icon={<SpeedPillIcon />}
+        label="Pace"
+        value={paceLabel}
+        onClick={onOpenPace}
+      />
     </div>
   );
 }
@@ -1298,13 +1405,21 @@ function ControlPill({
   icon,
   label,
   value,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
+  onClick?: () => void;
 }) {
   return (
-    <Button surface="dark" variant="secondary" size="xs" className="gap-1.5">
+    <Button
+      surface="dark"
+      variant="secondary"
+      size="xs"
+      className="gap-1.5"
+      onClick={onClick}
+    >
       {icon}
       <span className="text-white/70">{label}</span>
       <span className="font-semibold text-white">{value}</span>
@@ -1315,6 +1430,69 @@ function ControlPill({
         className="text-white/70"
       />
     </Button>
+  );
+}
+
+function LanguageDrawer({
+  open,
+  onOpenChange,
+  value,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="rounded-t-[1.5rem]">
+        <DrawerHeader className="text-left px-6 pt-3 pb-3">
+          <DrawerTitle className="font-display font-normal text-xl tracking-tight">
+            Language
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="px-6 pb-10">
+          <ChoiceList
+            value={value}
+            onChange={onChange}
+            options={LANGUAGE_OPTIONS}
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function PaceDrawer({
+  open,
+  onOpenChange,
+  value,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  value: number;
+  onChange: (i: number) => void;
+}) {
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="rounded-t-[1.5rem]">
+        <DrawerHeader className="text-left px-6 pt-3 pb-3">
+          <DrawerTitle className="font-display font-normal text-xl tracking-tight">
+            Voice pace
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="px-6 pb-10">
+          <Slider
+            steps={PACE_STEPS}
+            value={value}
+            onChange={onChange}
+            label="Voice pace"
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

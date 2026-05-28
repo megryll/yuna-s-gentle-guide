@@ -156,7 +156,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </span>
           <span
             className={cn(
-              "text-[10px] tracking-[0.2em] uppercase",
+              "text-[11px] tracking-[0.2em] uppercase",
               surface === "dark" ? "text-white/70" : "text-muted-foreground",
             )}
           >

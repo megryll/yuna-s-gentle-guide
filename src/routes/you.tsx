@@ -50,7 +50,7 @@ function YouRoute() {
               >
                 {stat.value}
               </span>
-              <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/75">
+              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/75">
                 {stat.label}
               </span>
             </div>

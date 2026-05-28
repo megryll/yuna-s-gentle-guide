@@ -21,7 +21,7 @@ function DSButtons() {
     <main className="ml-44 min-h-screen bg-background text-foreground">
       <div className="max-w-5xl mx-auto px-10 py-12">
         <header className="mb-10">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+          <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
             Design System
           </p>
           <h1 className="text-3xl tracking-tight">Buttons</h1>
@@ -214,7 +214,7 @@ function SurfacePair({
   return (
     <div>
       {innerLabel && (
-        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
+        <p className="text-[11px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
           {innerLabel}
         </p>
       )}
@@ -245,7 +245,7 @@ function SurfacePanel({
         <div className="w-full">
           <p
             className={
-              "text-[10px] tracking-[0.25em] uppercase mb-3 " +
+              "text-[11px] tracking-[0.25em] uppercase mb-3 " +
               (tone === "dark" ? "text-white/65" : "text-foreground/65")
             }
           >

@@ -121,6 +121,8 @@
   --color-primary-beige: var(--primary-beige);
   --color-alert-red: var(--alert-red);
   --color-success-green: var(--success-green);
+  --color-yuna-green: var(--yuna-green);
+  --color-yuna-green-deep: var(--yuna-green-deep);
 }
 
 :root {
@@ -164,6 +166,11 @@
   --primary-beige: #F5F0ED;
   --alert-red: #E0493F;
   --success-green: #34C759;
+  /* Yuna brand green — sampled from the avatar mark (avatar.png).
+     Used for selection/progress in branded controls (e.g. Slider fill). */
+  --yuna-green: #66BA24;
+  /* Slightly deeper variant for thumbs / pressed states. */
+  --yuna-green-deep: #4D9C1A;
 }
 
 .dark {
@@ -514,6 +521,13 @@
   .overlay-on-dark .border-foreground\/40 { border-color: rgba(255, 255, 255, 0.45); }
 
   .overlay-on-dark .hover\:bg-accent:hover { background-color: rgba(255, 255, 255, 0.08); }
+  /* `bg-accent/70` is the selected-row tint in `ChoiceList`. The default
+     `--accent` is a pale near-white; over the dark photo at 70% it reads as
+     a bright band with poor contrast against the white text. Remap to a
+     subtle frosted tint so the row marks itself without washing out. */
+  .overlay-on-dark .bg-accent\/70 { background-color: rgba(255, 255, 255, 0.12); }
+  .overlay-on-dark .bg-accent\/40 { background-color: rgba(255, 255, 255, 0.06); }
+  .overlay-on-dark .active\:bg-accent\/40:active { background-color: rgba(255, 255, 255, 0.06); }
   .overlay-on-dark .hover\:bg-destructive\/10:hover { background-color: rgba(255, 120, 120, 0.10); }
   .overlay-on-dark .active\:bg-background\/80:active { background-color: rgba(255, 255, 255, 0.12); }
 }
