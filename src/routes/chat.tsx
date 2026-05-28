@@ -1703,21 +1703,32 @@ function QuestionnaireAnswerSlot({
     );
   }
   if (question.kind === "scale") {
-    return <ScaleAnswer question={question} onSubmit={onPickScale} />;
+    return <ScaleAnswer question={question} onSubmit={onPickScale} fill={fill} />;
   }
-  return <AnswerChips question={question} onPick={onPickChip} />;
+  return <AnswerChips question={question} onPick={onPickChip} fill={fill} />;
 }
 
 // Chip stack — labeled single-select. No "Other" branch in the new schema.
 function AnswerChips({
   question,
   onPick,
+  fill = false,
 }: {
   question: ChipsQuestion;
   onPick: (option: string) => void;
+  // Voice mode passes fill so the list grows into the slot and scrolls
+  // inside its own bounded area when options exceed the viewport.
+  fill?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 yuna-fade-in">
+    <div
+      className={
+        "flex flex-col gap-2 yuna-fade-in " +
+        (fill
+          ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          : "")
+      }
+    >
       {question.options.map((option) => (
         <button
           key={option}
@@ -1860,9 +1871,13 @@ function PriorityPicker({
 function ScaleAnswer({
   question,
   onSubmit,
+  fill = false,
 }: {
   question: ScaleQuestion;
   onSubmit: (value: number, displayLabel: string) => void;
+  // Voice mode passes fill so the 0–10 row grows into the slot and scrolls
+  // inside its own bounded area when steps exceed the viewport.
+  fill?: boolean;
 }) {
   const stepCount = question.max - question.min + 1;
   const anchorAt = (step: number): string | undefined => question.anchors[step];
@@ -1873,7 +1888,14 @@ function ScaleAnswer({
   };
 
   return (
-    <div className="flex flex-col gap-2 yuna-fade-in">
+    <div
+      className={
+        "flex flex-col gap-2 yuna-fade-in " +
+        (fill
+          ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          : "")
+      }
+    >
       {Array.from({ length: stepCount }, (_, idx) => {
         const step = question.min + idx;
         const anchor = anchorAt(step);
