@@ -104,6 +104,12 @@ type VoiceSessionProps = {
    * Defaults to true so existing call sites are unaffected.
    */
   micEnabled?: boolean;
+  /**
+   * When true the avatar shrinks + snugs to the top to make room for a
+   * tall slot (the questionnaire). Single-button slots like the mic CTA
+   * keep the avatar in its default centered position.
+   */
+  compactLayout?: boolean;
 };
 
 export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(function VoiceSession(
@@ -114,6 +120,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     onSpeechStart,
     spokenAreaSlot,
     micEnabled = true,
+    compactLayout = false,
   },
   ref,
 ) {
@@ -645,18 +652,42 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     };
   }, []);
 
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
+  // Smooth the swap between the default layout (big avatar + waveform) and
+  // the compact layout (small row + answer slot). When the compact flag
+  // flips, we hold the old layout briefly and fade it out, then swap the
+  // DOM and let the new layout fade back in via the wrapper's opacity
+  // transition. Slot-only changes (e.g. moving from question N to N+1)
+  // swap immediately so chip taps feel responsive.
+  const [displayedCompact, setDisplayedCompact] = useState(compactLayout);
+  const [displayedSlot, setDisplayedSlot] = useState<ReactNode>(spokenAreaSlot);
+  const [fadingOut, setFadingOut] = useState(false);
+
+  useEffect(() => {
+    if (displayedCompact === compactLayout) {
+      if (displayedSlot !== spokenAreaSlot) setDisplayedSlot(spokenAreaSlot);
+      return;
+    }
+    setFadingOut(true);
+    const t = setTimeout(() => {
+      setDisplayedCompact(compactLayout);
+      setDisplayedSlot(spokenAreaSlot);
+      setFadingOut(false);
+    }, 220);
+    return () => clearTimeout(t);
+  }, [compactLayout, spokenAreaSlot, displayedCompact, displayedSlot]);
+
   const showPulseRings = phase === "speaking";
   // Pre-mic-permission the hold-to-talk vocabulary doesn't apply yet —
   // Yuna is doing the talking; the user's interaction is the questionnaire
-  // / CTA in the slot. Fall back to her name while she speaks, blank
-  // otherwise, so "Hold the mic to talk" never appears before the dialog.
-  const phaseLabel = spokenAreaSlot
+  // / CTA in the slot. "Tap to respond" only applies to the chips/picker
+  // (compact layout); when the slot is just the Enable-microphone CTA after
+  // onboarding, fall through to the normal speaking label so the user sees
+  // Yuna reflecting on what they just answered.
+  const phaseLabel = displayedSlot && displayedCompact
     ? "Tap to respond"
     : !micEnabled
       ? phase === "speaking"
-        ? "Yuna"
+        ? "Yuna is speaking"
         : ""
       : inputMode === "hands-free"
         ? PHASE_LABEL_HANDSFREE[phase]
@@ -672,72 +703,116 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
         : "Hold to talk";
 
   return (
-    <div className="relative flex-1 flex flex-col items-center px-8 pb-12 min-h-0">
-      <div className="mt-12 relative h-44 w-44 flex items-center justify-center shrink-0">
-        {showPulseRings && (
+    <div
+      className={
+        "relative flex-1 flex flex-col items-center px-8 min-h-0 transition-[padding] duration-300 ease-out " +
+        (displayedCompact ? "pb-8" : "pb-12")
+      }
+    >
+      <div
+        className={
+          "flex-1 w-full flex flex-col items-center min-h-0 transition-opacity duration-300 ease-out " +
+          (fadingOut ? "opacity-0" : "opacity-100")
+        }
+      >
+        {displayedCompact && displayedSlot ? (
+          // Compact + slot: a small avatar + instruction row sits at the top,
+          // and the answer panel grows to fill the remaining vertical space so
+          // long pickers (multi-priority list) can scroll inside their own
+          // bounded area rather than pushing the rest of the screen around.
           <>
-            <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
-            <span
-              className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
-              style={{ animationDelay: "600ms" }}
+            <div className="w-full flex items-center justify-center gap-3 shrink-0 mt-8 mb-8">
+              <div className="relative h-10 w-10 shrink-0 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center">
+                {avatar ? (
+                  <YunaAvatar variant={avatar} size={40} />
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-white" />
+                )}
+              </div>
+              <p className="font-display text-base leading-snug text-white">
+                Tap a response below to continue
+              </p>
+            </div>
+            <div className="w-full flex-1 min-h-0 flex flex-col items-stretch gap-3">
+              {displayedSlot}
+            </div>
+          </>
+        ) : (
+          <>
+            <div
+              className="w-full shrink-0 transition-[flex-grow] duration-300 ease-out"
+              style={{ flexGrow: 1 }}
             />
+            <div className="relative flex items-center justify-center shrink-0 transition-all duration-300 ease-out h-44 w-44">
+              {showPulseRings && (
+                <>
+                  <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
+                  <span
+                    className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
+                    style={{ animationDelay: "600ms" }}
+                  />
+                </>
+              )}
+              <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center transition-all duration-300 ease-out h-32 w-32">
+                {avatar ? (
+                  <YunaAvatar variant={avatar} size={128} />
+                ) : (
+                  <span className="h-3 w-3 rounded-full bg-white" />
+                )}
+              </div>
+            </div>
+
+            <div className="text-center transition-all duration-300 ease-out mt-8">
+              <h1 className="text-xl tracking-tight text-white">{phaseLabel}</h1>
+            </div>
+
+            {!displayedSlot && (
+              <div className="flex-1 flex items-end justify-center min-h-[64px] w-full">
+                <div
+                  className="w-full"
+                  style={{ marginLeft: "-2rem", marginRight: "-2rem", width: "calc(100% + 4rem)" }}
+                >
+                  <VoiceWaveform active={phase === "listening"} />
+                </div>
+              </div>
+            )}
+
+            {displayedSlot && (
+              <>
+                <div className="w-full shrink-0 flex-1" />
+                <div className="w-full max-w-[20rem] flex flex-col items-center text-center gap-2">
+                  {displayedSlot}
+                </div>
+              </>
+            )}
+
+            {!displayedSlot && micEnabled && (
+              <div className="mt-4 flex flex-col items-center gap-3 shrink-0">
+                {inputMode === "hold" && (
+                  <VoiceMicButton
+                    phase={phase}
+                    inputMode={inputMode}
+                    onPressStart={startHold}
+                    onPressEnd={endHold}
+                    onTap={toggleHandsFreeMic}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => setModeDrawerOpen(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={modeDrawerOpen}
+                  aria-label={`Switch mic mode (current: ${inputMode === "hold" ? "Hold to talk" : "Hands-free"})`}
+                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 active:text-white transition-colors"
+                >
+                  {helperLabel}
+                  <ChevronDown size={11} strokeWidth={1.6} aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </>
         )}
-        <div className="relative h-32 w-32 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center">
-          {avatar ? (
-            <YunaAvatar variant={avatar} size={128} />
-          ) : (
-            <span className="h-3 w-3 rounded-full bg-white" />
-          )}
-        </div>
       </div>
-
-      <div className="mt-8 text-center">
-        <h1 className="text-xl tracking-tight text-white">{phaseLabel}</h1>
-        <p className="mt-1 text-xs tracking-[0.2em] uppercase text-white/70 tabular-nums">
-          {mm}:{ss}
-        </p>
-      </div>
-
-      <div className="flex-1 flex items-end justify-center min-h-[64px] w-full">
-        <div
-          className="w-full"
-          style={{ marginLeft: "-2rem", marginRight: "-2rem", width: "calc(100% + 4rem)" }}
-        >
-          <VoiceWaveform active={phase === "listening"} />
-        </div>
-      </div>
-
-      {spokenAreaSlot && (
-        <div className="mt-4 w-full max-w-[20rem] flex flex-col items-center text-center gap-2 shrink-0">
-          {spokenAreaSlot}
-        </div>
-      )}
-
-      {!spokenAreaSlot && micEnabled && (
-        <div className="mt-4 flex flex-col items-center gap-3 shrink-0">
-          {inputMode === "hold" && (
-            <VoiceMicButton
-              phase={phase}
-              inputMode={inputMode}
-              onPressStart={startHold}
-              onPressEnd={endHold}
-              onTap={toggleHandsFreeMic}
-            />
-          )}
-          <button
-            type="button"
-            onClick={() => setModeDrawerOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={modeDrawerOpen}
-            aria-label={`Switch mic mode (current: ${inputMode === "hold" ? "Hold to talk" : "Hands-free"})`}
-            className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 active:text-white transition-colors"
-          >
-            {helperLabel}
-            <ChevronDown size={11} strokeWidth={1.6} aria-hidden="true" />
-          </button>
-        </div>
-      )}
 
       <VoiceModeDrawer
         open={modeDrawerOpen}
@@ -783,7 +858,7 @@ function VoiceModeDrawer({
             <ModeRow
               icon={<Radio size={18} strokeWidth={1.5} aria-hidden="true" />}
               title="Hands-free"
-              description="I'll listen continuously — just talk when you're ready."
+              description="I'll listen continuously. Just talk when you're ready."
               selected={current === "hands-free"}
               onClick={() => onSelect("hands-free")}
             />
@@ -1088,7 +1163,7 @@ async function composeGreeting(history: ChatMsg[]): Promise<string> {
   conversation.push({
     role: "user",
     content:
-      "[The user just switched to voice. Greet them warmly and pick the conversation up in one or two short sentences. Do not recap or apologise — speak as if continuing naturally out loud.]",
+      "[The user just switched to voice. Greet them warmly and pick the conversation up in one or two short sentences. Do not recap or apologise. Speak as if continuing naturally out loud.]",
   });
 
   const ctrl = new AbortController();

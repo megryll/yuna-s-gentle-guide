@@ -71,7 +71,7 @@ export function YunaSettingsDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleClose}>
-      <DrawerContent className="h-[85%] max-h-[85%] rounded-t-[1.5rem]">
+      <DrawerContent className="max-h-[85%] rounded-t-[1.5rem]">
         {screen === "main" ? (
           <>
             <DrawerHeader className="text-left px-6 pt-2">
@@ -80,7 +80,7 @@ export function YunaSettingsDrawer({
               </DrawerTitle>
             </DrawerHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-6">
+            <div className="px-6 pb-6 flex flex-col gap-6">
               <NavList>
                 <NavRow
                   icon={<MicIcon />}

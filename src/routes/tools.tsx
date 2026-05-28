@@ -18,7 +18,6 @@ const TOOLS: Tool[] = [
     caption: "Discover licensed therapists",
     image: "/tools/therapist.jpg",
     emoji: "💬",
-    isNew: true,
   },
   {
     id: "guided-audio",
@@ -62,9 +61,7 @@ function ToolsRoute() {
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pb-6 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <h1 className="mt-2 font-display text-3xl tracking-tight text-white">
-          Tools
-        </h1>
+        <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Tools</h1>
 
         <ul className="mt-5 flex flex-col gap-3">
           {TOOLS.map((t, i) => (
@@ -79,10 +76,7 @@ function ToolsRoute() {
                   className="absolute inset-0 h-full w-full object-cover"
                   aria-hidden
                 />
-                <div
-                  className="absolute inset-0"
-                  style={{ background: overlay }}
-                />
+                <div className="absolute inset-0" style={{ background: overlay }} />
                 {t.isNew && (
                   <span
                     className="absolute top-3 left-3 text-[11px] tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
@@ -95,7 +89,11 @@ function ToolsRoute() {
                   <p className={"font-display text-xl leading-tight tracking-tight " + titleClass}>
                     {t.title}
                   </p>
-                  <p className={"mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug " + captionClass}>
+                  <p
+                    className={
+                      "mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug " + captionClass
+                    }
+                  >
                     <span aria-hidden className="text-[14px] leading-none">
                       {t.emoji}
                     </span>

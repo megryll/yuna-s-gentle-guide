@@ -23,7 +23,7 @@ const TRENDS: EmotionTrend[] = [
     label: "Hopeful",
     values: [1, 2, 2, 3, 4, 5, 6, 7],
     count: 30,
-    caption: "Steadily growing — your evenings have been lighter lately.",
+    caption: "Steadily growing. Your evenings have been lighter lately.",
   },
   {
     label: "Calm",
@@ -35,25 +35,25 @@ const TRENDS: EmotionTrend[] = [
     label: "Grateful",
     values: [3, 4, 3, 4, 5, 4, 5, 5],
     count: 33,
-    caption: "Steady — a quiet thread through your weeks.",
+    caption: "Steady, a quiet thread through your weeks.",
   },
   {
     label: "Anxious",
     values: [6, 5, 6, 4, 3, 3, 2, 2],
     count: 31,
-    caption: "Easing — about half what it was a month ago.",
+    caption: "Easing, about half what it was a month ago.",
   },
   {
     label: "Overwhelmed",
     values: [4, 5, 3, 4, 2, 2, 1, 1],
     count: 22,
-    caption: "Settling — fewer heavy moments week over week.",
+    caption: "Settling, with fewer heavy moments week over week.",
   },
   {
     label: "Frustrated",
     values: [3, 2, 3, 2, 2, 1, 1, 1],
     count: 15,
-    caption: "Cooling — sharper in late April, softer since.",
+    caption: "Cooling. Sharper in late April, softer since.",
   },
 ];
 

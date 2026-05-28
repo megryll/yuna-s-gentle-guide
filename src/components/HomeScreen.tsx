@@ -14,7 +14,7 @@ import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { startAmbient } from "@/lib/ambient-audio";
 
 const WELCOME_AUDIO_TEXT =
-  "Welcome in. Take a look around — I'll be here when you're ready to chat.";
+  "Welcome in. Take a look around. I'll be here when you're ready to chat.";
 
 const PRIMARY_SUGGESTION = { label: "Chat Now", primary: true } as const;
 
@@ -314,7 +314,7 @@ function openPrompt(c: HomeCard): string {
     case "accountability":
       return c.goal;
     case "book":
-      return `${c.title} — ${c.author}`;
+      return `${c.title} by ${c.author}`;
   }
 }
 

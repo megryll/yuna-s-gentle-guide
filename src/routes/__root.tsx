@@ -3,6 +3,10 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
+import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
+// Side-effect import: installs the global Audio() interceptor early so every
+// audio element the app creates respects the prototype-mute admin toggle.
+import "@/lib/prototype-mute";
 
 function NotFoundComponent() {
   return (
@@ -84,6 +88,7 @@ function RootComponent() {
       <AdminSidebar />
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <UserTypeToggle />
+        <PrototypeMuteToggle />
       </div>
       <Outlet />
     </>

@@ -60,7 +60,11 @@ export function YunaAvatar({ size = 32, className, variant }: Props) {
       aria-hidden="true"
       width={size}
       height={size}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        transition: "width 300ms ease-out, height 300ms ease-out",
+      }}
       className={"rounded-full object-cover " + (className ?? "")}
       draggable={false}
     />

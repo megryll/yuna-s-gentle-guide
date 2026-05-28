@@ -28,7 +28,7 @@ const ASSESSMENTS: Assessment[] = [
     levels: ["High", "Average", "Low"],
     data: [0.1, 0.3, 0.5, 0.4, 0.7, 0.85, 0.95],
     accent: "#9BC97B",
-    copy: "Trending up over the past month — steadiest after your morning sessions.",
+    copy: "Trending up over the past month. Steadiest after your morning sessions.",
     emptyCopy: "Capture how you feel today so Yuna can track how it shifts.",
   },
   {
@@ -37,7 +37,7 @@ const ASSESSMENTS: Assessment[] = [
     levels: ["Severe", "Moderate", "Mild", "None"],
     data: [0.85, 0.9, 0.7, 0.55, 0.4, 0.35, 0.25],
     accent: "#C5B0E5",
-    copy: "Easing gently — moved from severe into the mild range this past month.",
+    copy: "Easing gently. Moved from severe into the mild range this past month.",
     emptyCopy: "Capture a baseline so Yuna can notice when things lift or weigh on you.",
   },
   {

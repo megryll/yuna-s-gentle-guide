@@ -103,7 +103,7 @@ export function HomeCardRow({
           >
             {title}
           </p>
-          <div className="mt-3.5 flex items-center gap-3 flex-wrap">
+          <div className="mt-3.5 flex items-center gap-1 flex-wrap">
             <span className={`text-[12px] font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
               {isGuided && avatar ? (
                 <YunaAvatar variant={avatar} size={15} />
@@ -135,7 +135,7 @@ function rowTitle(card: HomeCard): string {
     case "accountability":
       return `"${card.goal}"`;
     case "book":
-      return `${card.title} — ${card.author}`;
+      return `${card.title} by ${card.author}`;
   }
 }
 
@@ -527,7 +527,7 @@ function CardHeader({
 
   return (
     <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0 flex flex-row items-center gap-3 flex-wrap">
+      <div className="min-w-0 flex flex-row items-center gap-1 flex-wrap">
         <p
           className={
             "text-[12px] font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 " +
@@ -643,11 +643,11 @@ function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
   return (
     <span
       className={
-        "inline-flex items-center gap-1 text-[12px] font-medium tracking-[0.12em] uppercase " +
+        "text-[12px] font-medium tracking-[0.12em] uppercase " +
         (isDark ? "text-white" : "text-neutral-900")
       }
     >
-      <span aria-hidden>📅</span>
+      <span aria-hidden className="mx-0.5">•</span>
       Daily
     </span>
   );

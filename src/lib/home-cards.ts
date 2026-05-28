@@ -173,7 +173,6 @@ export const HOME_CARDS: HomeCard[] = [
     description: "Tell me what's going on, and we'll find a place to start.",
     duration: "1 minute",
     naturePath: "/nature/Background-2.png",
-    isNew: true,
   },
   {
     type: "meditation",

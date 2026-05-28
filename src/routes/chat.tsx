@@ -49,7 +49,20 @@ import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode } from "@/lib/theme-prefs";
-import { INTRO_QUESTIONS, OTHER_OPTION, type IntroQuestion } from "@/lib/questionnaire";
+import {
+  PRIORITY_QUESTION,
+  PRIORITY_OPTIONS,
+  WSAS_QUESTION,
+  TOP_PRIORITY_TOKEN,
+  branchFor,
+  priorityLabel,
+  type ChipsQuestion,
+  type IntroQuestion,
+  type MultiPriorityQuestion,
+  type PriorityKey,
+  type PriorityOption,
+  type ScaleQuestion,
+} from "@/lib/questionnaire";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -108,13 +121,13 @@ const LIMITATIONS_ITEMS: LimitationItem[] = [
 function followUpAfterLimitations(initial: string): string {
   const v = initial.toLowerCase();
   if (v.includes("specific")) {
-    return "So — what's on your mind today?";
+    return "So, what's on your mind today?";
   }
   if (v.includes("guide")) {
     return "Let's start with whatever feels easy. What brought you here today?";
   }
   if (v.includes("how yuna works") || v.includes("tell me more")) {
-    return "I'm here to listen and reflect — we can talk about your day, a feeling, anything that's stirring. There's no right place to begin.";
+    return "I'm here to listen and reflect. We can talk about your day, a feeling, anything that's stirring. There's no right place to begin.";
   }
   return "What feels most present right now?";
 }
@@ -122,10 +135,10 @@ function followUpAfterLimitations(initial: string): string {
 function acknowledgeChoice(initial: string): string {
   const v = initial.toLowerCase();
   if (v.includes("specific")) {
-    return "Wonderful — thank you for bringing something to the table.";
+    return "Wonderful. Thank you for bringing something to the table.";
   }
   if (v.includes("guide")) {
-    return "I'd love to. Let's take it slow — I'll lead the way.";
+    return "I'd love to. Let's take it slow. I'll lead the way.";
   }
   if (v.includes("how yuna works") || v.includes("tell me more")) {
     return "Happy to walk you through how I can support you.";
@@ -146,7 +159,7 @@ function isCustomInitial(initial: string): boolean {
 }
 
 const CHAT_NOW_ASK_LINE =
-  "Before we begin, I'd love to learn a little about you. Take a moment to answer a few questions on your device — it'll help me meet you right where you are.";
+  "Before we begin, I'd love to learn a little about you. Take a moment to answer a few questions on your device. It'll help me meet you right where you are.";
 
 // Spoken once, right after the first question's prompt, to coach the user
 // that the response chips are interactive. Subsequent questions don't need
@@ -155,14 +168,36 @@ const CHAT_NOW_TAP_HINT = "Tap whichever feels closest, and we'll keep going.";
 
 function chatNowWelcomeLine(name: string | null): string {
   const trimmed = name?.trim();
-  return trimmed
-    ? `Hi ${trimmed} — I'm so glad you're here.`
-    : "Hi there — I'm so glad you're here.";
+  return trimmed ? `Hi ${trimmed}, I'm so glad you're here.` : "Hi there, I'm so glad you're here.";
 }
 
 function isChatNowOpener(initial: string): boolean {
   return initial.trim().toLowerCase() === "chat now";
 }
+
+// Build the dynamic question set from whatever the user has answered so far.
+// Before Q1 we only know the priority question; once the top priority lands
+// we append the WSAS question (with the priority interpolated) and the three
+// branch follow-ups.
+function buildActiveQuestions(answers: QuestionnaireAnswer[]): IntroQuestion[] {
+  const list: IntroQuestion[] = [PRIORITY_QUESTION];
+  const priorityAnswer = answers.find((a) => a.questionId === PRIORITY_QUESTION.id);
+  const top = priorityAnswer?.priorityKeys?.[0] as PriorityKey | undefined;
+  if (!top) return list;
+  list.push(interpolatedWsas(top));
+  list.push(...branchFor(top));
+  return list;
+}
+
+function interpolatedWsas(top: PriorityKey): ScaleQuestion {
+  return {
+    ...WSAS_QUESTION,
+    prompt: WSAS_QUESTION.prompt.replace(TOP_PRIORITY_TOKEN, priorityLabel(top).toLowerCase()),
+  };
+}
+
+// Total expected questions: 2 universal + 3 branch once the branch is known.
+const QUESTIONNAIRE_TOTAL = 5;
 
 function composeQuestionnaireResponse(
   answers: QuestionnaireAnswer[],
@@ -170,38 +205,40 @@ function composeQuestionnaireResponse(
   // ends on the trail-off "Before we continue —". Voice mode is already in
   // voice and needs a real invitation to talk, so callers pass an open
   // question instead.
-  tail: string = "Before we continue —",
+  tail: string = "Before we continue...",
 ): string {
-  const byId = (id: string) => answers.find((a) => a.questionId === id)?.option ?? "";
-  const heaviest = byId("heaviest-area");
-  const support = byId("support-style");
-  const bringYou = byId("bring-you-here");
+  const priorityAns = answers.find((a) => a.questionId === PRIORITY_QUESTION.id);
+  const topKey = priorityAns?.priorityKeys?.[0] as PriorityKey | undefined;
+  const topName = topKey ? priorityLabel(topKey).toLowerCase() : "";
+  const wsas = answers.find((a) => a.questionId === WSAS_QUESTION.id);
+  const wsasValue = wsas?.value;
 
   const parts: string[] = ["Thank you for sharing all of that."];
-  if (heaviest) {
-    parts.push(`It sounds like ${heaviest.toLowerCase()} is sitting heaviest for you right now`);
-    if (support) {
-      parts[parts.length - 1] +=
-        `, and you'd like me to ${support.toLowerCase()} — I'll honor that.`;
+  if (topName) {
+    parts.push(`It sounds like ${topName} is sitting at the top of what you're carrying.`);
+  }
+  if (typeof wsasValue === "number") {
+    if (wsasValue <= 2) {
+      parts.push("It's good to hear it isn't pulling much from your work yet.");
+    } else if (wsasValue <= 5) {
+      parts.push("I hear that it's starting to weigh on how you show up at work — that matters.");
     } else {
-      parts[parts.length - 1] += ".";
+      parts.push("That weight on your work is real, and I'm glad you said it out loud.");
     }
-  } else if (bringYou) {
-    parts.push(`It means a lot that you came in — ${bringYou.toLowerCase()}.`);
   }
   parts.push(tail);
   return parts.join(" ");
 }
 
 const VOICE_POST_QUESTIONNAIRE_TAIL =
-  "I'd love to hear more about that — can you turn on your microphone so we can talk it through?";
+  "I'd love to hear more about that. Can you turn on your microphone so we can talk it through?";
 const VOICE_QUESTIONNAIRE_DISMISS_LINE =
-  "No worries — we can get to know each other as we go. Want to turn on your microphone so we can chat?";
+  "No worries. We can get to know each other as we go. Want to turn on your microphone so we can chat?";
 
 const REMINISCE_OPENERS = [
-  "Hi, I'm glad you're back. I've been thinking about what you shared last time — how have things felt since?",
-  "Hey you. Last we spoke you were carrying a lot at work — I'd love to hear where that's sitting now.",
-  "Hi again. Something from our last chat has been sitting with me — that bit about wanting more space to breathe. How's that going?",
+  "Hi, I'm glad you're back. I've been thinking about what you shared last time. How have things felt since?",
+  "Hey you. Last we spoke you were carrying a lot at work. I'd love to hear where that's sitting now.",
+  "Hi again. Something from our last chat has been sitting with me: that bit about wanting more space to breathe. How's that going?",
 ];
 
 function isReminisceEntry(initial: string): boolean {
@@ -245,6 +282,13 @@ function Chat() {
   const [questionnaireActive, setQuestionnaireActive] = useState(false);
   const [questionnaireIndex, setQuestionnaireIndex] = useState(0);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<QuestionnaireAnswer[]>([]);
+  // Active question set derived from answers so far. Starts with the
+  // priority Q only; grows to WSAS + 3 branch Qs once the user picks a top
+  // priority. Persisted progress rebuilds this on resume from the saved
+  // answers.
+  const [activeQuestions, setActiveQuestions] = useState<IntroQuestion[]>(() =>
+    buildActiveQuestions([]),
+  );
   // Voice panel visibility is decoupled from questionnaireActive so the
   // initial chat-now-voice flow can defer the panel until Q1's audio
   // actually plays (it'd be jarring to surface chips during welcome/ask).
@@ -358,7 +402,9 @@ function Chat() {
       const stored = loadStoredMessages();
       if (stored.length > 0) setMessages(stored);
       const progress = loadQuestionnaireProgress();
-      if (progress && progress.index < INTRO_QUESTIONS.length) {
+      const resumedQuestions = progress ? buildActiveQuestions(progress.answers) : null;
+      if (progress && resumedQuestions && progress.index < resumedQuestions.length) {
+        setActiveQuestions(resumedQuestions);
         setQuestionnaireActive(true);
         setQuestionnaireIndex(progress.index);
         setQuestionnaireAnswers(progress.answers);
@@ -411,13 +457,13 @@ function Chat() {
   // toggle never strands them on a question with no chips.
   useEffect(() => {
     if (questionnaireDismissedRef.current) return;
-    if (questionnaireAnswersRef.current.length >= INTRO_QUESTIONS.length) return;
+    if (questionnaireAnswersRef.current.length >= activeQuestions.length) return;
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m.kind !== "text") continue;
       if (m.from === "you") return;
       if (m.from !== "yuna") continue;
-      const qIdx = INTRO_QUESTIONS.findIndex((q) => q.prompt === m.text);
+      const qIdx = activeQuestions.findIndex((q) => q.prompt === m.text);
       // Keep scanning backwards if this Yuna line isn't a question — the
       // chat-now voice opener appends the tap-hint coaching line AFTER Q1's
       // prompt, so the last Yuna message at boot is the hint, not the
@@ -429,7 +475,7 @@ function Chat() {
       }
       return;
     }
-  }, [messages, questionnaireActive, questionnaireIndex]);
+  }, [messages, questionnaireActive, questionnaireIndex, activeQuestions]);
 
   // Voice panel timing. Only re-entries (mode toggle text↔voice mid-
   // questionnaire — flagged by revisit=1) surface chips immediately, so
@@ -749,18 +795,19 @@ function Chat() {
           setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ask }]);
           setTyping(false);
           speakIfEnabled(ask);
-          setTimeout(() => askQuestion(0), 700);
+          setTimeout(() => askQuestion(0, activeQuestions), 700);
         }, 900);
       }, 700);
     }, 900);
   };
 
-  // Ask question #idx as a Yuna bubble + spoken cue. In voice mode we drive
-  // VoiceSession's TTS pipeline so the spoken line sits in the same audio
-  // queue as the rest of the call.
-  const askQuestion = (idx: number) => {
-    if (idx >= INTRO_QUESTIONS.length) return;
-    const q = INTRO_QUESTIONS[idx];
+  // Ask question #idx from `questions` as a Yuna bubble + spoken cue. The
+  // questions list is passed in (rather than read from state) because the
+  // branch expands the list right after Q1's answer lands — using stale
+  // state here would re-ask Q1's prompt for Q2.
+  const askQuestion = (idx: number, questions: IntroQuestion[]) => {
+    if (idx >= questions.length) return;
+    const q = questions[idx];
     setQuestionnaireActive(true);
     setQuestionnaireIndex(idx);
     if (mode === "voice") {
@@ -775,24 +822,57 @@ function Chat() {
     }, 700);
   };
 
-  // User chose an answer chip (or typed an "Other" response). Append it as
-  // their bubble, advance to the next question, or finish when Q4 lands.
-  const pickAnswer = (option: string) => {
-    const trimmed = option.trim();
-    if (!trimmed) return;
-    const idx = questionnaireIndex;
-    const q = INTRO_QUESTIONS[idx];
-    if (!q) return;
-    const answer: QuestionnaireAnswer = { questionId: q.id, option: trimmed };
+  // Commit an answer and advance. `answer` carries the canonical display
+  // string; if it's a priority pick or a slider, the caller fills in the
+  // extra fields (priorityKeys / value) before calling.
+  const commitAnswer = (answer: QuestionnaireAnswer, displayText: string) => {
     const nextAnswers = [...questionnaireAnswersRef.current, answer];
     questionnaireAnswersRef.current = nextAnswers;
     setQuestionnaireAnswers(nextAnswers);
-    setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: trimmed }]);
-    if (idx >= INTRO_QUESTIONS.length - 1) {
+    // Rebuild the question list — Q1's answer expands it from 1 → 5.
+    const nextQuestions = buildActiveQuestions(nextAnswers);
+    setActiveQuestions(nextQuestions);
+    setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: displayText }]);
+    const idx = questionnaireIndex;
+    if (idx >= nextQuestions.length - 1) {
       finishQuestionnaire(nextAnswers);
     } else {
-      setTimeout(() => askQuestion(idx + 1), mode === "voice" ? 400 : 600);
+      setTimeout(() => askQuestion(idx + 1, nextQuestions), mode === "voice" ? 400 : 600);
     }
+  };
+
+  // Chips answer — single labeled option.
+  const pickAnswer = (option: string) => {
+    const trimmed = option.trim();
+    if (!trimmed) return;
+    const q = activeQuestions[questionnaireIndex];
+    if (!q) return;
+    commitAnswer({ questionId: q.id, option: trimmed }, trimmed);
+  };
+
+  // Multi-priority answer — ordered list of priority keys.
+  const pickPriorities = (picks: PriorityOption[]) => {
+    if (picks.length === 0) return;
+    const q = activeQuestions[questionnaireIndex];
+    if (!q) return;
+    const labels = picks.map((p) => p.label);
+    const display = labels.map((l, i) => `${i + 1}. ${l}`).join("  ");
+    commitAnswer(
+      {
+        questionId: q.id,
+        option: labels.join(", "),
+        options: labels,
+        priorityKeys: picks.map((p) => p.key),
+      },
+      display,
+    );
+  };
+
+  // Scale answer — numeric step on a slider.
+  const pickScale = (value: number, displayLabel: string) => {
+    const q = activeQuestions[questionnaireIndex];
+    if (!q) return;
+    commitAnswer({ questionId: q.id, option: displayLabel, value }, displayLabel);
   };
 
   const dismissQuestionnaire = () => {
@@ -908,8 +988,7 @@ function Chat() {
       audioStreamRef.current = stream;
       const Ctor =
         window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!Ctor) return;
       const ctx = new Ctor();
       audioCtxRef.current = ctx;
@@ -1046,7 +1125,7 @@ function Chat() {
       conversation.push({
         role: "user",
         content:
-          "(I just finished tapping through the acknowledgements. Please pick our conversation back up — gently reflect on what I shared at the start, in your own words, then ask one warm open follow-up. Don't restart, don't repeat lines you've already used, and don't reference this bracketed note.)",
+          "(I just finished tapping through the acknowledgements. Please pick our conversation back up. Gently reflect on what I shared at the start, in your own words, then ask one warm open follow-up. Don't restart, don't repeat lines you've already used, and don't reference this bracketed note.)",
       });
       void streamYunaReply(conversation).then((r) => {
         if (!r.ok && !r.bubbleAdded) {
@@ -1147,7 +1226,7 @@ function Chat() {
     ? [
         chatNowWelcomeLine(yunaUserName),
         CHAT_NOW_ASK_LINE,
-        INTRO_QUESTIONS[0].prompt,
+        PRIORITY_QUESTION.prompt,
         CHAT_NOW_TAP_HINT,
       ]
     : undefined;
@@ -1241,7 +1320,7 @@ function Chat() {
               // already activated questionnaireActive when the bubble was
               // appended; this gate is what keeps the panel from popping
               // in during welcome/ask on the initial chat-now-voice flow.
-              const qIdx = INTRO_QUESTIONS.findIndex((q) => q.prompt === text);
+              const qIdx = activeQuestions.findIndex((q) => q.prompt === text);
               if (qIdx === -1) return;
               setVoicePanelVisible(true);
               setHapticKey((k) => k + 1);
@@ -1250,18 +1329,31 @@ function Chat() {
               voiceMicCtaVisible && !voiceUnlocked ? (
                 <MicEnableCta onClick={openMicForVoice} />
               ) : questionnaireActive &&
-                  voicePanelVisible &&
-                  questionnaireIndex < INTRO_QUESTIONS.length ? (
+                voicePanelVisible &&
+                questionnaireIndex < activeQuestions.length ? (
                 <>
-                  <QuestionHeader index={questionnaireIndex} align="center" />
-                  <AnswerChips
+                  <QuestionHeader
+                    question={activeQuestions[questionnaireIndex]}
+                    index={questionnaireIndex}
+                    total={Math.max(activeQuestions.length, QUESTIONNAIRE_TOTAL)}
+                    align="center"
+                  />
+                  <QuestionnaireAnswerSlot
                     key={questionnaireIndex}
-                    question={INTRO_QUESTIONS[questionnaireIndex]}
-                    onPick={pickAnswer}
+                    question={activeQuestions[questionnaireIndex]}
+                    onPickChip={pickAnswer}
+                    onPickPriorities={pickPriorities}
+                    onPickScale={pickScale}
                     onSkip={dismissQuestionnaire}
+                    fill
                   />
                 </>
               ) : null
+            }
+            compactLayout={
+              questionnaireActive &&
+              voicePanelVisible &&
+              questionnaireIndex < activeQuestions.length
             }
             micEnabled={voiceUnlocked}
           />
@@ -1290,6 +1382,23 @@ function Chat() {
                 return <Bubble key={m.id} msg={m} />;
               })}
               {typing && <TypingBubble />}
+              {questionnaireActive && questionnaireIndex < activeQuestions.length && (
+                <div className="yuna-fade-in flex flex-col gap-2.5 pt-1">
+                  <QuestionMeta
+                    question={activeQuestions[questionnaireIndex]}
+                    index={questionnaireIndex}
+                    total={Math.max(activeQuestions.length, QUESTIONNAIRE_TOTAL)}
+                  />
+                  <QuestionnaireAnswerSlot
+                    key={questionnaireIndex}
+                    question={activeQuestions[questionnaireIndex]}
+                    onPickChip={pickAnswer}
+                    onPickPriorities={pickPriorities}
+                    onPickScale={pickScale}
+                    onSkip={dismissQuestionnaire}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Input + Call Yuna footer */}
@@ -1304,17 +1413,7 @@ function Chat() {
                     Keep Texting For Now
                   </Button>
                 </div>
-              ) : questionnaireActive && questionnaireIndex < INTRO_QUESTIONS.length ? (
-                <div className="px-5 pt-3 pb-6 yuna-fade-in flex flex-col gap-3">
-                  <QuestionHeader index={questionnaireIndex} align="left" />
-                  <AnswerChips
-                    key={questionnaireIndex}
-                    question={INTRO_QUESTIONS[questionnaireIndex]}
-                    onPick={pickAnswer}
-                    onSkip={dismissQuestionnaire}
-                  />
-                </div>
-              ) : (
+              ) : questionnaireActive && questionnaireIndex < activeQuestions.length ? null : (
                 <form onSubmit={send} className="px-5 pt-3 pb-6">
                   <TextField
                     ref={inputRef}
@@ -1390,10 +1489,7 @@ function Chat() {
 
       <HapticEdgePulse hapticKey={hapticKey} />
 
-      <Dialog
-        open={micOpen}
-        onOpenChange={setMicOpen}
-      >
+      <Dialog open={micOpen} onOpenChange={setMicOpen}>
         <DialogContent className="sm:max-w-[380px] rounded-3xl">
           <DialogHeader>
             <DialogTitle className="font-serif text-xl tracking-tight">
@@ -1514,106 +1610,120 @@ function LimitationsCard({
   );
 }
 
-// Counter (1/4) + the question prompt itself, shown above the chips in
-// both voice and text modes so the user can always see what they're
-// answering — voice centers it under the avatar; text left-aligns it
-// above the chip stack at the bottom of the screen.
-function QuestionHeader({
+// Slim meta line for text mode (1/N + optional subheader). The prompt is
+// omitted because it already appears as a Yuna bubble in the scroll area
+// just above the picker — repeating it inline would feel like a stutter.
+function QuestionMeta({
+  question,
   index,
+  total,
+}: {
+  question: IntroQuestion;
+  index: number;
+  total: number;
+}) {
+  const subheader = "subheader" in question ? question.subheader : undefined;
+  return (
+    <div className="flex items-baseline gap-2 text-white/70 font-sans-ui text-[11px] tracking-[0.2em] uppercase">
+      <span className="text-white/85">
+        {index + 1}/{total}
+      </span>
+      {subheader && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>{subheader}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Counter (1/N) + helper line + prompt itself, shown above the answer slot
+// in both voice and text modes — voice centers it under the avatar; text
+// left-aligns it above the answer area at the bottom of the screen.
+function QuestionHeader({
+  question,
+  index,
+  total,
   align,
 }: {
+  question: IntroQuestion;
   index: number;
+  total: number;
   align: "center" | "left";
 }) {
-  const total = INTRO_QUESTIONS.length;
-  const prompt = INTRO_QUESTIONS[index].prompt;
   const alignClass = align === "center" ? "items-center text-center" : "items-start text-left";
+  const helper = "helper" in question ? question.helper : undefined;
+  const subheader = "subheader" in question ? question.subheader : undefined;
   return (
     <div className={"flex flex-col gap-1.5 " + alignClass}>
       <span className="font-sans-ui text-[11px] tracking-[0.2em] uppercase text-white/75">
         {index + 1}/{total}
       </span>
-      <p className="text-lg leading-snug text-white">{prompt}</p>
+      {helper && <p className="text-sm leading-snug text-white/75">{helper}</p>}
+      <p className="text-lg leading-snug text-white">{question.prompt}</p>
+      {subheader && (
+        <p className="font-sans-ui text-[11px] tracking-[0.2em] uppercase text-white/70">
+          {subheader}
+        </p>
+      )}
     </div>
   );
 }
 
-// Renders the answer chip stack that replaces the chat input bar while the
-// inline questionnaire is active. Tapping a chip commits the answer; the
-// "Other" branch swaps to a small text-field form (for Q3's free-text).
+// Dispatcher that renders the right answer UI for each question kind. Skip
+// is only offered on the priority Q — the scale + chip branch Qs are part of
+// the contract and aren't dismissable mid-flow.
+function QuestionnaireAnswerSlot({
+  question,
+  onPickChip,
+  onPickPriorities,
+  onPickScale,
+  onSkip,
+  fill = false,
+}: {
+  question: IntroQuestion;
+  onPickChip: (option: string) => void;
+  onPickPriorities: (picks: PriorityOption[]) => void;
+  onPickScale: (value: number, displayLabel: string) => void;
+  onSkip: () => void;
+  // When true (voice mode), the priority picker flex-fills the available
+  // vertical space and scrolls inside that area. When false (text mode), it
+  // caps via max-h so the input footer keeps its place.
+  fill?: boolean;
+}) {
+  if (question.kind === "multi-priority") {
+    return (
+      <PriorityPicker
+        question={question}
+        onSubmit={onPickPriorities}
+        onSkip={onSkip}
+        fill={fill}
+      />
+    );
+  }
+  if (question.kind === "scale") {
+    return <ScaleAnswer question={question} onSubmit={onPickScale} />;
+  }
+  return <AnswerChips question={question} onPick={onPickChip} />;
+}
+
+// Chip stack — labeled single-select. No "Other" branch in the new schema.
 function AnswerChips({
   question,
   onPick,
-  onSkip,
 }: {
-  question: IntroQuestion;
+  question: ChipsQuestion;
   onPick: (option: string) => void;
-  onSkip: () => void;
 }) {
-  const [otherActive, setOtherActive] = useState(false);
-  const [otherText, setOtherText] = useState("");
-
-  const submitOther = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = otherText.trim();
-    if (!trimmed) return;
-    onPick(trimmed);
-  };
-
-  if (otherActive) {
-    return (
-      <form onSubmit={submitOther} className="flex flex-col gap-2 yuna-fade-in">
-        <TextField
-          surface="dark"
-          value={otherText}
-          onChange={(e) => setOtherText(e.target.value)}
-          placeholder="Tell me more…"
-          aria-label="Other — please specify"
-          autoFocus
-          trailing={
-            <Button
-              surface="dark"
-              variant="primary"
-              size="icon-sm"
-              type="submit"
-              onMouseDown={(e) => e.preventDefault()}
-              aria-label="Send"
-              disabled={!otherText.trim()}
-            >
-              <ArrowUpIcon />
-            </Button>
-          }
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setOtherActive(false);
-            setOtherText("");
-          }}
-          className="self-center text-[11px] tracking-[0.18em] uppercase text-white/70 active:text-white/95 transition-colors"
-        >
-          Back to options
-        </button>
-      </form>
-    );
-  }
-
-  const options = question.allowOther ? [...question.options, OTHER_OPTION] : question.options;
-
   return (
     <div className="flex flex-col gap-2 yuna-fade-in">
-      {options.map((option) => (
+      {question.options.map((option) => (
         <button
           key={option}
           type="button"
-          onClick={() => {
-            if (option === OTHER_OPTION) {
-              setOtherActive(true);
-              return;
-            }
-            onPick(option);
-          }}
-          className="w-full flex items-center justify-between gap-3 rounded-full border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
+          onClick={() => onPick(option)}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
         >
           <span className="flex-1 text-base leading-snug text-white/95">{option}</span>
           <ChevronRight
@@ -1624,13 +1734,173 @@ function AnswerChips({
           />
         </button>
       ))}
+    </div>
+  );
+}
+
+// Multi-priority picker — tap to add to a ranked list, tap again to remove.
+// Order of taps is the user's ranking; first tap is the top priority. A
+// Continue button commits the selection (so the user can reorder before
+// they're locked in).
+function PriorityPicker({
+  question,
+  onSubmit,
+  onSkip,
+  fill = false,
+}: {
+  question: MultiPriorityQuestion;
+  onSubmit: (picks: PriorityOption[]) => void;
+  onSkip: () => void;
+  // Voice mode passes fill so the list flex-grows into the slot and
+  // scrolls inside its own bounded area; text mode keeps the max-h cap.
+  fill?: boolean;
+}) {
+  const [picks, setPicks] = useState<PriorityOption[]>([]);
+  const max = question.maxSelect;
+
+  const toggle = (opt: PriorityOption) => {
+    setPicks((prev) => {
+      const i = prev.findIndex((p) => p.key === opt.key);
+      if (i >= 0) return prev.filter((_, j) => j !== i);
+      if (prev.length >= max) return prev;
+      return [...prev, opt];
+    });
+  };
+
+  return (
+    <div
+      className={
+        "flex flex-col gap-3 yuna-fade-in " + (fill ? "flex-1 min-h-0 w-full" : "")
+      }
+    >
+      <div
+        className={
+          "flex flex-col gap-2 " +
+          (fill
+            ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            : "")
+        }
+      >
+        {question.options.map((opt) => {
+          const rank = picks.findIndex((p) => p.key === opt.key);
+          const selected = rank >= 0;
+          const isTop = rank === 0;
+          const capped = !selected && picks.length >= max;
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => toggle(opt)}
+              disabled={capped}
+              className={
+                "w-full flex items-center justify-between gap-3 rounded-full border px-5 py-2.5 text-left transition-colors " +
+                (selected
+                  ? "border-white bg-white/15"
+                  : capped
+                    ? "border-white/20 opacity-50"
+                    : "border-white/40 bg-transparent active:bg-white/15")
+              }
+            >
+              <span className="flex-1 text-base leading-snug text-white/95">{opt.label}</span>
+              {selected ? (
+                isTop ? (
+                  <span
+                    aria-label="Top priority"
+                    className="shrink-0 inline-flex items-center rounded-full bg-white text-neutral-900 font-sans-ui text-[10px] font-semibold tracking-[0.14em] uppercase px-2.5 py-1"
+                  >
+                    Top Priority
+                  </span>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-900 font-sans-ui text-[12px] font-semibold"
+                  >
+                    {rank + 1}
+                  </span>
+                )
+              ) : (
+                <ChevronRight
+                  size={16}
+                  strokeWidth={1.6}
+                  aria-hidden="true"
+                  className="shrink-0 text-white/55"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <Button
+        surface="dark"
+        variant="primary"
+        fullWidth
+        onClick={() => onSubmit(picks)}
+        disabled={picks.length === 0}
+      >
+        {picks.length === 0
+          ? "Pick at least one"
+          : picks.length === 1
+            ? "Continue with 1 priority"
+            : `Continue with ${picks.length} priorities`}
+      </Button>
       <button
         type="button"
         onClick={onSkip}
-        className="self-center mt-1 text-[11px] tracking-[0.18em] uppercase text-white/70 active:text-white/95 transition-colors"
+        className="self-center text-[11px] tracking-[0.18em] uppercase text-white/70 active:text-white/95 transition-colors"
       >
         Skip for now
       </button>
+    </div>
+  );
+}
+
+// Numeric scale — a row of equally-sized numbered chips with anchor labels
+// underneath the min / mid / max columns. Tapping a chip commits the answer,
+// matching the AnswerChips one-tap pattern (no separate Continue button).
+function ScaleAnswer({
+  question,
+  onSubmit,
+}: {
+  question: ScaleQuestion;
+  onSubmit: (value: number, displayLabel: string) => void;
+}) {
+  const stepCount = question.max - question.min + 1;
+  const anchorAt = (step: number): string | undefined => question.anchors[step];
+
+  const displayLabelFor = (step: number) => {
+    const anchor = anchorAt(step);
+    return anchor ? `${step} — ${anchor}` : String(step);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 yuna-fade-in">
+      {Array.from({ length: stepCount }, (_, idx) => {
+        const step = question.min + idx;
+        const anchor = anchorAt(step);
+        return (
+          <button
+            key={step}
+            type="button"
+            onClick={() => onSubmit(step, displayLabelFor(step))}
+            className="w-full flex items-center justify-between gap-3 rounded-full border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
+          >
+            <span className="flex-1 flex items-baseline gap-3">
+              <span className="text-base text-white/95 tabular-nums w-4 shrink-0">{step}</span>
+              {anchor && (
+                <span className="text-[13px] leading-snug text-white/65">
+                  {anchor}
+                </span>
+              )}
+            </span>
+            <ChevronRight
+              size={16}
+              strokeWidth={1.6}
+              aria-hidden="true"
+              className="shrink-0 text-white/55"
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -51,12 +51,12 @@ const priya: ProfileData = {
   focusArea1: {
     eyebrow: "Focus Area #1",
     title: "Anxiety Awareness",
-    body: "Begin noticing when anxiety shows up and what it feels like in your body — building the foundation for everything that follows.",
+    body: "Begin noticing when anxiety shows up and what it feels like in your body, building the foundation for everything that follows.",
   },
   focusArea2: {
     eyebrow: "Focus Area #2",
     title: "Daily Grounding",
-    body: "Establish one small daily practice that helps you feel more settled — even for a few minutes.",
+    body: "Establish one small daily practice that helps you feel more settled, even for a few minutes.",
   },
 
   tasks1: [
@@ -109,12 +109,12 @@ const james: ProfileData = {
   focusArea1: {
     eyebrow: "Focus Area #1",
     title: "Emotional Openness",
-    body: "Continue building the ability to name and share what you feel — with Linda, with your children, and with yourself.",
+    body: "Continue building the ability to name and share what you feel: with Linda, with your children, and with yourself.",
   },
   focusArea2: {
     eyebrow: "Focus Area #2",
     title: "Identity & Purpose",
-    body: "Explore who you are beyond the station — finding meaning in the quiet, the relationships, and the life you're building now.",
+    body: "Explore who you are beyond the station, finding meaning in the quiet, the relationships, and the life you're building now.",
   },
 
   tasks1: [
@@ -155,9 +155,9 @@ const james: ProfileData = {
       emoji: "✨",
       title: "Cried during a session",
       date: "Jan 2026",
-      desc: "You allowed yourself to feel the full weight of losing the station — and you survived it.",
+      desc: "You allowed yourself to feel the full weight of losing the station, and you survived it.",
       meaning: [
-        "This proved the flood did not come — you felt, and then you were okay",
+        "This proved the flood did not come. You felt, and then you were okay",
         "It built evidence against the belief that feeling means falling apart",
         "The relief afterward was real and lasting",
       ],
@@ -167,13 +167,13 @@ const james: ProfileData = {
       emoji: "✨",
       title: "Invited Ryan to the workshop",
       date: "Mar 2026",
-      desc: "You asked Ryan to help with a woodworking project — a quiet act of connection.",
+      desc: "You asked Ryan to help with a woodworking project, a quiet act of connection.",
       meaning: [
-        "This was not about the project — it was about creating shared space",
+        "This was not about the project. It was about creating shared space",
         "Ryan said yes, which is evidence he wants connection too",
-        "Side-by-side activity is your language of closeness — and it works",
+        "Side-by-side activity is your language of closeness, and it works",
       ],
-      yunaQuote: "You found your way in with Ryan. Not through words — through wood and quiet. That is enough.",
+      yunaQuote: "You found your way in with Ryan. Not through words. Through wood and quiet. That is enough.",
     },
   ],
   beliefs: [
@@ -182,22 +182,22 @@ const james: ProfileData = {
       title: "Men handle things alone",
       desc: "Three decades of crisis response trained you to absorb and suppress.",
       meaning: [
-        "This belief kept you functional under pressure — but it has a shelf life",
+        "This belief kept you functional under pressure, but it has a shelf life",
         "Emotional isolation becomes more costly as the stakes shift from physical to relational",
-        "Asking for help is not failure — it is a different kind of strength",
+        "Asking for help is not failure. It is a different kind of strength",
       ],
-      yunaQuote: "I work with this belief, not against it — reframing vulnerability as tactical, not weak.",
+      yunaQuote: "I work with this belief, not against it, reframing vulnerability as tactical, not weak.",
     },
     {
       emoji: "⏳",
       title: "My best years are behind me",
-      desc: "Retirement feels like the beginning of decline — not a new chapter.",
+      desc: "Retirement feels like the beginning of decline, not a new chapter.",
       meaning: [
         "When identity was defined by action, stillness feels like stagnation",
         "The belief blocks you from investing in what is ahead",
         "Your children and Linda are evidence that what matters most is still unfolding",
       ],
-      yunaQuote: "I challenge this belief with evidence from your own life — the growth is happening now.",
+      yunaQuote: "I challenge this belief with evidence from your own life. The growth is happening now.",
     },
     {
       emoji: "🛡️",
@@ -206,9 +206,9 @@ const james: ProfileData = {
       meaning: [
         "This was reinforced by fire service culture for three decades",
         "It prevents the people closest to you from truly knowing you",
-        "Megan and Linda are actively asking for more — they see strength in openness",
+        "Megan and Linda are actively asking for more. They see strength in openness",
       ],
-      yunaQuote: "I help you test this assumption in safe, low-stakes ways — building evidence that it is outdated.",
+      yunaQuote: "I help you test this assumption in safe, low-stakes ways, building evidence that it is outdated.",
     },
   ],
   beliefsMore: 2,
@@ -216,20 +216,20 @@ const james: ProfileData = {
     {
       emoji: "🚒",
       title: "Retired fire captain (30 years)",
-      desc: "Three decades of service defined who you are — and who you thought you would always be.",
+      desc: "Three decades of service defined who you are, and who you thought you would always be.",
       meaning: [
         "Service was identity, purpose, and community all in one",
         "Retirement meant losing all three simultaneously",
-        "The camaraderie is what you miss most — the brotherhood",
+        "The camaraderie is what you miss most: the brotherhood",
       ],
-      yunaQuote: "I hold this loss with the seriousness it deserves — it is a grief, even if no one died.",
+      yunaQuote: "I hold this loss with the seriousness it deserves. It is a grief, even if no one died.",
     },
     {
       emoji: "💑",
       title: "Married to Linda (28 years)",
       desc: "A strong marriage tested by decades of shift work and emotional distance.",
       meaning: [
-        "Linda has been patient — but patience is not the same as fulfillment",
+        "Linda has been patient, but patience is not the same as fulfillment",
         "She wants to reconnect now that you are home",
         "The intimacy gap built over decades cannot close overnight",
       ],
@@ -238,7 +238,7 @@ const james: ProfileData = {
     {
       emoji: "🎣",
       title: "Fly fishing and woodworking",
-      desc: "These are where you find flow — and the closest thing to therapy you had before Yuna.",
+      desc: "These are where you find flow, and the closest thing to therapy you had before Yuna.",
       meaning: [
         "Solitary focus activities regulate your nervous system",
         "They are genuine sources of joy and calm",

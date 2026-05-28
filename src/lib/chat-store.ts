@@ -7,7 +7,18 @@
 
 export type LimitationItem = { id: string; text: string; checked: boolean };
 
-export type QuestionnaireAnswer = { questionId: string; option: string };
+// Questionnaire answer envelope. `option` is the canonical display string for
+// chips and the joined-rank string for priority picks; `value` carries the
+// numeric step for slider answers; `options` carries ordered selections for
+// the multi-priority question. Older persisted records (option-only) still
+// load — the optional fields default to undefined.
+export type QuestionnaireAnswer = {
+  questionId: string;
+  option: string;
+  value?: number;
+  options?: string[];
+  priorityKeys?: string[];
+};
 
 export type ChatMsg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }

@@ -29,20 +29,20 @@ export const VOICES: Record<VoiceId, VoiceConfig> = {
     id: "mei",
     // Sarah — soft American young adult female, thoughtful
     elevenlabsId: "EXAVITQu4vr4xnSDxMaL",
-    sampleText: "Hello — take your time. I'll be right here when you want to talk.",
+    sampleText: "Hello. Take your time. I'll be right here when you want to talk.",
   },
   // ── Photoreal men ──────────────────────────────────────────────────────────
   marcus: {
     id: "marcus",
     // Brian — mature American male, deep, resonant
     elevenlabsId: "nPczCjzI2devNBz1zQrb",
-    sampleText: "Hey. Whatever's on your mind — I've got space for it.",
+    sampleText: "Hey. Whatever's on your mind, I've got space for it.",
   },
   arun: {
     id: "arun",
     // Daniel — articulate British male, professional warmth
     elevenlabsId: "onwK4e9ZLuTAKqWW03F9",
-    sampleText: "Hi there. There's no right place to begin — just start where you are.",
+    sampleText: "Hi there. There's no right place to begin. Just start where you are.",
   },
   // ── Illustrated women ──────────────────────────────────────────────────────
   rosa: {
@@ -87,7 +87,7 @@ export const VOICES: Record<VoiceId, VoiceConfig> = {
     id: "tide",
     // River — calming non-binary American
     elevenlabsId: "SAz9YHcvj6GT2YYXdXww",
-    sampleText: "Hey. Ease in — there's no rush at all.",
+    sampleText: "Hey. Ease in. There's no rush at all.",
   },
   cloud: {
     id: "cloud",

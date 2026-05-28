@@ -47,7 +47,7 @@ export const PAST_SESSIONS: PastSession[] = [
       { label: "Gained clarity", emoji: "💎", tone: "positive" },
       { label: "Felt heard", emoji: "🫶", tone: "positive" },
     ],
-    note: "Helped me see I'm not behind — I'm holding too much.",
+    note: "Helped me see I'm not behind. I'm holding too much.",
     transcript: [
       {
         from: "you",
@@ -55,7 +55,7 @@ export const PAST_SESSIONS: PastSession[] = [
       },
       {
         from: "yuna",
-        text: "That sounds heavy. When you say losing track — do you mean forgetting things, or more that nothing feels urgent enough to start?",
+        text: "That sounds heavy. When you say losing track, do you mean forgetting things, or more that nothing feels urgent enough to start?",
       },
       {
         from: "you",
@@ -141,11 +141,11 @@ export const PAST_SESSIONS: PastSession[] = [
     transcript: [
       {
         from: "you",
-        text: "Everything's been loud lately. My head, my phone, the apartment — I can't find a quiet minute.",
+        text: "Everything's been loud lately. My head, my phone, the apartment. I can't find a quiet minute.",
       },
       {
         from: "yuna",
-        text: "Can we try something? A simple breath count — four in, seven hold, eight out. I'll go slowly.",
+        text: "Can we try something? A simple breath count: four in, seven hold, eight out. I'll go slowly.",
       },
       {
         from: "you",
@@ -183,7 +183,7 @@ export const PAST_SESSIONS: PastSession[] = [
     id: "s-01",
     date: "Apr 30",
     length: "31 min",
-    title: "First session — getting to know each other",
+    title: "First session: getting to know each other",
     tags: [
       { label: "Felt inspired", emoji: "✨", tone: "positive" },
       { label: "Felt connected", emoji: "🤝", tone: "positive" },

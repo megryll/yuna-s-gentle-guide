@@ -25,7 +25,7 @@ export type IntroVoice = {
 
 const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
   iris: "A warm, confident voice that grounds the room as it speaks.",
-  marcus: "Steady and resonant — a calm authority that helps you settle in.",
+  marcus: "Steady and resonant, a calm authority that helps you settle in.",
   mei: "Soft and thoughtful, gentle enough to hold what's underneath.",
   arun: "Articulate and unhurried, like a trusted friend taking their time.",
   rosa: "Bright and warm, lifting the conversation without rushing it.",
@@ -35,7 +35,7 @@ const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
   aura: "A soft, mysterious presence that holds space for stillness.",
   ember: "Warm and steadying, like firelight on a quiet evening.",
   tide: "Cool and rhythmic, easing in and out like a slow breath.",
-  cloud: "Light and airy — soft enough to land softly into the next moment.",
+  cloud: "Light and airy, soft enough to land softly into the next moment.",
 };
 
 export const INTRO_VOICES: IntroVoice[] = VOICE_IDS.map((id) => ({
@@ -70,7 +70,7 @@ export function SubScreen({
         <button
           onClick={onBack}
           aria-label="Back"
-          className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+          className="h-10 w-10 rounded-full flex items-center justify-center active:bg-accent transition-colors"
         >
           <ChevronLeftIcon />
         </button>
@@ -203,7 +203,7 @@ export function NavRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-accent/40 transition-colors border-t border-border first:border-t-0"
+      className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-accent/40 transition-colors border-t border-border first:border-t-0"
     >
       <span className="h-9 w-9 rounded-full flex items-center justify-center text-foreground shrink-0">
         {icon}

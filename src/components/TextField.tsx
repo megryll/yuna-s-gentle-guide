@@ -18,8 +18,7 @@ import { cn } from "@/lib/utils";
  * Inline focus ring is the border going opaque on focus-within; we do not
  * paint a Tailwind ring because the pill itself is the focus indicator.
  */
-export interface TextFieldProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
+export interface TextFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   surface?: "dark" | "light";
   size?: "md" | "sm";
   leading?: React.ReactNode;
@@ -34,19 +33,17 @@ const CONTAINER_BASE =
 // the dark photo bg. The `.theme-light` shim maps `bg-black/20` →
 // ~45% white, so in light mode the field still appears as a frosted white
 // pill matching SURFACE_LIGHT below.
-const SURFACE_DARK =
-  "border-white/30 bg-black/20 focus-within:border-white";
+const SURFACE_DARK = "border-white/30 bg-black/20 focus-within:border-white";
 
 // Light surface kept on its own variant for screens that are intrinsically
 // light (no themed photo bg). Border in ink so the pill has a hairline on
 // pale grounds.
-const SURFACE_LIGHT =
-  "border-foreground/30 bg-white/40 focus-within:border-foreground";
+const SURFACE_LIGHT = "border-foreground/30 bg-white/40 focus-within:border-foreground";
 
 // Full-size (default). Min-height keeps bare fields the same height as
 // fields with an icon-sm trailing button (h-8), so the pill reads
 // consistently whether or not a trailing control is present.
-const SIZE_MD = "pl-5 py-2 min-h-12 text-sm";
+const SIZE_MD = "pl-5 py-1.5 min-h-11 text-sm";
 // Compact — used inside cards (e.g. the gratitude journal rows).
 const SIZE_SM = "pl-4 py-1.5 text-[13px]";
 
@@ -81,23 +78,11 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
         : "text-foreground placeholder:text-foreground/45";
 
     return (
-      <div
-        className={cn(
-          CONTAINER_BASE,
-          surfaceClass,
-          sizeClass,
-          rightPad,
-          containerClassName,
-        )}
-      >
+      <div className={cn(CONTAINER_BASE, surfaceClass, sizeClass, rightPad, containerClassName)}>
         {leading}
         <input
           ref={ref}
-          className={cn(
-            "flex-1 bg-transparent outline-none min-w-0",
-            inputColor,
-            className,
-          )}
+          className={cn("flex-1 bg-transparent outline-none min-w-0", inputColor, className)}
           {...inputProps}
         />
         {trailing}
