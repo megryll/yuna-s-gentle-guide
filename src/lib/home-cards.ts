@@ -170,7 +170,7 @@ export const HOME_CARDS: HomeCard[] = [
     type: "self-discovery",
     id: "first-check-in",
     title: "Let's get to know each other",
-    description: "Tell me what's going on — we'll find a place to start.",
+    description: "Tell me what's going on, and we'll find a place to start.",
     duration: "1 minute",
     naturePath: "/nature/Background-2.png",
     isNew: true,
@@ -204,7 +204,7 @@ export const HOME_CARDS: HomeCard[] = [
     type: "affirmation",
     id: "strength-overcome",
     quote:
-      "I have the strength to overcome obstacles—each step forward is progress. Embrace challenges and keep moving confidently.",
+      "I have the strength to overcome obstacles. Each step forward is progress. Embrace challenges and keep moving confidently.",
     cadence: "Daily",
     naturePath: "/nature/Background-18.png",
     isSaved: true,
@@ -236,7 +236,7 @@ export const HOME_CARDS: HomeCard[] = [
     type: "guided-session",
     id: "perfectionism-work",
     title: "Untangle perfectionism at work, one thread at a time",
-    subtitle: "You've used the word 'should' a lot this week — let's dig in.",
+    subtitle: "You've used the word 'should' a lot this week. Let's dig in.",
     naturePath: "/nature/Background-15.png",
   },
   {
@@ -249,7 +249,7 @@ export const HOME_CARDS: HomeCard[] = [
   {
     type: "gratitude",
     id: "gratitude-surprise",
-    prompt: "Three small things today that didn't have to go right—but did:",
+    prompt: "Three small things today that didn't have to go right, but did:",
     cadence: "Daily",
     naturePath: "/nature/Background-16.png",
   },
@@ -258,7 +258,7 @@ export const HOME_CARDS: HomeCard[] = [
     id: "energy-audit",
     title: "Where Is Your Energy Actually Going?",
     description:
-      "A short audit of where your week is spent versus where you wish it were—surfaces the invisible trade-offs.",
+      "A short audit of where your week is spent versus where you wish it were. Surfaces the invisible trade-offs.",
     duration: "6–8 minutes",
     naturePath: "/nature/Background-12.png",
   },
@@ -266,7 +266,7 @@ export const HOME_CARDS: HomeCard[] = [
     type: "affirmation",
     id: "rest-is-not-reward",
     quote:
-      "Rest isn't a reward I earn—it's how I stay rooted enough to keep showing up. Softness today is strength tomorrow.",
+      "Rest isn't a reward I earn. It's how I stay rooted enough to keep showing up. Softness today is strength tomorrow.",
     cadence: "Daily",
     naturePath: "/nature/Background-13.png",
   },
@@ -288,7 +288,7 @@ export const HOME_CARDS: HomeCard[] = [
     type: "guided-session",
     id: "people-pleasing",
     title: "Notice where you're saying yes when you mean no",
-    subtitle: "Two of your stories this week ended with you overextending — let's unpack.",
+    subtitle: "Two of your stories this week ended with you overextending. Let's unpack.",
     naturePath: "/nature/Background-6.png",
   },
   {
