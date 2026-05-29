@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -7,6 +8,8 @@ import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
 // Side-effect import: installs the global Audio() interceptor early so every
 // audio element the app creates respects the prototype-mute admin toggle.
 import "@/lib/prototype-mute";
+import { startAmbient, stopAmbient } from "@/lib/ambient-audio";
+import { useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 
 function NotFoundComponent() {
   return (
@@ -83,6 +86,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Global forest-ambient controller. Runs once for the app's lifetime so the
+  // bed plays across every screen unless the user flips Nature Sounds off in
+  // Settings. Routes that manage their own ambient (intro, chat) still pause
+  // the singleton locally; they restart it on the way out so navigating
+  // anywhere else picks it up again.
+  const natureSoundsOn = useNatureSoundsOn();
+  useEffect(() => {
+    if (natureSoundsOn) startAmbient();
+    else stopAmbient(400);
+  }, [natureSoundsOn]);
+
   return (
     <>
       <AdminSidebar />

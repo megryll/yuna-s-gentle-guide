@@ -409,6 +409,10 @@ function Intro() {
   const fadeOutIntroTts = (ms: number) => {
     drainingRef.current = true;
     ttsPlayGenRef.current++;
+    // Bumping the gen above invalidates any in-flight speakYunaLine's
+    // restore-fade in its finally block. Without this the bed would arrive
+    // at /home ducked to ~0.04 and the user would hear silence.
+    if (!mutedRef.current) fadeAmbientTo(AMBIENT_VOLUME, ms);
     const el = ttsAudioRef.current;
     if (!el || el.paused) return;
     const startVol = el.volume;

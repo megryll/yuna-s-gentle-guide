@@ -34,7 +34,8 @@ import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 import { VoiceSession } from "@/components/VoiceSession";
 import { Waveform } from "@/components/Waveform";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
-import { pauseAmbient } from "@/lib/ambient-audio";
+import { pauseAmbient, startAmbient } from "@/lib/ambient-audio";
+import { getNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
@@ -219,10 +220,20 @@ function Chat() {
   // user gesture anywhere on the page. Pause the shared home/intro ambient
   // singleton first so the two beds don't double up.
   useEffect(() => {
+    if (!getNatureSoundsOn()) {
+      pauseAmbient();
+      return () => {};
+    }
     pauseAmbient();
     const ambience = getAmbience();
     const file = AMBIENCE_FILES[ambience];
-    if (!file) return;
+    if (!file) {
+      // No chat-specific bed picked — restore the singleton on the way out
+      // so the user hears nature sounds again everywhere else.
+      return () => {
+        startAmbient();
+      };
+    }
 
     const el = new Audio(file);
     el.loop = true;
@@ -250,6 +261,9 @@ function Chat() {
     return () => {
       el.pause();
       ambientRef.current = null;
+      // Hand the bed back to the shared singleton so the next screen keeps
+      // hearing nature sounds.
+      startAmbient();
     };
   }, []);
 

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   FileText,
   Globe,
+  Leaf,
   MessageSquare,
   Moon,
   ScanFace,
@@ -20,6 +21,7 @@ import { Button } from "@/components/Button";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { Switch } from "@/components/Switch";
 import { setAppMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { setNatureSoundsOn, useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -41,6 +43,7 @@ type ToggleRow = {
 type Row = LinkRow | ToggleRow;
 
 const GROUP_ONE: Row[] = [
+  { id: "natureSounds", label: "Nature sounds", Icon: Leaf, kind: "toggle", defaultOn: true },
   { id: "account", label: "Account Settings", Icon: User, kind: "link" },
   { id: "subscription", label: "Subscription", Icon: Star, kind: "link" },
   { id: "voice", label: "Customize Voice", Icon: Users, kind: "link" },
@@ -65,6 +68,7 @@ function SettingsRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
   const bgImage = useModeImage();
+  const natureSoundsOn = useNatureSoundsOn();
   const [toggles, setToggles] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       [...GROUP_ONE, ...GROUP_TWO]
@@ -73,8 +77,16 @@ function SettingsRoute() {
     ),
   );
 
-  const toggle = (id: string) =>
+  const readToggle = (id: string) =>
+    id === "natureSounds" ? natureSoundsOn : !!toggles[id];
+
+  const toggle = (id: string) => {
+    if (id === "natureSounds") {
+      setNatureSoundsOn(!natureSoundsOn);
+      return;
+    }
     setToggles((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <PhoneFrame>
@@ -136,7 +148,7 @@ function SettingsRoute() {
                 key={row.id}
                 row={row}
                 isLast={i === GROUP_ONE.length - 1}
-                toggleOn={row.kind === "toggle" ? toggles[row.id] : undefined}
+                toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
                 onToggle={() => toggle(row.id)}
               />
             ))}
@@ -148,7 +160,7 @@ function SettingsRoute() {
                 key={row.id}
                 row={row}
                 isLast={i === GROUP_TWO.length - 1}
-                toggleOn={row.kind === "toggle" ? toggles[row.id] : undefined}
+                toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
                 onToggle={() => toggle(row.id)}
               />
             ))}

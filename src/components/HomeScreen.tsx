@@ -52,9 +52,10 @@ export function HomeScreen({
 
   useWelcomeAudio(showWelcome, voice);
 
-  // Continue the forest ambient bed that started during /intro. No-op if it's
-  // already playing; on direct nav to /home (no prior intro) this also kicks
-  // it off so the home surface always feels live.
+  // Catch the case where the user arrives from /chat — chat pauses the
+  // singleton in favor of its own per-mount bed. The root controller only
+  // reacts to pref changes, so kick the bed back on here. No-op when it's
+  // already playing or the pref is off (startAmbient checks both).
   useEffect(() => {
     startAmbient();
   }, []);

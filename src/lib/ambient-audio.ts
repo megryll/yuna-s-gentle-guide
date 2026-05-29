@@ -2,6 +2,8 @@
 // changes — the intro starts it, the home screen keeps it going, and chat
 // pauses it while its own per-mount ambient plays.
 
+import { getNatureSoundsOn } from "./nature-sounds-prefs";
+
 const SRC = "/forest-background.m4a";
 
 export const AMBIENT_VOLUME = 0.35;
@@ -61,6 +63,7 @@ function bindGestureRetry() {
     gestureBound = false;
     const el = audio;
     if (!el) return;
+    if (!getNatureSoundsOn()) return;
     el.play()
       .then(() => fadeTo(AMBIENT_VOLUME, FADE_IN_MS))
       .catch(() => {});
@@ -70,13 +73,17 @@ function bindGestureRetry() {
   document.addEventListener("touchstart", onGesture, true);
 }
 
-// Idempotent. If already playing, this is a no-op. If paused, resumes from
-// silence with the same fade-in the intro uses so the cross-route handoff
-// feels seamless.
+// Idempotent. Ensures the bed is playing at AMBIENT_VOLUME — unless the user
+// has turned Nature Sounds off in Settings, in which case this no-ops so
+// callers don't have to gate each call site.
 export function startAmbient() {
+  if (!getNatureSoundsOn()) return;
   const el = ensureEl();
   if (!el) return;
-  if (!el.paused) return;
+  if (!el.paused) {
+    if (el.volume < AMBIENT_VOLUME) fadeTo(AMBIENT_VOLUME, FADE_IN_MS);
+    return;
+  }
   el.volume = 0;
   el.play()
     .then(() => fadeTo(AMBIENT_VOLUME, FADE_IN_MS))
@@ -124,4 +131,19 @@ export function fadeAmbientTo(target: number, ms: number) {
 
 export function isAmbientPlaying(): boolean {
   return audio != null && !audio.paused;
+}
+
+// Vite HMR: when this module is hot-reloaded the new instance creates a fresh
+// `audio` variable, but any Audio element from the prior instance is orphaned
+// and keeps playing. Pause and null it on dispose so reloads don't pile up
+// duplicate forest beds (and so the new module's stopAmbient can't fail to
+// find an element the old module created).
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (audio) {
+      cancelFade();
+      audio.pause();
+      audio = null;
+    }
+  });
 }
