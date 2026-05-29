@@ -811,7 +811,7 @@ function VoicePad({
           </div>
         </div>
 
-        <div className="shrink-0 w-full flex items-center justify-center min-h-[28px]">
+        <div className="shrink-0 w-full flex items-center justify-center min-h-12">
           {holdMode ? (
             <div className="inline-flex items-center gap-2 text-white/85">
               <MicGlyph />
