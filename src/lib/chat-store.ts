@@ -7,16 +7,6 @@
 
 export type LimitationItem = { id: string; text: string; checked: boolean };
 
-// Answer envelope for the two structured intake questions. `option` is the
-// canonical display string. `value` carries the numeric step for scale
-// answers. Older persisted records may have extra fields; they're ignored
-// by the new schema.
-export type QuestionnaireAnswer = {
-  questionId: string;
-  option: string;
-  value?: number;
-};
-
 export type ChatMsg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
   | {

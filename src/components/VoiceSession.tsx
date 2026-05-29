@@ -1,12 +1,4 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { Waveform } from "@/components/Waveform";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -55,31 +47,13 @@ const PHASE_LABEL_HANDSFREE: Record<Phase, string> = {
   ending: "Wrapping up…",
 };
 
-export type VoiceSessionHandle = {
-  /**
-   * Imperatively make Yuna speak a line and resume listening — used when an
-   * outside-the-session event needs to drive Yuna's verbal reply instead of
-   * waiting for the user to say something first.
-   */
-  speakYunaLine: (text: string, spokenText?: string) => Promise<void>;
-  /**
-   * Imperatively register a user-side turn that didn't come from the mic
-   * (e.g. a chip pick on a structured intake question), drive Claude's
-   * reflection on it, and speak the reply. `hiddenCue` rides along to
-   * Claude only — it nudges the model's framing without appearing in the
-   * chat thread. Keeps VoiceSession's `turnsRef` canonical so subsequent
-   * voice turns see the structured exchange in history.
-   */
-  respondToExternalUserTurn: (displayText: string, hiddenCue?: string) => Promise<void>;
-};
-
 type VoiceSessionProps = {
   onEndCall: (durationSec: number) => void;
   /**
    * Optional spoken opener. When provided, VoiceSession speaks these lines
    * in sequence on mount instead of calling composeGreeting. Used by the
-   * chat-now → voice flow so Yuna says the same welcome + questionnaire
-   * ask that the text-mode flow types out.
+   * chat-now → voice flow so Yuna says the same welcome the text-mode flow
+   * types out.
    */
   initialGreetingLines?: string[];
   /**
@@ -89,19 +63,6 @@ type VoiceSessionProps = {
    * which avoids two writers stomping each other.
    */
   onMessageAppended?: (msg: ChatMsg) => void;
-  /**
-   * Fires the moment Yuna's TTS for a given line actually starts playing
-   * (audio `onplaying` event). Lets the parent sync visual state — e.g.
-   * surfacing the questionnaire card — with the exact spoken cue.
-   */
-  onSpeechStart?: (text: string) => void;
-  /**
-   * Optional content rendered in the spoken-text area (between the phase
-   * label and the waveform). The voice screen no longer shows Yuna's
-   * transcript — this slot is used for in-session prompts like the intro
-   * questionnaire chips.
-   */
-  spokenAreaSlot?: ReactNode;
   /**
    * Whether the user has granted mic permission. When false the hold-to-talk
    * button still renders, but pressing it routes through
@@ -116,27 +77,15 @@ type VoiceSessionProps = {
    * press records normally.
    */
   onRequestMicPermission?: () => void;
-  /**
-   * When true the avatar shrinks + snugs to the top to make room for a
-   * tall slot (the questionnaire). Single-button slots like the mic CTA
-   * keep the avatar in its default centered position.
-   */
-  compactLayout?: boolean;
 };
 
-export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(function VoiceSession(
-  {
-    onEndCall,
-    initialGreetingLines,
-    onMessageAppended,
-    onSpeechStart,
-    spokenAreaSlot,
-    micEnabled = true,
-    onRequestMicPermission,
-    compactLayout = false,
-  },
-  ref,
-) {
+export function VoiceSession({
+  onEndCall,
+  initialGreetingLines,
+  onMessageAppended,
+  micEnabled = true,
+  onRequestMicPermission,
+}: VoiceSessionProps) {
   const { avatar } = useYunaIdentity();
   const [phase, setPhase] = useState<Phase>("connecting");
   const [speakerOn, setSpeakerOn] = useState(true);
@@ -163,16 +112,12 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   const secondsRef = useRef(0);
   const inputModeRef = useRef<InputMode>(inputMode);
   const onMessageAppendedRef = useRef(onMessageAppended);
-  const onSpeechStartRef = useRef(onSpeechStart);
   const onRequestMicPermissionRef = useRef(onRequestMicPermission);
   const micEnabledRef = useRef(micEnabled);
 
   useEffect(() => {
     onMessageAppendedRef.current = onMessageAppended;
   }, [onMessageAppended]);
-  useEffect(() => {
-    onSpeechStartRef.current = onSpeechStart;
-  }, [onSpeechStart]);
   useEffect(() => {
     onRequestMicPermissionRef.current = onRequestMicPermission;
   }, [onRequestMicPermission]);
@@ -235,7 +180,6 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
         el.onplaying = () => {
           if (endedRef.current) return;
           setPhase("speaking");
-          onSpeechStartRef.current?.(text);
         };
         el.onended = done;
         el.onerror = done;
@@ -496,7 +440,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   );
 
   const handleUserTurn = useCallback(
-    async (userText: string, hiddenCue?: string) => {
+    async (userText: string) => {
       if (endedRef.current) return;
       setLiveTranscript("");
       setPhase("thinking");
@@ -516,13 +460,6 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
           role: m.from === "you" ? "user" : "assistant",
           content: m.text,
         }));
-      // Hidden cue (e.g. "the user just picked X on the scale, briefly
-      // reflect…") rides alongside the visible conversation as an extra
-      // user-role message. Sent to Claude only — never persisted to the
-      // chat thread, never shown.
-      if (hiddenCue && hiddenCue.trim()) {
-        conversation.push({ role: "user", content: hiddenCue });
-      }
 
       let buffer = "";
       const ctrl = new AbortController();
@@ -621,45 +558,6 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     }
   }, [beginListening]);
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      speakYunaLine: async (text: string, spokenText?: string) => {
-        if (endedRef.current) return;
-        if (!text.trim()) return;
-        recognitionRef.current?.abort();
-        recognitionRef.current = null;
-        clearSilenceTimer();
-        setLiveTranscript("");
-        setPhase("speaking");
-
-        const yunaMsg: ChatMsg = {
-          id: chatUid(),
-          from: "yuna",
-          kind: "text",
-          text,
-        };
-        turnsRef.current = [...turnsRef.current, yunaMsg];
-        onMessageAppendedRef.current?.(yunaMsg);
-
-        await speak(spokenText ?? text);
-        if (endedRef.current) return;
-        settleAfterYuna();
-      },
-      respondToExternalUserTurn: async (displayText: string, hiddenCue?: string) => {
-        if (endedRef.current) return;
-        if (!displayText.trim()) return;
-        // Same teardown as speakYunaLine — the chip pick interrupts whatever
-        // listening loop might've resumed after the question's TTS finished.
-        recognitionRef.current?.abort();
-        recognitionRef.current = null;
-        clearSilenceTimer();
-        await handleUserTurn(displayText, hiddenCue);
-      },
-    }),
-    [speak, clearSilenceTimer, settleAfterYuna, handleUserTurn],
-  );
-
   useEffect(() => {
     endedRef.current = false;
     let cancelled = false;
@@ -753,134 +651,32 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     };
   }, []);
 
-  // Smooth the swap between the default layout (big avatar + waveform) and
-  // the compact layout (small row + answer slot). When the compact flag
-  // flips, we hold the old layout briefly and fade it out, then swap the
-  // DOM and let the new layout fade back in via the wrapper's opacity
-  // transition. Slot-only changes (e.g. moving from question N to N+1)
-  // swap immediately so chip taps feel responsive.
-  const [displayedCompact, setDisplayedCompact] = useState(compactLayout);
-  const [displayedSlot, setDisplayedSlot] = useState<ReactNode>(spokenAreaSlot);
-  const [fadingOut, setFadingOut] = useState(false);
-
-  useEffect(() => {
-    if (displayedCompact === compactLayout) {
-      if (displayedSlot !== spokenAreaSlot) setDisplayedSlot(spokenAreaSlot);
-      return;
-    }
-    setFadingOut(true);
-    const t = setTimeout(() => {
-      setDisplayedCompact(compactLayout);
-      setDisplayedSlot(spokenAreaSlot);
-      setFadingOut(false);
-    }, 220);
-    return () => clearTimeout(t);
-  }, [compactLayout, spokenAreaSlot, displayedCompact, displayedSlot]);
-
   const showPulseRings = phase === "speaking";
-  // Compact questionnaire layout owns its own copy ("Tap a response below").
-  // Every other voice-mode state shows the standard hold/hands-free phase
-  // label — even pre-mic-permission, since the button doubles as the grant
-  // trigger and the user needs to see "Hold the mic to talk" to know what
-  // to reach for.
   const phaseLabel =
-    displayedSlot && displayedCompact
-      ? "Tap to respond"
-      : inputMode === "hands-free"
-        ? PHASE_LABEL_HANDSFREE[phase]
-        : PHASE_LABEL_HOLD[phase];
+    inputMode === "hands-free" ? PHASE_LABEL_HANDSFREE[phase] : PHASE_LABEL_HOLD[phase];
 
   return (
-    <div
-      className={
-        "relative flex-1 flex flex-col items-center px-8 min-h-0 transition-[padding] duration-300 ease-out " +
-        (displayedCompact ? "pb-8" : "pb-6")
-      }
-    >
-      <div
-        className={
-          "flex-1 w-full flex flex-col items-center min-h-0 transition-opacity duration-300 ease-out " +
-          (fadingOut ? "opacity-0" : "opacity-100")
-        }
-      >
-        {displayedCompact && displayedSlot ? (
-          // Compact + slot: a small avatar + instruction row sits at the top,
-          // and the answer panel grows to fill the remaining vertical space so
-          // long pickers (multi-priority list) can scroll inside their own
-          // bounded area rather than pushing the rest of the screen around.
-          <>
-            <div className="w-full flex items-center justify-center gap-3 shrink-0 mt-8 mb-8">
-              <div className="relative h-10 w-10 shrink-0 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center">
-                {avatar ? (
-                  <YunaAvatar variant={avatar} size={40} />
-                ) : (
-                  <span className="h-2 w-2 rounded-full bg-white" />
-                )}
-              </div>
-              <p className="font-display text-base leading-snug text-white">
-                Tap a response below to continue
-              </p>
-            </div>
-            <div className="w-full flex-1 min-h-0 flex flex-col items-stretch gap-3">
-              {displayedSlot}
-            </div>
-          </>
-        ) : displayedSlot ? (
-          // Non-compact + slot: keep the older avatar-above-slot stack so the
-          // structured answer card can sit centered under the phase label.
-          <>
-            <div className="w-full flex-1 min-h-0 flex flex-col items-center justify-center pt-12">
-              <div className="relative flex items-center justify-center shrink-0 h-44 w-44">
-                {showPulseRings && (
-                  <>
-                    <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
-                    <span
-                      className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
-                      style={{ animationDelay: "600ms" }}
-                    />
-                  </>
-                )}
-                <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center h-32 w-32">
-                  {avatar ? (
-                    <YunaAvatar variant={avatar} size={128} />
-                  ) : (
-                    <span className="h-3 w-3 rounded-full bg-white" />
-                  )}
-                </div>
-              </div>
-              <div className="text-center mt-3">
-                <h1 className="text-xl tracking-tight text-white">{phaseLabel}</h1>
-              </div>
-            </div>
-            <div className="w-full max-w-[20rem] mx-auto flex flex-col items-center text-center gap-2 shrink-0">
-              {displayedSlot}
-            </div>
-          </>
-        ) : (
-          // Hold-to-talk + hands-free both render inside the same dotted pad
-          // so the phase label, avatar, and CTA share one visual frame.
-          <VoicePad
-            phase={phase}
-            phaseLabel={phaseLabel}
-            avatar={avatar}
-            showPulseRings={showPulseRings}
-            analyser={voiceAnalyser}
-            inputMode={inputMode}
-            onPressStart={startHold}
-            onPressEnd={endHold}
-            onOpenModeDrawer={() => setModeDrawerOpen(true)}
-          />
-        )}
+    <div className="relative flex-1 flex flex-col items-center px-8 min-h-0 pb-6">
+      <div className="flex-1 w-full flex flex-col items-center min-h-0">
+        <VoicePad
+          phase={phase}
+          phaseLabel={phaseLabel}
+          avatar={avatar}
+          showPulseRings={showPulseRings}
+          analyser={voiceAnalyser}
+          inputMode={inputMode}
+          onPressStart={startHold}
+          onPressEnd={endHold}
+          onOpenModeDrawer={() => setModeDrawerOpen(true)}
+        />
       </div>
 
-      {!displayedCompact && (
-        <PrivacyFooter
-          onLeaveFeedback={() => {
-            // Placeholder — wire to a real feedback drawer once it exists.
-            console.log("Leave feedback tapped");
-          }}
-        />
-      )}
+      <PrivacyFooter
+        onLeaveFeedback={() => {
+          // Placeholder — wire to a real feedback drawer once it exists.
+          console.log("Leave feedback tapped");
+        }}
+      />
 
       <ModeDrawer
         open={modeDrawerOpen}
@@ -893,7 +689,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       />
     </div>
   );
-});
+}
 
 function VoicePad({
   phase,
