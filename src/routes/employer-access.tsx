@@ -322,9 +322,14 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
           />
         </div>
 
-        <div className="mt-5 flex items-end justify-end">
+        <div className="mt-7">
           <Waveform
-            pattern={[10, 6, 13, 8, 14, 7, 11, 9, 5, 12, 8, 10, 6, 11]}
+            pattern={[
+              10, 6, 13, 8, 14, 7, 11, 9, 5, 12, 8, 10, 6, 11, 9, 7, 13, 5,
+              10, 8, 12, 6, 14, 9, 7, 11, 5, 13, 8, 10, 6, 12, 7, 11, 9, 14,
+              5, 8, 13, 6, 10, 12, 7, 9, 11, 5, 14, 8, 6, 13, 10, 7, 12, 9,
+              11, 5, 8, 14, 6, 13,
+            ]}
             tinted={unlocked}
           />
         </div>
@@ -378,13 +383,13 @@ function Waveform({
   tinted?: boolean;
 }) {
   return (
-    <div className="flex items-end gap-[3px] h-4">
+    <div className="flex items-end justify-between w-full h-4">
       {pattern.map((h, i) => (
         <span
           key={i}
           className={
             "w-[2px] rounded-[1px] " +
-            (tinted ? "bg-success-green/75" : "bg-white/55")
+            (tinted ? "bg-success-green/75" : "bg-white/25")
           }
           style={{ height: `${h}px` }}
         />

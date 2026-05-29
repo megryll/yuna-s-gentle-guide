@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
+import { X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
@@ -210,6 +211,17 @@ function WrapUp() {
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
+      <div className="absolute top-14 right-8 z-30">
+        <Button
+          surface="dark"
+          variant="secondary"
+          size="icon"
+          onClick={onDone}
+          aria-label="Close wrap-up"
+        >
+          <X size={16} strokeWidth={1.6} aria-hidden />
+        </Button>
+      </div>
       <div className="flex-1 flex flex-col px-8 text-white min-h-0">
         <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {isLoading ? (

@@ -1,20 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { Menu, Mic, PhoneCall } from "lucide-react";
+import { Menu, PhoneCall } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
 import { isLightMode, useAppMode } from "@/lib/theme-prefs";
-import { getMicGranted, setMicGranted } from "@/lib/yuna-session";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 /**
  * Shared chrome for primary app screens (Home, You, Activities, History, Progress).
@@ -35,33 +27,9 @@ export function ScreenChrome({
 }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [micOpen, setMicOpen] = useState(false);
-  const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
 
   const openCall = () => {
-    // Once the user has granted mic access once, skip the explainer dialog
-    // and go straight to the call — the browser already remembers its own
-    // grant so getUserMedia (via the recognizer) won't re-prompt either.
-    if (getMicGranted()) {
-      navigate({ to: "/chat", search: { mode: "voice" } });
-      return;
-    }
-    setMicState("idle");
-    setMicOpen(true);
-  };
-
-  const requestMic = async () => {
-    setMicState("asking");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-      setMicGranted();
-      setMicState("granted");
-      setMicOpen(false);
-      navigate({ to: "/chat", search: { mode: "voice" } });
-    } catch {
-      setMicState("denied");
-    }
+    navigate({ to: "/chat", search: { mode: "voice" } });
   };
 
   const mode = useAppMode();
@@ -113,49 +81,6 @@ export function ScreenChrome({
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
-
-      <Dialog open={micOpen} onOpenChange={setMicOpen}>
-        <DialogContent className="sm:max-w-[380px] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl tracking-tight">
-              Allow microphone access
-            </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
-              Yuna needs to hear you to hold a conversation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-center py-6">
-            <div className="h-20 w-20 rounded-full hairline flex items-center justify-center">
-              <MicLargeIcon />
-            </div>
-          </div>
-          {micState === "denied" && (
-            <p className="text-xs text-destructive text-center">
-              Microphone blocked. Update your browser settings and try again.
-            </p>
-          )}
-          <div className="flex flex-col gap-2 pt-2">
-            <Button
-              surface="light"
-              variant="primary"
-              fullWidth
-              onClick={requestMic}
-              disabled={micState === "asking"}
-            >
-              {micState === "asking" ? "Requesting…" : "Allow microphone"}
-            </Button>
-            <Button
-              surface="light"
-              variant="ghost"
-              size="sm"
-              fullWidth
-              onClick={() => setMicOpen(false)}
-            >
-              Not now
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </PhoneFrame>
   );
 }
@@ -172,8 +97,4 @@ function PhoneCallIcon() {
       aria-hidden="true"
     />
   );
-}
-
-function MicLargeIcon() {
-  return <Mic size={32} strokeWidth={1.5} />;
 }

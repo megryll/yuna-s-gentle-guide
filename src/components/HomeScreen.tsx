@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bookmark, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -134,50 +134,34 @@ export function HomeScreen({
   );
 }
 
-// Fires the welcome TTS once when the home page mounts with showWelcome.
-// The visual popup that previously paired with this audio is gone; the
-// greeting now lives in the home header copy itself.
-//
-// Module-level flag: persists across navigations (so re-mounting home
-// doesn't replay the audio) but resets on page reload — which matches the
-// "only plays once unless I do a hard refresh" requirement, since both
-// regular and hard refresh blow away module state.
-let welcomeAudioPlayed = false;
+// Fires the welcome TTS when the home page mounts with showWelcome AND
+// the intro flow set the `yuna.welcome-pending` sessionStorage flag right
+// before navigating here. The flag is consumed (deleted) on first read so
+// intra-session re-navigations to /home don't replay the line, while every
+// fresh intro completion gets its own greeting.
 
 function useWelcomeAudio(enabled: boolean, voice: string | null) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const blobUrlRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (!enabled || !voice) return;
-    if (welcomeAudioPlayed) return;
-    welcomeAudioPlayed = true;
-    let cancelled = false;
+    if (typeof window === "undefined") return;
+    if (window.sessionStorage.getItem("yuna.welcome-pending") !== "1") return;
+    // Consume the flag synchronously so a strict-mode / dep-change re-run of
+    // this effect bails here instead of kicking off a second fetch. The flag
+    // is the only dedupe mechanism — we deliberately do NOT cancel the
+    // in-flight play on cleanup, because the cleanup fires on the same
+    // double-invoke and would race the fetch resolution out of ever playing.
+    window.sessionStorage.removeItem("yuna.welcome-pending");
     const cfg = VOICES[voice as keyof typeof VOICES];
     if (!cfg) return;
     (async () => {
       try {
         const url = await fetchTtsBlobUrl(cfg.elevenlabsId, WELCOME_AUDIO_TEXT);
-        if (cancelled) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        blobUrlRef.current = url;
         const el = new Audio(url);
-        audioRef.current = el;
         await el.play();
       } catch {
         // Prototype: silent fallback if TTS or autoplay fails.
       }
     })();
-    return () => {
-      cancelled = true;
-      audioRef.current?.pause();
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
-    };
   }, [enabled, voice]);
 }
 

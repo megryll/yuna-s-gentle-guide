@@ -40,9 +40,9 @@ const TURN_END_SILENCE_MS = 1500;
 const PHASE_LABEL_HOLD: Record<Phase, string> = {
   connecting: "Connecting…",
   idle: "Hold the mic to talk",
-  listening: "Listening",
+  listening: "I'm listening",
   thinking: "Thinking…",
-  speaking: "Yuna",
+  speaking: "Yuna is speaking",
   muted: "Muted",
   ending: "Wrapping up…",
 };
@@ -50,9 +50,9 @@ const PHASE_LABEL_HOLD: Record<Phase, string> = {
 const PHASE_LABEL_HANDSFREE: Record<Phase, string> = {
   connecting: "Connecting…",
   idle: "Just a moment…",
-  listening: "Listening",
+  listening: "I'm listening",
   thinking: "Thinking…",
-  speaking: "Yuna",
+  speaking: "Yuna is speaking",
   muted: "Tap mic to resume",
   ending: "Wrapping up…",
 };
@@ -60,11 +60,19 @@ const PHASE_LABEL_HANDSFREE: Record<Phase, string> = {
 export type VoiceSessionHandle = {
   /**
    * Imperatively make Yuna speak a line and resume listening — used when an
-   * outside-the-session event (e.g. completing the intro questionnaire)
-   * needs to drive Yuna's verbal reply instead of waiting for the user to
-   * say something first.
+   * outside-the-session event needs to drive Yuna's verbal reply instead of
+   * waiting for the user to say something first.
    */
   speakYunaLine: (text: string) => Promise<void>;
+  /**
+   * Imperatively register a user-side turn that didn't come from the mic
+   * (e.g. a chip pick on a structured intake question), drive Claude's
+   * reflection on it, and speak the reply. `hiddenCue` rides along to
+   * Claude only — it nudges the model's framing without appearing in the
+   * chat thread. Keeps VoiceSession's `turnsRef` canonical so subsequent
+   * voice turns see the structured exchange in history.
+   */
+  respondToExternalUserTurn: (displayText: string, hiddenCue?: string) => Promise<void>;
 };
 
 type VoiceSessionProps = {
@@ -97,13 +105,19 @@ type VoiceSessionProps = {
    */
   spokenAreaSlot?: ReactNode;
   /**
-   * Whether the user has granted mic permission. When false, the mic
-   * button + mode-switch pill are hidden and the phase label avoids
-   * hold-to-talk copy — used during the chat-now voice opener where Yuna
-   * speaks + the on-device survey runs before the permission ask.
-   * Defaults to true so existing call sites are unaffected.
+   * Whether the user has granted mic permission. When false the hold-to-talk
+   * button still renders, but pressing it routes through
+   * `onRequestMicPermission` (the parent owns the permission dialog) instead
+   * of starting recognition.
    */
   micEnabled?: boolean;
+  /**
+   * Called when the user activates the mic without permission yet — hold
+   * press in hold-mode, or tap in hands-free. The parent surfaces the
+   * permission dialog; once granted it flips `micEnabled` and the next
+   * press records normally.
+   */
+  onRequestMicPermission?: () => void;
   /**
    * When true the avatar shrinks + snugs to the top to make room for a
    * tall slot (the questionnaire). Single-button slots like the mic CTA
@@ -120,6 +134,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     onSpeechStart,
     spokenAreaSlot,
     micEnabled = true,
+    onRequestMicPermission,
     compactLayout = false,
   },
   ref,
@@ -148,6 +163,8 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   const inputModeRef = useRef<InputMode>(inputMode);
   const onMessageAppendedRef = useRef(onMessageAppended);
   const onSpeechStartRef = useRef(onSpeechStart);
+  const onRequestMicPermissionRef = useRef(onRequestMicPermission);
+  const micEnabledRef = useRef(micEnabled);
 
   useEffect(() => {
     onMessageAppendedRef.current = onMessageAppended;
@@ -155,6 +172,12 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   useEffect(() => {
     onSpeechStartRef.current = onSpeechStart;
   }, [onSpeechStart]);
+  useEffect(() => {
+    onRequestMicPermissionRef.current = onRequestMicPermission;
+  }, [onRequestMicPermission]);
+  useEffect(() => {
+    micEnabledRef.current = micEnabled;
+  }, [micEnabled]);
   useEffect(() => {
     speakerOnRef.current = speakerOn;
   }, [speakerOn]);
@@ -337,6 +360,13 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     if (inputModeRef.current !== "hold") return;
     const p = phaseRef.current;
     if (p === "listening" || p === "ending" || p === "muted") return;
+    if (!micEnabledRef.current) {
+      // Pre-permission: the button is the grant trigger. Hand off to the
+      // parent's permission flow; recognition resumes via the same button
+      // on a subsequent press once `micEnabled` flips true.
+      onRequestMicPermissionRef.current?.();
+      return;
+    }
     if (p === "speaking" || p === "thinking") {
       stopYunaSpeaking();
     }
@@ -362,6 +392,10 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     if (inputModeRef.current !== "hands-free") return;
     const p = phaseRef.current;
     if (p === "ending") return;
+    if (!micEnabledRef.current) {
+      onRequestMicPermissionRef.current?.();
+      return;
+    }
     if (p === "muted") {
       beginListening();
       return;
@@ -415,7 +449,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   );
 
   const handleUserTurn = useCallback(
-    async (userText: string) => {
+    async (userText: string, hiddenCue?: string) => {
       if (endedRef.current) return;
       setLiveTranscript("");
       setPhase("thinking");
@@ -435,6 +469,13 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
           role: m.from === "you" ? "user" : "assistant",
           content: m.text,
         }));
+      // Hidden cue (e.g. "the user just picked X on the scale, briefly
+      // reflect…") rides alongside the visible conversation as an extra
+      // user-role message. Sent to Claude only — never persisted to the
+      // chat thread, never shown.
+      if (hiddenCue && hiddenCue.trim()) {
+        conversation.push({ role: "user", content: hiddenCue });
+      }
 
       let buffer = "";
       const ctrl = new AbortController();
@@ -560,8 +601,18 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
         if (endedRef.current) return;
         settleAfterYuna();
       },
+      respondToExternalUserTurn: async (displayText: string, hiddenCue?: string) => {
+        if (endedRef.current) return;
+        if (!displayText.trim()) return;
+        // Same teardown as speakYunaLine — the chip pick interrupts whatever
+        // listening loop might've resumed after the question's TTS finished.
+        recognitionRef.current?.abort();
+        recognitionRef.current = null;
+        clearSilenceTimer();
+        await handleUserTurn(displayText, hiddenCue);
+      },
     }),
-    [speak, clearSilenceTimer, settleAfterYuna],
+    [speak, clearSilenceTimer, settleAfterYuna, handleUserTurn],
   );
 
   useEffect(() => {
@@ -677,21 +728,16 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   }, [compactLayout, spokenAreaSlot, displayedCompact, displayedSlot]);
 
   const showPulseRings = phase === "speaking";
-  // Pre-mic-permission the hold-to-talk vocabulary doesn't apply yet —
-  // Yuna is doing the talking; the user's interaction is the questionnaire
-  // / CTA in the slot. "Tap to respond" only applies to the chips/picker
-  // (compact layout); when the slot is just the Enable-microphone CTA after
-  // onboarding, fall through to the normal speaking label so the user sees
-  // Yuna reflecting on what they just answered.
+  // Compact questionnaire layout owns its own copy ("Tap a response below").
+  // Every other voice-mode state shows the standard hold/hands-free phase
+  // label — even pre-mic-permission, since the button doubles as the grant
+  // trigger and the user needs to see "Hold the mic to talk" to know what
+  // to reach for.
   const phaseLabel = displayedSlot && displayedCompact
     ? "Tap to respond"
-    : !micEnabled
-      ? phase === "speaking"
-        ? "Yuna is speaking"
-        : ""
-      : inputMode === "hands-free"
-        ? PHASE_LABEL_HANDSFREE[phase]
-        : PHASE_LABEL_HOLD[phase];
+    : inputMode === "hands-free"
+      ? PHASE_LABEL_HANDSFREE[phase]
+      : PHASE_LABEL_HOLD[phase];
   // With the mic button hidden in hands-free, the old "Tap mic to …" copy
   // doesn't apply — just show the mode name. Hold mode keeps its
   // press-state copy so the user always knows whether they're holding.
@@ -786,7 +832,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
               </>
             )}
 
-            {!displayedSlot && micEnabled && (
+            {!displayedSlot && (
               <div className="mt-4 flex flex-col items-center gap-3 shrink-0">
                 {inputMode === "hold" && (
                   <VoiceMicButton

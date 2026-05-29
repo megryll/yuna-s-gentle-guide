@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Gauge,
   Globe,
-  Lock,
   ScanFace,
   Star,
   Volume2,
@@ -16,7 +15,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
 import { TextField } from "@/components/TextField";
-import { setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
+import { getVoice, setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { avatarSrc } from "@/components/YunaAvatar";
 import { setUserType } from "@/lib/user-type";
@@ -95,6 +94,7 @@ type Phase = "reveal" | "wait-input" | "wait-tap";
 const TOTAL_STEPS = 6;
 const TYPING_MS = 1100;
 const INTRO_SECOND_TYPING_MS = 1800;
+const INTRO_LONG_TYPING_MS = 1700;
 const POST_BUBBLE_GAP_MS = 350;
 const INTRO_BETWEEN_BUBBLES_MS = 700;
 const FIRST_STEP_AVATAR_DELAY_MS = 400;
@@ -104,7 +104,7 @@ const POST_NAME_DELAY_MS = 500;
 const REACTION_AMAZING = {
   userText: "Tell me more about Yuna \u{1F440}",
   yunaReply:
-    "I'm an emotionally intelligent chatbot, trained in well-tested types of therapy, here to listen and guide you. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
+    "I'm a chatbot trained in proven therapy methods. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
 };
 // Stress check-in options offered after the mood-stats card. Replies are
 // tiered by intensity so a low-stress choice doesn't get an "I'm sorry"
@@ -135,7 +135,7 @@ const initialRevealsForStep = (
   if (stepIdx === 1) {
     return [
       {
-        text: "Let me introduce myself too. I was developed by experts in psychology and wellness, from some of the leading US universities.",
+        text: "Let me introduce myself too. I was created by psychologists from leading U.S. universities.",
         card: { kind: "harvard" },
       },
       {
@@ -155,7 +155,7 @@ const initialRevealsForStep = (
   if (stepIdx === 3) {
     return [
       {
-        text: "91% of people felt better after just one session.",
+        text: "Did you know: 91% of people felt better after just one session.",
         card: { kind: "mood-stats" },
       },
       { text: "On that note, how's your stress today?" },
@@ -239,6 +239,16 @@ function Intro() {
   const voicePlayGenRef = useRef(0);
   const mutedRef = useRef(muted);
 
+  // ── Post-voice-pick TTS playback ────────────────────────────────────────
+  // After the user confirms a voice in step 4, every new Yuna bubble gets
+  // explicitly enqueued via enqueueSpeak at the point it's added to the
+  // chat. A simple promise queue serializes playback so bubble 1 finishes
+  // before bubble 2 starts.
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsCacheRef = useRef<Map<string, string>>(new Map());
+  const ttsQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const ttsPlayGenRef = useRef(0);
+
   const KEYBOARD_OFFSET = 260;
 
   // Keep a ref of `muted` for setTimeout-scheduled callbacks (closure freshness)
@@ -318,6 +328,98 @@ function Intro() {
     }
   };
 
+  const speakYunaLine = async (text: string): Promise<void> => {
+    if (mutedRef.current) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const voiceId = getVoice();
+    if (!voiceId) return;
+    const cfg = VOICES[voiceId];
+
+    const gen = ++ttsPlayGenRef.current;
+    const prior = ttsAudioRef.current;
+    if (prior) {
+      prior.onended = null;
+      prior.onerror = null;
+      prior.onplaying = null;
+      prior.pause();
+      prior.removeAttribute("src");
+      prior.load();
+    }
+    const el = new Audio();
+    ttsAudioRef.current = el;
+    el.volume = 1;
+
+    try {
+      const cacheKey = `${voiceId}:${trimmed}`;
+      let blobUrl = ttsCacheRef.current.get(cacheKey);
+      if (!blobUrl) {
+        blobUrl = await fetchTtsBlobUrl(cfg.elevenlabsId, trimmed);
+        ttsCacheRef.current.set(cacheKey, blobUrl);
+      }
+      if (gen !== ttsPlayGenRef.current) return;
+      if (mutedRef.current) return;
+      fadeAmbientTo(0.04, 250);
+      el.src = blobUrl;
+      el.currentTime = 0;
+      await new Promise<void>((resolve) => {
+        const done = () => {
+          el.onended = null;
+          el.onerror = null;
+          resolve();
+        };
+        el.onended = done;
+        el.onerror = done;
+        el.play().catch((err) => {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            done();
+            return;
+          }
+          console.error("Intro TTS play failed", err);
+          done();
+        });
+      });
+    } catch (err) {
+      console.error("Intro TTS fetch failed", err);
+    } finally {
+      if (gen === ttsPlayGenRef.current && !mutedRef.current) {
+        fadeAmbientTo(AMBIENT_VOLUME, 600);
+      }
+    }
+  };
+
+  const enqueueSpeak = (text: string) => {
+    ttsQueueRef.current = ttsQueueRef.current
+      .then(() => speakYunaLine(text))
+      .catch(() => {});
+  };
+
+  // Fade the in-flight intro TTS to silent, then tear it down. Used on the
+  // intro→home handoff so the last bubble's voice doesn't talk over the
+  // welcome line that plays as soon as /home mounts. Bumping ttsPlayGenRef
+  // also invalidates any queued speakYunaLine still waiting on its fetch.
+  const fadeOutIntroTts = (ms: number) => {
+    ttsPlayGenRef.current++;
+    const el = ttsAudioRef.current;
+    if (!el || el.paused) return;
+    const startVol = el.volume;
+    const startT = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min((t - startT) / ms, 1);
+      el.volume = Math.max(0, startVol * (1 - p));
+      if (p < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        el.onended = null;
+        el.onerror = null;
+        el.pause();
+        el.removeAttribute("src");
+        el.load();
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
   // Forest ambient lives in a module singleton (src/lib/ambient-audio.ts) so
   // it survives the intro→home transition. Mute toggles pause/resume the
   // singleton; we deliberately do NOT pause on unmount so the bed keeps
@@ -325,6 +427,17 @@ function Intro() {
   useEffect(() => {
     if (muted) {
       pauseAmbient();
+      // Also cut off any in-flight Yuna TTS playback so muting silences her
+      // mid-sentence, not just the ambient bed.
+      ttsPlayGenRef.current++;
+      const el = ttsAudioRef.current;
+      if (el) {
+        el.onended = null;
+        el.onerror = null;
+        el.pause();
+        el.removeAttribute("src");
+        el.load();
+      }
       return;
     }
     startAmbient();
@@ -348,7 +461,11 @@ function Intro() {
     for (let i = 0; i < reveals.length; i++) {
       const reveal = reveals[i];
       const typingDuration =
-        stepIdx === 0 && i === 1 ? INTRO_SECOND_TYPING_MS : TYPING_MS;
+        stepIdx === 0 && i === 1
+          ? INTRO_SECOND_TYPING_MS
+          : stepIdx === 1
+            ? INTRO_LONG_TYPING_MS
+            : TYPING_MS;
       const showTypingAt = cursor;
       const showBubbleAt = cursor + typingDuration;
 
@@ -371,6 +488,10 @@ function Intro() {
               card: reveal.card,
             },
           ]);
+          // Voice is locked in by step 5 — speak every reveal beyond that
+          // so the privacy + Face ID bubbles read aloud like "Great choice!"
+          // does. Step 4 and below stay silent (no voice picked yet).
+          if (stepIdx >= 5) enqueueSpeak(reveal.text);
         }, showBubbleAt),
       );
       const isLast = i === reveals.length - 1;
@@ -565,7 +686,7 @@ function Intro() {
         {
           id: newBubbleId(),
           from: "yuna",
-          text: "Whenever you’re ready",
+          text: "No worries, you can always change this later.",
         },
       ]);
       goToStep(stepIdx + 1);
@@ -576,8 +697,10 @@ function Intro() {
     setPushModalOpen(false);
     setPhase("reveal");
 
-    const userText = allowed ? "✓ You set up notifications" : "Maybe later";
-    const yunaReply = allowed ? "I’ll keep them gentle" : "Whenever you’re ready";
+    const userText = allowed ? "✓ They’re set up" : "⏳ Skipped them for now";
+    const yunaReply = allowed
+      ? "Great! I’ll keep them gentle"
+      : "No worries, you can always change this later.";
 
     playSendPop();
     setBubbles((prev) => [
@@ -606,7 +729,7 @@ function Intro() {
     playSendPop();
     setBubbles((prev) => [
       ...prev,
-      { id: newBubbleId(), from: "you", text: "✓ You chose a voice" },
+      { id: newBubbleId(), from: "you", text: "I chose one" },
     ]);
     // Hide the picker + CTA so the screen lands on the sent bubble before
     // Yuna's acknowledgement reveals and the privacy step begins.
@@ -615,14 +738,12 @@ function Intro() {
     setTimeout(() => {
       setTyping(false);
       playBubblePop();
+      const ackText = "Great choice! Last couple of things…";
       setBubbles((prev) => [
         ...prev,
-        {
-          id: newBubbleId(),
-          from: "yuna",
-          text: "Great choice! Last couple of things…",
-        },
+        { id: newBubbleId(), from: "yuna", text: ackText },
       ]);
+      enqueueSpeak(ackText);
       goToStep(stepIdx + 1);
     }, POST_NAME_DELAY_MS + TYPING_MS);
   };
@@ -636,9 +757,20 @@ function Intro() {
     // The app always boots into dark mode after onboarding so first-run
     // users land on the dark photo cluster regardless of any stale
     // light-mode preference left over from a prior session.
+    // Fade the previous bubble's TTS so it doesn't talk over /home's
+    // welcome line. The 600ms fade lands well inside the 1400ms transition
+    // overlay, so the user just hears silence before "Welcome in.".
+    fadeOutIntroTts(600);
     setUserType("new");
     setAppMode("dark");
     setTransitioning(true);
+    // Hand off the welcome-line cue to HomeScreen via sessionStorage so
+    // each completed intro plays the spoken greeting exactly once on the
+    // next /home mount — independent of any module-level state that may
+    // have been tripped by earlier dev navigation.
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("yuna.welcome-pending", "1");
+    }
     setTimeout(() => {
       navigate({ to: "/home" });
     }, 1400);
@@ -856,7 +988,7 @@ function Intro() {
                       variant="primary"
                       fullWidth
                       onClick={() =>
-                        submitNotificationChoice(true, "✓ You set up notifications")
+                        submitNotificationChoice(true, "✓ They’re set up")
                       }
                     >
                       Set them up {"\u{2728}"}
@@ -866,7 +998,7 @@ function Intro() {
                       variant="secondary"
                       fullWidth
                       onClick={() =>
-                        submitNotificationChoice(false, "Maybe later")
+                        submitNotificationChoice(false, "⏳ Skipped them for now")
                       }
                     >
                       Maybe later
@@ -1003,10 +1135,10 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
     >
       <div
         className={
-          "max-w-[85%] rounded-2xl overflow-hidden " +
+          "rounded-2xl overflow-hidden " +
           (mine
-            ? "bg-white text-neutral-900 rounded-br-sm"
-            : "rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm text-white")
+            ? "max-w-[85%] bg-white text-neutral-900 rounded-br-sm"
+            : "max-w-[calc(85%+8px)] rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm text-white")
         }
       >
         <p
@@ -1030,8 +1162,16 @@ function Bubble({ bubble }: { bubble: BubbleData }) {
               <Attachment kind={bubble.card.kind} />
             </div>
           ) : bubble.card.kind === "privacy" ? (
-            <div className="border-t border-white/20 bg-white/10 px-4 py-4">
-              <Attachment kind={bubble.card.kind} />
+            <div className="px-4 pb-3 -mt-1">
+              <a
+                href="https://yuna.io/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-white/70 underline underline-offset-2 decoration-white/50 text-[16px] active:opacity-80 transition-opacity"
+              >
+                Read our Privacy Policy
+                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
+              </a>
             </div>
           ) : (
             <div className="border-t border-white/20 bg-white/10 px-4 py-3">
@@ -1290,25 +1430,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   if (kind === "faceid") {
     return <FaceIdToggle />;
   }
-  return (
-    <a
-      href="https://yuna.io/privacy"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-3 text-white active:opacity-80 transition-opacity"
-    >
-      <Lock size={22} strokeWidth={1.75} aria-hidden className="shrink-0" />
-      <span className="flex-1 min-w-0 text-[15px] font-semibold leading-snug">
-        Read our Privacy Policy
-      </span>
-      <ArrowUpRight
-        size={18}
-        strokeWidth={1.75}
-        aria-hidden
-        className="shrink-0"
-      />
-    </a>
-  );
+  return null;
 }
 
 function FaceIdToggle() {

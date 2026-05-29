@@ -95,21 +95,6 @@ export function setHasChatted() {
   window.localStorage.setItem(HAS_CHATTED_KEY, "1");
 }
 
-// Tracks whether the user has already seen the "Allow microphone" explainer
-// in the current page load. Module-level state on purpose: persists across
-// navigation (so going Home → Chat → Home → Chat doesn't re-prompt) but
-// resets on any reload (regular or hard), so a hard refresh restores the
-// first-run experience.
-let micGrantedThisLoad = false;
-
-export function getMicGranted(): boolean {
-  return micGrantedThisLoad;
-}
-
-export function setMicGranted() {
-  micGrantedThisLoad = true;
-}
-
 export function getLastTopics(): string[] {
   if (typeof window === "undefined") return [];
   try {

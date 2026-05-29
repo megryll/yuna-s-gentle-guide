@@ -19,11 +19,9 @@ import { YunaAvatar } from "@/components/YunaAvatar";
 import {
   AMBIENCE_FILES,
   getAmbience,
-  getMicGranted,
   getVoice,
   setHasChatted,
   setLastTopics,
-  setMicGranted,
   useYunaIdentity,
 } from "@/lib/yuna-session";
 import { useUserType } from "@/lib/user-type";
@@ -38,29 +36,15 @@ import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 import { VoiceSession, type VoiceSessionHandle } from "@/components/VoiceSession";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { pauseAmbient } from "@/lib/ambient-audio";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode } from "@/lib/theme-prefs";
 import {
-  PRIORITY_QUESTION,
-  PRIORITY_OPTIONS,
-  WSAS_QUESTION,
-  TOP_PRIORITY_TOKEN,
-  branchFor,
-  priorityLabel,
+  USEFULNESS_QUESTION,
+  WELLBEING_SCALE_QUESTION,
   type ChipsQuestion,
   type IntroQuestion,
-  type MultiPriorityQuestion,
-  type PriorityKey,
-  type PriorityOption,
   type ScaleQuestion,
 } from "@/lib/questionnaire";
 
@@ -87,13 +71,13 @@ export const Route = createFileRoute("/chat")({
 
 import {
   chatUid as uid,
-  clearQuestionnaireProgress,
+  clearChatNowSession,
   clearStoredMessages,
   clearVoiceGreeted,
-  loadQuestionnaireProgress,
+  getChatNowSession,
   loadStoredMessages,
-  saveQuestionnaireProgress,
   saveStoredMessages,
+  setChatNowSession,
   type ChatMsg as Msg,
   type LimitationItem,
   type QuestionnaireAnswer,
@@ -106,7 +90,7 @@ const LIMITATIONS_PROMPT =
 // "75% more likely" for emphasis; we strip that markup here so TTS reads
 // the sentence cleanly. The follow-up question is enqueued as its own
 // utterance so the serial TTS queue gives it a fresh fetch + a natural
-// beat — keeps the call-to-action from feeling tacked on or clipped.
+// beat keeps the call-to-action from feeling tacked on or clipped.
 const VOICE_PITCH_SPOKEN_LINES = [
   "People who chat with me over voice are 75% more likely to find value in our conversations.",
   "Want to give me a call?",
@@ -118,6 +102,9 @@ const LIMITATIONS_ITEMS: LimitationItem[] = [
   { id: "private", text: "I keep our chats 100% private", checked: false },
 ];
 
+// Suggestion-chip entry follow-ups (used when the user lands in /chat from
+// a Home suggestion chip, e.g. "Tell me more about Yuna"). Chat-now uses a
+// separate intake flow — see CHAT_NOW_OPENER below.
 function followUpAfterLimitations(initial: string): string {
   const v = initial.toLowerCase();
   if (v.includes("specific")) {
@@ -146,8 +133,8 @@ function acknowledgeChoice(initial: string): string {
   return "Thank you for sharing that.";
 }
 
-// Treat any opener that doesn't match a suggestion chip as a real share
-// — we want Yuna to reflect on it after the onboarding gate, not reset.
+// Treat any opener that doesn't match a suggestion chip as a real share so
+// Yuna reflects on it after the onboarding gate, not resets.
 function isCustomInitial(initial: string): boolean {
   const v = initial.trim().toLowerCase();
   if (!v) return false;
@@ -158,82 +145,76 @@ function isCustomInitial(initial: string): boolean {
   return true;
 }
 
-const CHAT_NOW_ASK_LINE =
-  "Before we begin, I'd love to learn a little about you. Take a moment to answer a few questions on your device. It'll help me meet you right where you are.";
-
-// Spoken once, right after the first question's prompt, to coach the user
-// that the response chips are interactive. Subsequent questions don't need
-// this hint — the pattern is established.
-const CHAT_NOW_TAP_HINT = "Tap whichever feels closest, and we'll keep going.";
-
-function chatNowWelcomeLine(name: string | null): string {
+// First-session intake opener for chat-now entry. One bubble, ends with the
+// open question that hands the floor to the user. The model takes it from
+// there for the next several turns, with two structured questions injected
+// at predetermined beats (USER_TURNS_BEFORE_SCALE / USER_TURNS_BEFORE_MC).
+function chatNowOpener(name: string | null): string {
   const trimmed = name?.trim();
-  return trimmed ? `Hi ${trimmed}, I'm so glad you're here.` : "Hi there, I'm so glad you're here.";
+  const greeting = trimmed ? `Hi ${trimmed}, welcome.` : "Hi, welcome.";
+  return `${greeting} Take a breath if you need one. There's no rush here. What brought you in today?`;
 }
 
 function isChatNowOpener(initial: string): boolean {
   return initial.trim().toLowerCase() === "chat now";
 }
 
-// Build the dynamic question set from whatever the user has answered so far.
-// Before Q1 we only know the priority question; once the top priority lands
-// we append the WSAS question (with the priority interpolated) and the three
-// branch follow-ups.
-function buildActiveQuestions(answers: QuestionnaireAnswer[]): IntroQuestion[] {
-  const list: IntroQuestion[] = [PRIORITY_QUESTION];
-  const priorityAnswer = answers.find((a) => a.questionId === PRIORITY_QUESTION.id);
-  const top = priorityAnswer?.priorityKeys?.[0] as PriorityKey | undefined;
-  if (!top) return list;
-  list.push(interpolatedWsas(top));
-  list.push(...branchFor(top));
-  return list;
+// First-session intake injection schedule. Counted as user text-message
+// turns sent during the chat-now flow. The scale question surfaces after
+// Yuna's reply to the user's 3rd turn; the multiple-choice after her reply
+// to the 5th. Crisis content suppresses both for the remainder of the
+// session.
+const USER_TURNS_BEFORE_SCALE = 3;
+const USER_TURNS_BEFORE_MC = 5;
+
+// Lightweight client-side crisis check. The server system prompt is the
+// real safety net — this client check only suppresses the structured Q
+// injection so chips don't surface during an acute moment. Errors on the
+// side of suppression: a few false positives just mean a slightly longer
+// open exchange.
+const CRISIS_PATTERN =
+  /\b(suicid|kill (myself|me)|end (my )?life|don'?t want to (be here|live|exist)|want to die|self[- ]?harm|hurting myself|cutting myself|can'?t go on|no point in (living|going on)|hopeless|panic attack|can'?t breathe)\b/i;
+
+function looksLikeCrisis(text: string): boolean {
+  return CRISIS_PATTERN.test(text);
 }
 
-function interpolatedWsas(top: PriorityKey): ScaleQuestion {
-  return {
-    ...WSAS_QUESTION,
-    prompt: WSAS_QUESTION.prompt.replace(TOP_PRIORITY_TOKEN, priorityLabel(top).toLowerCase()),
-  };
-}
-
-// Total expected questions: 2 universal + 3 branch once the branch is known.
-const QUESTIONNAIRE_TOTAL = 5;
-
-function composeQuestionnaireResponse(
-  answers: QuestionnaireAnswer[],
-  // Trailing line. Text mode pairs the ack with a voice-pitch card, so it
-  // ends on the trail-off "Before we continue —". Voice mode is already in
-  // voice and needs a real invitation to talk, so callers pass an open
-  // question instead.
-  tail: string = "Before we continue...",
-): string {
-  const priorityAns = answers.find((a) => a.questionId === PRIORITY_QUESTION.id);
-  const topKey = priorityAns?.priorityKeys?.[0] as PriorityKey | undefined;
-  const topName = topKey ? priorityLabel(topKey).toLowerCase() : "";
-  const wsas = answers.find((a) => a.questionId === WSAS_QUESTION.id);
-  const wsasValue = wsas?.value;
-
-  const parts: string[] = ["Thank you for sharing all of that."];
-  if (topName) {
-    parts.push(`It sounds like ${topName} is sitting at the top of what you're carrying.`);
-  }
-  if (typeof wsasValue === "number") {
-    if (wsasValue <= 2) {
-      parts.push("It's good to hear it isn't pulling much from your work yet.");
-    } else if (wsasValue <= 5) {
-      parts.push("I hear that it's starting to weigh on how you show up at work — that matters.");
-    } else {
-      parts.push("That weight on your work is real, and I'm glad you said it out loud.");
+// Walk persisted messages on a mid-session re-entry (text↔voice toggle) and
+// re-derive the intake state: which structured Qs have already been asked,
+// whether a Q is still waiting on an answer (last Yuna line is a question
+// prompt with no user reply after), and whether anything tripped crisis
+// detection earlier. Drives the boot effect's state seeding.
+function deriveIntakeStateFromMessages(msgs: Msg[]): {
+  pendingQuestion: IntroQuestion | null;
+  scaleAsked: boolean;
+  mcAsked: boolean;
+  crisisMode: boolean;
+} {
+  let scaleAsked = false;
+  let mcAsked = false;
+  let crisisMode = false;
+  for (const m of msgs) {
+    if (m.kind !== "text") continue;
+    if (m.from === "yuna") {
+      if (m.text === WELLBEING_SCALE_QUESTION.prompt) scaleAsked = true;
+      if (m.text === USEFULNESS_QUESTION.prompt) mcAsked = true;
+    } else if (m.from === "you" && looksLikeCrisis(m.text)) {
+      crisisMode = true;
     }
   }
-  parts.push(tail);
-  return parts.join(" ");
+  // Pending iff the very last text message is one of the question prompts —
+  // i.e. Yuna asked it and the user hasn't answered yet.
+  let pendingQuestion: IntroQuestion | null = null;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (m.kind !== "text") continue;
+    if (m.from === "you") break;
+    if (m.text === WELLBEING_SCALE_QUESTION.prompt) pendingQuestion = WELLBEING_SCALE_QUESTION;
+    else if (m.text === USEFULNESS_QUESTION.prompt) pendingQuestion = USEFULNESS_QUESTION;
+    break;
+  }
+  return { pendingQuestion, scaleAsked, mcAsked, crisisMode };
 }
-
-const VOICE_POST_QUESTIONNAIRE_TAIL =
-  "I'd love to hear more about that. Can you turn on your microphone so we can talk it through?";
-const VOICE_QUESTIONNAIRE_DISMISS_LINE =
-  "No worries. We can get to know each other as we go. Want to turn on your microphone so we can chat?";
 
 const REMINISCE_OPENERS = [
   "Hi, I'm glad you're back. I've been thinking about what you shared last time. How have things felt since?",
@@ -269,50 +250,37 @@ function Chat() {
   const { avatar, name: yunaUserName } = useYunaIdentity();
   const userType = useUserType();
   const [speakerOn, setSpeakerOn] = useState(true);
-  const [micOpen, setMicOpen] = useState(false);
-  const [micState, setMicState] = useState<"idle" | "asking" | "granted" | "denied">("idle");
-  // Whether voice mode is unlocked on this page load. Initialised from the
-  // module-level mic-granted flag, so navigating Home→Chat→Home→Chat doesn't
-  // re-prompt; reset on hard refresh because the flag is in-memory.
-  const [voiceUnlocked, setVoiceUnlocked] = useState(() => getMicGranted());
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [pendingLimitations, setPendingLimitations] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
-  const [questionnaireActive, setQuestionnaireActive] = useState(false);
-  const [questionnaireIndex, setQuestionnaireIndex] = useState(0);
-  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<QuestionnaireAnswer[]>([]);
-  // Active question set derived from answers so far. Starts with the
-  // priority Q only; grows to WSAS + 3 branch Qs once the user picks a top
-  // priority. Persisted progress rebuilds this on resume from the saved
-  // answers.
-  const [activeQuestions, setActiveQuestions] = useState<IntroQuestion[]>(() =>
-    buildActiveQuestions([]),
-  );
-  // Voice panel visibility is decoupled from questionnaireActive so the
-  // initial chat-now-voice flow can defer the panel until Q1's audio
-  // actually plays (it'd be jarring to surface chips during welcome/ask).
-  // For mode toggles and re-entries, the effect below flips this on
-  // immediately so the user keeps seeing the same step they were on.
+  // Structured question currently waiting on the user. Null in the open
+  // phases of the conversation. Set when chat.tsx injects a scale or MC
+  // question, cleared when the user answers or skips it.
+  const [pendingQuestion, setPendingQuestion] = useState<IntroQuestion | null>(null);
+  // Per-question gates so the injection effect doesn't keep re-asking after
+  // the user has answered or skipped. Independent so the MC can still fire
+  // even if the user skipped the scale.
+  const [scaleAsked, setScaleAsked] = useState(false);
+  const [mcAsked, setMcAsked] = useState(false);
+  // Trips the moment any user message looks like acute distress. Once true
+  // for the rest of this session, no structured question is injected.
+  // Server system prompt handles the response tone.
+  const [crisisMode, setCrisisMode] = useState(false);
+  // Voice panel visibility is decoupled from pendingQuestion so the initial
+  // chat-now-voice flow can defer the panel until the opener audio actually
+  // plays (jarring to surface chips during the spoken question itself). For
+  // mode toggles and re-entries, the effect below flips this on immediately
+  // so the user keeps seeing the same step they were on.
   const [voicePanelVisible, setVoicePanelVisible] = useState(false);
-  // Post-questionnaire CTA in voice mode: when the four-question survey
-  // finishes (or the user skips it) without mic granted yet, the slot in
-  // VoiceSession swaps from chips to an "Enable microphone" button so the
-  // user can opt into talking with intent.
-  const [voiceMicCtaVisible, setVoiceMicCtaVisible] = useState(false);
   // Monotonic counter that, when incremented, re-mounts the haptic edge
   // overlay (via the `key` prop) and replays its short pulse animation.
-  // Driven by the appearance of each survey question.
+  // Driven by the appearance of each structured question.
   const [hapticKey, setHapticKey] = useState(0);
-  // Tracks user-initiated dismissal so the messages-derived activation
-  // effect doesn't re-arm the questionnaire on the next render.
-  const questionnaireDismissedRef = useRef(false);
-  // Latest answers ref so async callbacks (timers, voice handlers) see the
-  // freshly-picked answer instead of a stale closure when finishing Q4.
-  const questionnaireAnswersRef = useRef<QuestionnaireAnswer[]>([]);
-  useEffect(() => {
-    questionnaireAnswersRef.current = questionnaireAnswers;
-  }, [questionnaireAnswers]);
+  // True when the current chat session began via "Chat Now" (i.e. is the
+  // first-session intake). Suggestion-chip entries from /home use the older
+  // limitations + voice-pitch flow and skip structured question injection.
+  const isChatNowSessionRef = useRef(false);
   // Voice-note dictation state. While recording, the input is read-only
   // and the live transcript is rendered into `text` so the user sees what
   // was heard before they tap the check to send.
@@ -390,43 +358,37 @@ function Chat() {
 
     // We do NOT call an absolute `setMessages(seed)` here. Effects fire
     // children-first, so VoiceSession's mount effect already queued its
-    // `onMessageAppended` functional updates (4 greeting lines for the
+    // `onMessageAppended` functional updates (greeting lines for the
     // chat-now-voice path) before this boot effect runs. An absolute set
-    // here would replay AFTER those appends and wipe them — that was the
-    // exact symptom of "voice mode shows no chips, text mode shows no
-    // bubbles." Use targeted setMessages calls only when this branch has
-    // something specific to seed.
+    // here would replay AFTER those appends and wipe them. Use targeted
+    // setMessages calls only when this branch has something specific to
+    // seed.
     if (isRevisit) {
-      // Resume persisted thread + questionnaire progress so a mode-switch
-      // remount picks up where the user left off.
+      // Resume persisted thread + chat-now flag + derived intake state so
+      // a mode-switch remount picks up where the user left off.
       const stored = loadStoredMessages();
       if (stored.length > 0) setMessages(stored);
-      const progress = loadQuestionnaireProgress();
-      const resumedQuestions = progress ? buildActiveQuestions(progress.answers) : null;
-      if (progress && resumedQuestions && progress.index < resumedQuestions.length) {
-        setActiveQuestions(resumedQuestions);
-        setQuestionnaireActive(true);
-        setQuestionnaireIndex(progress.index);
-        setQuestionnaireAnswers(progress.answers);
-        questionnaireAnswersRef.current = progress.answers;
-      } else if (mode === "voice" && !voiceUnlocked) {
-        // Resumed in voice mode without an in-flight survey and without mic
-        // granted — surface the Enable-microphone CTA so the user has a
-        // path forward. We never auto-open the permission dialog; it only
-        // opens when the user explicitly taps the CTA.
-        setVoiceMicCtaVisible(true);
-      }
+      isChatNowSessionRef.current = getChatNowSession();
+      const derived = deriveIntakeStateFromMessages(stored);
+      if (derived.scaleAsked) setScaleAsked(true);
+      if (derived.mcAsked) setMcAsked(true);
+      if (derived.crisisMode) setCrisisMode(true);
+      if (derived.pendingQuestion) setPendingQuestion(derived.pendingQuestion);
     } else {
-      // Any non-revisit entry starts a fresh thread — wipe the persisted
-      // log so the next conversation begins clean.
+      // Any non-revisit entry starts a fresh thread. Wipe persisted log +
+      // session flags so the next conversation begins clean.
       clearStoredMessages();
-      clearQuestionnaireProgress();
+      clearChatNowSession();
       clearVoiceGreeted();
-      // "Chat Now" isn't an actual user share — don't seed a user bubble for
-      // it; Yuna opens the conversation with the welcome flow instead.
+      // "Chat Now" isn't an actual user share, don't seed a user bubble
+      // for it; Yuna opens the conversation with the intake opener.
       if (!isReturningReminisce && !isChatNow && q) {
         setMessages([{ id: uid(), from: "you", kind: "text", text: q }]);
         userTopicsRef.current.push(q);
+      }
+      if (isChatNow) {
+        setChatNowSession();
+        isChatNowSessionRef.current = true;
       }
     }
 
@@ -440,62 +402,48 @@ function Chat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist questionnaire progress so a mode-switch remount can resume.
+  // Inject structured questions at predetermined beats during a chat-now
+  // session. Runs after each Yuna text reply lands. Crisis content
+  // permanently suppresses both questions for the rest of the session —
+  // chips have no business surfacing during an acute moment.
   useEffect(() => {
-    if (!questionnaireActive) return;
-    saveQuestionnaireProgress({
-      index: questionnaireIndex,
-      answers: questionnaireAnswers,
-    });
-  }, [questionnaireActive, questionnaireIndex, questionnaireAnswers]);
-
-  // Derive questionnaireActive from messages. Voice mode appends each
-  // question bubble before its audio cue fires, and the text mode's
-  // typed flow appends it just before the chips render. Driving the
-  // active step off the messages list keeps it correct regardless of
-  // which mode the user is in when the bubble lands — so a mid-flow
-  // toggle never strands them on a question with no chips.
-  useEffect(() => {
-    if (questionnaireDismissedRef.current) return;
-    if (questionnaireAnswersRef.current.length >= activeQuestions.length) return;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
-      if (m.kind !== "text") continue;
-      if (m.from === "you") return;
-      if (m.from !== "yuna") continue;
-      const qIdx = activeQuestions.findIndex((q) => q.prompt === m.text);
-      // Keep scanning backwards if this Yuna line isn't a question — the
-      // chat-now voice opener appends the tap-hint coaching line AFTER Q1's
-      // prompt, so the last Yuna message at boot is the hint, not the
-      // question. Returning here would strand the questionnaire inactive.
-      if (qIdx === -1) continue;
-      if (!questionnaireActive || questionnaireIndex !== qIdx) {
-        setQuestionnaireActive(true);
-        setQuestionnaireIndex(qIdx);
-      }
-      return;
+    if (!isChatNowSessionRef.current) return;
+    if (pendingQuestion) return;
+    if (crisisMode) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.kind !== "text" || last.from !== "yuna") return;
+    const userCount = messages.filter(
+      (m) => m.kind === "text" && m.from === "you",
+    ).length;
+    if (userCount >= USER_TURNS_BEFORE_SCALE && !scaleAsked) {
+      askQuestion(WELLBEING_SCALE_QUESTION);
+    } else if (userCount >= USER_TURNS_BEFORE_MC && scaleAsked && !mcAsked) {
+      askQuestion(USEFULNESS_QUESTION);
     }
-  }, [messages, questionnaireActive, questionnaireIndex, activeQuestions]);
+    // askQuestion is stable enough — pulling it into deps would loop on every
+    // render via closure churn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, pendingQuestion, scaleAsked, mcAsked, crisisMode]);
 
-  // Voice panel timing. Only re-entries (mode toggle text↔voice mid-
-  // questionnaire — flagged by revisit=1) surface chips immediately, so
-  // the user picks up on the same step. The initial chat-now-voice flow
-  // defers the panel until Q1's TTS actually starts playing via
-  // onSpeechStart — otherwise chips would flash on screen during the
-  // welcome + ask lines, before Yuna has asked the first question.
-  // Re-entries also fire a one-shot haptic pulse since no fresh TTS
-  // event will trigger one for the question that's already in flight.
+  // Voice panel timing. Only re-entries (mode toggle text↔voice while a
+  // structured Q is pending — flagged by revisit=1) surface chips
+  // immediately, so the user picks up on the same step. The initial
+  // injection flow defers the panel until the Q's TTS actually starts
+  // playing via onSpeechStart, otherwise chips would flash on screen
+  // before Yuna has audibly asked. Re-entries also fire a one-shot
+  // haptic pulse since no fresh TTS event will trigger one for the
+  // question that's already in flight.
   useEffect(() => {
     if (mode !== "voice") {
       setVoicePanelVisible(false);
       return;
     }
-    if (!questionnaireActive) return;
+    if (!pendingQuestion) return;
     const isRevisit = revisit === "1" || revisit === "true";
     if (!isRevisit) return;
     setVoicePanelVisible(true);
     setHapticKey((k) => k + 1);
-  }, [mode, questionnaireActive, questionnaireIndex, revisit]);
+  }, [mode, pendingQuestion, revisit]);
 
   const respondReminisce = () => {
     setTyping(true);
@@ -556,7 +504,7 @@ function Chat() {
       window.clearTimeout(t);
       cancelled = true;
     };
-  }, [messages, typing, inputFocused, questionnaireActive, questionnaireIndex]);
+  }, [messages, typing, inputFocused, pendingQuestion]);
 
   // Keep a ref so speakIfEnabled — used inside async callbacks — sees the
   // current toggle without needing to be re-bound on every change.
@@ -773,159 +721,106 @@ function Chat() {
     }, delay);
   };
 
+  // Chat-now text opener. Voice mode is driven separately by VoiceSession's
+  // initialGreetingLines (see chatNowVoiceGreeting below) so we don't speak
+  // from here in that branch.
   const respondToChatNow = () => {
-    // Voice mode delegates the verbal greeting to VoiceSession's own TTS
-    // pipeline, so we don't double-speak from here. The questionnaire is
-    // started by the VoiceSession onSpeechStart callback when Yuna actually
-    // begins saying CHAT_NOW_ASK_LINE.
-    if (mode === "voice") {
-      return;
-    }
-
+    if (mode === "voice") return;
     setTyping(true);
-    const welcome = chatNowWelcomeLine(yunaUserName);
-    const ask = CHAT_NOW_ASK_LINE;
+    const opener = chatNowOpener(yunaUserName);
     setTimeout(() => {
-      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: welcome }]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: opener }]);
       setTyping(false);
-      speakIfEnabled(welcome);
-      setTimeout(() => {
-        setTyping(true);
-        setTimeout(() => {
-          setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ask }]);
-          setTyping(false);
-          speakIfEnabled(ask);
-          setTimeout(() => askQuestion(0, activeQuestions), 700);
-        }, 900);
-      }, 700);
+      speakIfEnabled(opener);
     }, 900);
   };
 
-  // Ask question #idx from `questions` as a Yuna bubble + spoken cue. The
-  // questions list is passed in (rather than read from state) because the
-  // branch expands the list right after Q1's answer lands — using stale
-  // state here would re-ask Q1's prompt for Q2.
-  const askQuestion = (idx: number, questions: IntroQuestion[]) => {
-    if (idx >= questions.length) return;
-    const q = questions[idx];
-    setQuestionnaireActive(true);
-    setQuestionnaireIndex(idx);
+  // Inject a structured question (scale or chips) as a Yuna bubble + spoken
+  // cue. The injection effect calls this when a user-turn threshold is met.
+  // Per-question `*Asked` gates flip true here so a single render of the
+  // effect doesn't re-ask the same Q from a stale snapshot of state.
+  const askQuestion = (question: IntroQuestion) => {
+    setPendingQuestion(question);
+    if (question.id === WELLBEING_SCALE_QUESTION.id) setScaleAsked(true);
+    if (question.id === USEFULNESS_QUESTION.id) setMcAsked(true);
     if (mode === "voice") {
-      void voiceSessionRef.current?.speakYunaLine(q.prompt);
+      void voiceSessionRef.current?.speakYunaLine(question.prompt);
       return;
     }
     setTyping(true);
     setTimeout(() => {
-      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: q.prompt }]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: question.prompt }]);
       setTyping(false);
-      speakIfEnabled(q.prompt);
+      speakIfEnabled(question.prompt);
     }, 700);
   };
 
-  // Commit an answer and advance. `answer` carries the canonical display
-  // string; if it's a priority pick or a slider, the caller fills in the
-  // extra fields (priorityKeys / value) before calling.
+  // Commit a structured answer. The user's pick becomes a normal "you"
+  // bubble and is sent to Claude with a hidden cue so she reflects on the
+  // pick in her own voice rather than restating it clinically. In voice
+  // mode the heavy lifting (append user turn, drive Claude reply, speak)
+  // routes through VoiceSession so its `turnsRef` stays the canonical
+  // source for subsequent voice turns.
   const commitAnswer = (answer: QuestionnaireAnswer, displayText: string) => {
-    const nextAnswers = [...questionnaireAnswersRef.current, answer];
-    questionnaireAnswersRef.current = nextAnswers;
-    setQuestionnaireAnswers(nextAnswers);
-    // Rebuild the question list — Q1's answer expands it from 1 → 5.
-    const nextQuestions = buildActiveQuestions(nextAnswers);
-    setActiveQuestions(nextQuestions);
-    setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: displayText }]);
-    const idx = questionnaireIndex;
-    if (idx >= nextQuestions.length - 1) {
-      finishQuestionnaire(nextAnswers);
-    } else {
-      setTimeout(() => askQuestion(idx + 1, nextQuestions), mode === "voice" ? 400 : 600);
+    setPendingQuestion(null);
+    const isUsefulness = answer.questionId === USEFULNESS_QUESTION.id;
+    const hiddenCue = isUsefulness
+      ? `(The user just answered my usefulness question with: "${displayText}". Briefly acknowledge what they chose, warmly. Do not restate it word-for-word. Then ask one open follow-up that opens space for the rest of our conversation. Do not reference this bracketed note.)`
+      : `(The user just answered my wellbeing scale question with: "${displayText}". Briefly reflect on what that number means in the context of what they've already shared, in your own words. Do not restate the number clinically. Then ask one natural open follow-up. Do not reference this bracketed note.)`;
+
+    if (mode === "voice") {
+      void voiceSessionRef.current?.respondToExternalUserTurn(displayText, hiddenCue);
+      return;
     }
+
+    setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: displayText }]);
+    const conversation = messages
+      .filter((m): m is Extract<Msg, { kind: "text" }> => m.kind === "text")
+      .map((m) => ({ role: m.from === "you" ? "user" : "assistant", content: m.text }));
+    conversation.push({ role: "user", content: displayText });
+    conversation.push({ role: "user", content: hiddenCue });
+    void streamYunaReply(conversation).then(() => {
+      // After the MC lands and Yuna's reflection is in the thread, pitch
+      // the voice mode (text mode only — voice mode is already on a call).
+      if (isUsefulness) transitionToVoicePitch(1200);
+    });
   };
 
   // Chips answer — single labeled option.
   const pickAnswer = (option: string) => {
     const trimmed = option.trim();
-    if (!trimmed) return;
-    const q = activeQuestions[questionnaireIndex];
-    if (!q) return;
-    commitAnswer({ questionId: q.id, option: trimmed }, trimmed);
+    if (!trimmed || !pendingQuestion) return;
+    commitAnswer({ questionId: pendingQuestion.id, option: trimmed }, trimmed);
   };
 
-  // Multi-priority answer — ordered list of priority keys.
-  const pickPriorities = (picks: PriorityOption[]) => {
-    if (picks.length === 0) return;
-    const q = activeQuestions[questionnaireIndex];
-    if (!q) return;
-    const labels = picks.map((p) => p.label);
-    const display = labels.map((l, i) => `${i + 1}. ${l}`).join("  ");
-    commitAnswer(
-      {
-        questionId: q.id,
-        option: labels.join(", "),
-        options: labels,
-        priorityKeys: picks.map((p) => p.key),
-      },
-      display,
-    );
-  };
-
-  // Scale answer — numeric step on a slider.
+  // Scale answer — numeric step.
   const pickScale = (value: number, displayLabel: string) => {
-    const q = activeQuestions[questionnaireIndex];
-    if (!q) return;
-    commitAnswer({ questionId: q.id, option: displayLabel, value }, displayLabel);
+    if (!pendingQuestion) return;
+    commitAnswer({ questionId: pendingQuestion.id, option: displayLabel, value }, displayLabel);
   };
 
-  const dismissQuestionnaire = () => {
-    questionnaireDismissedRef.current = true;
-    setQuestionnaireActive(false);
+  // Skip a single structured question without ending the session. Marks
+  // the per-question gate so the injection effect doesn't immediately
+  // re-ask it. Yuna acknowledges and yields back to the open conversation.
+  const dismissPendingQuestion = () => {
+    if (!pendingQuestion) return;
+    const wasUsefulness = pendingQuestion.id === USEFULNESS_QUESTION.id;
+    if (pendingQuestion.id === WELLBEING_SCALE_QUESTION.id) setScaleAsked(true);
+    if (wasUsefulness) setMcAsked(true);
+    setPendingQuestion(null);
     setVoicePanelVisible(false);
-    clearQuestionnaireProgress();
-    // Voice mode: panel slides away, then Yuna speaks the dismissal line —
-    // text mode types it out and resumes the input bar. No voice-pitch
-    // follow-up since we're already on a call. If mic isn't granted yet
-    // (chat-now path), surface the Enable Microphone CTA so the user has
-    // a way forward — Yuna's dismissal line invites the same.
+    const ack = "No worries, we can keep going.";
     if (mode === "voice") {
-      void voiceSessionRef.current?.speakYunaLine(VOICE_QUESTIONNAIRE_DISMISS_LINE);
-      if (!voiceUnlocked) setVoiceMicCtaVisible(true);
+      void voiceSessionRef.current?.speakYunaLine(ack);
       return;
     }
     setTyping(true);
     setTimeout(() => {
-      setMessages((m) => [
-        ...m,
-        { id: uid(), from: "yuna", kind: "text", text: VOICE_QUESTIONNAIRE_DISMISS_LINE },
-      ]);
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: ack }]);
       setTyping(false);
-      speakIfEnabled(VOICE_QUESTIONNAIRE_DISMISS_LINE);
-      setTimeout(() => transitionToVoicePitch(), 700);
+      speakIfEnabled(ack);
+      if (wasUsefulness) setTimeout(() => transitionToVoicePitch(), 700);
     }, 900);
-  };
-
-  const finishQuestionnaire = (answers: QuestionnaireAnswer[]) => {
-    setQuestionnaireActive(false);
-    setVoicePanelVisible(false);
-    clearQuestionnaireProgress();
-    // Voice mode: skip the typed acknowledgement + voice-pitch transition.
-    // Instead, hand VoiceSession the same acknowledgement (ending on an open
-    // invite rather than the text-mode trail-off) and let its TTS pipeline
-    // speak it before resuming the listen loop.
-    if (mode === "voice") {
-      const text = composeQuestionnaireResponse(answers, VOICE_POST_QUESTIONNAIRE_TAIL);
-      void voiceSessionRef.current?.speakYunaLine(text);
-      // The composed tail invites the user to enable their microphone —
-      // surface the CTA in the slot so the request lands with the words.
-      if (!voiceUnlocked) setVoiceMicCtaVisible(true);
-      return;
-    }
-    setTyping(true);
-    setTimeout(() => {
-      const text = composeQuestionnaireResponse(answers);
-      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text }]);
-      setTyping(false);
-      speakIfEnabled(text);
-      setTimeout(() => transitionToVoicePitch(1200), 800);
-    }, 1000);
   };
 
   const respondToInitial = (initial: string) => {
@@ -957,7 +852,12 @@ function Chat() {
     userTopicsRef.current.push(value);
     setLastTopics(userTopicsRef.current);
     inputRef.current?.blur();
-    if (isFirstUserMessage) {
+    if (looksLikeCrisis(value)) setCrisisMode(true);
+    // Suggestion-chip entries from /home still go through the older
+    // limitations + voice-pitch flow (respondToInitial). Chat-now sessions
+    // skip straight to Claude so the open intake exchange isn't interrupted
+    // by a canned acknowledgement.
+    if (isFirstUserMessage && !isChatNowSessionRef.current) {
       respondToInitial(value);
     } else {
       void respondClaude(value);
@@ -1159,76 +1059,27 @@ function Chat() {
     navigate({ to: "/chat", search: { q: "", mode: "text", revisit: "1" } });
   };
 
-  // Voice-pitch is interactive while in text mode; dismiss it the moment the
-  // user commits to switching so a stray "Continue Over Voice" tap doesn't
-  // get re-rendered behind the mic prompt.
-  //
-  // `openMicForVoice` is reserved for the *explicit* enable-mic CTAs (the
-  // post-survey button in voice mode, and the "Continue Over Voice" card in
-  // text mode). It's the only path that may open the permission dialog.
+  // "Continue Over Voice" in text mode just navigates — the browser owns
+  // any real mic permission prompt when recognition actually starts.
   const openMicForVoice = () => {
     stopTts();
     setVoicePitchActive(false);
-    // Skip the explainer dialog once we've previously gotten a grant —
-    // the browser remembers its own permission, so the next voice session
-    // starts without any prompt.
-    if (voiceUnlocked) {
-      navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
-      return;
-    }
-    setMicState("idle");
-    setMicOpen(true);
+    navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
   };
 
-  // Segmented-toggle "Voice" tap. Pure navigation — never opens the
-  // permission dialog. If mic isn't granted, VoiceSession renders in
-  // deferred-mic mode and the post-survey CTA is the only thing that can
-  // surface the dialog.
   const switchToVoiceMode = () => {
     if (mode === "voice") return;
     stopTts();
     setVoicePitchActive(false);
     navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
   };
-  const requestMic = async () => {
-    setMicState("asking");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-      setMicGranted();
-      setVoiceUnlocked(true);
-      setVoiceMicCtaVisible(false);
-      setMicState("granted");
-      setMicOpen(false);
-      // If the dialog was triggered from a non-voice screen (segmented toggle
-      // in text mode), navigate into voice. If we were already on
-      // /chat?mode=voice (Chat Now / AppBar chat icon entry), we stay put —
-      // VoiceSession will mount as soon as voiceUnlocked flips.
-      if (mode !== "voice") {
-        navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
-      }
-    } catch {
-      setMicState("denied");
-    }
-  };
 
-  // (No auto-open mic dialog.) The permission dialog opens only when the
-  // user explicitly taps an action — the post-survey "Enable microphone"
-  // CTA in voice mode, or the "Continue Over Voice" card in text mode.
-  // Toggling text↔voice never triggers the prompt on its own.
-
-  // Chat-now landing in voice mode: hand VoiceSession the same welcome +
-  // ask + Q1-prompt + tap-hint lines so they share a single audio queue.
-  // The tap-hint plays right after Q1 so the user knows the on-screen
-  // chips are interactive. Subsequent questions don't need the hint —
-  // the pattern is established.
+  // Chat-now landing in voice mode: hand VoiceSession the single intake
+  // opener line — it already contains the open question that hands the
+  // floor to the user. The structured Qs surface mid-conversation via the
+  // injection effect, not at greeting time.
   const chatNowVoiceGreeting = isChatNowVoice
-    ? [
-        chatNowWelcomeLine(yunaUserName),
-        CHAT_NOW_ASK_LINE,
-        PRIORITY_QUESTION.prompt,
-        CHAT_NOW_TAP_HINT,
-      ]
+    ? [chatNowOpener(yunaUserName)]
     : undefined;
 
   return (
@@ -1310,52 +1161,37 @@ function Chat() {
             ref={voiceSessionRef}
             onEndCall={endChat}
             initialGreetingLines={chatNowVoiceGreeting}
-            onMessageAppended={(msg) =>
-              setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]))
-            }
+            onMessageAppended={(msg) => {
+              setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]));
+              if (msg.kind === "text" && msg.from === "you" && looksLikeCrisis(msg.text)) {
+                setCrisisMode(true);
+              }
+            }}
             onSpeechStart={(text) => {
-              // Audio for a question prompt just started playing —
-              // surface the voice panel on the audio cue and trigger the
-              // haptic edge pulse. The messages-derived effect may have
-              // already activated questionnaireActive when the bubble was
-              // appended; this gate is what keeps the panel from popping
-              // in during welcome/ask on the initial chat-now-voice flow.
-              const qIdx = activeQuestions.findIndex((q) => q.prompt === text);
-              if (qIdx === -1) return;
+              // Audio for a structured question just started — surface the
+              // voice panel and trigger the haptic edge pulse so chips
+              // appear in sync with the spoken cue rather than ahead of it.
+              if (
+                text !== WELLBEING_SCALE_QUESTION.prompt &&
+                text !== USEFULNESS_QUESTION.prompt
+              )
+                return;
               setVoicePanelVisible(true);
               setHapticKey((k) => k + 1);
             }}
             spokenAreaSlot={
-              voiceMicCtaVisible && !voiceUnlocked ? (
-                <MicEnableCta onClick={openMicForVoice} />
-              ) : questionnaireActive &&
-                voicePanelVisible &&
-                questionnaireIndex < activeQuestions.length ? (
-                <>
-                  <QuestionHeader
-                    question={activeQuestions[questionnaireIndex]}
-                    index={questionnaireIndex}
-                    total={Math.max(activeQuestions.length, QUESTIONNAIRE_TOTAL)}
-                    align="center"
-                  />
-                  <QuestionnaireAnswerSlot
-                    key={questionnaireIndex}
-                    question={activeQuestions[questionnaireIndex]}
-                    onPickChip={pickAnswer}
-                    onPickPriorities={pickPriorities}
-                    onPickScale={pickScale}
-                    onSkip={dismissQuestionnaire}
-                    fill
-                  />
-                </>
+              pendingQuestion && voicePanelVisible ? (
+                <QuestionnaireAnswerSlot
+                  key={pendingQuestion.id}
+                  question={pendingQuestion}
+                  onPickChip={pickAnswer}
+                  onPickScale={pickScale}
+                  onSkip={dismissPendingQuestion}
+                  fill
+                />
               ) : null
             }
-            compactLayout={
-              questionnaireActive &&
-              voicePanelVisible &&
-              questionnaireIndex < activeQuestions.length
-            }
-            micEnabled={voiceUnlocked}
+            compactLayout={!!(pendingQuestion && voicePanelVisible)}
           />
         ) : (
           <>
@@ -1374,28 +1210,17 @@ function Chat() {
                     />
                   );
                 if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} />;
-                // intro-questionnaire / questionnaire-answers are legacy
-                // message kinds — the new inline flow emits plain text
-                // bubbles for each question + answer, so render nothing.
-                if (m.kind === "intro-questionnaire") return null;
-                if (m.kind === "questionnaire-answers") return null;
                 return <Bubble key={m.id} msg={m} />;
               })}
               {typing && <TypingBubble />}
-              {questionnaireActive && questionnaireIndex < activeQuestions.length && (
+              {pendingQuestion && (
                 <div className="yuna-fade-in flex flex-col gap-2.5 pt-1">
-                  <QuestionMeta
-                    question={activeQuestions[questionnaireIndex]}
-                    index={questionnaireIndex}
-                    total={Math.max(activeQuestions.length, QUESTIONNAIRE_TOTAL)}
-                  />
                   <QuestionnaireAnswerSlot
-                    key={questionnaireIndex}
-                    question={activeQuestions[questionnaireIndex]}
+                    key={pendingQuestion.id}
+                    question={pendingQuestion}
                     onPickChip={pickAnswer}
-                    onPickPriorities={pickPriorities}
                     onPickScale={pickScale}
-                    onSkip={dismissQuestionnaire}
+                    onSkip={dismissPendingQuestion}
                   />
                 </div>
               )}
@@ -1413,7 +1238,7 @@ function Chat() {
                     Keep Texting For Now
                   </Button>
                 </div>
-              ) : questionnaireActive && questionnaireIndex < activeQuestions.length ? null : (
+              ) : pendingQuestion ? null : (
                 <form onSubmit={send} className="px-5 pt-3 pb-6">
                   <TextField
                     ref={inputRef}
@@ -1488,49 +1313,6 @@ function Chat() {
       </div>
 
       <HapticEdgePulse hapticKey={hapticKey} />
-
-      <Dialog open={micOpen} onOpenChange={setMicOpen}>
-        <DialogContent className="sm:max-w-[380px] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-xl tracking-tight">
-              Allow microphone access
-            </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
-              Yuna needs to hear you to hold a conversation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-center py-6">
-            <div className="h-20 w-20 rounded-full hairline flex items-center justify-center">
-              <MicLargeIcon />
-            </div>
-          </div>
-          {micState === "denied" && (
-            <p className="text-xs text-destructive text-center">
-              Microphone blocked. Update your browser settings and try again.
-            </p>
-          )}
-          <div className="flex flex-col gap-2 pt-2">
-            <Button
-              surface="light"
-              variant="primary"
-              fullWidth
-              onClick={requestMic}
-              disabled={micState === "asking"}
-            >
-              {micState === "asking" ? "Requesting…" : "Allow microphone"}
-            </Button>
-            <Button
-              surface="light"
-              variant="ghost"
-              size="sm"
-              fullWidth
-              onClick={() => setMicOpen(false)}
-            >
-              Not now
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <YunaSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
     </PhoneFrame>
@@ -1610,179 +1392,48 @@ function LimitationsCard({
   );
 }
 
-// Slim meta line for text mode (1/N + optional subheader). The prompt is
-// omitted because it already appears as a Yuna bubble in the scroll area
-// just above the picker — repeating it inline would feel like a stutter.
-function QuestionMeta({
-  question,
-  index,
-  total,
-}: {
-  question: IntroQuestion;
-  index: number;
-  total: number;
-}) {
-  const subheader = "subheader" in question ? question.subheader : undefined;
-  return (
-    <div className="flex items-baseline gap-2 text-white/70 font-sans-ui text-[11px] tracking-[0.2em] uppercase">
-      <span className="text-white/85">
-        {index + 1}/{total}
-      </span>
-      {subheader && (
-        <>
-          <span aria-hidden="true">·</span>
-          <span>{subheader}</span>
-        </>
-      )}
-    </div>
-  );
-}
-
-// Counter (1/N) + helper line + prompt itself, shown above the answer slot
-// in both voice and text modes — voice centers it under the avatar; text
-// left-aligns it above the answer area at the bottom of the screen.
-function QuestionHeader({
-  question,
-  index,
-  total,
-  align,
-}: {
-  question: IntroQuestion;
-  index: number;
-  total: number;
-  align: "center" | "left";
-}) {
-  const alignClass = align === "center" ? "items-center text-center" : "items-start text-left";
-  const helper = "helper" in question ? question.helper : undefined;
-  const subheader = "subheader" in question ? question.subheader : undefined;
-  return (
-    <div className={"flex flex-col gap-1.5 " + alignClass}>
-      <span className="font-sans-ui text-[11px] tracking-[0.2em] uppercase text-white/75">
-        {index + 1}/{total}
-      </span>
-      {helper && <p className="text-sm leading-snug text-white/75">{helper}</p>}
-      <p className="text-lg leading-snug text-white">{question.prompt}</p>
-      {subheader && (
-        <p className="font-sans-ui text-[11px] tracking-[0.2em] uppercase text-white/70">
-          {subheader}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// Dispatcher that renders the right answer UI for each question kind. Skip
-// is only offered on the priority Q — the scale + chip branch Qs are part of
-// the contract and aren't dismissable mid-flow.
+// Dispatcher that renders the right answer UI for each structured question
+// kind. Skip is always offered — either Q can be dismissed mid-conversation
+// and the open thread carries on.
 function QuestionnaireAnswerSlot({
   question,
   onPickChip,
-  onPickPriorities,
   onPickScale,
   onSkip,
   fill = false,
 }: {
   question: IntroQuestion;
   onPickChip: (option: string) => void;
-  onPickPriorities: (picks: PriorityOption[]) => void;
   onPickScale: (value: number, displayLabel: string) => void;
   onSkip: () => void;
-  // When true (voice mode), the priority picker flex-fills the available
-  // vertical space and scrolls inside that area. When false (text mode), it
-  // caps via max-h so the input footer keeps its place.
+  // Voice mode passes fill so the list flex-grows into the slot and scrolls
+  // inside its own bounded area; text mode keeps the max-h cap.
   fill?: boolean;
 }) {
-  if (question.kind === "multi-priority") {
+  if (question.kind === "scale") {
     return (
-      <PriorityPicker
-        question={question}
-        onSubmit={onPickPriorities}
-        onSkip={onSkip}
-        fill={fill}
-      />
+      <ScaleAnswer question={question} onSubmit={onPickScale} onSkip={onSkip} fill={fill} />
     );
   }
-  if (question.kind === "scale") {
-    return <ScaleAnswer question={question} onSubmit={onPickScale} fill={fill} />;
-  }
-  return <AnswerChips question={question} onPick={onPickChip} fill={fill} />;
+  return <AnswerChips question={question} onPick={onPickChip} onSkip={onSkip} fill={fill} />;
 }
 
-// Chip stack — labeled single-select. No "Other" branch in the new schema.
+// Chip stack — labeled single-select. Skip lets the user bypass without
+// answering; structured Qs are optional in the new intake.
 function AnswerChips({
   question,
   onPick,
+  onSkip,
   fill = false,
 }: {
   question: ChipsQuestion;
   onPick: (option: string) => void;
-  // Voice mode passes fill so the list grows into the slot and scrolls
-  // inside its own bounded area when options exceed the viewport.
-  fill?: boolean;
-}) {
-  return (
-    <div
-      className={
-        "flex flex-col gap-2 yuna-fade-in " +
-        (fill
-          ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          : "")
-      }
-    >
-      {question.options.map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => onPick(option)}
-          className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
-        >
-          <span className="flex-1 text-base leading-snug text-white/95">{option}</span>
-          <ChevronRight
-            size={16}
-            strokeWidth={1.6}
-            aria-hidden="true"
-            className="shrink-0 text-white/55"
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// Multi-priority picker — tap to add to a ranked list, tap again to remove.
-// Order of taps is the user's ranking; first tap is the top priority. A
-// Continue button commits the selection (so the user can reorder before
-// they're locked in).
-function PriorityPicker({
-  question,
-  onSubmit,
-  onSkip,
-  fill = false,
-}: {
-  question: MultiPriorityQuestion;
-  onSubmit: (picks: PriorityOption[]) => void;
   onSkip: () => void;
-  // Voice mode passes fill so the list flex-grows into the slot and
-  // scrolls inside its own bounded area; text mode keeps the max-h cap.
   fill?: boolean;
 }) {
-  const [picks, setPicks] = useState<PriorityOption[]>([]);
-  const max = question.maxSelect;
-
-  const toggle = (opt: PriorityOption) => {
-    setPicks((prev) => {
-      const i = prev.findIndex((p) => p.key === opt.key);
-      if (i >= 0) return prev.filter((_, j) => j !== i);
-      if (prev.length >= max) return prev;
-      return [...prev, opt];
-    });
-  };
-
   return (
     <div
-      className={
-        "flex flex-col gap-3 yuna-fade-in " + (fill ? "flex-1 min-h-0 w-full" : "")
-      }
+      className={"flex flex-col gap-3 yuna-fade-in " + (fill ? "flex-1 min-h-0 w-full" : "")}
     >
       <div
         className={
@@ -1792,128 +1443,14 @@ function PriorityPicker({
             : "")
         }
       >
-        {question.options.map((opt) => {
-          const rank = picks.findIndex((p) => p.key === opt.key);
-          const selected = rank >= 0;
-          const isTop = rank === 0;
-          const capped = !selected && picks.length >= max;
-          return (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => toggle(opt)}
-              disabled={capped}
-              className={
-                "w-full flex items-center justify-between gap-3 rounded-full border px-5 py-2.5 text-left transition-colors " +
-                (selected
-                  ? "border-white bg-white/15"
-                  : capped
-                    ? "border-white/20 opacity-50"
-                    : "border-white/40 bg-transparent active:bg-white/15")
-              }
-            >
-              <span className="flex-1 text-base leading-snug text-white/95">{opt.label}</span>
-              {selected ? (
-                isTop ? (
-                  <span
-                    aria-label="Top priority"
-                    className="shrink-0 inline-flex items-center rounded-full bg-white text-neutral-900 font-sans-ui text-[10px] font-semibold tracking-[0.14em] uppercase px-2.5 py-1"
-                  >
-                    Top Priority
-                  </span>
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-900 font-sans-ui text-[12px] font-semibold"
-                  >
-                    {rank + 1}
-                  </span>
-                )
-              ) : (
-                <ChevronRight
-                  size={16}
-                  strokeWidth={1.6}
-                  aria-hidden="true"
-                  className="shrink-0 text-white/55"
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <Button
-        surface="dark"
-        variant="primary"
-        fullWidth
-        onClick={() => onSubmit(picks)}
-        disabled={picks.length === 0}
-      >
-        {picks.length === 0
-          ? "Pick at least one"
-          : picks.length === 1
-            ? "Continue with 1 priority"
-            : `Continue with ${picks.length} priorities`}
-      </Button>
-      <button
-        type="button"
-        onClick={onSkip}
-        className="self-center text-[11px] tracking-[0.18em] uppercase text-white/70 active:text-white/95 transition-colors"
-      >
-        Skip for now
-      </button>
-    </div>
-  );
-}
-
-// Numeric scale — a row of equally-sized numbered chips with anchor labels
-// underneath the min / mid / max columns. Tapping a chip commits the answer,
-// matching the AnswerChips one-tap pattern (no separate Continue button).
-function ScaleAnswer({
-  question,
-  onSubmit,
-  fill = false,
-}: {
-  question: ScaleQuestion;
-  onSubmit: (value: number, displayLabel: string) => void;
-  // Voice mode passes fill so the 0–10 row grows into the slot and scrolls
-  // inside its own bounded area when steps exceed the viewport.
-  fill?: boolean;
-}) {
-  const stepCount = question.max - question.min + 1;
-  const anchorAt = (step: number): string | undefined => question.anchors[step];
-
-  const displayLabelFor = (step: number) => {
-    const anchor = anchorAt(step);
-    return anchor ? `${step} — ${anchor}` : String(step);
-  };
-
-  return (
-    <div
-      className={
-        "flex flex-col gap-2 yuna-fade-in " +
-        (fill
-          ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          : "")
-      }
-    >
-      {Array.from({ length: stepCount }, (_, idx) => {
-        const step = question.min + idx;
-        const anchor = anchorAt(step);
-        return (
+        {question.options.map((option) => (
           <button
-            key={step}
+            key={option}
             type="button"
-            onClick={() => onSubmit(step, displayLabelFor(step))}
-            className="w-full flex items-center justify-between gap-3 rounded-full border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
+            onClick={() => onPick(option)}
+            className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
           >
-            <span className="flex-1 flex items-baseline gap-3">
-              <span className="text-base text-white/95 tabular-nums w-4 shrink-0">{step}</span>
-              {anchor && (
-                <span className="text-[13px] leading-snug text-white/65">
-                  {anchor}
-                </span>
-              )}
-            </span>
+            <span className="flex-1 text-base leading-snug text-white/95">{option}</span>
             <ChevronRight
               size={16}
               strokeWidth={1.6}
@@ -1921,8 +1458,94 @@ function ScaleAnswer({
               className="shrink-0 text-white/55"
             />
           </button>
-        );
-      })}
+        ))}
+      </div>
+      <SkipButton onClick={onSkip} />
+    </div>
+  );
+}
+
+// Compact "Skip for now" affordance reused by both answer kinds. Lowercase
+// uppercase tracked label so it reads as a tertiary action — not competing
+// with the option chips above.
+function SkipButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="self-center text-[11px] tracking-[0.18em] uppercase text-white/70 active:text-white/95 transition-colors"
+    >
+      Skip for now
+    </button>
+  );
+}
+
+// Numeric scale — a column of numbered rows with optional anchor labels
+// (1 / 5 / 10 carry copy, the rest are bare numbers). Tap to commit, no
+// separate continue step. Skip is offered just below so the user can
+// bypass without picking a number.
+function ScaleAnswer({
+  question,
+  onSubmit,
+  onSkip,
+  fill = false,
+}: {
+  question: ScaleQuestion;
+  onSubmit: (value: number, displayLabel: string) => void;
+  onSkip: () => void;
+  fill?: boolean;
+}) {
+  const stepCount = question.max - question.min + 1;
+  const anchorAt = (step: number): string | undefined => question.anchors[step];
+
+  // Compose the bubble text we send to Claude as the user's answer. Use a
+  // sentence form (not "5 — Some hard days, some okay") so the model treats
+  // it as a natural reply rather than a clinical readout. Em dashes are
+  // banned in Yuna's voice, but this is the user's bubble so a period works.
+  const displayLabelFor = (step: number) => {
+    const anchor = anchorAt(step);
+    return anchor ? `${step}. ${anchor}.` : String(step);
+  };
+
+  return (
+    <div
+      className={"flex flex-col gap-3 yuna-fade-in " + (fill ? "flex-1 min-h-0 w-full" : "")}
+    >
+      <div
+        className={
+          "flex flex-col gap-2 " +
+          (fill
+            ? "flex-1 min-h-0 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            : "")
+        }
+      >
+        {Array.from({ length: stepCount }, (_, idx) => {
+          const step = question.min + idx;
+          const anchor = anchorAt(step);
+          return (
+            <button
+              key={step}
+              type="button"
+              onClick={() => onSubmit(step, displayLabelFor(step))}
+              className="w-full flex items-center justify-between gap-3 rounded-full border border-white/40 bg-transparent px-5 py-2.5 text-left transition-colors active:bg-white/15"
+            >
+              <span className="flex-1 flex items-baseline gap-3">
+                <span className="text-base text-white/95 tabular-nums w-4 shrink-0">{step}</span>
+                {anchor && (
+                  <span className="text-[13px] leading-snug text-white/65">{anchor}</span>
+                )}
+              </span>
+              <ChevronRight
+                size={16}
+                strokeWidth={1.6}
+                aria-hidden="true"
+                className="shrink-0 text-white/55"
+              />
+            </button>
+          );
+        })}
+      </div>
+      <SkipButton onClick={onSkip} />
     </div>
   );
 }
@@ -1944,21 +1567,6 @@ function HapticEdgePulse({ hapticKey }: { hapticKey: number }) {
       <span className="yuna-haptic-ring" style={{ animationDelay: "220ms" }} />
     </div>,
     container,
-  );
-}
-
-// Post-questionnaire CTA. Replaces the chip stack in the voice-screen
-// spoken-text slot once the survey ends without mic permission yet —
-// Yuna's spoken tail invites the user to "turn on your microphone", and
-// this button is what they reach for.
-function MicEnableCta({ onClick }: { onClick: () => void }) {
-  return (
-    <div className="w-full flex justify-center yuna-fade-in">
-      <Button surface="dark" variant="primary" onClick={onClick}>
-        <Mic size={14} strokeWidth={1.6} aria-hidden="true" />
-        Enable microphone
-      </Button>
-    </div>
   );
 }
 
@@ -2166,9 +1774,6 @@ function MicIcon() {
 }
 function PhoneCallIcon() {
   return <Phone size={14} strokeWidth={1.5} fill="currentColor" aria-hidden="true" />;
-}
-function MicLargeIcon() {
-  return <Mic size={32} strokeWidth={1.5} />;
 }
 
 // Voice-note waveform. When an AnalyserNode is connected, bars read from
