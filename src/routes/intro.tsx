@@ -248,6 +248,13 @@ function Intro() {
   const ttsCacheRef = useRef<Map<string, string>>(new Map());
   const ttsQueueRef = useRef<Promise<void>>(Promise.resolve());
   const ttsPlayGenRef = useRef(0);
+  // Set true by fadeOutIntroTts on the intro→home handoff. Without this,
+  // killing the playing element via removeAttribute("src") + load() fires
+  // an `error` that resolves speakYunaLine's promise, the queue advances,
+  // and the next queued bubble (e.g. the FaceID line after privacy) plays
+  // right on top of /home's welcome. speakYunaLine bails at the top when
+  // draining, so the rest of the queue drops silently.
+  const drainingRef = useRef(false);
 
   const KEYBOARD_OFFSET = 260;
 
@@ -329,6 +336,7 @@ function Intro() {
   };
 
   const speakYunaLine = async (text: string): Promise<void> => {
+    if (drainingRef.current) return;
     if (mutedRef.current) return;
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -399,6 +407,7 @@ function Intro() {
   // welcome line that plays as soon as /home mounts. Bumping ttsPlayGenRef
   // also invalidates any queued speakYunaLine still waiting on its fetch.
   const fadeOutIntroTts = (ms: number) => {
+    drainingRef.current = true;
     ttsPlayGenRef.current++;
     const el = ttsAudioRef.current;
     if (!el || el.paused) return;
