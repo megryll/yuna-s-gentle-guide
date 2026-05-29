@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
-import { Waveform } from "@/components/Waveform";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { useAppMode } from "@/lib/theme-prefs";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
@@ -667,6 +668,7 @@ export function VoiceSession({
           inputMode={inputMode}
           onPressStart={startHold}
           onPressEnd={endHold}
+          onToggleMic={toggleHandsFreeMic}
           onOpenModeDrawer={() => setModeDrawerOpen(true)}
         />
       </div>
@@ -700,6 +702,7 @@ function VoicePad({
   inputMode,
   onPressStart,
   onPressEnd,
+  onToggleMic,
   onOpenModeDrawer,
 }: {
   phase: Phase;
@@ -710,9 +713,11 @@ function VoicePad({
   inputMode: InputMode;
   onPressStart: () => void;
   onPressEnd: () => void;
+  onToggleMic: () => void;
   onOpenModeDrawer: () => void;
 }) {
   const listening = phase === "listening";
+  const muted = phase === "muted";
   const disabled = phase === "ending" || phase === "muted";
   const holdMode = inputMode === "hold";
   // Only the hold-to-talk surface captures press gestures. Hands-free keeps
@@ -771,14 +776,21 @@ function VoicePad({
           backgroundSize: "12px 12px",
         }}
       />
-      <div className="relative h-full w-full flex flex-col items-center justify-center gap-5 px-5 py-8">
+      <VoiceWaveform active={listening} analyser={analyser} />
+      <div className="relative z-10 h-full w-full flex flex-col items-center justify-center gap-5 px-5 py-8">
         {/* Idle hold-mode hides the label — "HOLD TO TALK" below the avatar
-            already states the affordance, so doubling it is just noise. */}
-        {!(inputMode === "hold" && phase === "idle") && (
-          <div className="shrink-0 text-center">
-            <p className="text-base tracking-tight text-white/85">{phaseLabel}</p>
-          </div>
-        )}
+            already states the affordance, so doubling it is just noise. Slot
+            stays mounted (just invisible) so the avatar and footer row don't
+            shift up when we drop the label. */}
+        <div
+          className={
+            "shrink-0 text-center transition-opacity duration-200 " +
+            (inputMode === "hold" && phase === "idle" ? "opacity-0" : "opacity-100")
+          }
+          aria-hidden={inputMode === "hold" && phase === "idle"}
+        >
+          <p className="text-base tracking-tight text-white/85">{phaseLabel}</p>
+        </div>
 
         <div className="relative flex items-center justify-center h-40 w-40 shrink-0">
           {showPulseRings && (
@@ -800,14 +812,12 @@ function VoicePad({
         </div>
 
         <div className="shrink-0 w-full flex items-center justify-center min-h-[28px]">
-          {listening ? (
-            <div className="w-full max-w-[16rem] h-7 px-3 rounded-full bg-white/10 border border-white/20 flex items-center">
-              <Waveform analyser={analyser} className="flex-1 h-5" />
-            </div>
-          ) : holdMode ? (
+          {holdMode ? (
             <div className="inline-flex items-center gap-2 text-white/85">
               <MicGlyph />
-              <span className="text-[12px] uppercase tracking-[0.18em]">Hold to talk</span>
+              <span className="text-[12px] uppercase tracking-[0.18em]">
+                {listening ? "Release to send" : "Hold to talk"}
+              </span>
               <button
                 type="button"
                 aria-label="Voice options"
@@ -819,14 +829,28 @@ function VoicePad({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              aria-label="Voice options"
-              onClick={onOpenModeDrawer}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
-            >
-              <MoreDotsGlyph />
-            </button>
+            <div className="inline-flex items-center gap-2">
+              <Button
+                surface="dark"
+                variant="secondary"
+                size="md"
+                onClick={onToggleMic}
+                disabled={phase === "ending" || phase === "connecting"}
+                aria-pressed={muted}
+                className="text-[12px] uppercase tracking-[0.18em]"
+              >
+                {muted ? <MicOffGlyph /> : <MicGlyph />}
+                {muted ? "Unmute mic" : "Mute mic"}
+              </Button>
+              <button
+                type="button"
+                aria-label="Voice options"
+                onClick={onOpenModeDrawer}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
+              >
+                <MoreDotsGlyph />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -992,11 +1016,104 @@ function MicGlyph() {
   );
 }
 
+const WAVE_VIEW_W = 400;
+const WAVE_VIEW_H = 120;
+const WAVE_MID = WAVE_VIEW_H / 2;
+const WAVE_SEGMENTS = 96;
+const WAVE_LEVEL_GAIN = 6;
+
+function VoiceWaveform({
+  active,
+  analyser,
+}: {
+  active: boolean;
+  analyser: AnalyserNode | null;
+}) {
+  const pathRef = useRef<SVGPathElement>(null);
+  const mode = useAppMode();
+  const stroke = mode === "light" ? "rgba(20, 20, 22, 0.55)" : "rgba(255, 255, 255, 0.55)";
+
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    let smoothed = 0;
+    let wavePhase = 0;
+    const buf = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
+
+    const draw = () => {
+      const path = pathRef.current;
+      if (!path) return;
+      const boosted = Math.min(1, smoothed * WAVE_LEVEL_GAIN);
+      const amp = 0.5 + boosted * (WAVE_MID - 2);
+      let d = `M 0 ${WAVE_MID.toFixed(2)}`;
+      for (let i = 1; i <= WAVE_SEGMENTS; i++) {
+        const x = (i / WAVE_SEGMENTS) * WAVE_VIEW_W;
+        const t = i / WAVE_SEGMENTS;
+        const wave =
+          (Math.sin(t * 7 + wavePhase) + Math.sin(t * 13 + wavePhase * 1.4) * 0.35) / 1.35;
+        const taper = 0.3 + 0.7 * Math.sin(t * Math.PI);
+        const y = WAVE_MID + wave * amp * taper;
+        d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+      }
+      path.setAttribute("d", d);
+    };
+
+    const tick = () => {
+      if (analyser && buf) {
+        analyser.getByteFrequencyData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) sum += buf[i];
+        smoothed = smoothed * 0.65 + (sum / buf.length / 255) * 0.35;
+      } else {
+        // No mic feed yet — keep the line gently breathing so it doesn't
+        // look frozen while permission is pending.
+        smoothed = smoothed * 0.9;
+      }
+      wavePhase += 0.04 + smoothed * 0.12;
+      draw();
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      pathRef.current?.setAttribute("d", `M 0 ${WAVE_MID} L ${WAVE_VIEW_W} ${WAVE_MID}`);
+    };
+  }, [active, analyser]);
+
+  return (
+    <div
+      aria-hidden
+      className={
+        "pointer-events-none absolute inset-x-0 bottom-16 z-0 transition-opacity duration-500 " +
+        (active ? "opacity-100" : "opacity-0")
+      }
+    >
+      <svg
+        className="block w-full h-24 overflow-visible"
+        viewBox={`0 0 ${WAVE_VIEW_W} ${WAVE_VIEW_H}`}
+        preserveAspectRatio="none"
+      >
+        <path
+          ref={pathRef}
+          d={`M 0 ${WAVE_MID} L ${WAVE_VIEW_W} ${WAVE_MID}`}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function MicOffGlyph() {
   return (
     <svg
-      width="28"
-      height="28"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
