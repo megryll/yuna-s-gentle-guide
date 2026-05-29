@@ -20,6 +20,7 @@ import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
 import { Route as EmotionTrendsRouteImport } from './routes/emotion-trends'
+import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
@@ -88,6 +89,11 @@ const EmotionTrendsRoute = EmotionTrendsRouteImport.update({
   path: '/emotion-trends',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreatingYourSpaceRoute = CreatingYourSpaceRouteImport.update({
+  id: '/creating-your-space',
+  path: '/creating-your-space',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/accept-terms': typeof AcceptTermsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/creating-your-space': typeof CreatingYourSpaceRoute
   '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/accept-terms': typeof AcceptTermsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/creating-your-space': typeof CreatingYourSpaceRoute
   '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/accept-terms': typeof AcceptTermsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/creating-your-space': typeof CreatingYourSpaceRoute
   '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/accept-terms'
     | '/auth'
     | '/chat'
+    | '/creating-your-space'
     | '/emotion-trends'
     | '/employer-access'
     | '/home'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/accept-terms'
     | '/auth'
     | '/chat'
+    | '/creating-your-space'
     | '/emotion-trends'
     | '/employer-access'
     | '/home'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/accept-terms'
     | '/auth'
     | '/chat'
+    | '/creating-your-space'
     | '/emotion-trends'
     | '/employer-access'
     | '/home'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AcceptTermsRoute: typeof AcceptTermsRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
+  CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
   EmotionTrendsRoute: typeof EmotionTrendsRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
   HomeRoute: typeof HomeRoute
@@ -408,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmotionTrendsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creating-your-space': {
+      id: '/creating-your-space'
+      path: '/creating-your-space'
+      fullPath: '/creating-your-space'
+      preLoaderRoute: typeof CreatingYourSpaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -500,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptTermsRoute: AcceptTermsRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
+  CreatingYourSpaceRoute: CreatingYourSpaceRoute,
   EmotionTrendsRoute: EmotionTrendsRoute,
   EmployerAccessRoute: EmployerAccessRoute,
   HomeRoute: HomeRoute,

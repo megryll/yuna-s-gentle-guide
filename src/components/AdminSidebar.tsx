@@ -27,6 +27,7 @@ const PAGES: Entry[] = [
   { label: "Mood data", to: "/intro", search: { step: 3 }, sub: true },
   { label: "Voice", to: "/intro", search: { step: 4 }, sub: true },
   { label: "Privacy", to: "/intro", search: { step: 5 }, sub: true },
+  { label: "Creating Your Space", to: "/creating-your-space", sub: true },
   { label: "Home", to: "/home" },
   { label: "Session", to: "/chat" },
   { label: "Wrap-up", to: "/wrap-up" },

@@ -131,7 +131,7 @@ function Index() {
 
       <div
         className="absolute left-0 right-0 bottom-[-72px] rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col gap-5"
-        style={{ animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 2020ms both" }}
+        style={{ animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both" }}
       >
         <div className="flex flex-col gap-3">
           <button
