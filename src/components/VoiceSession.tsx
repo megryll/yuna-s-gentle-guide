@@ -7,10 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Check, ChevronDown, Hand, Radio } from "lucide-react";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { Waveform } from "@/components/Waveform";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
-import { useAppMode } from "@/lib/theme-prefs";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import {
@@ -25,8 +25,6 @@ import {
   setVoiceGreeted,
   type ChatMsg,
 } from "@/lib/chat-store";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { NavList } from "@/components/yuna-settings-shared";
 
 type Phase = "connecting" | "idle" | "listening" | "thinking" | "speaking" | "muted" | "ending";
 
@@ -63,7 +61,7 @@ export type VoiceSessionHandle = {
    * outside-the-session event needs to drive Yuna's verbal reply instead of
    * waiting for the user to say something first.
    */
-  speakYunaLine: (text: string) => Promise<void>;
+  speakYunaLine: (text: string, spokenText?: string) => Promise<void>;
   /**
    * Imperatively register a user-side turn that didn't come from the mic
    * (e.g. a chip pick on a structured intake question), drive Claude's
@@ -146,11 +144,14 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   const [liveTranscript, setLiveTranscript] = useState("");
   const [inputMode, setInputMode] = useState<InputMode>("hold");
   const [modeDrawerOpen, setModeDrawerOpen] = useState(false);
+  const [voiceAnalyser, setVoiceAnalyser] = useState<AnalyserNode | null>(null);
 
   const recognitionRef = useRef<RecognitionHandle | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatAbortRef = useRef<AbortController | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const turnsRef = useRef<ChatMsg[]>(loadStoredMessages());
   // Guards against StrictMode's double-invoked mount effect appending the
   // greeting turns twice. The audio pipeline already has its own
@@ -259,6 +260,46 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     }
   }, []);
 
+  // Live waveform analyser — runs in parallel with speech recognition so the
+  // hold-to-talk pad can render the user's actual voice. Recognition opens
+  // its own mic stream; the analyser takes a second getUserMedia handle and
+  // pipes it through an AudioContext. Both are torn down whenever listening
+  // ends so we don't leak the mic indicator.
+  const stopAudioAnalyser = useCallback(() => {
+    audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+    audioStreamRef.current = null;
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    setVoiceAnalyser(null);
+  }, []);
+
+  const startAudioAnalyser = useCallback(async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (endedRef.current || phaseRef.current !== "listening") {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      audioStreamRef.current = stream;
+      const Ctor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return;
+      const ctx = new Ctor();
+      audioCtxRef.current = ctx;
+      if (ctx.state === "suspended") await ctx.resume();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.6;
+      source.connect(analyser);
+      setVoiceAnalyser(analyser);
+    } catch {
+      // Mic blocked — Waveform falls back to its baseline bars.
+    }
+  }, []);
+
   const beginListening = useCallback(() => {
     if (endedRef.current) return;
     if (!isSpeechRecognitionSupported()) {
@@ -288,6 +329,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       onFinal: (committed) => {
         clearSilenceTimer();
         recognitionRef.current = null;
+        stopAudioAnalyser();
         const text = committed.trim();
         if (!text) {
           if (endedRef.current) return;
@@ -307,6 +349,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       onError: (err) => {
         clearSilenceTimer();
         recognitionRef.current = null;
+        stopAudioAnalyser();
         if (err.error === "not-allowed" || err.error === "service-not-allowed") {
           console.warn("Call mic permission denied");
           requestEnd();
@@ -333,8 +376,9 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       return;
     }
     recognitionRef.current = handle;
+    void startAudioAnalyser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearSilenceTimer]);
+  }, [clearSilenceTimer, startAudioAnalyser, stopAudioAnalyser]);
 
   const stopYunaSpeaking = useCallback(() => {
     const el = ttsAudioRef.current;
@@ -380,9 +424,10 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     if (handle) {
       handle.stop();
     } else if (phaseRef.current === "listening") {
+      stopAudioAnalyser();
       setPhase("idle");
     }
-  }, []);
+  }, [stopAudioAnalyser]);
 
   // Hands-free tap behavior on the big mic button: toggle mute. If Yuna is
   // mid-sentence, treat the tap as a barge-in so the user can interrupt
@@ -409,13 +454,14 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       recognitionRef.current?.abort();
       recognitionRef.current = null;
       clearSilenceTimer();
+      stopAudioAnalyser();
       setLiveTranscript("");
       setPhase("muted");
       return;
     }
     // idle / connecting → kick off listening
     beginListening();
-  }, [beginListening, clearSilenceTimer, stopYunaSpeaking]);
+  }, [beginListening, clearSilenceTimer, stopYunaSpeaking, stopAudioAnalyser]);
 
   // Mode switch from the pill. Switching INTO hands-free from idle starts
   // listening so the user doesn't have to take a second action; switching
@@ -439,13 +485,14 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       if (p === "listening") {
         recognitionRef.current?.abort();
         recognitionRef.current = null;
+        stopAudioAnalyser();
         setLiveTranscript("");
         setPhase("idle");
       } else if (p === "muted") {
         setPhase("idle");
       }
     },
-    [beginListening, clearSilenceTimer],
+    [beginListening, clearSilenceTimer, stopAudioAnalyser],
   );
 
   const handleUserTurn = useCallback(
@@ -577,11 +624,9 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   useImperativeHandle(
     ref,
     () => ({
-      speakYunaLine: async (text: string) => {
+      speakYunaLine: async (text: string, spokenText?: string) => {
         if (endedRef.current) return;
         if (!text.trim()) return;
-        // Tear down any in-flight recognition turn so Yuna doesn't talk over
-        // the user's mic input and the silence timer doesn't fire mid-speech.
         recognitionRef.current?.abort();
         recognitionRef.current = null;
         clearSilenceTimer();
@@ -597,7 +642,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
         turnsRef.current = [...turnsRef.current, yunaMsg];
         onMessageAppendedRef.current?.(yunaMsg);
 
-        await speak(text);
+        await speak(spokenText ?? text);
         if (endedRef.current) return;
         settleAfterYuna();
       },
@@ -680,6 +725,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
     setPhase("ending");
     recognitionRef.current?.abort();
     recognitionRef.current = null;
+    stopAudioAnalyser();
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
@@ -689,7 +735,7 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       ttsAudioRef.current = null;
     }
     onEndCall(secondsRef.current);
-  }, [onEndCall]);
+  }, [onEndCall, stopAudioAnalyser]);
 
   useEffect(() => {
     endedRef.current = false;
@@ -700,6 +746,10 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
       ttsAudioRef.current?.pause();
       ttsAudioRef.current = null;
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+      audioStreamRef.current = null;
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
     };
   }, []);
 
@@ -733,26 +783,18 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   // label — even pre-mic-permission, since the button doubles as the grant
   // trigger and the user needs to see "Hold the mic to talk" to know what
   // to reach for.
-  const phaseLabel = displayedSlot && displayedCompact
-    ? "Tap to respond"
-    : inputMode === "hands-free"
-      ? PHASE_LABEL_HANDSFREE[phase]
-      : PHASE_LABEL_HOLD[phase];
-  // With the mic button hidden in hands-free, the old "Tap mic to …" copy
-  // doesn't apply — just show the mode name. Hold mode keeps its
-  // press-state copy so the user always knows whether they're holding.
-  const helperLabel =
-    inputMode === "hands-free"
-      ? "Hands-free"
-      : phase === "listening"
-        ? "Release to send"
-        : "Hold to talk";
+  const phaseLabel =
+    displayedSlot && displayedCompact
+      ? "Tap to respond"
+      : inputMode === "hands-free"
+        ? PHASE_LABEL_HANDSFREE[phase]
+        : PHASE_LABEL_HOLD[phase];
 
   return (
     <div
       className={
         "relative flex-1 flex flex-col items-center px-8 min-h-0 transition-[padding] duration-300 ease-out " +
-        (displayedCompact ? "pb-8" : "pb-12")
+        (displayedCompact ? "pb-8" : "pb-6")
       }
     >
       <div
@@ -783,84 +825,64 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
               {displayedSlot}
             </div>
           </>
-        ) : (
+        ) : displayedSlot ? (
+          // Non-compact + slot: keep the older avatar-above-slot stack so the
+          // structured answer card can sit centered under the phase label.
           <>
-            <div
-              className="w-full shrink-0 transition-[flex-grow] duration-300 ease-out"
-              style={{ flexGrow: 1 }}
-            />
-            <div className="relative flex items-center justify-center shrink-0 transition-all duration-300 ease-out h-44 w-44">
-              {showPulseRings && (
-                <>
-                  <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
-                  <span
-                    className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
-                    style={{ animationDelay: "600ms" }}
-                  />
-                </>
-              )}
-              <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center transition-all duration-300 ease-out h-32 w-32">
-                {avatar ? (
-                  <YunaAvatar variant={avatar} size={128} />
-                ) : (
-                  <span className="h-3 w-3 rounded-full bg-white" />
+            <div className="w-full flex-1 min-h-0 flex flex-col items-center justify-center pt-12">
+              <div className="relative flex items-center justify-center shrink-0 h-44 w-44">
+                {showPulseRings && (
+                  <>
+                    <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
+                    <span
+                      className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
+                      style={{ animationDelay: "600ms" }}
+                    />
+                  </>
                 )}
-              </div>
-            </div>
-
-            <div className="text-center transition-all duration-300 ease-out mt-8">
-              <h1 className="text-xl tracking-tight text-white">{phaseLabel}</h1>
-            </div>
-
-            {!displayedSlot && (
-              <div className="flex-1 flex items-end justify-center min-h-[64px] w-full">
-                <div
-                  className="w-full"
-                  style={{ marginLeft: "-2rem", marginRight: "-2rem", width: "calc(100% + 4rem)" }}
-                >
-                  <VoiceWaveform active={phase === "listening"} />
+                <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center h-32 w-32">
+                  {avatar ? (
+                    <YunaAvatar variant={avatar} size={128} />
+                  ) : (
+                    <span className="h-3 w-3 rounded-full bg-white" />
+                  )}
                 </div>
               </div>
-            )}
-
-            {displayedSlot && (
-              <>
-                <div className="w-full shrink-0 flex-1" />
-                <div className="w-full max-w-[20rem] flex flex-col items-center text-center gap-2">
-                  {displayedSlot}
-                </div>
-              </>
-            )}
-
-            {!displayedSlot && (
-              <div className="mt-4 flex flex-col items-center gap-3 shrink-0">
-                {inputMode === "hold" && (
-                  <VoiceMicButton
-                    phase={phase}
-                    inputMode={inputMode}
-                    onPressStart={startHold}
-                    onPressEnd={endHold}
-                    onTap={toggleHandsFreeMic}
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={() => setModeDrawerOpen(true)}
-                  aria-haspopup="dialog"
-                  aria-expanded={modeDrawerOpen}
-                  aria-label={`Switch mic mode (current: ${inputMode === "hold" ? "Hold to talk" : "Hands-free"})`}
-                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 active:text-white transition-colors"
-                >
-                  {helperLabel}
-                  <ChevronDown size={11} strokeWidth={1.6} aria-hidden="true" />
-                </button>
+              <div className="text-center mt-3">
+                <h1 className="text-xl tracking-tight text-white">{phaseLabel}</h1>
               </div>
-            )}
+            </div>
+            <div className="w-full max-w-[20rem] mx-auto flex flex-col items-center text-center gap-2 shrink-0">
+              {displayedSlot}
+            </div>
           </>
+        ) : (
+          // Hold-to-talk + hands-free both render inside the same dotted pad
+          // so the phase label, avatar, and CTA share one visual frame.
+          <VoicePad
+            phase={phase}
+            phaseLabel={phaseLabel}
+            avatar={avatar}
+            showPulseRings={showPulseRings}
+            analyser={voiceAnalyser}
+            inputMode={inputMode}
+            onPressStart={startHold}
+            onPressEnd={endHold}
+            onOpenModeDrawer={() => setModeDrawerOpen(true)}
+          />
         )}
       </div>
 
-      <VoiceModeDrawer
+      {!displayedCompact && (
+        <PrivacyFooter
+          onLeaveFeedback={() => {
+            // Placeholder — wire to a real feedback drawer once it exists.
+            console.log("Leave feedback tapped");
+          }}
+        />
+      )}
+
+      <ModeDrawer
         open={modeDrawerOpen}
         onOpenChange={setModeDrawerOpen}
         current={inputMode}
@@ -873,7 +895,171 @@ export const VoiceSession = forwardRef<VoiceSessionHandle, VoiceSessionProps>(fu
   );
 });
 
-function VoiceModeDrawer({
+function VoicePad({
+  phase,
+  phaseLabel,
+  avatar,
+  showPulseRings,
+  analyser,
+  inputMode,
+  onPressStart,
+  onPressEnd,
+  onOpenModeDrawer,
+}: {
+  phase: Phase;
+  phaseLabel: string;
+  avatar: ReturnType<typeof useYunaIdentity>["avatar"];
+  showPulseRings: boolean;
+  analyser: AnalyserNode | null;
+  inputMode: InputMode;
+  onPressStart: () => void;
+  onPressEnd: () => void;
+  onOpenModeDrawer: () => void;
+}) {
+  const listening = phase === "listening";
+  const disabled = phase === "ending" || phase === "muted";
+  const holdMode = inputMode === "hold";
+  // Only the hold-to-talk surface captures press gestures. Hands-free keeps
+  // the same visual frame but doesn't react to taps on the pad itself —
+  // the mic toggle and mode drawer drive that flow instead.
+  const pressActive = holdMode && !disabled;
+
+  const pressHandlers = pressActive
+    ? {
+        onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          onPressStart();
+        },
+        onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }
+          onPressEnd();
+        },
+        onPointerCancel: () => onPressEnd(),
+        onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => e.preventDefault(),
+      }
+    : {};
+
+  const containerBase =
+    "relative w-full flex-1 min-h-0 rounded-2xl overflow-hidden backdrop-blur-md transition-colors duration-150 ";
+  const containerState = disabled
+    ? "bg-white/[0.06] text-white/40"
+    : listening
+      ? "bg-white/[0.18] text-white"
+      : "bg-white/[0.08] text-white";
+
+  // Stops a tap on the 3-dot menu from also triggering the surrounding
+  // press-to-talk gesture when it lives inside the pressable region.
+  const stopPress = (e: React.PointerEvent | React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  return (
+    <div
+      {...pressHandlers}
+      aria-label={pressActive ? (listening ? "Release to send" : "Hold to talk") : undefined}
+      role={pressActive ? "button" : undefined}
+      className={
+        containerBase +
+        containerState +
+        (pressActive ? " cursor-pointer select-none active:bg-white/[0.14]" : "")
+      }
+    >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.10) 0.9px, transparent 1.2px)",
+          backgroundSize: "12px 12px",
+        }}
+      />
+      <div className="relative h-full w-full flex flex-col items-center justify-center gap-5 px-5 py-8">
+        {/* Idle hold-mode hides the label — "HOLD TO TALK" below the avatar
+            already states the affordance, so doubling it is just noise. */}
+        {!(inputMode === "hold" && phase === "idle") && (
+          <div className="shrink-0 text-center">
+            <p className="text-base tracking-tight text-white/85">{phaseLabel}</p>
+          </div>
+        )}
+
+        <div className="relative flex items-center justify-center h-40 w-40 shrink-0">
+          {showPulseRings && (
+            <>
+              <span className="absolute inset-0 rounded-full border border-white/40 yuna-pulse-ring" />
+              <span
+                className="absolute inset-3 rounded-full border border-white/40 yuna-pulse-ring"
+                style={{ animationDelay: "600ms" }}
+              />
+            </>
+          )}
+          <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center h-32 w-32">
+            {avatar ? (
+              <YunaAvatar variant={avatar} size={128} />
+            ) : (
+              <span className="h-3 w-3 rounded-full bg-white" />
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 w-full flex items-center justify-center min-h-[28px]">
+          {listening ? (
+            <div className="w-full max-w-[16rem] h-7 px-3 rounded-full bg-white/10 border border-white/20 flex items-center">
+              <Waveform analyser={analyser} className="flex-1 h-5" />
+            </div>
+          ) : holdMode ? (
+            <div className="inline-flex items-center gap-2 text-white/85">
+              <MicGlyph />
+              <span className="text-[12px] uppercase tracking-[0.18em]">Hold to talk</span>
+              <button
+                type="button"
+                aria-label="Voice options"
+                onClick={onOpenModeDrawer}
+                onPointerDown={stopPress}
+                className="ml-1 inline-flex items-center justify-center w-7 h-7 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
+              >
+                <MoreDotsGlyph />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label="Voice options"
+              onClick={onOpenModeDrawer}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
+            >
+              <MoreDotsGlyph />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyFooter({ onLeaveFeedback }: { onLeaveFeedback: () => void }) {
+  return (
+    <div className="shrink-0 w-full flex items-center justify-center gap-2 pt-4 text-[12px] tracking-[0.02em] text-white/75">
+      <span className="inline-flex items-center gap-1.5">
+        <span>100% Private</span>
+        <LockGlyph />
+      </span>
+      <span aria-hidden className="text-white/45">
+        ·
+      </span>
+      <button
+        type="button"
+        onClick={onLeaveFeedback}
+        className="text-white/85 active:text-white transition-colors"
+      >
+        Leave Feedback
+      </button>
+    </div>
+  );
+}
+
+function ModeDrawer({
   open,
   onOpenChange,
   current,
@@ -887,162 +1073,114 @@ function VoiceModeDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="rounded-t-[1.5rem]">
-        <DrawerHeader className="text-left px-6 pt-2">
-          <DrawerTitle className="font-serif text-xl tracking-tight">
-            Conversation mode
+        <DrawerHeader className="text-left px-6 pt-3 pb-3">
+          <DrawerTitle className="font-display font-normal text-xl tracking-tight">
+            Voice mode
           </DrawerTitle>
         </DrawerHeader>
-        <div className="px-6 pb-10">
-          <NavList>
-            <ModeRow
-              icon={<Hand size={18} strokeWidth={1.5} aria-hidden="true" />}
-              title="Hold to talk"
-              description="Press and hold the mic when you want to speak."
-              selected={current === "hold"}
-              onClick={() => onSelect("hold")}
-            />
-            <ModeRow
-              icon={<Radio size={18} strokeWidth={1.5} aria-hidden="true" />}
-              title="Hands-free"
-              description="I'll listen continuously. Just talk when you're ready."
-              selected={current === "hands-free"}
-              onClick={() => onSelect("hands-free")}
-            />
-          </NavList>
+        <div className="px-6 pb-10 flex flex-col gap-2">
+          <ModeOption
+            label="Hold to Talk"
+            description="Press and hold the panel to speak."
+            selected={current === "hold"}
+            onSelect={() => onSelect("hold")}
+          />
+          <ModeOption
+            label="Hands-Free"
+            description="Yuna listens continuously between turns."
+            selected={current === "hands-free"}
+            onSelect={() => onSelect("hands-free")}
+          />
         </div>
       </DrawerContent>
     </Drawer>
   );
 }
 
-function ModeRow({
-  icon,
-  title,
+function ModeOption({
+  label,
   description,
   selected,
-  onClick,
+  onSelect,
 }: {
-  icon: React.ReactNode;
-  title: string;
+  label: string;
   description: string;
   selected: boolean;
-  onClick: () => void;
+  onSelect: () => void;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={onSelect}
       aria-pressed={selected}
-      className="w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors border-t border-border first:border-t-0 active:bg-accent/40"
+      className={
+        "w-full text-left rounded-2xl px-4 py-3 border transition-colors " +
+        (selected
+          ? "border-foreground/40 bg-foreground/5"
+          : "border-border bg-transparent active:bg-foreground/[0.03]")
+      }
     >
-      <span className="h-9 w-9 rounded-full flex items-center justify-center text-foreground shrink-0">
-        {icon}
-      </span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-foreground">{title}</span>
-        <span className="block text-xs leading-snug text-foreground/70 mt-0.5">{description}</span>
-      </span>
-      {selected && (
-        <Check size={16} strokeWidth={2} aria-hidden="true" className="text-foreground shrink-0 mt-1" />
-      )}
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-base text-foreground">{label}</span>
+        {selected && <CheckGlyph />}
+      </div>
+      <p className="text-[13px] text-foreground/65 mt-0.5">{description}</p>
     </button>
   );
 }
 
-function VoiceMicButton({
-  phase,
-  inputMode,
-  onPressStart,
-  onPressEnd,
-  onTap,
-}: {
-  phase: Phase;
-  inputMode: InputMode;
-  onPressStart: () => void;
-  onPressEnd: () => void;
-  onTap: () => void;
-}) {
-  const listening = phase === "listening";
-  const muted = phase === "muted";
-  const disabled = phase === "ending" || (inputMode === "hold" && muted);
-  const handsFree = inputMode === "hands-free";
-
-  // Hold mode: capture press to drive recognition lifecycle.
-  // Hands-free: a tap toggles mute, so we only fire onTap on click.
-  const handlers = handsFree
-    ? {
-        onClick: () => {
-          if (disabled) return;
-          onTap();
-        },
-      }
-    : {
-        onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-          if (disabled) return;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          onPressStart();
-        },
-        onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
-          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-            e.currentTarget.releasePointerCapture(e.pointerId);
-          }
-          onPressEnd();
-        },
-        onPointerCancel: () => onPressEnd(),
-        onContextMenu: (e: React.MouseEvent<HTMLButtonElement>) => e.preventDefault(),
-      };
-
-  const ariaLabel = handsFree
-    ? muted
-      ? "Tap to unmute"
-      : listening
-        ? "Tap to mute"
-        : "Tap to start listening"
-    : listening
-      ? "Release to send"
-      : "Hold to talk";
-
-  const classes = (() => {
-    const base =
-      "relative h-20 w-20 rounded-full flex items-center justify-center select-none transition-transform duration-150 ";
-    if (disabled) return base + "bg-white/15 text-white/40 cursor-not-allowed";
-    if (handsFree && muted) {
-      return base + "bg-white/15 text-white/65 border border-white/30 active:scale-95";
-    }
-    if (listening) {
-      return base + "bg-white text-foreground scale-110 shadow-[0_0_0_10px_rgba(255,255,255,0.12)]";
-    }
-    return base + "bg-white text-foreground active:scale-95";
-  })();
-
+function MoreDotsGlyph() {
   return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      aria-pressed={handsFree ? !muted : undefined}
-      disabled={disabled}
-      {...handlers}
-      className={classes}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <circle cx="5" cy="12" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="19" cy="12" r="1.6" />
+    </svg>
+  );
+}
+
+function LockGlyph() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
     >
-      {listening && (
-        <>
-          <span className="absolute inset-0 rounded-full border border-white/30 yuna-pulse-ring" />
-          <span
-            className="absolute -inset-2 rounded-full border border-white/20 yuna-pulse-ring"
-            style={{ animationDelay: "500ms" }}
-          />
-        </>
-      )}
-      {handsFree && muted ? <MicOffGlyph /> : <MicGlyph />}
-    </button>
+      <rect x="4" y="10" width="16" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function CheckGlyph() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }
 
 function MicGlyph() {
   return (
     <svg
-      width="28"
-      height="28"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -1078,117 +1216,6 @@ function MicOffGlyph() {
       <path d="M19 11a7 7 0 0 1-.16 1.5" />
       <path d="M12 18v3" />
     </svg>
-  );
-}
-
-const WAVE_VIEW_W = 400;
-const WAVE_VIEW_H = 120;
-const WAVE_MID = WAVE_VIEW_H / 2;
-const WAVE_SEGMENTS = 96;
-const WAVE_LEVEL_GAIN = 6;
-
-function VoiceWaveform({ active }: { active: boolean }) {
-  const pathRef = useRef<SVGPathElement>(null);
-  const mode = useAppMode();
-  const stroke = mode === "light" ? "rgba(20, 20, 22, 0.75)" : "rgba(255, 255, 255, 0.7)";
-
-  useEffect(() => {
-    if (!active) return;
-
-    let cancelled = false;
-    let stream: MediaStream | null = null;
-    let audioCtx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let raf = 0;
-    let smoothed = 0;
-    let phase = 0;
-
-    const draw = () => {
-      const path = pathRef.current;
-      if (!path) return;
-      const boosted = Math.min(1, smoothed * WAVE_LEVEL_GAIN);
-      const amp = 0.5 + boosted * (WAVE_MID - 2);
-      let d = `M 0 ${WAVE_MID.toFixed(2)}`;
-      for (let i = 1; i <= WAVE_SEGMENTS; i++) {
-        const x = (i / WAVE_SEGMENTS) * WAVE_VIEW_W;
-        const t = i / WAVE_SEGMENTS;
-        const wave = (Math.sin(t * 7 + phase) + Math.sin(t * 13 + phase * 1.4) * 0.35) / 1.35;
-        const taper = 0.3 + 0.7 * Math.sin(t * Math.PI);
-        const y = WAVE_MID + wave * amp * taper;
-        d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
-      }
-      path.setAttribute("d", d);
-    };
-
-    (async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        const Ctx: typeof AudioContext =
-          window.AudioContext ??
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        audioCtx = new Ctx();
-        const source = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        analyser.smoothingTimeConstant = 0.85;
-        source.connect(analyser);
-
-        const buf = new Uint8Array(analyser.frequencyBinCount);
-        const tick = () => {
-          if (cancelled || !analyser) return;
-          analyser.getByteFrequencyData(buf);
-          let sum = 0;
-          for (let i = 0; i < buf.length; i++) sum += buf[i];
-          const lvl = sum / buf.length / 255;
-          smoothed = smoothed * 0.65 + lvl * 0.35;
-          phase += 0.04 + smoothed * 0.12;
-          draw();
-          raf = requestAnimationFrame(tick);
-        };
-        tick();
-      } catch (err) {
-        console.warn("Voice waveform mic unavailable", err);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-      if (audioCtx) audioCtx.close().catch(() => {});
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-      pathRef.current?.setAttribute("d", `M 0 ${WAVE_MID} L ${WAVE_VIEW_W} ${WAVE_MID}`);
-    };
-  }, [active]);
-
-  return (
-    <div
-      aria-hidden
-      className={
-        "w-full pointer-events-none transition-opacity duration-500 " +
-        (active ? "opacity-100" : "opacity-0")
-      }
-    >
-      <svg
-        className="block w-full h-16 overflow-visible"
-        viewBox={`0 0 ${WAVE_VIEW_W} ${WAVE_VIEW_H}`}
-        preserveAspectRatio="none"
-      >
-        <path
-          ref={pathRef}
-          d={`M 0 ${WAVE_MID} L ${WAVE_VIEW_W} ${WAVE_MID}`}
-          fill="none"
-          stroke={stroke}
-          strokeWidth="1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-    </div>
   );
 }
 

@@ -34,6 +34,7 @@ import {
 } from "@/lib/speech";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
 import { VoiceSession, type VoiceSessionHandle } from "@/components/VoiceSession";
+import { Waveform } from "@/components/Waveform";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { pauseAmbient } from "@/lib/ambient-audio";
 import { Button } from "@/components/Button";
@@ -744,7 +745,13 @@ function Chat() {
     if (question.id === WELLBEING_SCALE_QUESTION.id) setScaleAsked(true);
     if (question.id === USEFULNESS_QUESTION.id) setMcAsked(true);
     if (mode === "voice") {
-      void voiceSessionRef.current?.speakYunaLine(question.prompt);
+      // Chips render as tap-only chips on the voice screen — nudge the user
+      // toward the device so they don't sit waiting for a spoken option list.
+      const spokenText =
+        question.kind === "chips"
+          ? `${question.prompt} Tap a response on your device.`
+          : undefined;
+      void voiceSessionRef.current?.speakYunaLine(question.prompt, spokenText);
       return;
     }
     setTyping(true);
@@ -1171,9 +1178,11 @@ function Chat() {
               // Audio for a structured question just started — surface the
               // voice panel and trigger the haptic edge pulse so chips
               // appear in sync with the spoken cue rather than ahead of it.
+              // startsWith tolerates the chips-mode "Tap a response on your
+              // device." suffix added to the spoken text.
               if (
-                text !== WELLBEING_SCALE_QUESTION.prompt &&
-                text !== USEFULNESS_QUESTION.prompt
+                !text.startsWith(WELLBEING_SCALE_QUESTION.prompt) &&
+                !text.startsWith(USEFULNESS_QUESTION.prompt)
               )
                 return;
               setVoicePanelVisible(true);
@@ -1774,60 +1783,4 @@ function MicIcon() {
 }
 function PhoneCallIcon() {
   return <Phone size={14} strokeWidth={1.5} fill="currentColor" aria-hidden="true" />;
-}
-
-// Voice-note waveform. When an AnalyserNode is connected, bars read from
-// the live time-domain signal (peak amplitude per chunk → bar height) so
-// the row tracks the user's actual voice. With no analyser, bars sit at a
-// quiet baseline.
-const WAVE_BAR_COUNT = 36;
-function Waveform({ analyser }: { analyser?: AnalyserNode | null }) {
-  const barsRef = useRef<Array<HTMLSpanElement | null>>([]);
-
-  useEffect(() => {
-    if (!analyser) return;
-    const buf = new Uint8Array(analyser.fftSize);
-    let raf = 0;
-    const tick = () => {
-      analyser.getByteTimeDomainData(buf);
-      const chunk = Math.floor(buf.length / WAVE_BAR_COUNT);
-      for (let i = 0; i < WAVE_BAR_COUNT; i++) {
-        let peak = 0;
-        const start = i * chunk;
-        for (let j = 0; j < chunk; j++) {
-          // 128 is silence in 8-bit time domain. Center on 0 then normalize.
-          const v = Math.abs(buf[start + j] - 128) / 128;
-          if (v > peak) peak = v;
-        }
-        // Aggressive compression curve so normal speech fills most of the
-        // range. Small noise floor keeps the bars at rest when silent.
-        const cleaned = Math.max(0, peak - 0.015);
-        const boosted = Math.pow(cleaned, 0.35) * 1.8;
-        const h = Math.max(0.1, Math.min(1, boosted));
-        const el = barsRef.current[i];
-        if (el) el.style.height = `${Math.round(h * 100)}%`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [analyser]);
-
-  return (
-    <div
-      aria-hidden="true"
-      className="flex-1 flex items-center justify-between h-6 overflow-hidden"
-    >
-      {Array.from({ length: WAVE_BAR_COUNT }).map((_, i) => (
-        <span
-          key={i}
-          ref={(el) => {
-            barsRef.current[i] = el;
-          }}
-          className="w-[2px] rounded-full bg-white"
-          style={{ height: "12%", transition: "height 70ms linear" }}
-        />
-      ))}
-    </div>
-  );
 }
