@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { KeyboardSimulator } from "@/components/KeyboardSimulator";
+import { usePlatform } from "@/lib/platform";
 import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 const PhoneFrameContext = createContext<HTMLElement | null>(null);
@@ -43,6 +44,7 @@ export function PhoneFrame({
   const themedBg = themed ? modeImage : undefined;
   const bg = themedBg ?? backgroundImage;
   const light = themed && isLightMode(mode);
+  const platform = usePlatform();
 
   return (
     <div className="min-h-screen w-full bg-muted/40 flex items-center justify-center sm:p-6">
@@ -61,7 +63,8 @@ export function PhoneFrame({
           className={
             "relative w-full min-h-screen sm:min-h-[820px] sm:h-[820px] sm:rounded-[2.25rem] sm:hairline overflow-hidden flex flex-col " +
             (bg ? "" : "bg-background") +
-            (light ? " theme-light" : "")
+            (light ? " theme-light" : "") +
+            (platform === "android" ? " platform-android" : "")
           }
           style={
             bg

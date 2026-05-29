@@ -530,4 +530,56 @@
   .overlay-on-dark .active\:bg-accent\/40:active { background-color: rgba(255, 255, 255, 0.06); }
   .overlay-on-dark .hover\:bg-destructive\/10:hover { background-color: rgba(255, 120, 120, 0.10); }
   .overlay-on-dark .active\:bg-background\/80:active { background-color: rgba(255, 255, 255, 0.12); }
+
+  /* ─── Android-platform shim (.platform-android) ────────────────────────────
+     Android Chrome's backdrop-filter support is shaky in production WebViews
+     and the design needs to degrade gracefully on devices that ignore the
+     filter. The admin "iOS / Android" toggle adds this class to PhoneFrame's
+     inner wrapper to simulate that environment: kill all backdrop blur, then
+     bump the white-alpha / off-white surfaces a notch so cards still read as
+     defined elements without the frosted-glass effect. Scoped under the
+     phone frame so admin chrome (sidebar, top toggles) keeps its blur. */
+  .platform-android,
+  .platform-android * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Standard Tailwind white-alpha background stops — the primary frosted-card
+     vocabulary across photo-bg screens. Pushed lower than the iOS frosted
+     stops so the photo reads through more strongly on Android (no blur
+     means the same opacity feels heavier than on iOS — so we go thinner). */
+  .platform-android .bg-white\/5   { background-color: rgba(255, 255, 255, 0.10); }
+  .platform-android .bg-white\/10  { background-color: rgba(255, 255, 255, 0.18); }
+  .platform-android .bg-white\/15  { background-color: rgba(255, 255, 255, 0.22); }
+  .platform-android .bg-white\/20  { background-color: rgba(255, 255, 255, 0.28); }
+  .platform-android .bg-white\/25  { background-color: rgba(255, 255, 255, 0.32); }
+
+  /* Arbitrary white-alpha values used by wrap-up cards, You stat tiles, and
+     the employer-access lower sheet. Mapped onto the same curve. */
+  .platform-android .bg-white\/\[0\.04\] { background-color: rgba(255, 255, 255, 0.08); }
+  .platform-android .bg-white\/\[0\.06\] { background-color: rgba(255, 255, 255, 0.12); }
+  .platform-android .bg-white\/\[0\.11\] { background-color: rgba(255, 255, 255, 0.20); }
+
+  /* Off-white frosted surfaces (drawers, settings sections, etc.). In light
+     mode these render the warm --background var at low opacity over the
+     light photo; without blur we lift them to a near-opaque ink-tinted
+     white so the card edge stays defined. */
+  .platform-android .bg-background\/40 { background-color: rgba(245, 240, 237, 0.85); }
+  .platform-android .bg-background\/60 { background-color: rgba(245, 240, 237, 0.90); }
+  .platform-android .bg-background\/70 { background-color: rgba(245, 240, 237, 0.92); }
+  .platform-android .bg-background\/80 { background-color: rgba(245, 240, 237, 0.94); }
+
+  /* In dark mode, overlay surfaces (drawers, dialogs) get re-pointed to
+     white-alpha via .overlay-on-dark. We need to re-bump those too — the
+     compound selector beats both .platform-android and .overlay-on-dark
+     by specificity (3 classes vs 2). */
+  .platform-android .overlay-on-dark .bg-background      { background-color: rgba(255, 255, 255, 0.14); }
+  .platform-android .overlay-on-dark .bg-background\/40  { background-color: rgba(255, 255, 255, 0.14); }
+  .platform-android .overlay-on-dark .bg-background\/60  { background-color: rgba(255, 255, 255, 0.16); }
+  .platform-android .overlay-on-dark .bg-background\/70  { background-color: rgba(255, 255, 255, 0.18); }
+  .platform-android .overlay-on-dark .bg-background\/80  { background-color: rgba(255, 255, 255, 0.20); }
+  .platform-android .overlay-on-dark .bg-popover         { background-color: rgba(255, 255, 255, 0.18); }
+  .platform-android .overlay-on-dark .bg-muted           { background-color: rgba(255, 255, 255, 0.22); }
+  .platform-android .overlay-on-dark .bg-card            { background-color: rgba(255, 255, 255, 0.16); }
 }

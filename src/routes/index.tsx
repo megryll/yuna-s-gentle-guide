@@ -3,7 +3,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { useWelcomeImage } from "@/lib/theme-prefs";
+import { useDarkBlurImage, useWelcomeImage } from "@/lib/theme-prefs";
+import { usePlatform } from "@/lib/platform";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,6 +19,25 @@ export const Route = createFileRoute("/")({
 function Index() {
   const navigate = useNavigate();
   const welcomeBg = useWelcomeImage();
+  const blurBg = useDarkBlurImage();
+  const platform = usePlatform();
+  // Android can't render backdrop-filter, so the frosted cards over the
+  // un-blurred forest photo look harsh. Paint the pre-blurred photo into
+  // each card's background instead — fixed attachment so the patch aligns
+  // with what's behind the card. Chat bubbles keep a light white wash to
+  // help text contrast; the bottom sheet uses the blur image alone.
+  const bubbleStyle =
+    platform === "android"
+      ? ({
+          background: `linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), url(${blurBg}) center/cover fixed no-repeat`,
+        } as const)
+      : undefined;
+  const sheetStyle =
+    platform === "android"
+      ? ({
+          background: `url(${blurBg}) center/cover fixed no-repeat`,
+        } as const)
+      : undefined;
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1800);
@@ -103,6 +123,7 @@ function Index() {
               style={{
                 animation:
                   "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 120ms both",
+                ...bubbleStyle,
               }}
             >
               <p className="text-[20px] leading-[1.4] text-white">
@@ -117,6 +138,7 @@ function Index() {
               style={{
                 animation:
                   "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 220ms both",
+                ...bubbleStyle,
               }}
             >
               <p className="text-[20px] leading-[1.4] text-white">
@@ -131,7 +153,10 @@ function Index() {
 
       <div
         className="absolute left-0 right-0 bottom-[-72px] rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col gap-5"
-        style={{ animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both" }}
+        style={{
+          animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both",
+          ...sheetStyle,
+        }}
       >
         <div className="flex flex-col gap-3">
           <button
