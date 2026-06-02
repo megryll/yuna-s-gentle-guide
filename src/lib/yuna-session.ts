@@ -95,6 +95,21 @@ export function setHasChatted() {
   window.localStorage.setItem(HAS_CHATTED_KEY, "1");
 }
 
+// Whether the user has seen the three first-session disclaimer drawers
+// (not a real person / not a crisis service / 100% private). Held in memory
+// only — deliberately NOT persisted. It survives in-app navigation (chat →
+// home → chat won't re-show them) but resets on a full page reload, so a
+// hard refresh always shows the sequence again for demos/previews.
+let seenDisclaimers = false;
+
+export function getSeenDisclaimers(): boolean {
+  return seenDisclaimers;
+}
+
+export function setSeenDisclaimers() {
+  seenDisclaimers = true;
+}
+
 export function getLastTopics(): string[] {
   if (typeof window === "undefined") return [];
   try {

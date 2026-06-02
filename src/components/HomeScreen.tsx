@@ -12,6 +12,8 @@ import { SuggestionChip } from "@/components/SuggestionChip";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { startAmbient } from "@/lib/ambient-audio";
+import { useStartChat } from "@/lib/chat-launch";
+import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
 
 const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around. I'll be here when you're ready to chat.";
@@ -32,13 +34,13 @@ export function HomeScreen({
   showWelcome?: boolean;
 }) {
   const navigate = useNavigate();
+  const startChat = useStartChat();
   const { name, voice } = useYunaIdentity();
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
   const cards = variant === "new" ? [INTRO_CARD] : POST_INTRO_CARDS;
   const initialSavedIds = useMemo(
-    () =>
-      new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
+    () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
   );
   const [savedIds, setSavedIds] = useState<Set<string>>(initialSavedIds);
@@ -71,7 +73,7 @@ export function HomeScreen({
       initial.trim().toLowerCase() === "chat now"
         ? { q: initial, mode: "voice" as const }
         : { q: initial };
-    navigate({ to: "/chat", search });
+    startChat(search);
   };
 
   return (
@@ -92,25 +94,16 @@ export function HomeScreen({
 
           <div className="mt-2 yuna-rise">
             <h1 className="text-2xl leading-snug tracking-tight text-white">
-              {returning
-                ? name
-                  ? `Welcome back, ${name}.`
-                  : "Welcome back."
-                : "Welcome in."}
+              {returning ? (name ? `Welcome back, ${name}.` : "Welcome back.") : "Welcome in."}
             </h1>
             <p className="mt-2 text-sm text-white/80 max-w-[18rem]">
-              {returning
-                ? "What should we dig into?"
-                : "I'll be here when you're ready to chat."}
+              {returning ? "What should we dig into?" : "I'll be here when you're ready to chat."}
             </p>
           </div>
 
           <div className="mt-5 flex flex-col gap-2.5">
             <div className="yuna-rise">
-              <SuggestionChip
-                variant="primary"
-                onClick={() => open(PRIMARY_SUGGESTION.label)}
-              >
+              <SuggestionChip variant="primary" onClick={() => open(PRIMARY_SUGGESTION.label)}>
                 {PRIMARY_SUGGESTION.label}
               </SuggestionChip>
             </div>
@@ -131,6 +124,7 @@ export function HomeScreen({
 
         <AppBar surface="dark" />
       </div>
+      <FirstSessionDisclaimerGate />
     </PhoneFrame>
   );
 }
@@ -192,9 +186,7 @@ function CreatedForYou({
   return (
     <div className="mt-10">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">
-          Created For You
-        </p>
+        <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">Created For You</p>
         <div className="flex items-center gap-2">
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <SavedToggle on={savedOnly} onClick={() => setSavedOnly(!savedOnly)} />
@@ -211,11 +203,7 @@ function CreatedForYou({
       ) : (
         <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-4")}>
           {items.map((c, i) => (
-            <li
-              key={c.id}
-              className="yuna-rise"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
+            <li key={c.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
               {viewMode === "card" ? (
                 <HomeCardItem
                   card={c}
@@ -245,23 +233,15 @@ function ExperienceFeedback() {
   return (
     <div className="mt-8 yuna-rise px-1 py-4 text-center text-white">
       <p className="font-display text-[20px] leading-snug tracking-tight max-w-[18rem] mx-auto">
-        {hasPick
-          ? "Thank you for sharing."
-          : "What was your Yuna experience like today?"}
+        {hasPick ? "Thank you for sharing." : "What was your Yuna experience like today?"}
       </p>
       <p className="mt-2 text-[14px] leading-relaxed text-white/75">
-        {hasPick
-          ? "Your feedback helps us improve!"
-          : "Our team reads every submission"}
+        {hasPick ? "Your feedback helps us improve!" : "Our team reads every submission"}
       </p>
       <div className="mt-5 flex items-center justify-between gap-2 max-w-[18rem] mx-auto">
         {faces.map((emoji, i) => {
           const active = picked === i;
-          const scaleClass = active
-            ? "scale-150"
-            : hasPick
-              ? "scale-90"
-              : "scale-100";
+          const scaleClass = active ? "scale-150" : hasPick ? "scale-90" : "scale-100";
           return (
             <button
               key={emoji}
@@ -315,21 +295,14 @@ function ViewToggle({
   // with appMode just like SegmentedToggle does in chat.
   const appMode = useAppMode();
   const isDark = appMode === "dark";
-  const railClass = isDark
-    ? "bg-black/15"
-    : "border border-foreground/20 bg-background/60";
-  const railStyle = isDark
-    ? { border: "1px solid rgba(255,255,255,0.25)" }
-    : undefined;
+  const railClass = isDark ? "bg-black/15" : "border border-foreground/20 bg-background/60";
+  const railStyle = isDark ? { border: "1px solid rgba(255,255,255,0.25)" } : undefined;
   return (
     <div
       role="group"
       aria-label="View mode"
       style={railStyle}
-      className={
-        "inline-flex items-center rounded-full backdrop-blur-sm h-8 p-0.5 " +
-        railClass
-      }
+      className={"inline-flex items-center rounded-full backdrop-blur-sm h-8 p-0.5 " + railClass}
     >
       <ToggleSegmentButton
         active={mode === "card"}
@@ -362,9 +335,7 @@ function ToggleSegmentButton({
 }) {
   // Arbitrary hex values match SegmentedToggle's segments so the active pill
   // is fully opaque ink in light mode and fully opaque white in dark mode.
-  const activeClass = isDark
-    ? "bg-[#ffffff] text-[#1D1F25]"
-    : "bg-[#1D1F25] text-[#ffffff]";
+  const activeClass = isDark ? "bg-[#ffffff] text-[#1D1F25]" : "bg-[#1D1F25] text-[#ffffff]";
   const inactiveClass = isDark
     ? "text-white active:bg-white/10"
     : "text-foreground/75 active:bg-foreground/10";
@@ -397,12 +368,7 @@ function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
           : "border border-white/25 text-white/75 active:bg-white/10")
       }
     >
-      <Bookmark
-        size={14}
-        strokeWidth={1.75}
-        fill={on ? "currentColor" : "none"}
-        aria-hidden
-      />
+      <Bookmark size={14} strokeWidth={1.75} fill={on ? "currentColor" : "none"} aria-hidden />
     </button>
   );
 }
@@ -410,4 +376,3 @@ function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 function MenuIcon() {
   return <Menu size={22} strokeWidth={1.6} aria-hidden="true" />;
 }
-

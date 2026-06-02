@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { useUserType } from "@/lib/user-type";
+import { useStartChat } from "@/lib/chat-launch";
 import { getProfileData, type Insight } from "@/lib/profile-data";
 import {
   EmptyStateCard,
@@ -60,8 +61,16 @@ function YouRoute() {
         <div className="flex flex-col gap-8 mt-10">
           <Section heading="Focus Areas">
             <div className="flex gap-2">
-              <FocusAreaBentoCard num={1} title={data.focusArea1.title} taskCount={data.tasks1.length} />
-              <FocusAreaBentoCard num={2} title={data.focusArea2.title} taskCount={data.tasks2.length} />
+              <FocusAreaBentoCard
+                num={1}
+                title={data.focusArea1.title}
+                taskCount={data.tasks1.length}
+              />
+              <FocusAreaBentoCard
+                num={2}
+                title={data.focusArea2.title}
+                taskCount={data.tasks2.length}
+              />
             </div>
           </Section>
 
@@ -103,7 +112,8 @@ function YouRoute() {
             Something feel off?
           </p>
           <p className="text-[14px] leading-[22px] text-white/75 text-center max-w-[20rem]">
-            Yuna's understanding grows over time. If anything here doesn't feel right, you can help refine it.
+            Yuna's understanding grows over time. If anything here doesn't feel right, you can help
+            refine it.
           </p>
           <Button surface="dark" variant="secondary" size="md" className="mt-1">
             Help Yuna understand you better
@@ -136,6 +146,7 @@ function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentL
 // ─── Empty state (no conversations yet) ─────────────────────────────────────
 
 function YouEmptyState() {
+  const startChat = useStartChat();
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -147,27 +158,18 @@ function YouEmptyState() {
         </div>
 
         <div className="mt-6 flex flex-col gap-2.5">
-          <PreviewRow
-            heading="Focus Areas"
-            body="Where we'll be working together"
-          />
-          <PreviewRow
-            heading="Breakthroughs"
-            body="Real shifts in your thinking, as they emerge"
-          />
+          <PreviewRow heading="Focus Areas" body="Where we'll be working together" />
+          <PreviewRow heading="Breakthroughs" body="Real shifts in your thinking, as they emerge" />
           <PreviewRow
             heading="Beliefs & Behaviors"
             body="Patterns I'll start to notice as we talk"
           />
-          <PreviewRow
-            heading="Basics"
-            body="The context I'll hold in mind for you"
-          />
+          <PreviewRow heading="Basics" body="The context I'll hold in mind for you" />
         </div>
 
         <div className="mt-10 flex justify-center">
-          <Button surface="dark" variant="primary" asChild>
-            <Link to="/chat">Start your first conversation</Link>
+          <Button surface="dark" variant="primary" onClick={() => startChat()}>
+            Start your first conversation
           </Button>
         </div>
       </div>
@@ -209,15 +211,11 @@ function EmptyHeroGlow() {
 
 function PreviewRow({ heading, body }: { heading: string; body: string }) {
   return (
-    <div
-      className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5"
-    >
+    <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5">
       <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-white/65">
         {heading}
       </p>
-      <p className="text-[14px] leading-[20px] text-white/65 mt-1">
-        {body}
-      </p>
+      <p className="text-[14px] leading-[20px] text-white/65 mt-1">{body}</p>
     </div>
   );
 }

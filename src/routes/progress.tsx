@@ -1,8 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { PAST_SESSIONS, type PastSession } from "@/lib/sessions";
 import { useUserType } from "@/lib/user-type";
+import { useStartChat } from "@/lib/chat-launch";
 
 export const Route = createFileRoute("/progress")({
   head: () => ({ meta: [{ title: "Progress — Yuna" }] }),
@@ -65,15 +66,15 @@ function ProgressRoute() {
 }
 
 function ProgressReturning() {
-  const navigate = useNavigate();
+  const startChat = useStartChat();
   const preview = PAST_SESSIONS.slice(0, 2);
 
   const onContinue = (s: PastSession) => {
-    navigate({ to: "/chat", search: { q: s.title } });
+    startChat({ q: s.title });
   };
 
   const onAssess = (a: Assessment) => {
-    navigate({ to: "/chat", search: { q: `Take my ${a.title.toLowerCase()} check-in` } });
+    startChat({ q: `Take my ${a.title.toLowerCase()} check-in` });
   };
 
   return (
@@ -116,9 +117,7 @@ function ProgressReturning() {
 
         <SectionLabel
           className="mt-8"
-          action={
-            <SectionAction to="/emotion-trends">View trends</SectionAction>
-          }
+          action={<SectionAction to="/emotion-trends">View trends</SectionAction>}
         >
           Emotions noticed lately
         </SectionLabel>
@@ -143,11 +142,7 @@ function ProgressReturning() {
         <ul className="mt-3 flex flex-col gap-3">
           {ASSESSMENTS.map((a, i) => (
             <li key={a.id} style={{ animationDelay: `${i * 80}ms` }} className="yuna-rise">
-              <AssessmentCard
-                assessment={a}
-                isEmpty={false}
-                onAssess={() => onAssess(a)}
-              />
+              <AssessmentCard assessment={a} isEmpty={false} onAssess={() => onAssess(a)} />
             </li>
           ))}
         </ul>
@@ -157,14 +152,14 @@ function ProgressReturning() {
 }
 
 function ProgressNew() {
-  const navigate = useNavigate();
+  const startChat = useStartChat();
 
   const onBaseline = (a: Assessment) => {
-    navigate({ to: "/chat", search: { q: `Start my ${a.title.toLowerCase()} baseline` } });
+    startChat({ q: `Start my ${a.title.toLowerCase()} baseline` });
   };
 
   const onStartChat = () => {
-    navigate({ to: "/chat", search: {} });
+    startChat();
   };
 
   return (
@@ -179,8 +174,8 @@ function ProgressNew() {
             Your progress lives here
           </h1>
           <p className="mt-2 text-sm text-white/80 leading-relaxed max-w-[20rem]">
-            Past sessions, emotions Yuna notices, and your check-ins will all
-            fill in here over time.
+            Past sessions, emotions Yuna notices, and your check-ins will all fill in here over
+            time.
           </p>
         </div>
 
@@ -191,9 +186,7 @@ function ProgressNew() {
           className="mt-3 yuna-rise w-full text-left rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-3 active:bg-white/[0.08] transition-colors flex items-center gap-3"
         >
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] tracking-[0.2em] uppercase text-white/55">
-              No sessions yet
-            </p>
+            <p className="text-[11px] tracking-[0.2em] uppercase text-white/55">No sessions yet</p>
             <p className="mt-1 text-[14px] leading-snug text-white/80">
               Your first conversation will appear here.
             </p>
@@ -228,11 +221,7 @@ function ProgressNew() {
         <ul className="mt-3 flex flex-col gap-3">
           {ASSESSMENTS.map((a, i) => (
             <li key={a.id} style={{ animationDelay: `${i * 80}ms` }} className="yuna-rise">
-              <AssessmentCard
-                assessment={a}
-                isEmpty
-                onAssess={() => onBaseline(a)}
-              />
+              <AssessmentCard assessment={a} isEmpty onAssess={() => onBaseline(a)} />
             </li>
           ))}
         </ul>
@@ -252,9 +241,7 @@ function AssessmentCard({
 }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4">
-      <p className="font-display text-[18px] leading-tight text-white">
-        {assessment.title}
-      </p>
+      <p className="font-display text-[18px] leading-tight text-white">{assessment.title}</p>
 
       <div className="mt-3 flex gap-3">
         <div
@@ -398,18 +385,11 @@ function SectionLabel({
   className?: string;
 }) {
   const labelText = (
-    <p className="text-[11px] tracking-[0.25em] uppercase text-white/65">
-      {children}
-    </p>
+    <p className="text-[11px] tracking-[0.25em] uppercase text-white/65">{children}</p>
   );
   if (!action) {
     return (
-      <p
-        className={
-          "text-[11px] tracking-[0.25em] uppercase text-white/65 " +
-          className
-        }
-      >
+      <p className={"text-[11px] tracking-[0.25em] uppercase text-white/65 " + className}>
         {children}
       </p>
     );
@@ -422,13 +402,7 @@ function SectionLabel({
   );
 }
 
-function SectionAction({
-  to,
-  children,
-}: {
-  to: string;
-  children: React.ReactNode;
-}) {
+function SectionAction({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link
       to={to}

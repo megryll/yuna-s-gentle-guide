@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu, PhoneCall } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -6,6 +5,8 @@ import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
+import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
+import { useStartChat } from "@/lib/chat-launch";
 import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 
 /**
@@ -25,19 +26,18 @@ export function ScreenChrome({
   hideHeader?: boolean;
   surface?: "light" | "dark";
 }) {
-  const navigate = useNavigate();
+  const startChat = useStartChat();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const openCall = () => {
-    navigate({ to: "/chat", search: { mode: "voice" } });
+    startChat({ mode: "voice" });
   };
 
   const mode = useAppMode();
   // surface="dark" is the photo-bg cluster (Home/You/etc). In light mode the
   // photo flips to /light-blur-bg.png, so cards/buttons need surface="light"
   // to stay readable. Dark mode keeps the existing dark-photo styling.
-  const effectiveSurface =
-    surface === "dark" && isLightMode(mode) ? "light" : surface;
+  const effectiveSurface = surface === "dark" && isLightMode(mode) ? "light" : surface;
   const isDark = surface === "dark";
 
   return (
@@ -81,6 +81,7 @@ export function ScreenChrome({
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
+      <FirstSessionDisclaimerGate />
     </PhoneFrame>
   );
 }
@@ -90,11 +91,5 @@ function MenuIcon() {
 }
 
 function PhoneCallIcon() {
-  return (
-    <PhoneCall
-      size={22}
-      strokeWidth={1.6}
-      aria-hidden="true"
-    />
-  );
+  return <PhoneCall size={22} strokeWidth={1.6} aria-hidden="true" />;
 }

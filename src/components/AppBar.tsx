@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { History, House, MessageCircle, Pencil, User } from "lucide-react";
 import { useUserType } from "@/lib/user-type";
+import { useStartChat } from "@/lib/chat-launch";
 
 type Surface = "light" | "dark";
 
@@ -32,14 +33,18 @@ const APPBAR_BULGE_PATH =
 // `preserveAspectRatio="none"` lets the path stretch to whatever the nav's
 // width is; mask-size 100% 100% then fills the element.
 const APPBAR_MASK_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -18.20933 393.344 109.33833' preserveAspectRatio='none'><path d='${APPBAR_BULGE_PATH}' fill='black'/></svg>`;
-const APPBAR_MASK_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(
-  APPBAR_MASK_SVG,
-)}")`;
+const APPBAR_MASK_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(APPBAR_MASK_SVG)}")`;
 
 const ITEMS: Item[] = [
   { label: "Home", to: "/home", icon: HomeIcon, matches: ["/home"] },
   { label: "You", to: "/you", icon: PersonIcon, notify: true },
-  { label: "Chat", to: "/chat", icon: ChatIcon, emphasized: true, search: { q: "Chat Now", mode: "voice" } },
+  {
+    label: "Chat",
+    to: "/chat",
+    icon: ChatIcon,
+    emphasized: true,
+    search: { q: "Chat Now", mode: "voice" },
+  },
   { label: "Tools", to: "/tools", icon: ToolsIcon, matches: ["/tools"] },
   { label: "Sessions", to: "/sessions", icon: SessionsIcon, matches: ["/sessions"] },
 ];
@@ -47,6 +52,7 @@ const ITEMS: Item[] = [
 export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   const { pathname } = useLocation();
   const userType = useUserType();
+  const startChat = useStartChat();
   // Notification dots only surface for returning users — that's where the
   // "new content since last visit" framing applies.
   const showNotifications = userType === "returning" && pathname === "/home";
@@ -55,6 +61,17 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   const tabs = ITEMS.map((it) => {
     const active = it.matches ? it.matches.includes(pathname) : pathname === it.to;
     const notify = !!it.notify && showNotifications && !active;
+    // The Chat tab is the first-session entry — route it through startChat so
+    // the disclaimers play over the current screen before /chat, instead of
+    // navigating away first.
+    const onSelect =
+      it.to === "/chat"
+        ? () =>
+            startChat({
+              q: it.search?.q,
+              mode: it.search?.mode === "voice" ? "voice" : "text",
+            })
+        : undefined;
     return (
       <Tab
         key={it.label}
@@ -62,6 +79,7 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
         active={active}
         notify={notify}
         surface={surface}
+        onSelect={onSelect}
       />
     );
   });
@@ -74,10 +92,7 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
     // bounding-box width at y=0 (no L-shaped cutouts), the visible bar reads
     // as a clean rounded rectangle with a bump on top.
     return (
-      <nav
-        aria-label="Main"
-        className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1"
-      >
+      <nav aria-label="Main" className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1">
         <div
           aria-hidden="true"
           className="absolute left-0 right-0 bottom-0 -z-10 bg-white/10 backdrop-blur-md"
@@ -111,16 +126,36 @@ function Tab({
   active,
   notify,
   surface,
+  onSelect,
 }: {
   item: Item;
   active: boolean;
   notify: boolean;
   surface: Surface;
+  onSelect?: () => void;
 }) {
   const Icon = item.icon;
   const isDark = surface === "dark";
 
   if (item.emphasized) {
+    // When a tab owns its navigation (e.g. Chat gating disclaimers first), it
+    // renders as a button so the handler runs instead of a plain Link.
+    if (onSelect) {
+      return (
+        <button
+          type="button"
+          onClick={onSelect}
+          className="flex flex-col items-center justify-center"
+          style={isDark ? { transform: "translateY(-12px)" } : undefined}
+          aria-current={active ? "page" : undefined}
+        >
+          <span className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]">
+            <Icon />
+            {notify && <NotificationDot surface={surface} />}
+          </span>
+        </button>
+      );
+    }
     // The emphasized chat tab is a 60px circle (~50% larger than the inactive
     // tabs' h-10 icon box) so it reads as the primary action. The translateY
     // lifts the button so the chat icon sits on the same horizontal line as
@@ -136,9 +171,7 @@ function Tab({
         style={isDark ? { transform: "translateY(-12px)" } : undefined}
         aria-current={active ? "page" : undefined}
       >
-        <span
-          className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]"
-        >
+        <span className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]">
           <Icon />
           {notify && <NotificationDot surface={surface} />}
         </span>
@@ -146,12 +179,8 @@ function Tab({
     );
   }
 
-  const labelActiveClass = isDark
-    ? "text-white font-semibold"
-    : "text-foreground font-semibold";
-  const labelInactiveClass = isDark
-    ? "text-white/60"
-    : "text-muted-foreground";
+  const labelActiveClass = isDark ? "text-white font-semibold" : "text-foreground font-semibold";
+  const labelInactiveClass = isDark ? "text-white/60" : "text-muted-foreground";
 
   const iconActiveClass = isDark ? "text-white" : "text-foreground";
   const iconInactiveClass = isDark
@@ -208,13 +237,7 @@ function PersonIcon() {
 }
 
 function ChatIcon() {
-  return (
-    <MessageCircle
-      size={26}
-      strokeWidth={1.6}
-      aria-hidden="true"
-    />
-  );
+  return <MessageCircle size={26} strokeWidth={1.6} aria-hidden="true" />;
 }
 
 function ToolsIcon() {

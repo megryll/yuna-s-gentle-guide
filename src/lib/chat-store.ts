@@ -5,16 +5,8 @@
 // Persisted in sessionStorage (not localStorage) on purpose. The chat is
 // scoped to one browsing session for this prototype.
 
-export type LimitationItem = { id: string; text: string; checked: boolean };
-
 export type ChatMsg =
   | { id: string; from: "you" | "yuna"; kind: "text"; text: string }
-  | {
-      id: string;
-      from: "system";
-      kind: "limitations";
-      items: LimitationItem[];
-    }
   | {
       id: string;
       from: "system";

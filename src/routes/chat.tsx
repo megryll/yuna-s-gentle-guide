@@ -1,16 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  ArrowUp,
-  Check,
-  Mic,
-  MessageCircle,
-  Phone,
-  Settings,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
+import { ArrowUp, Mic, MessageCircle, Phone, Settings, Volume2, VolumeX, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -72,11 +62,7 @@ import {
   saveStoredMessages,
   setChatNowSession,
   type ChatMsg as Msg,
-  type LimitationItem,
 } from "@/lib/chat-store";
-
-const LIMITATIONS_PROMPT =
-  "Before we continue, you'll need to acknowledge my limitations. Tap the checkmarks to agree.";
 
 // Spoken version of the voice-pitch card copy. The card itself bolds
 // "75% more likely" for emphasis; we strip that markup here so TTS reads
@@ -86,12 +72,6 @@ const LIMITATIONS_PROMPT =
 const VOICE_PITCH_SPOKEN_LINES = [
   "People who chat with me over voice are 75% more likely to find value in our conversations.",
   "Want to give me a call?",
-];
-
-const LIMITATIONS_ITEMS: LimitationItem[] = [
-  { id: "person", text: "I am not a real person", checked: false },
-  { id: "crisis", text: "I am not a crisis service", checked: false },
-  { id: "private", text: "I keep our chats 100% private", checked: false },
 ];
 
 // Suggestion-chip entry follow-ups (used when the user lands in /chat from
@@ -185,7 +165,6 @@ function Chat() {
   const [speakerOn, setSpeakerOn] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
-  const [pendingLimitations, setPendingLimitations] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
   // True when the current chat session began via "Chat Now". Suggestion-chip
   // entries from /home use the limitations + voice-pitch flow; chat-now skips
@@ -205,7 +184,6 @@ function Chat() {
   const userTopicsRef = useRef<string[]>([]);
   const initialPromptRef = useRef<string>("");
   const bootedRef = useRef(false);
-  const limitationsResolvedRef = useRef(false);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const speakerOnRef = useRef(true);
   const ttsQueueRef = useRef<string[]>([]);
@@ -631,7 +609,7 @@ function Chat() {
   };
 
   const sendText = (value: string) => {
-    if (!value.trim() || pendingLimitations) return;
+    if (!value.trim()) return;
     const isFirstUserMessage = !messages.some((m) => m.from === "you");
     setMessages((m) => [...m, { id: uid(), from: "you", kind: "text", text: value }]);
     setText("");
@@ -690,7 +668,7 @@ function Chat() {
   };
 
   const startVoiceNote = () => {
-    if (recordingVoice || pendingLimitations) return;
+    if (recordingVoice) return;
     if (!isSpeechRecognitionSupported()) {
       alert("Voice notes need a browser that supports speech recognition (try Chrome or Safari).");
       return;
@@ -746,49 +724,6 @@ function Chat() {
       stopTts();
     };
   }, []);
-
-  const checkLimitation = (msgId: string, itemId: string) => {
-    setMessages((msgs) =>
-      msgs.map((m) => {
-        if (m.id !== msgId || m.kind !== "limitations") return m;
-        return {
-          ...m,
-          items: m.items.map((i) => (i.id === itemId && !i.checked ? { ...i, checked: true } : i)),
-        };
-      }),
-    );
-  };
-
-  // Once all three limitations are checked, unlock the input and let Yuna
-  // acknowledge before continuing the conversation.
-  useEffect(() => {
-    if (!pendingLimitations) return;
-    if (limitationsResolvedRef.current) return;
-    const lim = messages.find((m) => m.kind === "limitations");
-    if (!lim || lim.kind !== "limitations") return;
-    if (!lim.items.every((i) => i.checked)) return;
-    limitationsResolvedRef.current = true;
-    setPendingLimitations(false);
-    setTyping(true);
-    setTimeout(() => {
-      const thanksText = "Thanks, now let's get into it.";
-      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: thanksText }]);
-      setTyping(false);
-      speakIfEnabled(thanksText);
-      if (mode === "voice") return;
-      setTimeout(() => {
-        setTyping(true);
-        setTimeout(() => {
-          setMessages((m) => [...m, { id: uid(), from: "system", kind: "voice-pitch" }]);
-          setTyping(false);
-          setVoicePitchActive(true);
-          VOICE_PITCH_SPOKEN_LINES.forEach(speakIfEnabled);
-        }, 1300);
-      }, 700);
-    }, 900);
-    // speakIfEnabled is stable via refs, no need to track it as a dep
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, pendingLimitations]);
 
   const dismissVoicePitch = () => {
     setVoicePitchActive(false);
@@ -861,9 +796,7 @@ function Chat() {
 
   // Chat-now landing in voice mode: hand VoiceSession the opener line so
   // Yuna greets the user once the mic comes up.
-  const chatNowVoiceGreeting = isChatNowVoice
-    ? [chatNowOpener(yunaUserName)]
-    : undefined;
+  const chatNowVoiceGreeting = isChatNowVoice ? [chatNowOpener(yunaUserName)] : undefined;
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
@@ -955,14 +888,6 @@ function Chat() {
               className="flex-1 overflow-y-auto px-5 pt-20 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {messages.map((m) => {
-                if (m.kind === "limitations")
-                  return (
-                    <LimitationsCard
-                      key={m.id}
-                      msg={m}
-                      onCheck={(itemId) => checkLimitation(m.id, itemId)}
-                    />
-                  );
                 if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} />;
                 return <Bubble key={m.id} msg={m} />;
               })}
@@ -992,15 +917,8 @@ function Chat() {
                     onBlur={() => {
                       if (!keyboardLatched) setInputFocused(false);
                     }}
-                    placeholder={
-                      pendingLimitations
-                        ? "Tap each checkmark above to continue"
-                        : recordingVoice
-                          ? ""
-                          : "Type a Message..."
-                    }
+                    placeholder={recordingVoice ? "" : "Type a Message..."}
                     readOnly={recordingVoice}
-                    disabled={pendingLimitations}
                     containerClassName={recordingVoice ? "border-white" : undefined}
                     className={recordingVoice ? "hidden" : "disabled:opacity-60"}
                     leading={recordingVoice ? <Waveform analyser={voiceAnalyser} /> : undefined}
@@ -1015,7 +933,7 @@ function Chat() {
                         onMouseDown={(e) => e.preventDefault()}
                         onTouchStart={(e) => e.preventDefault()}
                         onPointerDown={(e) => {
-                          if (text.trim() || pendingLimitations || recordingVoice) return;
+                          if (text.trim() || recordingVoice) return;
                           e.preventDefault();
                           startVoiceNote();
                         }}
@@ -1035,7 +953,6 @@ function Chat() {
                               ? "Send"
                               : "Hold to record voice note"
                         }
-                        disabled={pendingLimitations}
                       >
                         {text.trim() && !recordingVoice ? (
                           <ArrowUpIcon />
@@ -1074,61 +991,6 @@ function Bubble({ msg }: { msg: Extract<Msg, { kind: "text" }> }) {
       >
         {msg.text}
       </div>
-    </div>
-  );
-}
-
-function LimitationsCard({
-  msg,
-  onCheck,
-}: {
-  msg: Extract<Msg, { kind: "limitations" }>;
-  onCheck: (itemId: string) => void;
-}) {
-  const allChecked = msg.items.every((i) => i.checked);
-
-  if (allChecked) {
-    return (
-      <div className="yuna-rise w-full flex justify-end">
-        <div className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm px-3.5 py-1.5 text-xs text-white/85">
-          <span
-            aria-hidden="true"
-            className="shrink-0 h-4 w-4 rounded-full bg-white text-neutral-900 flex items-center justify-center"
-          >
-            <Check size={10} strokeWidth={2.6} />
-          </span>
-          Acknowledgements accepted
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="yuna-rise w-full flex flex-col gap-2">
-      {msg.items.map((item) => {
-        const checked = item.checked;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onCheck(item.id)}
-            disabled={checked}
-            aria-pressed={checked}
-            className="flex items-center gap-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-3 text-left transition-colors active:bg-white/20"
-          >
-            <span className="flex-1 text-sm leading-snug text-white">{item.text}</span>
-            <span
-              aria-hidden="true"
-              className={
-                "shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-colors " +
-                (checked ? "bg-white text-neutral-900" : "border border-white/40 text-transparent")
-              }
-            >
-              <Check size={14} strokeWidth={2.2} />
-            </span>
-          </button>
-        );
-      })}
     </div>
   );
 }
