@@ -104,7 +104,7 @@ const POST_NAME_DELAY_MS = 500;
 const REACTION_AMAZING = {
   userText: "Tell me more about Yuna \u{1F440}",
   yunaReply:
-    "I'm a chatbot trained in proven therapy methods. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
+    "I'm trained in proven therapy methods. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
 };
 // Stress check-in options offered after the mood-stats card. Replies are
 // tiered by intensity so a low-stress choice doesn't get an "I'm sorry"
@@ -155,7 +155,7 @@ const initialRevealsForStep = (
   if (stepIdx === 3) {
     return [
       {
-        text: "Did you know: 91% of people felt better after just one session.",
+        text: "Did you know: 70% of people feel better after just one session.",
         card: { kind: "mood-stats" },
       },
       { text: "On that note, how's your stress today?" },
@@ -712,7 +712,7 @@ function Intro() {
 
     const userText = allowed ? "✓ They’re set up" : "⏳ Skipped them for now";
     const yunaReply = allowed
-      ? "Great! I’ll keep them gentle"
+      ? "Love it. I’ll keep them light."
       : "No worries, you can always change this later.";
 
     playSendPop();
