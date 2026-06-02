@@ -1,11 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 export const Route = createFileRoute("/employer-access")({
   head: () => ({
@@ -32,12 +38,30 @@ function EmployerAccessScreen() {
   const [code, setCode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [troubleOpen, setTroubleOpen] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
 
   const unlock = () => {
     if (!code.trim()) return;
     (document.activeElement as HTMLElement | null)?.blur?.();
+    if (code.trim().toLowerCase() === "no") {
+      setTroubleOpen(true);
+      return;
+    }
     setUnlocked(true);
   };
+
+  const handleRequestSent = () => {
+    setTroubleOpen(false);
+    setToastOpen(true);
+  };
+
+  useEffect(() => {
+    if (!toastOpen) return;
+    const t = window.setTimeout(() => setToastOpen(false), 3000);
+    return () => window.clearTimeout(t);
+  }, [toastOpen]);
 
   return (
     <PhoneFrame backgroundImage={darkBg}>
@@ -129,7 +153,11 @@ function EmployerAccessScreen() {
               </Button>
               <p className="mt-2 text-center text-sm text-white/70">
                 Not sure?{" "}
-                <button type="button" className="font-semibold text-white">
+                <button
+                  type="button"
+                  className="font-semibold text-white"
+                  onClick={() => setHelpOpen(true)}
+                >
                   Get Help
                 </button>
               </p>
@@ -137,7 +165,205 @@ function EmployerAccessScreen() {
           )}
         </div>
       </div>
+
+      <Toast open={toastOpen} message="Your request has been sent" />
+      <EmployerHelpDrawer open={helpOpen} onOpenChange={setHelpOpen} />
+      <EmployerTroubleDrawer
+        open={troubleOpen}
+        onOpenChange={setTroubleOpen}
+        onSubmit={handleRequestSent}
+      />
     </PhoneFrame>
+  );
+}
+
+function Toast({ open, message }: { open: boolean; message: string }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={
+        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] " +
+        "transition-all duration-300 ease-out " +
+        (open
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 -translate-y-2")
+      }
+    >
+      <div className="rounded-full border border-white/25 bg-black/45 backdrop-blur-md px-4 py-2 shadow-lg">
+        <p className="text-[13px] text-white">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function EmployerHelpDrawer({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
+        <DrawerHeader className="text-left px-6 pt-8 pb-3">
+          <DrawerTitle className="font-display font-normal text-[28px] leading-[1.15] tracking-tight text-white">
+            Let&rsquo;s get you access.
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="flex-1 overflow-y-auto px-6 pb-8 text-[15px] leading-snug text-white/85">
+          <p>There are two ways to verify your employer:</p>
+
+          <h3 className="mt-6 font-display font-normal text-[18px] text-white">
+            1. Using your email
+          </h3>
+          <p className="mt-3">
+            Enter the email where you received your invitation to Yuna.
+          </p>
+          <p className="mt-3">
+            It might be your work email or a personal one. If you can&rsquo;t
+            remember, search your inbox for &ldquo;Yuna&rdquo; or contact your
+            HR representative.
+          </p>
+
+          <h3 className="mt-6 font-display font-normal text-[18px] text-white">
+            2. Using an access code
+          </h3>
+          <p className="mt-3">
+            Some employers share a single access code with their whole team
+            instead of individual invitations.
+          </p>
+          <p className="mt-3">
+            Check recent emails or Slack messages from your HR or People team,
+            the code is usually there.
+          </p>
+
+          <p className="mt-8 text-center text-[13px] leading-relaxed text-white/75">
+            Still having issues? Email us at{" "}
+            <span className="font-semibold text-white">support@yuna.io</span>{" "}
+            and we will respond within 2 business days.
+          </p>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function EmployerTroubleDrawer({
+  open,
+  onOpenChange,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSubmit: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [employer, setEmployer] = useState("");
+
+  const canSubmit =
+    name.trim().length > 0 && email.trim().length > 0 && employer.trim().length > 0;
+
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setEmail("");
+      setEmployer("");
+    }
+  }, [open]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    onSubmit();
+  };
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
+        <DrawerHeader className="text-left px-6 pt-8 pb-3">
+          <DrawerTitle className="font-display font-normal text-[26px] leading-[1.15] tracking-tight text-white">
+            We&rsquo;re having trouble verifying your employer.
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="flex-1 overflow-y-auto px-6 pb-8">
+          <p className="text-[15px] leading-snug text-white/85">
+            This is probably on our end. Share a few details and our team will
+            reach out within one business day.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3">
+            <TextField
+              surface="dark"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              autoCapitalize="words"
+            />
+            <TextField
+              surface="dark"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <TextField
+              surface="dark"
+              value={employer}
+              onChange={(e) => setEmployer(e.target.value)}
+              placeholder="Employer"
+              autoCapitalize="words"
+            />
+            <Button
+              surface="dark"
+              variant="primary"
+              fullWidth
+              type="submit"
+              disabled={!canSubmit}
+              onMouseDown={(e) => e.preventDefault()}
+              className="mt-2 disabled:opacity-100 disabled:bg-white/15 disabled:text-white/60"
+            >
+              Continue
+            </Button>
+          </form>
+
+          <div className="mt-7">
+            <p className="text-[15px] font-semibold text-white">
+              A few things to try:
+            </p>
+            <ul className="mt-3 flex flex-col gap-2.5">
+              {[
+                "Search your inbox for “Yuna”",
+                "Check with your HR or People team",
+                "If you just enrolled, try again in 24 hours",
+              ].map((label) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2.5 text-[14px] text-white/85"
+                >
+                  <CheckBadge />
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function CheckBadge() {
+  return (
+    <span className="h-[18px] w-[18px] rounded-full bg-success-green flex items-center justify-center shrink-0">
+      <Check size={11} strokeWidth={3} className="text-white" />
+    </span>
   );
 }
 
