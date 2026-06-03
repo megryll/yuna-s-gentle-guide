@@ -63,7 +63,7 @@ function ToggleButton({
           ? "bg-foreground text-background"
           : disabled
             ? "text-muted-foreground/40 cursor-not-allowed"
-            : "text-muted-foreground hover:text-foreground")
+            : "text-muted-foreground active:text-foreground")
       }
     >
       {children}

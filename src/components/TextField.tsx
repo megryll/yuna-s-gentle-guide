@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  *   - "dark"  — dark or photo backgrounds
  *   - "light" — light backgrounds
  *
- * size: "md" (default) | "sm" (compact)
+ * size: "md" (default) | "sm" (compact) | "lg" (large)
  *
  * leading / trailing: optional elements rendered inside the pill on the
  *   left / right (e.g. a status indicator or a send button).
@@ -20,13 +20,18 @@ import { cn } from "@/lib/utils";
  *   warm orange alert tone. Pair with a message line below the field — see
  *   /ds/text-fields for the full pattern. Also sets aria-invalid.
  *
+ * active: holds the border in its opaque (focused) state without focus — for
+ *   runtime states that own the field while the cursor is elsewhere, e.g. the
+ *   chat composer while recording a voice note. Ignored when `error` is set.
+ *
  * Inline focus ring is the border going opaque on focus-within; we do not
  * paint a Tailwind ring because the pill itself is the focus indicator.
  */
 export interface TextFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   surface?: "dark" | "light";
-  size?: "md" | "sm";
+  size?: "md" | "sm" | "lg";
   error?: boolean;
+  active?: boolean;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   containerClassName?: string;
@@ -46,6 +51,11 @@ const SURFACE_DARK = "border-white/30 bg-black/20 focus-within:border-white";
 // pale grounds.
 const SURFACE_LIGHT = "border-foreground/30 bg-white/40 focus-within:border-foreground";
 
+// Active — same opaque border the field shows on focus, held on regardless of
+// focus. Used while the field owns a runtime state (e.g. recording).
+const SURFACE_DARK_ACTIVE = "border-white bg-black/20 focus-within:border-white";
+const SURFACE_LIGHT_ACTIVE = "border-foreground bg-white/40 focus-within:border-foreground";
+
 // Error border — warm orange, keeping each surface's own fill so only the
 // edge reads as "invalid". Focus border stays orange rather than reverting.
 const SURFACE_DARK_ERROR = "border-alert-orange bg-black/20 focus-within:border-alert-orange";
@@ -57,6 +67,9 @@ const SURFACE_LIGHT_ERROR = "border-alert-orange bg-white/40 focus-within:border
 const SIZE_MD = "pl-5 py-1.5 min-h-11 text-sm";
 // Compact — used inside cards (e.g. the gratitude journal rows).
 const SIZE_SM = "pl-4 py-1.5 text-[13px]";
+// Large — roomier pill for hero/standalone fields. Min-height pairs with an
+// icon-lg trailing button (h-11) the way md pairs with icon-sm.
+const SIZE_LG = "pl-6 py-2.5 min-h-14 text-base";
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
   (
@@ -64,6 +77,7 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
       surface = "dark",
       size = "md",
       error = false,
+      active = false,
       leading,
       trailing,
       containerClassName,
@@ -76,19 +90,27 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
       ? surface === "dark"
         ? SURFACE_DARK_ERROR
         : SURFACE_LIGHT_ERROR
-      : surface === "dark"
-        ? SURFACE_DARK
-        : SURFACE_LIGHT;
-    const sizeClass = size === "md" ? SIZE_MD : SIZE_SM;
+      : active
+        ? surface === "dark"
+          ? SURFACE_DARK_ACTIVE
+          : SURFACE_LIGHT_ACTIVE
+        : surface === "dark"
+          ? SURFACE_DARK
+          : SURFACE_LIGHT;
+    const sizeClass = size === "lg" ? SIZE_LG : size === "sm" ? SIZE_SM : SIZE_MD;
     // Inner trailing-aware right padding: small when a control is tucked
     // inside the pill, generous when the field is just text.
     const rightPad = trailing
-      ? size === "md"
-        ? "pr-1.5"
-        : "pr-1"
-      : size === "md"
-        ? "pr-5"
-        : "pr-4";
+      ? size === "lg"
+        ? "pr-2"
+        : size === "md"
+          ? "pr-1.5"
+          : "pr-1"
+      : size === "lg"
+        ? "pr-6"
+        : size === "md"
+          ? "pr-5"
+          : "pr-4";
 
     const inputColor =
       surface === "dark"

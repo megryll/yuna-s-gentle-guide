@@ -273,7 +273,7 @@ function EmotionRow({
           style={{ background: emotion.color }}
         />
         <span className="flex-1 text-[15px] text-white/90">{emotion.name}</span>
-        <span className="text-[14px] font-medium tracking-[0.02em] text-white/75 font-sans-ui">
+        <span className="text-[14px] font-medium tracking-[0.02em] text-white/75">
           {emotion.value}%
         </span>
         <ChevronDown

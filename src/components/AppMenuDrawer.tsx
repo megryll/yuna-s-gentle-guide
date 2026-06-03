@@ -102,14 +102,16 @@ export function AppMenuDrawer({
         }
       >
         <div className="flex items-center justify-between px-5 pt-12 pb-3 shrink-0">
-          <h2 className="font-serif text-xl tracking-tight">Account</h2>
-          <button
+          <h2 className="font-display text-3xl tracking-tight">Account</h2>
+          <Button
+            surface="light"
+            variant="ghost"
+            size="icon"
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
           >
             <X size={14} strokeWidth={1.5} />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -147,7 +149,7 @@ export function AppMenuDrawer({
                     key={r.label}
                     onClick={() => { r.onClick?.(); onOpenChange(false); }}
                     className={
-                      "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent transition-colors " +
+                      "w-full flex items-center gap-3 px-4 py-3 text-left active:bg-accent transition-colors " +
                       (i > 0 ? "border-t border-border" : "")
                     }
                   >
@@ -171,7 +173,7 @@ export function AppMenuDrawer({
           <div className="mt-8 rounded-2xl hairline overflow-hidden bg-background">
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-accent transition-colors"
             >
               <span className="h-8 w-8 flex items-center justify-center text-foreground shrink-0">
                 <LogoutIcon />
@@ -180,7 +182,7 @@ export function AppMenuDrawer({
             </button>
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/10 transition-colors border-t border-border"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive active:bg-destructive/10 transition-colors border-t border-border"
             >
               <span className="h-8 w-8 flex items-center justify-center shrink-0">
                 <TrashIcon />

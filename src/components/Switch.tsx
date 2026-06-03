@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 /**
  * Switch — iOS-style toggle.
  *
- * On-state uses the `--success-green` token. Off-state uses a translucent
+ * On-state uses the `--yuna-green` token. Off-state uses a translucent
  * foreground fill so it adapts to light/dark surfaces. Thumb is a small
- * white circle that slides between ends.
+ * white circle that slides between ends. Pass `disabled` to dim the control
+ * and block toggling.
  */
 export interface SwitchProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> {
@@ -16,7 +17,7 @@ export interface SwitchProps
 }
 
 export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ checked, onChange, label, className, ...props }, ref) => {
+  ({ checked, onChange, label, disabled, className, ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -24,11 +25,13 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         role="switch"
         aria-checked={checked}
         aria-label={label}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
           "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
-          checked ? "bg-success-green" : "bg-foreground/20",
+          "disabled:cursor-not-allowed disabled:opacity-40",
+          checked ? "bg-yuna-green" : "bg-foreground/20",
           className,
         )}
         {...props}

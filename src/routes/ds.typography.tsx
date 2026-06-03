@@ -23,8 +23,8 @@ type ScaleRow = {
 };
 
 const SCALE: ScaleRow[] = [
-  { size: "text-3xl", px: 30, family: "display", role: "Page hero — auth, intro, employer access" },
-  { size: "text-2xl", px: 24, family: "display", role: "Section hero — drawer titles, you page" },
+  { size: "text-3xl", px: 30, family: "display", role: "Page hero & drawer titles — auth, intro, employer access" },
+  { size: "text-2xl", px: 24, family: "display", role: "Section hero — you page" },
   { size: "text-xl", px: 20, family: "display", role: "Large heading inside cards" },
   { size: "text-[18px]", px: 18, family: "body", role: "Body emphasis, drawer body copy" },
   { size: "text-[17px]", px: 17, family: "body", role: "Join drawer option labels" },
@@ -50,10 +50,7 @@ function DSTypography() {
       }
     >
       {/* ─── Families ───────────────────────────────────────────────────── */}
-      <Section
-        title="Families"
-        subtitle="The two families and where each is allowed."
-      >
+      <Section title="Families">
         <div className="grid grid-cols-1 gap-3">
           <FamilyCard
             family="Fraunces"
@@ -82,7 +79,7 @@ function DSTypography() {
       {/* ─── Scale ──────────────────────────────────────────────────────── */}
       <Section
         title="Scale"
-        subtitle="Sizes actually in use across the app. Arbitrary `text-[Npx]` sizes are intentional — the rounded Tailwind scale doesn't hit the integer pixel sizes the design needs at this density."
+        subtitle="Arbitrary text-[Npx] sizes are intentional — Tailwind's rounded scale doesn't hit the integer sizes the design needs."
       >
         <div className="rounded-2xl border border-border overflow-hidden">
           <table className="w-full text-sm">
@@ -115,7 +112,7 @@ function DSTypography() {
       {/* ─── On photo bgs ────────────────────────────────────────────────── */}
       <Section
         title="On photo backgrounds"
-        subtitle="The cluster the user reads against. Body copy + meta labels must clear the alpha contrast floors enforced by the shim blocks in src/styles.css."
+        subtitle="Body and meta labels must clear the alpha contrast floors enforced by the shims in src/styles.css."
       >
         <SurfacePair
           align="start"
@@ -190,7 +187,7 @@ function DSTypography() {
       {/* ─── Weights ────────────────────────────────────────────────────── */}
       <Section
         title="Weights"
-        subtitle="Available Stara + Fraunces weights. Don't reach for weights not listed — they won't ship."
+        subtitle="Don't reach for weights not listed — they won't ship."
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-2xl border border-border p-5">

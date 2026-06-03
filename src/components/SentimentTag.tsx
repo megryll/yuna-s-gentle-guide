@@ -9,15 +9,16 @@ import { useAppMode, type AppMode } from "@/lib/theme-prefs";
 
 export type SentimentTone = "positive" | "negative";
 
-// Tones reuse the toast fill tokens so positive/negative signals read as the
-// same green/orange language across sliders, sentiment pills, and toasts.
+// Positive reuses the brand yuna-green (same as the sliders); negative the
+// toast alert orange — so positive/negative signals read as one green/orange
+// language across sliders, sentiment pills, and toasts.
 const TONE_COLOR_DARK: Record<SentimentTone, string> = {
-  positive: "var(--success-green)",
+  positive: "var(--yuna-green)",
   negative: "var(--alert-orange)",
 };
 
 const TONE_COLOR_LIGHT: Record<SentimentTone, string> = {
-  positive: "var(--success-green)",
+  positive: "var(--yuna-green)",
   negative: "var(--alert-orange)",
 };
 

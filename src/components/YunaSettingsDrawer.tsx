@@ -75,7 +75,7 @@ export function YunaSettingsDrawer({
         {screen === "main" ? (
           <>
             <DrawerHeader className="text-left px-6 pt-2">
-              <DrawerTitle className="font-serif text-xl tracking-tight">
+              <DrawerTitle className="font-display text-3xl tracking-tight">
                 Personalize Yuna
               </DrawerTitle>
             </DrawerHeader>
@@ -127,6 +127,7 @@ export function YunaSettingsDrawer({
             )}
             {screen === "pace" && (
               <Slider
+                surface="light"
                 steps={PACE_STEPS}
                 value={paceIdx}
                 onChange={setPaceIdx}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown as ChevronDownIcon } from "lucide-react";
+import { Button } from "@/components/Button";
 import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -23,15 +24,12 @@ export function YunaHeaderTrigger({
 
   return (
     <>
-      <button
+      <Button
+        surface={isDark ? "dark" : "light"}
+        variant="secondary"
         onClick={() => setOpen(true)}
         aria-label="Open Yuna settings"
-        className={
-          "h-9 px-3 rounded-full flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase transition-colors " +
-          (isDark
-            ? "border border-white/40 text-white active:bg-white/15"
-            : "hairline hover:bg-accent")
-        }
+        className="h-9 gap-2 px-3 text-[11px] uppercase tracking-[0.2em]"
       >
         <span
           className={
@@ -45,7 +43,7 @@ export function YunaHeaderTrigger({
         </span>
         Yuna
         <ChevronDown />
-      </button>
+      </Button>
       <YunaSettingsDrawer open={open} onOpenChange={setOpen} />
     </>
   );

@@ -41,7 +41,7 @@ function ToggleButton({
       aria-pressed={active}
       className={
         "text-[11px] tracking-wide px-3 py-1 rounded-full transition-colors " +
-        (active ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")
+        (active ? "bg-foreground text-background" : "text-muted-foreground active:text-foreground")
       }
     >
       {children}

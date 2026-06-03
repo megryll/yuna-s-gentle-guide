@@ -24,22 +24,11 @@ function DSToasts() {
           </p>
           <h1 className="text-3xl tracking-tight">Toast Alerts</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
-            A brief notification pill that appears at the top of a screen — the
-            calmer replacement for the old full-bleed OS banners. The whole pill
-            carries the variant color as a solid fill, with a bare glyph and copy
-            in a deep tonal ink — a darkened shade of the fill itself. Three
-            semantic variants:{" "}
-            <code className="text-xs">error</code> (warm orange, never red),{" "}
-            <code className="text-xs">neutral</code> (a monochrome chip that
-            inverts to its surface), and{" "}
-            <code className="text-xs">success</code>. Pick a{" "}
-            <code className="text-xs">surface</code> for the background it sits
-            on, and pass <code className="text-xs">onDismiss</code> for a close
-            button.
+            A brief notification pill at the top of a screen.
           </p>
         </header>
 
-        <Section title="Surface: dark" subtitle="Use on dark or photo backgrounds.">
+        <Section title="Surface: dark">
           <DarkSurface>
             <div className="flex flex-col gap-3 max-w-sm">
               <Toast
@@ -61,7 +50,7 @@ function DSToasts() {
           </DarkSurface>
         </Section>
 
-        <Section title="Surface: light" subtitle="Use on light backgrounds.">
+        <Section title="Surface: light">
           <LightSurface>
             <div className="flex flex-col gap-3 max-w-sm">
               <Toast
@@ -83,10 +72,7 @@ function DSToasts() {
           </LightSurface>
         </Section>
 
-        <Section
-          title="With a title"
-          subtitle="An optional bold title above the message for richer alerts."
-        >
+        <Section title="With a title">
           <div className="grid grid-cols-2 gap-4">
             <DarkSurface>
               <div className="max-w-sm">
@@ -111,10 +97,7 @@ function DSToasts() {
           </div>
         </Section>
 
-        <Section
-          title="Dismissible"
-          subtitle="Pass onDismiss to show a close button on the right."
-        >
+        <Section title="Dismissible">
           <div className="grid grid-cols-2 gap-4">
             <DarkSurface>
               <div className="max-w-sm">
@@ -140,7 +123,7 @@ function DSToasts() {
           </div>
         </Section>
 
-        <Section title="Props" subtitle="Type signature.">
+        <Section title="Props">
           <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
 {`<Toast
   variant?:   "error" | "neutral" | "success"   // default: "neutral"

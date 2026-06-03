@@ -53,7 +53,7 @@ export function SchedulePrioritizeDrawer({
             <CalendarClock size={26} strokeWidth={1.6} className="text-white" aria-hidden />
           </span>
 
-          <DrawerTitle className="mt-6 font-display font-normal text-[30px] leading-[1.12] tracking-tight text-white">
+          <DrawerTitle className="mt-6 font-display font-normal text-3xl leading-[1.12] tracking-tight text-white">
             Schedule To Prioritize Yourself
           </DrawerTitle>
 
@@ -93,7 +93,7 @@ export function SchedulePrioritizeDrawer({
 
 function Chip({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-[13px] text-white/85 font-sans-ui">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-[13px] text-white/85">
       <span className="text-white/70">{icon}</span>
       {children}
     </span>

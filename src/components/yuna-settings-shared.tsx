@@ -9,6 +9,7 @@ import {
   Pause,
   Play,
 } from "lucide-react";
+import { Button } from "@/components/Button";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
 import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
@@ -67,15 +68,17 @@ export function SubScreen({
   return (
     <>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pt-2 pb-3 yuna-fade-in">
-        <button
+        <Button
+          surface="light"
+          variant="ghost"
+          size="icon"
           onClick={onBack}
           aria-label="Back"
-          className="h-10 w-10 rounded-full flex items-center justify-center active:bg-accent transition-colors"
         >
           <ChevronLeftIcon />
-        </button>
-        <h2 className="font-serif text-lg tracking-tight text-center">{title}</h2>
-        <span className="h-10 w-10" aria-hidden="true" />
+        </Button>
+        <h2 className="font-display text-lg tracking-tight text-center">{title}</h2>
+        <span className="h-9 w-9" aria-hidden="true" />
       </div>
       <div className="flex-1 overflow-y-auto px-6 pb-10 yuna-fade-in">{children}</div>
     </>
@@ -453,20 +456,23 @@ function VoiceIntroCard({
       )}
 
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2.5">
-        <button
+        <Button
+          surface="dark"
+          variant="secondary"
+          size="sm"
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onTogglePlay();
           }}
-          type="button"
-          className="self-start flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm active:bg-white/25"
+          className="self-start gap-1.5 bg-white/15 backdrop-blur-sm active:bg-white/25"
           aria-label={playing ? "Pause voice preview" : "Play voice preview"}
         >
           {playing ? <PausePill /> : <PlayPill />}
           <span className="text-[11px] tracking-[0.1em] uppercase text-white">
             {playing ? "Pause" : "Play"}
           </span>
-        </button>
+        </Button>
         <p className="text-[14px] leading-snug text-white/90">{voice.desc}</p>
       </div>
     </div>

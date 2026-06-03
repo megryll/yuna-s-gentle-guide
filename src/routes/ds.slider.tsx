@@ -15,7 +15,7 @@ export const Route = createFileRoute("/ds/slider")({
       {
         name: "description",
         content:
-          "Stepped slider — Yuna-green rail wraps a white circular dial.",
+          "Thin slider — linear (stepped) and bipolar (center-out) variants.",
       },
     ],
   }),
@@ -28,46 +28,78 @@ function DSSlider() {
   return (
     <DSPage
       title="Slider"
-      intro={
-        <>
-          Stepped slider for ordered choices over a small finite set (voice
-          pace, intensity, volume). The rail uses{" "}
-          <code className="text-xs">--yuna-green</code> — sampled from the
-          Yuna avatar mark — and wraps a white circular dial that bulges a few
-          pixels above and below the rail edge.
-        </>
-      }
+      intro="A thin rail with a small thumb. Linear runs left-to-right across a set of steps; bipolar rests at the center and grows out into positive or negative."
     >
-      <Section title="Default" subtitle="Card-wrapped with a caps-tracked label.">
-        <SurfacePair renderRow={() => <Demo />} align="start" />
+      <Section
+        title="Linear"
+        subtitle="Stepped, left-to-right — for an ordered set like voice pace. value is the 0-based step index; the green fill grows from the left to the thumb."
+      >
+        <SurfacePair align="start" renderRow={(surface) => <LinearDemo surface={surface} />} />
       </Section>
 
-      <Section title="Props" subtitle="Type signature.">
+      <Section
+        title="Bipolar"
+        subtitle="Center-out rating — the thumb starts at the midpoint. value runs -1 → 1; the fill turns green toward the positive end, orange toward the negative."
+      >
+        <SurfacePair align="start" renderRow={(surface) => <BipolarDemo surface={surface} />} />
+      </Section>
+
+      <Section title="Props">
         <PropsBlock>{`<Slider
-  steps:    readonly string[]        // step labels; length = step count
-  value:    number                   // 0-based index of selected step
-  onChange: (idx: number) => void
-  label?:   string                   // caps-tracked label above the rail
-  bare?:    boolean                  // drop the surrounding card frame
+  variant?:    "linear" | "bipolar"   // default "linear"
+  value:       number                  // linear: step index · bipolar: -1..1
+  onChange:    (value: number) => void
+  surface?:    "dark" | "light"        // default "dark"
+
+  // linear
+  steps?:      readonly string[]       // labels below the rail; length = step count
+  label?:      string                  // caps-tracked label above the rail
+
+  // bipolar
+  leftLabel?:  string                  // negative-end label, above the rail
+  rightLabel?: string                  // positive-end label, above the rail
+  touched?:    boolean                 // emphasise the active end once moved
 />
 
-// Keyboard: ArrowLeft/Down decrements, ArrowRight/Up increments.
-// Tap or drag anywhere on the rail snaps to the nearest step.
+// Keyboard: arrow keys step the thumb. Tap or drag anywhere on the rail.
 `}</PropsBlock>
       </Section>
     </DSPage>
   );
 }
 
-function Demo() {
+function LinearDemo({ surface }: { surface: "dark" | "light" }) {
   const [idx, setIdx] = useState(2);
   return (
     <div className="w-full max-w-sm">
       <Slider
+        variant="linear"
+        surface={surface}
         steps={PACE_STEPS}
         value={idx}
         onChange={setIdx}
         label="Voice pace"
+      />
+    </div>
+  );
+}
+
+function BipolarDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState(0);
+  const [touched, setTouched] = useState(false);
+  return (
+    <div className="w-full max-w-sm">
+      <Slider
+        variant="bipolar"
+        surface={surface}
+        value={value}
+        onChange={(v) => {
+          setValue(v);
+          setTouched(true);
+        }}
+        leftLabel="Increased stress"
+        rightLabel="Decreased stress"
+        touched={touched}
       />
     </div>
   );

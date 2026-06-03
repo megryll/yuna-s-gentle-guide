@@ -100,7 +100,7 @@ function EmployerAccessScreen() {
         </div>
 
         <div className="mt-8 text-center yuna-rise">
-          <h1 className="font-serif text-[30px] leading-[1.1] tracking-tight">
+          <h1 className="font-display text-[30px] leading-[1.1] tracking-tight">
             {unlocked ? "You're in." : "Your benefit is waiting."}
           </h1>
           <p className="mt-3 text-[15px] leading-snug text-white/80">
@@ -224,8 +224,8 @@ function EmployerHelpDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
-        <DrawerHeader className="text-left px-6 pt-8 pb-3">
-          <DrawerTitle className="font-display font-normal text-[28px] leading-[1.15] tracking-tight text-white">
+        <DrawerHeader className="text-left px-6 pt-8 pb-6">
+          <DrawerTitle className="font-display font-normal text-3xl leading-[1.15] tracking-tight text-white">
             Let&rsquo;s get you access.
           </DrawerTitle>
         </DrawerHeader>
@@ -307,8 +307,8 @@ function EmployerTroubleDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
-        <DrawerHeader className="text-left px-6 pt-8 pb-3">
-          <DrawerTitle className="font-display font-normal text-[26px] leading-[1.15] tracking-tight text-white">
+        <DrawerHeader className="text-left px-6 pt-8 pb-6">
+          <DrawerTitle className="font-display font-normal text-3xl leading-[1.15] tracking-tight text-white">
             We&rsquo;re having trouble verifying your employer.
           </DrawerTitle>
         </DrawerHeader>
@@ -357,7 +357,7 @@ function EmployerTroubleDrawer({
               type="submit"
               disabled={!canSubmit}
               onMouseDown={(e) => e.preventDefault()}
-              className="mt-2 disabled:opacity-100 disabled:bg-white/15 disabled:text-white/60"
+              className="mt-2"
             >
               Continue
             </Button>
@@ -391,7 +391,7 @@ function EmployerTroubleDrawer({
 
 function CheckBadge() {
   return (
-    <span className="h-[18px] w-[18px] rounded-full bg-success-green flex items-center justify-center shrink-0">
+    <span className="h-[18px] w-[18px] rounded-full bg-yuna-green flex items-center justify-center shrink-0">
       <Check size={11} strokeWidth={3} className="text-white" />
     </span>
   );
@@ -521,7 +521,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
 
       <div className="relative px-5 pt-5 pb-4">
         <div className="flex items-start justify-between">
-          <h3 className="font-serif text-[22px] leading-[1.05] tracking-tight">
+          <h3 className="font-display text-[22px] leading-[1.05] tracking-tight">
             Unlimited Access
           </h3>
           <img
@@ -536,7 +536,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
             className={
               "text-[11px] tracking-[0.2em] uppercase px-2.5 h-6 inline-flex items-center rounded-full " +
               (unlocked
-                ? "bg-success-green text-white shadow-[0_0_10px_rgba(102,186,36,0.55)]"
+                ? "bg-yuna-green text-white shadow-[0_0_10px_rgba(102,186,36,0.55)]"
                 : "bg-transparent text-white border border-white/40")
             }
           >
@@ -550,7 +550,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
               <Check
                 size={13}
                 strokeWidth={2.5}
-                className={unlocked ? "text-success-green" : "text-white"}
+                className={unlocked ? "text-yuna-green" : "text-white"}
               />
               <span>{label}</span>
             </div>
@@ -645,7 +645,7 @@ function Waveform({
           key={i}
           className={
             "w-[2px] rounded-[1px] " +
-            (tinted ? "bg-success-green/75" : "bg-white/25")
+            (tinted ? "bg-yuna-green/75" : "bg-white/25")
           }
           style={{ height: `${h}px` }}
         />

@@ -25,11 +25,13 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
 5. **No hover states — this is a mobile prototype.** Use `active:` for pressed feedback (already in DS Button). Only `focus-visible:` (keyboard a11y) and `disabled:` are allowed beyond `active:`.
 
-6. **Fonts.**
+6. **Fonts — two families only.**
    - Body copy + button labels: Stara (set on `body`; Buttons inherit it)
-   - Headings (`h1`–`h6`): Fraunces — applied by global selector, also available as `.font-display`
-   - Utility / micro-copy (uppercase tracked labels, numerics): `font-sans-ui`
+   - Headings (`h1`–`h6`): Fraunces — applied by global selector, also available as `.font-display`. Use `font-display`, never Tailwind's `font-serif` (that's a generic serif stack, not Fraunces).
+   - Tracked-uppercase labels, eyebrows, and numerics stay in Stara — don't reach for a system sans.
+   - `font-sans-ui` (system sans) is **not** a third design font. It's reserved exclusively for simulated device/OS chrome — keyboard keys, push-notification banners, the iOS permission dialog. Never use it for app content.
    - Don't add a new font without explicit DS approval.
+   - Drawer titles are `text-3xl` (30px) — the one drawer-title size in the DS scale. Don't introduce per-drawer sizes.
 
 7. **Don't inline-style for color, spacing, or typography.** If you reach for `style={{ backgroundColor: ... }}` on a button, that's a sign to add a variant or token instead. Inline styles are OK only for runtime layout math (keyboard offset, animation transforms, etc.).
 
@@ -88,6 +90,6 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 - [ ] Build passes (`npm run build`)
 - [ ] DS page reflects any source-component changes
 - [ ] No new hardcoded button/input/card markup that should be DS-driven
-- [ ] No `font-sans-ui` on body-copy elements (Stara should win there)
+- [ ] No `font-sans-ui` outside simulated OS chrome (Stara wins for all app content)
 - [ ] No `hover:` states added (active: only)
 - [ ] Padding matches the cluster rules

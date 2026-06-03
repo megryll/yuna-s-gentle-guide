@@ -25,19 +25,12 @@ function DSButtons() {
             Design System
           </p>
           <h1 className="text-3xl tracking-tight">Buttons</h1>
-          <p className="mt-3 max-w-xl text-sm text-muted-foreground leading-relaxed">
-            One root <code className="text-xs">Button</code> drives every CTA.
-            Pick a <code className="text-xs">surface</code> (the background it sits on), a{" "}
-            <code className="text-xs">variant</code> (fill style), and a{" "}
-            <code className="text-xs">size</code>. Each variant below is shown on both
-            surfaces.
-          </p>
         </header>
 
         {/* ─── Variants × text sizes ───────────────────────────────────────── */}
         <Section
           title="Primary"
-          subtitle="Solid fill — strongest CTA. Use sparingly: one primary per screen."
+          subtitle="One primary per screen."
         >
           <SurfacePair
             renderRow={(surface) => (
@@ -54,7 +47,7 @@ function DSButtons() {
 
         <Section
           title="Secondary"
-          subtitle="Outlined, no fill — supporting actions. Also the off-state for toggle buttons."
+          subtitle="Also the off-state for toggle buttons."
         >
           <SurfacePair
             renderRow={(surface) => (
@@ -69,10 +62,7 @@ function DSButtons() {
           />
         </Section>
 
-        <Section
-          title="Ghost"
-          subtitle="No border or fill — text-only affordances."
-        >
+        <Section title="Ghost">
           <SurfacePair
             renderRow={(surface) => (
               <Row>
@@ -87,16 +77,7 @@ function DSButtons() {
         </Section>
 
         {/* ─── Icon buttons — sizes, toggle, label-below all together ─────── */}
-        <Section
-          title="Icon buttons"
-          subtitle={
-            <>
-              <code className="text-[11px]">size="icon-sm" | "icon" | "icon-lg"</code>.
-              Pass <code className="text-[11px]">pressed</code> to flip into primary (toggle state).
-              Pass <code className="text-[11px]">label</code> on icon sizes to render a small caption underneath.
-            </>
-          }
-        >
+        <Section title="Icon buttons">
           {/* Sizes */}
           <SurfacePair
             innerLabel="Sizes"
@@ -143,7 +124,7 @@ function DSButtons() {
         {/* ─── States ──────────────────────────────────────────────────────── */}
         <Section
           title="States"
-          subtitle="Default, focused, disabled. Tap and hold a button to feel the pressed (active:) state — there are no hover states."
+          subtitle="Tap and hold to feel the pressed state; there are no hover states."
         >
           <SurfacePair
             renderRow={(surface) => (
@@ -157,7 +138,7 @@ function DSButtons() {
         </Section>
 
         {/* ─── Props reference ────────────────────────────────────────────── */}
-        <Section title="Props" subtitle="Type signature.">
+        <Section title="Props">
           <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
 {`<Button
   surface?:  "dark" | "light"                          // default: "light"

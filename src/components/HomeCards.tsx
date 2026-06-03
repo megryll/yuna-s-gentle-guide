@@ -12,6 +12,7 @@ import {
   type CardKindMeta,
   type HomeCard,
 } from "@/lib/home-cards";
+import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { TextField } from "@/components/TextField";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -324,14 +325,15 @@ function AffirmationCard({
       </div>
       <CardFooter
         primary={
-          <button
-            type="button"
+          <Button
+            surface="dark"
+            variant="secondary"
+            size="icon"
             onClick={onClick}
             aria-label="Play affirmation"
-            className="h-10 w-10 rounded-full border border-white/30 text-white inline-flex items-center justify-center active:bg-white/10 transition-colors"
           >
             <Play size={16} strokeWidth={2} fill="currentColor" aria-hidden />
-          </button>
+          </Button>
         }
         isSaved={isSaved}
         onToggleSave={onToggleSave}
@@ -621,20 +623,15 @@ function CardCTA({
   onClick: () => void;
   children: React.ReactNode;
 }) {
-  const isDark = tone === "dark";
   return (
-    <button
-      type="button"
+    <Button
+      surface={tone === "dark" ? "dark" : "light"}
+      variant="secondary"
       onClick={onClick}
-      className={
-        "inline-flex items-center justify-center rounded-full px-5 h-10 text-[12.5px] font-medium tracking-[0.1em] uppercase border-[1.5px] active:bg-white/10 transition-colors " +
-        (isDark
-          ? "border-white/40 text-white"
-          : "border-neutral-900/55 text-neutral-900")
-      }
+      className="h-10 px-5 text-[12.5px] font-medium uppercase tracking-[0.1em]"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 

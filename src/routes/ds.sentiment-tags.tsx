@@ -29,24 +29,9 @@ const PALETTE = [
 
 function DSSentimentTags() {
   return (
-    <DSPage
-      title="Sentiment tags"
-      intro={
-        <>
-          A frosted pill with a hairline border and a small colored dot
-          indicating the emotion family. Used to surface session tags and
-          reflection highlights. Always display-only — non-interactive label.
-          The dot color is set via the{" "}
-          <code className="text-xs">tone</code> shortcut or an
-          explicit <code className="text-xs">dotColor</code> hex.
-        </>
-      }
-    >
+    <DSPage title="Sentiment tags">
       {/* ─── Display — examples on both surfaces ─────────────────────────── */}
-      <Section
-        title="Display"
-        subtitle="Non-interactive label. Renders as a static <span> at the size used in the prototype."
-      >
+      <Section title="Display">
         <SurfacePair
           align="start"
           renderRow={(surface) => (
@@ -72,10 +57,7 @@ useSentimentToneColor(): (tone: SentimentTone) => string`}</PropsBlock>
       </Section>
 
       {/* ─── Palette catalogue ──────────────────────────────────────────── */}
-      <Section
-        title="Dot palette"
-        subtitle="The full emotion-color set used across the app. Each hue maps to an emotion family."
-      >
+      <Section title="Dot palette">
         <div className="grid grid-cols-2 gap-2">
           {PALETTE.map((p) => (
             <div
@@ -101,4 +83,3 @@ useSentimentToneColor(): (tone: SentimentTone) => string`}</PropsBlock>
     </DSPage>
   );
 }
-

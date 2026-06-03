@@ -919,7 +919,7 @@ function Chat() {
                     }}
                     placeholder={recordingVoice ? "" : "Type a Message..."}
                     readOnly={recordingVoice}
-                    containerClassName={recordingVoice ? "border-white" : undefined}
+                    active={recordingVoice}
                     className={recordingVoice ? "hidden" : "disabled:opacity-60"}
                     leading={recordingVoice ? <Waveform analyser={voiceAnalyser} /> : undefined}
                     trailing={

@@ -37,7 +37,6 @@ const PAGES: Entry[] = [
   { label: "Focus area 2", to: "/focus-area/2", sub: true },
   { label: "Tools", to: "/tools" },
   { label: "Sessions", to: "/sessions" },
-  { label: "Progress", to: "/progress" },
   { label: "Settings", to: "/settings" },
 ];
 

@@ -122,10 +122,9 @@
   --color-alert-red: var(--alert-red);
   --color-alert-orange: var(--alert-orange);
   --color-alert-orange-foreground: var(--alert-orange-foreground);
-  --color-success-green: var(--success-green);
-  --color-success-green-foreground: var(--success-green-foreground);
   --color-yuna-green: var(--yuna-green);
   --color-yuna-green-deep: var(--yuna-green-deep);
+  --color-yuna-green-foreground: var(--yuna-green-foreground);
 }
 
 :root {
@@ -174,15 +173,15 @@
   /* Deep tonal ink for text/glyphs sitting on the alert-orange fill
      (e.g. solid Toast). ~5.2:1 on #F2994A — clears AA for body text. */
   --alert-orange-foreground: #572F0F;
-  --success-green: #34C759;
-  /* Deep tonal ink for text/glyphs on the success-green fill. ~4.7:1 on
-     #34C759 — clears AA for body text. */
-  --success-green-foreground: #124927;
-  /* Yuna brand green — sampled from the avatar mark (avatar.png).
-     Used for selection/progress in branded controls (e.g. Slider fill). */
+  /* Yuna brand green — sampled from the avatar mark (avatar.png). The single
+     "positive / on / progress" green across the app: slider fills, switches,
+     sentiment pills, and the success Toast. */
   --yuna-green: #66BA24;
   /* Slightly deeper variant for thumbs / pressed states. */
   --yuna-green-deep: #4D9C1A;
+  /* Deep tonal ink for text/glyphs sitting on the yuna-green fill (e.g. the
+     success Toast). ~5:1 on #66BA24 — clears AA for body text. */
+  --yuna-green-foreground: #0F3D20;
 }
 
 .dark {

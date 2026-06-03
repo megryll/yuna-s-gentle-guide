@@ -818,15 +818,17 @@ function VoicePad({
               <span className="text-[12px] uppercase tracking-[0.18em]">
                 {listening ? "Release to send" : "Hold to talk"}
               </span>
-              <button
-                type="button"
+              <Button
+                surface="dark"
+                variant="ghost"
+                size="icon-sm"
                 aria-label="Voice options"
                 onClick={onOpenModeDrawer}
                 onPointerDown={stopPress}
-                className="ml-1 inline-flex items-center justify-center w-7 h-7 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
+                className="ml-1"
               >
                 <MoreDotsGlyph />
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="inline-flex items-center gap-2">
@@ -842,14 +844,15 @@ function VoicePad({
                 {muted ? <MicOffGlyph /> : <MicGlyph />}
                 {muted ? "Unmute mic" : "Mute mic"}
               </Button>
-              <button
-                type="button"
+              <Button
+                surface="dark"
+                variant="ghost"
+                size="icon"
                 aria-label="Voice options"
                 onClick={onOpenModeDrawer}
-                className="inline-flex items-center justify-center w-9 h-9 rounded-full text-white/75 active:text-white active:bg-white/10 transition-colors"
               >
                 <MoreDotsGlyph />
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -894,7 +897,7 @@ function ModeDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="rounded-t-[1.5rem]">
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
-          <DrawerTitle className="font-display font-normal text-xl tracking-tight">
+          <DrawerTitle className="font-display font-normal text-3xl tracking-tight">
             Voice mode
           </DrawerTitle>
         </DrawerHeader>

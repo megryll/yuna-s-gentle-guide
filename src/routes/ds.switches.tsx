@@ -15,22 +15,8 @@ export const Route = createFileRoute("/ds/switches")({
 
 function DSSwitches() {
   return (
-    <DSPage
-      title="Switches"
-      intro={
-        <>
-          iOS-style on/off toggle for binary settings. On-state uses{" "}
-          <code className="text-xs">--success-green</code>;
-          off-state uses <code className="text-xs">foreground/20</code>{" "}
-          so it adapts to either surface. The thumb is always a white circle
-          with a soft shadow.
-        </>
-      }
-    >
-      <Section
-        title="States"
-        subtitle="Off and on, in both modes. Tap any switch to toggle."
-      >
+    <DSPage title="Switches">
+      <Section title="States">
         <SurfacePair
           renderRow={(surface) => <SwitchStates surface={surface} />}
         />
@@ -38,23 +24,20 @@ function DSSwitches() {
 
       <Section
         title="With label"
-        subtitle="Pair with a label using a flex row. The label is the click target via Switch's `aria-label`; visible text uses a sibling span."
+        subtitle="Wrap in a <label> so the visible text is part of the tap target."
       >
         <SurfacePair
           renderRow={(surface) => <SwitchWithLabel surface={surface} />}
         />
       </Section>
 
-      <Section
-        title="Inside a settings row"
-        subtitle="The dominant call site — settings drawers. Row is hairline-bordered, label left, switch right."
-      >
+      <Section title="Inside a settings row">
         <SurfacePair
           renderRow={(surface) => <SwitchRow surface={surface} />}
         />
       </Section>
 
-      <Section title="Props" subtitle="Type signature.">
+      <Section title="Props">
         <PropsBlock>{`<Switch
   checked:  boolean
   onChange: (next: boolean) => void
@@ -86,6 +69,12 @@ function SwitchStates({ surface }: { surface: "dark" | "light" }) {
         <Switch checked={off} onChange={setOff} label="Off example" />
         <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
           Off
+        </span>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <Switch checked disabled onChange={() => {}} label="Disabled example" />
+        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
+          Disabled
         </span>
       </div>
     </div>

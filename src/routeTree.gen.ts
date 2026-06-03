@@ -15,12 +15,10 @@ import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
-import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
-import { Route as EmotionTrendsRouteImport } from './routes/emotion-trends'
 import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -66,11 +64,6 @@ const SessionsRoute = SessionsRouteImport.update({
   path: '/sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProgressRoute = ProgressRouteImport.update({
-  id: '/progress',
-  path: '/progress',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -89,11 +82,6 @@ const HomeRoute = HomeRouteImport.update({
 const EmployerAccessRoute = EmployerAccessRouteImport.update({
   id: '/employer-access',
   path: '/employer-access',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmotionTrendsRoute = EmotionTrendsRouteImport.update({
-  id: '/emotion-trends',
-  path: '/emotion-trends',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreatingYourSpaceRoute = CreatingYourSpaceRouteImport.update({
@@ -173,12 +161,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
-  '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
-  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -201,12 +187,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
-  '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
-  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -230,12 +214,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
-  '/emotion-trends': typeof EmotionTrendsRoute
   '/employer-access': typeof EmployerAccessRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
-  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -260,12 +242,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
-    | '/emotion-trends'
     | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
-    | '/progress'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -288,12 +268,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
-    | '/emotion-trends'
     | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
-    | '/progress'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -316,12 +294,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
-    | '/emotion-trends'
     | '/employer-access'
     | '/home'
     | '/intro'
     | '/login'
-    | '/progress'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -345,12 +321,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
-  EmotionTrendsRoute: typeof EmotionTrendsRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
   LoginRoute: typeof LoginRoute
-  ProgressRoute: typeof ProgressRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
@@ -412,13 +386,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/progress': {
-      id: '/progress'
-      path: '/progress'
-      fullPath: '/progress'
-      preLoaderRoute: typeof ProgressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -445,13 +412,6 @@ declare module '@tanstack/react-router' {
       path: '/employer-access'
       fullPath: '/employer-access'
       preLoaderRoute: typeof EmployerAccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/emotion-trends': {
-      id: '/emotion-trends'
-      path: '/emotion-trends'
-      fullPath: '/emotion-trends'
-      preLoaderRoute: typeof EmotionTrendsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/creating-your-space': {
@@ -561,12 +521,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CreatingYourSpaceRoute: CreatingYourSpaceRoute,
-  EmotionTrendsRoute: EmotionTrendsRoute,
   EmployerAccessRoute: EmployerAccessRoute,
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
   LoginRoute: LoginRoute,
-  ProgressRoute: ProgressRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,

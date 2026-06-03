@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { Slider } from "@/components/Slider";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useSentimentToneColor } from "@/components/SentimentTag";
@@ -33,16 +33,6 @@ const MIN_LOADING_MS = 1250;
 
 // Two list-view home cards Yuna surfaces as new activities for this session.
 const PLACED_FOR_YOU: HomeCard[] = HOME_CARDS.filter((c) => c.isNew).slice(0, 2);
-
-// Center-out sliders share these colors. Mint green for the positive
-// direction, warm peach for the negative — both pulled from the wrap-up
-// emotion palette so they sit naturally with the rest of the screen.
-// Mode-aware so the slider tracks match the SentimentTag pills above
-// them in either light or dark mode.
-function useSliderColors() {
-  const toneColor = useSentimentToneColor();
-  return { positive: toneColor("positive"), negative: toneColor("negative") };
-}
 
 // Palette tying each detected emotion to a soft, readable hue. Real impl
 // would classify the transcript server-side; this prototype hardcodes the
@@ -310,14 +300,18 @@ function ReflectionSection({
       </h2>
 
       <div className="flex flex-col gap-9">
-        <SentimentSlider
+        <Slider
+          variant="bipolar"
+          surface="dark"
           leftLabel="Increased stress"
           rightLabel="Decreased stress"
           value={stress}
           touched={stressTouched}
           onChange={onStressChange}
         />
-        <SentimentSlider
+        <Slider
+          variant="bipolar"
+          surface="dark"
           leftLabel="Worsened mood"
           rightLabel="Improved mood"
           value={mood}
@@ -326,67 +320,6 @@ function ReflectionSection({
         />
       </div>
     </section>
-  );
-}
-
-// Center-out slider: thumb starts at 0, fill grows from the center outward
-// in the direction of motion. Mint when shifting positive, peach when
-// shifting negative — the color is the at-a-glance read on the rating.
-function SentimentSlider({
-  leftLabel,
-  rightLabel,
-  value,
-  touched,
-  onChange,
-}: {
-  leftLabel: string;
-  rightLabel: string;
-  value: number;
-  touched: boolean;
-  onChange: (v: number) => void;
-}) {
-  const positive = value > 0;
-  const negative = value < 0;
-  const colors = useSliderColors();
-  // Fill spans from center (50%) outward by |value| * 50%. For negative
-  // values we offset the left edge so the bar grows leftward visually.
-  const fillStart = negative ? 50 + value * 50 : 50;
-  const fillWidth = Math.abs(value) * 50;
-  const fillColor = positive ? colors.positive : negative ? colors.negative : "transparent";
-
-  return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex items-center justify-between text-[13px] font-medium tracking-[0.04em] uppercase text-white/75">
-        <span className={negative && touched ? "text-white/95" : ""}>{leftLabel}</span>
-        <span className={positive && touched ? "text-white/95" : ""}>{rightLabel}</span>
-      </div>
-      <SliderPrimitive.Root
-        className="relative flex w-full touch-none select-none items-center h-7"
-        min={-1}
-        max={1}
-        step={0.01}
-        value={[value]}
-        onValueChange={(v) => onChange(v[0] ?? 0)}
-        aria-label={`${leftLabel} to ${rightLabel}`}
-      >
-        <SliderPrimitive.Track className="relative h-3 w-full grow rounded-full bg-white/15 border border-white/12">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-1.5 h-[24px] w-px bg-white/35"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-0 h-full rounded-full transition-[background-color] duration-150"
-            style={{
-              left: `${fillStart}%`,
-              width: `${fillWidth}%`,
-              backgroundColor: fillColor,
-            }}
-          />
-        </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60" />
-      </SliderPrimitive.Root>
-    </div>
   );
 }
 

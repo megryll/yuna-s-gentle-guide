@@ -37,7 +37,7 @@ const ICON = { error: CircleAlert, success: Check, neutral: Info } as const;
 // competes with the colored variants.
 const FILL = {
   error: { box: "bg-alert-orange text-alert-orange-foreground", muted: "text-alert-orange-foreground/75" },
-  success: { box: "bg-success-green text-success-green-foreground", muted: "text-success-green-foreground/75" },
+  success: { box: "bg-yuna-green text-yuna-green-foreground", muted: "text-yuna-green-foreground/75" },
 } as const;
 const FILL_NEUTRAL = {
   dark: "bg-white text-neutral-900",

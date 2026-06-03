@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/Button";
 import type { Insight } from "@/lib/profile-data";
 import { useAppMode } from "@/lib/theme-prefs";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -245,16 +246,19 @@ export function InsightCard({
 
 export function MoreButton({ count, onClick }: { count: number; onClick?: () => void }) {
   return (
-    <button
+    <Button
+      surface="dark"
+      variant="secondary"
+      fullWidth
       type="button"
       onClick={onClick}
-      className="w-full inline-flex items-center justify-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 active:bg-white/5 transition-colors"
+      className="gap-2.5 px-5 py-2.5"
     >
       <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-white/70">
         +{count} more
       </span>
       <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
-    </button>
+    </Button>
   );
 }
 
