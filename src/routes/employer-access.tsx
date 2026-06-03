@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { CheckBadge } from "@/components/CheckBadge";
 import { TextField, FieldError } from "@/components/TextField";
 import { Toast } from "@/components/Toast";
 
@@ -100,10 +101,10 @@ function EmployerAccessScreen() {
         </div>
 
         <div className="mt-8 text-center yuna-rise">
-          <h1 className="font-display text-[30px] leading-[1.1] tracking-tight">
+          <h1 className="font-display text-3xl leading-[1.1] tracking-tight">
             {unlocked ? "You're in." : "Your benefit is waiting."}
           </h1>
-          <p className="mt-3 text-[15px] leading-snug text-white/80">
+          <p className="mt-3 text-[15px] leading-snug text-white/85">
             {unlocked
               ? "Your pass is ready to claim!"
               : "Enter the email linked to your benefits or your access code to unlock your pass."}
@@ -172,15 +173,17 @@ function EmployerAccessScreen() {
               >
                 Unlock my pass
               </Button>
-              <p className="mt-2 text-center text-sm text-white/70">
+              <p className="mt-2 text-center text-sm text-white/75">
                 Not sure?{" "}
-                <button
+                <Button
+                  surface="dark"
+                  variant="link"
                   type="button"
-                  className="font-semibold text-white"
+                  className="align-baseline"
                   onClick={() => setHelpOpen(true)}
                 >
                   Get Help
-                </button>
+                </Button>
               </p>
             </form>
           )}
@@ -225,7 +228,7 @@ function EmployerHelpDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
         <DrawerHeader className="text-left px-6 pt-8 pb-6">
-          <DrawerTitle className="font-display font-normal text-3xl leading-[1.15] tracking-tight text-white">
+          <DrawerTitle>
             Let&rsquo;s get you access.
           </DrawerTitle>
         </DrawerHeader>
@@ -308,7 +311,7 @@ function EmployerTroubleDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
         <DrawerHeader className="text-left px-6 pt-8 pb-6">
-          <DrawerTitle className="font-display font-normal text-3xl leading-[1.15] tracking-tight text-white">
+          <DrawerTitle>
             We&rsquo;re having trouble verifying your employer.
           </DrawerTitle>
         </DrawerHeader>
@@ -377,7 +380,7 @@ function EmployerTroubleDrawer({
                   key={label}
                   className="flex items-center gap-2.5 text-[14px] text-white/85"
                 >
-                  <CheckBadge />
+                  <CheckBadge size="sm" />
                   <span>{label}</span>
                 </li>
               ))}
@@ -386,14 +389,6 @@ function EmployerTroubleDrawer({
         </div>
       </DrawerContent>
     </Drawer>
-  );
-}
-
-function CheckBadge() {
-  return (
-    <span className="h-[18px] w-[18px] rounded-full bg-yuna-green flex items-center justify-center shrink-0">
-      <Check size={11} strokeWidth={3} className="text-white" />
-    </span>
   );
 }
 

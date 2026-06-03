@@ -53,7 +53,7 @@ export function SchedulePrioritizeDrawer({
             <CalendarClock size={26} strokeWidth={1.6} className="text-white" aria-hidden />
           </span>
 
-          <DrawerTitle className="mt-6 font-display font-normal text-3xl leading-[1.12] tracking-tight text-white">
+          <DrawerTitle className="mt-6">
             Schedule To Prioritize Yourself
           </DrawerTitle>
 

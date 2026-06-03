@@ -1613,7 +1613,7 @@ function LanguageDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="rounded-t-[1.5rem]">
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
-          <DrawerTitle className="font-display font-normal text-3xl tracking-tight">
+          <DrawerTitle>
             Language
           </DrawerTitle>
         </DrawerHeader>
@@ -1644,7 +1644,7 @@ function PaceDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="rounded-t-[1.5rem]">
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
-          <DrawerTitle className="font-display font-normal text-3xl tracking-tight">
+          <DrawerTitle>
             Voice pace
           </DrawerTitle>
         </DrawerHeader>

@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField, FieldError } from "@/components/TextField";
+import { Divider } from "@/components/Divider";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 // Basic shape check — enough to catch typos like a missing "@" without
@@ -57,11 +58,11 @@ function LoginScreen() {
 
         <div key={step} className="yuna-fade-in flex flex-col">
           <div className="mt-14 yuna-rise">
-            <h1 className="text-[32px] leading-tight tracking-tight text-white">
+            <h1 className="text-3xl leading-tight tracking-tight text-white">
               {step === "email" ? "Welcome back." : "Enter your password."}
             </h1>
             {step === "password" && email && (
-              <p className="mt-3 text-sm text-white/70">{email}</p>
+              <p className="mt-3 text-sm text-white/75">{email}</p>
             )}
           </div>
 
@@ -75,11 +76,7 @@ function LoginScreen() {
                 <img src="/logos/google.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
                 Continue with Google
               </Button>
-              <div className="flex items-center gap-3 my-2 text-[11px] tracking-[0.2em] uppercase text-white/60">
-                <span className="flex-1 h-px bg-white/25" />
-                or
-                <span className="flex-1 h-px bg-white/25" />
-              </div>
+              <Divider surface="dark" label="or" className="my-2" />
               <form
                 noValidate
                 onSubmit={(e) => {
@@ -142,12 +139,14 @@ function LoginScreen() {
               <Button surface="dark" variant="primary" fullWidth type="submit">
                 Log in
               </Button>
-              <button
+              <Button
+                surface="dark"
+                variant="link"
                 type="button"
-                className="self-center mt-1 text-sm text-white/70 underline underline-offset-4 decoration-white/40"
+                className="self-center mt-1"
               >
                 Forgot password?
-              </button>
+              </Button>
             </form>
           )}
         </div>

@@ -91,13 +91,17 @@ const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DrawerFooter.displayName = "DrawerFooter";
 
+// Drawer titles are the one drawer-title size in the DS scale: text-3xl (30px),
+// Fraunces, authored white-on-dark so `.theme-light` inverts for light mode
+// (CLAUDE.md rule 6). Don't re-specify size / family / weight / color at call
+// sites — pass only layout extras (e.g. mt-6) through `className`.
 const DrawerTitle = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("font-display font-normal text-3xl tracking-tight text-white", className)}
     {...props}
   />
 ));

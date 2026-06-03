@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { CheckBadge } from "@/components/CheckBadge";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/accept-terms")({
@@ -59,7 +60,7 @@ function AcceptTerms() {
         </div>
 
         <div className="mt-10 yuna-rise text-center">
-          <h1 className="text-[32px] leading-tight tracking-tight text-white">
+          <h1 className="text-3xl leading-tight tracking-tight text-white">
             Let's set up your
             <br />
             private space
@@ -120,36 +121,13 @@ function ActiveTerm({
     <div className="yuna-rise rounded-2xl border border-white/35 bg-white/10 backdrop-blur-sm px-5 pt-4 pb-3 flex flex-col gap-3">
       <p className="text-[15px] leading-snug text-white">{text}</p>
       <div className="flex items-center justify-between">
-        <Button
-          surface="dark"
-          variant="ghost"
-          size="sm"
-          className="uppercase tracking-[0.14em] font-bold -ml-4"
-        >
+        <Button surface="dark" variant="ghost" size="sm" className="-ml-4">
           Read more
         </Button>
-        <Button
-          surface="dark"
-          variant="primary"
-          size="sm"
-          onClick={onAgree}
-          className="uppercase tracking-[0.14em] font-bold"
-        >
+        <Button surface="dark" variant="primary" size="sm" onClick={onAgree}>
           I agree
         </Button>
       </div>
     </div>
-  );
-}
-
-function CheckBadge() {
-  return (
-    <span
-      aria-hidden="true"
-      className="flex items-center justify-center h-7 w-7 rounded-full shrink-0 text-white"
-      style={{ backgroundColor: "#66BA24" }}
-    >
-      <Check size={15} strokeWidth={2.5} />
-    </span>
   );
 }

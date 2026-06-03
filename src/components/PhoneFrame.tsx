@@ -3,7 +3,9 @@ import { KeyboardSimulator } from "@/components/KeyboardSimulator";
 import { usePlatform } from "@/lib/platform";
 import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
-const PhoneFrameContext = createContext<HTMLElement | null>(null);
+// Exported so the DS-docs DeviceFrame can provide its own container, letting a
+// real Drawer/dialog portal into a simulated device frame on a /ds/* page.
+export const PhoneFrameContext = createContext<HTMLElement | null>(null);
 // Container that lives OUTSIDE the inner phone's overflow-hidden clip — used
 // to render visuals (haptic edge-pulse, etc.) that need to extend beyond the
 // phone bounds into the surrounding browser area. Positioned behind the

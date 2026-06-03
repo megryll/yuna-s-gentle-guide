@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Toast } from "@/components/Toast";
-import { DSPage, PropsBlock, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
+import {
+  DSPage,
+  DevicePair,
+  PropsBlock,
+  Section,
+  SurfaceMatrix,
+  type MatrixRow,
+} from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/toasts")({
   head: () => ({
@@ -30,6 +37,28 @@ function DSToasts() {
         subtitle="A title adds a bold line above the message; onDismiss adds a close button."
       >
         <SurfaceMatrix rows={OPTION_ROWS} />
+      </Section>
+
+      <Section
+        title="Position"
+        subtitle="Toasts enter from the top edge, below the status area, and auto-dismiss. Pin them to the top of the screen — never floating mid-content."
+      >
+        <DevicePair
+          renderRow={() => (
+            <div className="absolute top-8 inset-x-0 px-4">
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 bg-yuna-green shadow-[0_12px_30px_-12px_rgba(0,0,0,0.45)]">
+                <span
+                  aria-hidden
+                  className="h-[18px] w-[18px] rounded-full shrink-0 bg-yuna-green-foreground/40"
+                />
+                <span
+                  aria-hidden
+                  className="block h-3 flex-1 max-w-[70%] rounded-full bg-yuna-green-foreground/30"
+                />
+              </div>
+            </div>
+          )}
+        />
       </Section>
 
       <Section title="Props">

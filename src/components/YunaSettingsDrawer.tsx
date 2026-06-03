@@ -75,7 +75,7 @@ export function YunaSettingsDrawer({
         {screen === "main" ? (
           <>
             <DrawerHeader className="text-left px-6 pt-2">
-              <DrawerTitle className="font-display text-3xl tracking-tight">
+              <DrawerTitle>
                 Personalize Yuna
               </DrawerTitle>
             </DrawerHeader>

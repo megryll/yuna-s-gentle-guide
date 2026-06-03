@@ -1,4 +1,6 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
+import { PhoneFrameContext } from "@/components/PhoneFrame";
+import { usePlatform } from "@/lib/platform";
 
 /**
  * DS-documentation page kit — NOT a prototype component.
@@ -123,6 +125,93 @@ export function Row({
   className?: string;
 }) {
   return <div className={`flex items-center flex-wrap gap-3 ${className}`}>{children}</div>;
+}
+
+// ─── Device frame ─────────────────────────────────────────────────────────
+// A simulated phone for position-dependent things — overlays that slide up
+// (drawers, modals) or pin to an edge (toasts). It provides the
+// PhoneFrameContext so a real Drawer portals INTO the frame (absolute, scrim
+// clipped to the device) instead of the browser viewport. `surface` picks the
+// photo + adds `.theme-light` so white-on-dark content inverts for light mode,
+// and it mirrors the live platform toggle for blur fidelity. Children render
+// over the photo; position them with absolute classes (e.g. a top toast).
+
+export function DeviceFrame({
+  surface,
+  label = true,
+  children,
+}: {
+  surface: "dark" | "light";
+  label?: boolean;
+  children?: ReactNode;
+}) {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const platform = usePlatform();
+  const dark = surface === "dark";
+  const bg = dark ? "/background.png" : "/light-blur-bg.png";
+  return (
+    <div className="flex flex-col items-center gap-2">
+      {label && (
+        <p className="text-[11px] tracking-[0.25em] uppercase text-muted-foreground">
+          {dark ? "Dark surface" : "Light surface"}
+        </p>
+      )}
+      <div
+        ref={setContainer}
+        className={
+          "relative w-[252px] h-[512px] shrink-0 rounded-[2.25rem] overflow-hidden border border-border bg-cover bg-center " +
+          (dark ? "" : "theme-light ") +
+          (platform === "android" ? "platform-android" : "")
+        }
+        style={{ backgroundImage: `url(${bg})` }}
+      >
+        <span
+          aria-hidden
+          className="absolute top-2 left-1/2 -translate-x-1/2 h-1.5 w-16 rounded-full bg-black/25 z-10"
+        />
+        <PhoneFrameContext.Provider value={container}>
+          {children}
+        </PhoneFrameContext.Provider>
+      </div>
+    </div>
+  );
+}
+
+// Neutral placeholder bar for device-frame mockups — shows a component's
+// footprint (a title, a line of copy, a CTA) without committing to text, so the
+// frame reads as size/position only. Tone is picked per surface: white-alpha on
+// the dark photo, ink-alpha on the light photo (frosted bg-white/* doesn't
+// invert via .theme-light, so we choose directly).
+export function Bar({
+  surface,
+  className = "",
+}: {
+  surface: "dark" | "light";
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={
+        "block rounded-full " +
+        (surface === "dark" ? "bg-white/30 " : "bg-foreground/25 ") +
+        className
+      }
+    />
+  );
+}
+
+export function DevicePair({
+  renderRow,
+}: {
+  renderRow: (surface: "dark" | "light") => ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap justify-center gap-8">
+      <DeviceFrame surface="dark">{renderRow("dark")}</DeviceFrame>
+      <DeviceFrame surface="light">{renderRow("light")}</DeviceFrame>
+    </div>
+  );
 }
 
 export function PropsBlock({ children }: { children: string }) {

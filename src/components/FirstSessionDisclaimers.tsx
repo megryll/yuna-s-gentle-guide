@@ -83,7 +83,7 @@ export function FirstSessionDisclaimers({
     >
       <DrawerContent mode="dark" className="rounded-t-[1.5rem]">
         <div className="px-8 pt-12 pb-12 text-center">
-          <DrawerTitle className="font-display font-normal text-3xl leading-[1.12] tracking-tight text-white">
+          <DrawerTitle>
             {current.title}
           </DrawerTitle>
 

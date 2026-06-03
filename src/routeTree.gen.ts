@@ -32,6 +32,9 @@ import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
+import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
+import { Route as DsDividerRouteImport } from './routes/ds.divider'
+import { Route as DsCheckBadgeRouteImport } from './routes/ds.check-badge'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 import { Route as DsAvatarsRouteImport } from './routes/ds.avatars'
@@ -151,6 +154,21 @@ const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
   path: '/ds/segmented-toggle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsDrawerRoute = DsDrawerRouteImport.update({
+  id: '/ds/drawer',
+  path: '/ds/drawer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsDividerRoute = DsDividerRouteImport.update({
+  id: '/ds/divider',
+  path: '/ds/divider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsCheckBadgeRoute = DsCheckBadgeRouteImport.update({
+  id: '/ds/check-badge',
+  path: '/ds/check-badge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsChatBubblesRoute = DsChatBubblesRouteImport.update({
   id: '/ds/chat-bubbles',
   path: '/ds/chat-bubbles',
@@ -186,6 +204,9 @@ export interface FileRoutesByFullPath {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/divider': typeof DsDividerRoute
+  '/ds/drawer': typeof DsDrawerRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -214,6 +235,9 @@ export interface FileRoutesByTo {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/divider': typeof DsDividerRoute
+  '/ds/drawer': typeof DsDrawerRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -243,6 +267,9 @@ export interface FileRoutesById {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/divider': typeof DsDividerRoute
+  '/ds/drawer': typeof DsDrawerRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -273,6 +300,9 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/buttons'
     | '/ds/chat-bubbles'
+    | '/ds/check-badge'
+    | '/ds/divider'
+    | '/ds/drawer'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -301,6 +331,9 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/buttons'
     | '/ds/chat-bubbles'
+    | '/ds/check-badge'
+    | '/ds/divider'
+    | '/ds/drawer'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -329,6 +362,9 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/buttons'
     | '/ds/chat-bubbles'
+    | '/ds/check-badge'
+    | '/ds/divider'
+    | '/ds/drawer'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -358,6 +394,9 @@ export interface RootRouteChildren {
   DsAvatarsRoute: typeof DsAvatarsRoute
   DsButtonsRoute: typeof DsButtonsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
+  DsCheckBadgeRoute: typeof DsCheckBadgeRoute
+  DsDividerRoute: typeof DsDividerRoute
+  DsDrawerRoute: typeof DsDrawerRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSentimentTagsRoute: typeof DsSentimentTagsRoute
   DsSliderRoute: typeof DsSliderRoute
@@ -531,6 +570,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSegmentedToggleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/drawer': {
+      id: '/ds/drawer'
+      path: '/ds/drawer'
+      fullPath: '/ds/drawer'
+      preLoaderRoute: typeof DsDrawerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/divider': {
+      id: '/ds/divider'
+      path: '/ds/divider'
+      fullPath: '/ds/divider'
+      preLoaderRoute: typeof DsDividerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/check-badge': {
+      id: '/ds/check-badge'
+      path: '/ds/check-badge'
+      fullPath: '/ds/check-badge'
+      preLoaderRoute: typeof DsCheckBadgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/chat-bubbles': {
       id: '/ds/chat-bubbles'
       path: '/ds/chat-bubbles'
@@ -574,6 +634,9 @@ const rootRouteChildren: RootRouteChildren = {
   DsAvatarsRoute: DsAvatarsRoute,
   DsButtonsRoute: DsButtonsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
+  DsCheckBadgeRoute: DsCheckBadgeRoute,
+  DsDividerRoute: DsDividerRoute,
+  DsDrawerRoute: DsDrawerRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSentimentTagsRoute: DsSentimentTagsRoute,
   DsSliderRoute: DsSliderRoute,

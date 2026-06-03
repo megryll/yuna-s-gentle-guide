@@ -51,6 +51,9 @@ const DS_PAGES: Entry[] = [
   { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
   { label: "Sentiment Tags", to: "/ds/sentiment-tags" },
   { label: "Chat Bubbles", to: "/ds/chat-bubbles" },
+  { label: "Divider", to: "/ds/divider" },
+  { label: "Check Badge", to: "/ds/check-badge" },
+  { label: "Drawer", to: "/ds/drawer" },
 ];
 
 function readSearchObject(search: unknown): Record<string, unknown> {
