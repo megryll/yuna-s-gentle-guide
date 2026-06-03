@@ -9,6 +9,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
+import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { startAmbient } from "@/lib/ambient-audio";
@@ -288,6 +289,11 @@ function openPrompt(c: HomeCard): string {
   }
 }
 
+const VIEW_TOGGLE_OPTIONS: ReadonlyArray<SegmentedToggleOption<"card" | "list">> = [
+  { value: "card", icon: <LayoutGrid size={13} strokeWidth={1.75} aria-hidden />, ariaLabel: "Card view" },
+  { value: "list", icon: <List size={13} strokeWidth={1.75} aria-hidden />, ariaLabel: "List view" },
+];
+
 function ViewToggle({
   mode,
   onChange,
@@ -295,67 +301,18 @@ function ViewToggle({
   mode: "card" | "list";
   onChange: (m: "card" | "list") => void;
 }) {
-  // Rail + active-pill styling mirrors `SegmentedToggle` (Settings light/dark,
-  // Chat text/voice) so the three toggles read as one family. Surface flips
-  // with appMode just like SegmentedToggle does in chat.
+  // Compact DS segmented toggle — surface flips with appMode so it reads as
+  // one family with Chat's text/voice and Settings' light/dark toggles.
   const appMode = useAppMode();
-  const isDark = appMode === "dark";
-  const railClass = isDark ? "bg-black/15" : "border border-foreground/20 bg-background/60";
-  const railStyle = isDark ? { border: "1px solid rgba(255,255,255,0.25)" } : undefined;
   return (
-    <div
-      role="group"
-      aria-label="View mode"
-      style={railStyle}
-      className={"inline-flex items-center rounded-full backdrop-blur-sm h-8 p-0.5 " + railClass}
-    >
-      <ToggleSegmentButton
-        active={mode === "card"}
-        isDark={isDark}
-        onClick={() => onChange("card")}
-        aria-label="Card view"
-      >
-        <LayoutGrid size={13} strokeWidth={1.75} aria-hidden />
-      </ToggleSegmentButton>
-      <ToggleSegmentButton
-        active={mode === "list"}
-        isDark={isDark}
-        onClick={() => onChange("list")}
-        aria-label="List view"
-      >
-        <List size={13} strokeWidth={1.75} aria-hidden />
-      </ToggleSegmentButton>
-    </div>
-  );
-}
-
-function ToggleSegmentButton({
-  active,
-  isDark,
-  children,
-  ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  active: boolean;
-  isDark: boolean;
-}) {
-  // Arbitrary hex values match SegmentedToggle's segments so the active pill
-  // is fully opaque ink in light mode and fully opaque white in dark mode.
-  const activeClass = isDark ? "bg-[#ffffff] text-[#1D1F25]" : "bg-[#1D1F25] text-[#ffffff]";
-  const inactiveClass = isDark
-    ? "text-white active:bg-white/10"
-    : "text-foreground/75 active:bg-foreground/10";
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      className={
-        "inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors " +
-        (active ? activeClass : inactiveClass)
-      }
-      {...rest}
-    >
-      {children}
-    </button>
+    <SegmentedToggle
+      size="sm"
+      value={mode}
+      onChange={onChange}
+      surface={appMode === "dark" ? "dark" : "light"}
+      ariaLabel="View mode"
+      options={VIEW_TOGGLE_OPTIONS}
+    />
   );
 }
 

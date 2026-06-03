@@ -1,19 +1,23 @@
 import type { ReactNode } from "react";
 
 /**
- * Two-segment pill toggle used across the app — chat's Text/Voice switch
- * and the settings appearance toggle. One component so future visual
- * tweaks affect every surface.
+ * Two-segment pill toggle used across the app — chat's Text/Voice switch,
+ * the settings appearance toggle, and Home's icon-only card/list switcher.
+ * One component so future visual tweaks affect every surface.
  *
  * Pass `surface="dark"` when the toggle sits on the dark photo cluster,
  * `surface="light"` for the pale light photo. The active segment uses
  * arbitrary color values so it stays high-contrast even when a parent
  * applies `.overlay-on-dark` token swaps (e.g. settings dark mode).
+ *
+ * `size="md"` (default) is the labeled pill (h-9 rail, h-8 px-3 segments).
+ * `size="sm"` is the compact rail (h-8) for icon-only switchers — omit
+ * `label` on the options and the segments collapse to square h-7 buttons.
  */
 
 export type SegmentedToggleOption<V extends string> = {
   value: V;
-  label: string;
+  label?: string;
   icon: ReactNode;
   ariaLabel?: string;
 };
@@ -24,12 +28,14 @@ export function SegmentedToggle<V extends string>({
   onChange,
   surface,
   ariaLabel,
+  size = "md",
 }: {
   value: V;
   options: ReadonlyArray<SegmentedToggleOption<V>>;
   onChange: (v: V) => void;
   surface: "dark" | "light";
   ariaLabel: string;
+  size?: "sm" | "md";
 }) {
   const isDark = surface === "dark";
   // Dark surface: a slight dark wash sits on the whole rail so the inactive
@@ -50,7 +56,8 @@ export function SegmentedToggle<V extends string>({
       aria-label={ariaLabel}
       style={railStyle}
       className={
-        "inline-flex items-center rounded-full backdrop-blur-sm h-9 p-0.5 " +
+        "inline-flex items-center rounded-full backdrop-blur-sm p-0.5 " +
+        (size === "sm" ? "h-8 " : "h-9 ") +
         railClass
       }
     >
@@ -61,13 +68,17 @@ export function SegmentedToggle<V extends string>({
             key={opt.value}
             active={active}
             isDark={isDark}
+            size={size}
+            hasLabel={!!opt.label}
             onClick={active ? undefined : () => onChange(opt.value)}
-            ariaLabel={opt.ariaLabel ?? opt.label}
+            ariaLabel={opt.ariaLabel ?? opt.label ?? ariaLabel}
           >
             {opt.icon}
-            <span className="text-[11px] tracking-[0.16em] uppercase">
-              {opt.label}
-            </span>
+            {opt.label ? (
+              <span className="text-[11px] tracking-[0.16em] uppercase">
+                {opt.label}
+              </span>
+            ) : null}
           </Segment>
         );
       })}
@@ -78,12 +89,16 @@ export function SegmentedToggle<V extends string>({
 function Segment({
   active,
   isDark,
+  size,
+  hasLabel,
   children,
   onClick,
   ariaLabel,
 }: {
   active: boolean;
   isDark: boolean;
+  size: "sm" | "md";
+  hasLabel: boolean;
   children: ReactNode;
   onClick: (() => void) | undefined;
   ariaLabel: string;
@@ -100,6 +115,15 @@ function Segment({
   const inactiveClass = isDark
     ? "text-white active:bg-white/10"
     : "text-foreground/75 active:bg-foreground/10";
+  // Labeled segments grow with their text (px + gap); icon-only segments are
+  // square. sm shaves a row off both so the compact rail reads h-8 / h-7.
+  const sizeClass = hasLabel
+    ? size === "sm"
+      ? "gap-1.5 h-7 px-3"
+      : "gap-1.5 h-8 px-3"
+    : size === "sm"
+      ? "h-7 w-7"
+      : "h-8 w-8";
   return (
     <button
       type="button"
@@ -107,7 +131,9 @@ function Segment({
       aria-label={ariaLabel}
       onClick={onClick}
       className={
-        "inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-full transition-colors " +
+        "inline-flex items-center justify-center rounded-full transition-colors " +
+        sizeClass +
+        " " +
         (active ? activeClass : inactiveClass)
       }
     >

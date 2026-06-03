@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { MessageSquare, Mic, Sun, Moon } from "lucide-react";
+import { MessageSquare, Mic, Sun, Moon, LayoutGrid, List } from "lucide-react";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
 import { DSPage, Section, SurfacePair, PropsBlock } from "@/components/ds-surface";
 
@@ -28,55 +28,44 @@ const THEME_OPTIONS: ReadonlyArray<SegmentedToggleOption<"light" | "dark">> = [
   { value: "dark", label: "Dark", icon: <Moon size={14} strokeWidth={1.75} /> },
 ] as const;
 
+// Icon-only, no label — the compact size="sm" rail (Home card/list switcher).
+const VIEW_OPTIONS: ReadonlyArray<SegmentedToggleOption<"card" | "list">> = [
+  { value: "card", icon: <LayoutGrid size={13} strokeWidth={1.75} />, ariaLabel: "Card view" },
+  { value: "list", icon: <List size={13} strokeWidth={1.75} />, ariaLabel: "List view" },
+] as const;
+
 function DSSegmentedToggle() {
   return (
-    <DSPage
-      title="Segmented toggle"
-      intro={
-        <>
-          A two-segment pill toggle for mutually exclusive states.
-          Used by the chat <strong>Voice / Text</strong> switch and the
-          settings <strong>Light / Dark</strong> appearance toggle. The active
-          segment uses arbitrary{" "}
-          <code className="text-xs">#ffffff</code> /{" "}
-          <code className="text-xs">#1D1F25</code> values so
-          neither the <code className="text-xs">.overlay-on-dark</code>{" "}
-          token swap nor <code className="text-xs">.theme-light</code>{" "}
-          inversion can clobber the contrast.
-        </>
-      }
-    >
+    <DSPage title="Segmented toggle">
       {/* ─── Default — Voice / Text ─────────────────────────────────────── */}
-      <Section
-        title="Default"
-        subtitle="Chat-style — Voice / Text. Click a segment to flip the active pill."
-      >
+      <Section title="Default">
         <SurfacePair
           renderRow={(surface) => <ChatToggleDemo surface={surface} />}
         />
       </Section>
 
       {/* ─── Theme variant ──────────────────────────────────────────────── */}
-      <Section
-        title="Theme variant"
-        subtitle="Settings-style — Light / Dark."
-      >
+      <Section title="Theme variant">
         <SurfacePair
           renderRow={(surface) => <ThemeToggleDemo surface={surface} />}
         />
       </Section>
 
+      {/* ─── Compact (icon-only) ────────────────────────────────────────── */}
+      <Section title="Compact — size=&quot;sm&quot;, icon-only">
+        <SurfacePair
+          renderRow={(surface) => <ViewToggleDemo surface={surface} />}
+        />
+      </Section>
+
       {/* ─── Anatomy ────────────────────────────────────────────────────── */}
-      <Section
-        title="Anatomy"
-        subtitle="Rail height 36px, segments 32px. Each segment is a centered flex row: icon (14px) + label (uppercase, tracked, 11px). Rail uses a translucent wash so it reads against either photo."
-      >
+      <Section title="Anatomy">
         <div className="rounded-2xl border border-border p-6 bg-muted/30">
           <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[12px]">
             <span className="text-muted-foreground">Rail height</span>
-            <code>h-9 (36px)</code>
+            <code>md: h-9 (36px) · sm: h-8 (32px)</code>
             <span className="text-muted-foreground">Segment height</span>
-            <code>h-8 (32px) inside p-0.5 rail</code>
+            <code>md: h-8 px-3 · sm: h-7 (icon-only h-7 w-7)</code>
             <span className="text-muted-foreground">Active pill</span>
             <code>bg-[#ffffff] text-[#1D1F25] (dark) · bg-[#1D1F25] text-[#ffffff] (light)</code>
             <span className="text-muted-foreground">Inactive label</span>
@@ -87,20 +76,21 @@ function DSSegmentedToggle() {
         </div>
       </Section>
 
-      <Section title="Props" subtitle="Type signature.">
+      <Section title="Props">
         <PropsBlock>{`<SegmentedToggle
   value:    V
   options:  ReadonlyArray<SegmentedToggleOption<V>>
   onChange: (v: V) => void
   surface:  "dark" | "light"
   ariaLabel: string
+  size?:    "sm" | "md"        // default "md"; "sm" = compact rail
 />
 
 type SegmentedToggleOption<V extends string> = {
   value:      V
-  label:      string
+  label?:     string           // omit for icon-only (size="sm")
   icon:       ReactNode
-  ariaLabel?: string
+  ariaLabel?: string           // required when label is omitted
 }`}</PropsBlock>
       </Section>
     </DSPage>
@@ -131,6 +121,20 @@ function ThemeToggleDemo({ surface }: { surface: "dark" | "light" }) {
       surface={surface}
       ariaLabel="Appearance"
       options={THEME_OPTIONS}
+    />
+  );
+}
+
+function ViewToggleDemo({ surface }: { surface: "dark" | "light" }) {
+  const [view, setView] = useState<"card" | "list">("card");
+  return (
+    <SegmentedToggle
+      size="sm"
+      value={view}
+      onChange={setView}
+      surface={surface}
+      ariaLabel="View mode"
+      options={VIEW_OPTIONS}
     />
   );
 }
