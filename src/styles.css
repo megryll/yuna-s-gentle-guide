@@ -120,7 +120,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-primary-beige: var(--primary-beige);
   --color-alert-red: var(--alert-red);
+  --color-alert-orange: var(--alert-orange);
+  --color-alert-orange-foreground: var(--alert-orange-foreground);
   --color-success-green: var(--success-green);
+  --color-success-green-foreground: var(--success-green-foreground);
   --color-yuna-green: var(--yuna-green);
   --color-yuna-green-deep: var(--yuna-green-deep);
 }
@@ -165,7 +168,16 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
   --primary-beige: #F5F0ED;
   --alert-red: #E0493F;
+  /* Warm orange for form validation — gentler than the red alert tone,
+     and legible on both the dark photo bg and light surfaces. */
+  --alert-orange: #F2994A;
+  /* Deep tonal ink for text/glyphs sitting on the alert-orange fill
+     (e.g. solid Toast). ~5.2:1 on #F2994A — clears AA for body text. */
+  --alert-orange-foreground: #572F0F;
   --success-green: #34C759;
+  /* Deep tonal ink for text/glyphs on the success-green fill. ~4.7:1 on
+     #34C759 — clears AA for body text. */
+  --success-green-foreground: #124927;
   /* Yuna brand green — sampled from the avatar mark (avatar.png).
      Used for selection/progress in branded controls (e.g. Slider fill). */
   --yuna-green: #66BA24;
@@ -483,7 +495,11 @@
      leaks the light-grey token through, producing the bright top hairline
      visible on drawers + dialogs in dark mode. */
   .overlay-on-dark, .overlay-on-dark * { border-color: rgba(255, 255, 255, 0.15); }
-  .overlay-on-dark .text-foreground { color: rgb(255, 255, 255); }
+  /* `:not(.bg-white)` keeps the white-pill primary button (`bg-white
+     text-{foreground|neutral-900}`) legible: its label must stay dark ink on
+     the white fill. Without the guard these broad inversions turn the label
+     white-on-white when a primary Button renders inside a dark overlay. */
+  .overlay-on-dark .text-foreground:not(.bg-white) { color: rgb(255, 255, 255); }
   .overlay-on-dark .text-foreground\/85 { color: rgba(255, 255, 255, 0.9); }
   .overlay-on-dark .text-foreground\/75 { color: rgba(255, 255, 255, 0.85); }
   .overlay-on-dark .text-foreground\/70 { color: rgba(255, 255, 255, 0.8); }
@@ -495,7 +511,7 @@
      things like the "1.0x" / "English" values in Personalize Yuna stay
      legible on the dark photo. */
   .overlay-on-dark .text-muted-foreground { color: rgba(255, 255, 255, 0.8); }
-  .overlay-on-dark .text-neutral-900 { color: rgb(255, 255, 255); }
+  .overlay-on-dark .text-neutral-900:not(.bg-white) { color: rgb(255, 255, 255); }
   .overlay-on-dark .text-neutral-600 { color: rgba(255, 255, 255, 0.75); }
   .overlay-on-dark .text-destructive { color: rgb(255, 138, 138); }
 

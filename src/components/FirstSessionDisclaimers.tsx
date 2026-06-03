@@ -51,9 +51,11 @@ const STEPS = [
 export function FirstSessionDisclaimers({
   open,
   onComplete,
+  onDismiss,
 }: {
   open: boolean;
   onComplete: () => void;
+  onDismiss: () => void;
 }) {
   const [step, setStep] = useState(0);
   const current = STEPS[step];
@@ -67,8 +69,18 @@ export function FirstSessionDisclaimers({
     setStep((s) => s + 1);
   };
 
+  const dismiss = () => {
+    setStep(0);
+    onDismiss();
+  };
+
   return (
-    <Drawer open={open} dismissible={false} modal={false}>
+    <Drawer
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) dismiss();
+      }}
+    >
       <DrawerContent mode="dark" className="rounded-t-[1.5rem]">
         <div className="px-8 pt-12 pb-12 text-center">
           <DrawerTitle className="font-display font-normal text-[34px] leading-[1.12] tracking-tight text-white">
@@ -107,6 +119,7 @@ export function FirstSessionDisclaimerGate() {
         clearChatLaunch();
         navigate({ to: "/chat", search });
       }}
+      onDismiss={clearChatLaunch}
     />
   );
 }

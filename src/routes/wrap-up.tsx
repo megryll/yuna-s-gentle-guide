@@ -8,14 +8,11 @@ import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useSentimentToneColor } from "@/components/SentimentTag";
 import { useYunaIdentity } from "@/lib/yuna-session";
-import {
-  clearStoredMessages,
-  loadStoredMessages,
-  type ChatMsg,
-} from "@/lib/chat-store";
+import { clearStoredMessages, loadStoredMessages, type ChatMsg } from "@/lib/chat-store";
 import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
+import { requestSchedulePrompt } from "@/lib/schedule-prompt";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -73,8 +70,7 @@ type Highlight = { quote: string; emotions: string[] };
 // match the prototype's stress-and-planning theme.
 const FALLBACK_HIGHLIGHTS: Highlight[] = [
   {
-    quote:
-      "Maybe I could try to organize my tasks better and take some time off to relax.",
+    quote: "Maybe I could try to organize my tasks better and take some time off to relax.",
     emotions: ["Overwhelm", "Resolve"],
   },
   {
@@ -83,8 +79,7 @@ const FALLBACK_HIGHLIGHTS: Highlight[] = [
     emotions: ["Relief", "Resolve", "Hopefulness"],
   },
   {
-    quote:
-      "Yes, I think I might need to do that. Thank you for your support.",
+    quote: "Yes, I think I might need to do that. Thank you for your support.",
     emotions: ["Gratitude", "Self-compassion"],
   },
 ];
@@ -203,6 +198,7 @@ function WrapUp() {
     if (keepsake) persist();
     clearStoredMessages();
     setUserType("returning");
+    requestSchedulePrompt(themes[0]);
     navigate({ to: "/home" });
   };
 
@@ -211,19 +207,19 @@ function WrapUp() {
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="absolute top-14 right-8 z-30">
-        <Button
-          surface="dark"
-          variant="secondary"
-          size="icon"
-          onClick={onDone}
-          aria-label="Close wrap-up"
-        >
-          <X size={16} strokeWidth={1.6} aria-hidden />
-        </Button>
-      </div>
       <div className="flex-1 flex flex-col px-8 text-white min-h-0">
         <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex justify-end -mb-4">
+            <Button
+              surface="dark"
+              variant="secondary"
+              size="icon"
+              onClick={onDone}
+              aria-label="Close wrap-up"
+            >
+              <X size={16} strokeWidth={1.6} aria-hidden />
+            </Button>
+          </div>
           {isLoading ? (
             <SkeletonScreen />
           ) : (
@@ -250,12 +246,7 @@ function WrapUp() {
               <PlacedForYou items={PLACED_FOR_YOU} />
 
               <div className="pt-2 pb-2">
-                <Button
-                  surface="dark"
-                  variant="primary"
-                  fullWidth
-                  onClick={onDone}
-                >
+                <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
                   Finish session
                 </Button>
               </div>
@@ -271,18 +262,10 @@ function WrapUp() {
 // Floating (no card) hero: tiny eyebrow, Yuna avatar, and the personalized
 // AI keepsake as the headline. White text gets a soft drop shadow so it
 // stays legible against bright spots of the photo bg.
-function SessionHero({
-  avatar,
-  message,
-}: {
-  avatar: AvatarVariant | null;
-  message: string;
-}) {
+function SessionHero({ avatar, message }: { avatar: AvatarVariant | null; message: string }) {
   return (
     <section className="flex flex-col items-center text-center gap-4 pt-20 pb-10 yuna-fade-in">
-      <p className="text-[11px] tracking-[0.32em] uppercase text-white/65">
-        Session complete
-      </p>
+      <p className="text-[11px] tracking-[0.32em] uppercase text-white/65">Session complete</p>
 
       <span className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0 ring-1 ring-white/15">
         {avatar ? (
@@ -369,21 +352,13 @@ function SentimentSlider({
   // values we offset the left edge so the bar grows leftward visually.
   const fillStart = negative ? 50 + value * 50 : 50;
   const fillWidth = Math.abs(value) * 50;
-  const fillColor = positive
-    ? colors.positive
-    : negative
-      ? colors.negative
-      : "transparent";
+  const fillColor = positive ? colors.positive : negative ? colors.negative : "transparent";
 
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between text-[13px] font-medium tracking-[0.04em] uppercase text-white/75">
-        <span className={negative && touched ? "text-white/95" : ""}>
-          {leftLabel}
-        </span>
-        <span className={positive && touched ? "text-white/95" : ""}>
-          {rightLabel}
-        </span>
+        <span className={negative && touched ? "text-white/95" : ""}>{leftLabel}</span>
+        <span className={positive && touched ? "text-white/95" : ""}>{rightLabel}</span>
       </div>
       <SliderPrimitive.Root
         className="relative flex w-full touch-none select-none items-center h-7"
@@ -439,9 +414,7 @@ function HighlightsCard({ highlights }: { highlights: Highlight[] }) {
 
 function HighlightItem({ highlight }: { highlight: Highlight }) {
   const emotionColors = useEmotionColors();
-  const colors = highlight.emotions
-    .map((e) => emotionColors[e])
-    .filter(Boolean);
+  const colors = highlight.emotions.map((e) => emotionColors[e]).filter(Boolean);
   const ribbon =
     colors.length === 0
       ? "rgba(255,255,255,0.25)"
@@ -470,9 +443,7 @@ function HighlightItem({ highlight }: { highlight: Highlight }) {
         }}
       />
       <div className="flex flex-col gap-3">
-        <p className="text-[16px] leading-relaxed text-white/90">
-          “{highlight.quote}”
-        </p>
+        <p className="text-[16px] leading-relaxed text-white/90">“{highlight.quote}”</p>
 
         {highlight.emotions.length > 0 && (
           <div className="pt-3 border-t border-white/12 flex flex-wrap gap-1.5">

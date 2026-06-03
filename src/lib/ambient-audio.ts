@@ -1,10 +1,10 @@
-// Shared forest-ambient bed. Lives at module scope so it survives route
+// Shared nature-ambient bed. Lives at module scope so it survives route
 // changes — the intro starts it, the home screen keeps it going, and chat
-// pauses it while its own per-mount ambient plays.
+// pauses it while its own per-mount ambient plays. The track itself is
+// selectable via the admin soundtrack toggle (see soundtrack-prefs).
 
 import { getNatureSoundsOn } from "./nature-sounds-prefs";
-
-const SRC = "/forest-background.m4a";
+import { getSoundtrackSrc } from "./soundtrack-prefs";
 
 export const AMBIENT_VOLUME = 0.35;
 const FADE_IN_MS = 1000;
@@ -45,7 +45,7 @@ function fadeTo(target: number, ms: number) {
 function ensureEl(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (audio) return audio;
-  const el = new Audio(SRC);
+  const el = new Audio(getSoundtrackSrc());
   el.loop = true;
   el.preload = "auto";
   el.volume = 0;
@@ -88,6 +88,26 @@ export function startAmbient() {
   el.play()
     .then(() => fadeTo(AMBIENT_VOLUME, FADE_IN_MS))
     .catch(() => bindGestureRetry());
+}
+
+// Swap the bed to the currently-selected soundtrack. No-op until the element
+// exists (the next startAmbient picks up the selection via ensureEl). When it
+// is already playing we restart on the new source with a fade so the change is
+// audible immediately on intro/home.
+export function switchSoundtrack() {
+  const el = audio;
+  if (!el) return;
+  const src = getSoundtrackSrc();
+  if (el.src.endsWith(src)) return;
+  const wasPlaying = !el.paused;
+  cancelFade();
+  el.src = src;
+  el.volume = 0;
+  if (wasPlaying && getNatureSoundsOn()) {
+    el.play()
+      .then(() => fadeTo(AMBIENT_VOLUME, FADE_IN_MS))
+      .catch(() => bindGestureRetry());
+  }
 }
 
 // Stop with optional fade. Pauses the element when the fade completes so

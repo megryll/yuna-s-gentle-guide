@@ -121,12 +121,7 @@ function SettingsRoute() {
               Settings
             </h1>
           </div>
-          <Button
-            surface="light"
-            variant="secondary"
-            size="xs"
-            className="bg-background/60 backdrop-blur-sm border-foreground/20 text-foreground/85 active:bg-background/80"
-          >
+          <Button surface="light" variant="secondary" size="xs">
             Share Yuna
           </Button>
         </header>

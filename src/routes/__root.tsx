@@ -6,11 +6,13 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
 import { PlatformToggle } from "@/components/PlatformToggle";
 import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
+import { SoundtrackToggle } from "@/components/SoundtrackToggle";
 // Side-effect import: installs the global Audio() interceptor early so every
 // audio element the app creates respects the prototype-mute admin toggle.
 import "@/lib/prototype-mute";
-import { startAmbient, stopAmbient } from "@/lib/ambient-audio";
+import { startAmbient, stopAmbient, switchSoundtrack } from "@/lib/ambient-audio";
 import { useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
+import { useSoundtrackId } from "@/lib/soundtrack-prefs";
 
 function NotFoundComponent() {
   return (
@@ -56,8 +58,7 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary" },
       {
         name: "twitter:description",
-        content:
-          "A calm, private space to talk through what's on your mind.",
+        content: "A calm, private space to talk through what's on your mind.",
       },
     ],
     links: [
@@ -98,12 +99,21 @@ function RootComponent() {
     else stopAmbient(400);
   }, [natureSoundsOn]);
 
+  // Swap the bed when the admin picks a different soundtrack. No-op on first
+  // mount (the element doesn't exist yet — startAmbient above seeds it with
+  // the selected track); only a live change restarts on the new source.
+  const soundtrackId = useSoundtrackId();
+  useEffect(() => {
+    switchSoundtrack();
+  }, [soundtrackId]);
+
   return (
     <>
       <AdminSidebar />
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <PlatformToggle />
         <UserTypeToggle />
+        <SoundtrackToggle />
         <PrototypeMuteToggle />
       </div>
       <Outlet />

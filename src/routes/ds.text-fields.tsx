@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowUp } from "lucide-react";
-import { TextField } from "@/components/TextField";
+import { TextField, FieldError } from "@/components/TextField";
 import { Button } from "@/components/Button";
 
 export const Route = createFileRoute("/ds/text-fields")({
@@ -88,31 +88,17 @@ function DSTextFields() {
                   }
                 />
               </Row>
-              <Row label="md, leading + trailing (recording state)">
-                <TextField
-                  surface="dark"
-                  placeholder="Listening…"
-                  readOnly
-                  containerClassName="border-white"
-                  leading={
-                    <span
-                      aria-hidden="true"
-                      className="h-2 w-2 rounded-full bg-success-green shrink-0"
-                    />
-                  }
-                  trailing={
-                    <Button
-                      surface="dark"
-                      variant="primary"
-                      size="icon-sm"
-                      type="button"
-                      pressed
-                      aria-label="Stop recording"
-                    >
-                      <ArrowUp size={13} strokeWidth={2} />
-                    </Button>
-                  }
-                />
+              <Row label="md, error (with message)">
+                <div className="flex flex-col gap-2">
+                  <TextField
+                    surface="dark"
+                    type="password"
+                    error
+                    defaultValue="short"
+                    placeholder="At least 8 characters"
+                  />
+                  <FieldError>Your password needs at least 8 characters.</FieldError>
+                </div>
               </Row>
             </div>
           </DarkSurface>
@@ -150,6 +136,7 @@ function DSTextFields() {
 {`<TextField
   surface?:  "dark" | "light"          // default: "dark"
   size?:     "md" | "sm"               // default: "md"
+  error?:    boolean                   // orange alert border + aria-invalid
   leading?:  ReactNode                 // inline indicator (e.g. recording dot)
   trailing?: ReactNode                 // inline action (e.g. send button)
   containerClassName?: string          // class on the pill wrapper

@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { TextField } from "@/components/TextField";
+import { TextField, FieldError } from "@/components/TextField";
+import { Toast } from "@/components/Toast";
+
+// Basic shape check — only enforced when the entry looks like an email (has
+// an "@"), so access codes still pass straight through.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 import {
@@ -36,6 +41,7 @@ function EmployerAccessScreen() {
   const navigate = useNavigate();
   const darkBg = useDarkBlurImage();
   const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -43,9 +49,16 @@ function EmployerAccessScreen() {
   const [toastOpen, setToastOpen] = useState(false);
 
   const unlock = () => {
-    if (!code.trim()) return;
+    const v = code.trim();
+    if (!v) return;
+    // Only validate format when they're clearly entering an email; access
+    // codes pass through untouched.
+    if (v.includes("@") && !EMAIL_RE.test(v)) {
+      setCodeError("That doesn't look like a valid email.");
+      return;
+    }
     (document.activeElement as HTMLElement | null)?.blur?.();
-    if (code.trim().toLowerCase() === "no") {
+    if (v.toLowerCase() === "no") {
       setTroubleOpen(true);
       return;
     }
@@ -124,23 +137,31 @@ function EmployerAccessScreen() {
             </div>
           ) : (
             <form
+              noValidate
               onSubmit={(e) => {
                 e.preventDefault();
                 unlock();
               }}
               className="flex flex-col gap-3"
             >
-              <TextField
-                surface="dark"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                onFocus={() => setInputFocused(true)}
-                onBlur={() => setInputFocused(false)}
-                placeholder="Enter your email or access code here"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-              />
+              <div className="flex flex-col gap-2">
+                <TextField
+                  surface="dark"
+                  error={!!codeError}
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    if (codeError) setCodeError("");
+                  }}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
+                  placeholder="Enter your email or access code here"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                {codeError && <FieldError>{codeError}</FieldError>}
+              </div>
               <Button
                 surface="dark"
                 variant="primary"
@@ -166,7 +187,7 @@ function EmployerAccessScreen() {
         </div>
       </div>
 
-      <Toast open={toastOpen} message="Your request has been sent" />
+      <RequestToast open={toastOpen} />
       <EmployerHelpDrawer open={helpOpen} onOpenChange={setHelpOpen} />
       <EmployerTroubleDrawer
         open={troubleOpen}
@@ -177,22 +198,18 @@ function EmployerAccessScreen() {
   );
 }
 
-function Toast({ open, message }: { open: boolean; message: string }) {
+// Positioned, animated wrapper around the DS Toast — slides/fades in from the
+// top edge of the phone frame.
+function RequestToast({ open }: { open: boolean }) {
   return (
     <div
-      role="status"
-      aria-live="polite"
       className={
-        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] " +
+        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-xs " +
         "transition-all duration-300 ease-out " +
-        (open
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 -translate-y-2")
+        (open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")
       }
     >
-      <div className="rounded-full border border-white/25 bg-black/45 backdrop-blur-md px-4 py-2 shadow-lg">
-        <p className="text-[13px] text-white">{message}</p>
-      </div>
+      <Toast surface="dark" variant="success" message="Your request has been sent." />
     </div>
   );
 }
@@ -261,6 +278,7 @@ function EmployerTroubleDrawer({
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [employer, setEmployer] = useState("");
 
   const canSubmit =
@@ -270,6 +288,7 @@ function EmployerTroubleDrawer({
     if (!open) {
       setName("");
       setEmail("");
+      setEmailError("");
       setEmployer("");
     }
   }, [open]);
@@ -277,6 +296,10 @@ function EmployerTroubleDrawer({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
+    if (!EMAIL_RE.test(email.trim())) {
+      setEmailError("That doesn't look like a valid email.");
+      return;
+    }
     (document.activeElement as HTMLElement | null)?.blur?.();
     onSubmit();
   };
@@ -295,7 +318,7 @@ function EmployerTroubleDrawer({
             reach out within one business day.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3">
+          <form noValidate onSubmit={handleSubmit} className="mt-7 flex flex-col gap-3">
             <TextField
               surface="dark"
               value={name}
@@ -303,16 +326,23 @@ function EmployerTroubleDrawer({
               placeholder="Full name"
               autoCapitalize="words"
             />
-            <TextField
-              surface="dark"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
+            <div className="flex flex-col gap-2">
+              <TextField
+                surface="dark"
+                type="email"
+                error={!!emailError}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
+                placeholder="Email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {emailError && <FieldError>{emailError}</FieldError>}
+            </div>
             <TextField
               surface="dark"
               value={employer}

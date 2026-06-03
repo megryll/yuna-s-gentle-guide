@@ -768,7 +768,7 @@ function Chat() {
 
   const endChat = () => {
     clearVoiceGreeted();
-    navigate({ to: "/wrap-up" });
+    navigate({ to: "/wrap-up-2" });
   };
 
   const switchToText = () => {

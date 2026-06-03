@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YouRouteImport } from './routes/you'
+import { Route as WrapUp2RouteImport } from './routes/wrap-up-2'
 import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -27,6 +28,7 @@ import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
+import { Route as DsToastsRouteImport } from './routes/ds.toasts'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
@@ -37,6 +39,11 @@ import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 const YouRoute = YouRouteImport.update({
   id: '/you',
   path: '/you',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WrapUp2Route = WrapUp2RouteImport.update({
+  id: '/wrap-up-2',
+  path: '/wrap-up-2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WrapUpRoute = WrapUpRouteImport.update({
@@ -124,6 +131,11 @@ const DsTypographyRoute = DsTypographyRouteImport.update({
   path: '/ds/typography',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsToastsRoute = DsToastsRouteImport.update({
+  id: '/ds/toasts',
+  path: '/ds/toasts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
   id: '/ds/text-fields',
   path: '/ds/text-fields',
@@ -171,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
+  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
@@ -178,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
@@ -197,6 +211,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
+  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
@@ -204,6 +219,7 @@ export interface FileRoutesByTo {
   '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
@@ -224,6 +240,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
+  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
@@ -231,6 +248,7 @@ export interface FileRoutesById {
   '/ds/slider': typeof DsSliderRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
@@ -252,6 +270,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
+    | '/wrap-up-2'
     | '/you'
     | '/ds/buttons'
     | '/ds/segmented-toggle'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/toasts'
     | '/ds/typography'
     | '/focus-area/$num'
   fileRoutesByTo: FileRoutesByTo
@@ -278,6 +298,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
+    | '/wrap-up-2'
     | '/you'
     | '/ds/buttons'
     | '/ds/segmented-toggle'
@@ -285,6 +306,7 @@ export interface FileRouteTypes {
     | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/toasts'
     | '/ds/typography'
     | '/focus-area/$num'
   id:
@@ -304,6 +326,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
+    | '/wrap-up-2'
     | '/you'
     | '/ds/buttons'
     | '/ds/segmented-toggle'
@@ -311,6 +334,7 @@ export interface FileRouteTypes {
     | '/ds/slider'
     | '/ds/switches'
     | '/ds/text-fields'
+    | '/ds/toasts'
     | '/ds/typography'
     | '/focus-area/$num'
   fileRoutesById: FileRoutesById
@@ -331,6 +355,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
+  WrapUp2Route: typeof WrapUp2Route
   YouRoute: typeof YouRoute
   DsButtonsRoute: typeof DsButtonsRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
@@ -338,6 +363,7 @@ export interface RootRouteChildren {
   DsSliderRoute: typeof DsSliderRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
+  DsToastsRoute: typeof DsToastsRoute
   DsTypographyRoute: typeof DsTypographyRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
 }
@@ -349,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/you'
       fullPath: '/you'
       preLoaderRoute: typeof YouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wrap-up-2': {
+      id: '/wrap-up-2'
+      path: '/wrap-up-2'
+      fullPath: '/wrap-up-2'
+      preLoaderRoute: typeof WrapUp2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wrap-up': {
@@ -470,6 +503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsTypographyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/toasts': {
+      id: '/ds/toasts'
+      path: '/ds/toasts'
+      fullPath: '/ds/toasts'
+      preLoaderRoute: typeof DsToastsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/text-fields': {
       id: '/ds/text-fields'
       path: '/ds/text-fields'
@@ -531,6 +571,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
+  WrapUp2Route: WrapUp2Route,
   YouRoute: YouRoute,
   DsButtonsRoute: DsButtonsRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
@@ -538,6 +579,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsSliderRoute: DsSliderRoute,
   DsSwitchesRoute: DsSwitchesRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
+  DsToastsRoute: DsToastsRoute,
   DsTypographyRoute: DsTypographyRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
 }

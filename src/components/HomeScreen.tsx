@@ -14,6 +14,7 @@ import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
+import { SchedulePrioritizeGate } from "@/components/SchedulePrioritizeDrawer";
 
 const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around. I'll be here when you're ready to chat.";
@@ -80,7 +81,10 @@ export function HomeScreen({
     <PhoneFrame backgroundImage="/background.png" themed>
       <div className="flex-1 flex flex-col text-white min-h-0">
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex justify-end -mr-1">
+          <div className="flex items-center justify-between -mx-1">
+            <Button surface="dark" variant="secondary" size="xs" onClick={() => undefined}>
+              Upgrade
+            </Button>
             <Button
               surface="dark"
               variant="ghost"
@@ -92,7 +96,7 @@ export function HomeScreen({
             </Button>
           </div>
 
-          <div className="mt-2 yuna-rise">
+          <div className="mt-10 yuna-rise">
             <h1 className="text-2xl leading-snug tracking-tight text-white">
               {returning ? (name ? `Welcome back, ${name}.` : "Welcome back.") : "Welcome in."}
             </h1>
@@ -125,6 +129,7 @@ export function HomeScreen({
         <AppBar surface="dark" />
       </div>
       <FirstSessionDisclaimerGate />
+      <SchedulePrioritizeGate />
     </PhoneFrame>
   );
 }
@@ -184,7 +189,7 @@ function CreatedForYou({
   const items = savedOnly ? cards.filter((c) => savedIds.has(c.id)) : cards;
 
   return (
-    <div className="mt-10">
+    <div className="mt-16">
       <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">Created For You</p>
         <div className="flex items-center gap-2">

@@ -3,7 +3,11 @@ import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { TextField } from "@/components/TextField";
+import { TextField, FieldError } from "@/components/TextField";
+
+// Basic shape check — enough to catch typos like a missing "@" without
+// rejecting valid-but-unusual addresses.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/auth")({
@@ -23,12 +27,16 @@ function AuthScreen() {
   const darkBg = useDarkBlurImage();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const finish = () => navigate({ to: "/accept-terms" });
   const goBack = () => {
-    if (step === "password") setStep("email");
-    else navigate({ to: "/" });
+    if (step === "password") {
+      setPasswordError("");
+      setStep("email");
+    } else navigate({ to: "/" });
   };
 
   return (
@@ -60,17 +68,31 @@ function AuthScreen() {
           {step === "email" ? (
             <div className="mt-10 flex flex-col gap-3">
               <form
-                onSubmit={(e) => { e.preventDefault(); setStep("password"); }}
+                noValidate
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!EMAIL_RE.test(email.trim())) {
+                    setEmailError("That doesn't look like a valid email.");
+                    return;
+                  }
+                  setStep("password");
+                }}
                 className="flex flex-col gap-3"
               >
-                <TextField
-                  surface="dark"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                />
+                <div className="flex flex-col gap-2">
+                  <TextField
+                    surface="dark"
+                    type="email"
+                    error={!!emailError}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError("");
+                    }}
+                    placeholder="your@email.com"
+                  />
+                  {emailError && <FieldError>{emailError}</FieldError>}
+                </div>
                 <Button surface="dark" variant="primary" fullWidth type="submit">
                   Continue with email
                 </Button>
@@ -91,19 +113,31 @@ function AuthScreen() {
             </div>
           ) : (
             <form
-              onSubmit={(e) => { e.preventDefault(); finish(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (password.length < 8) {
+                  setPasswordError("Your password needs at least 8 characters.");
+                  return;
+                }
+                finish();
+              }}
               className="mt-10 flex flex-col gap-3"
             >
-              <TextField
-                surface="dark"
-                type="password"
-                required
-                minLength={8}
-                autoFocus
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
-              />
+              <div className="flex flex-col gap-2">
+                <TextField
+                  surface="dark"
+                  type="password"
+                  autoFocus
+                  error={!!passwordError}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
+                  placeholder="At least 8 characters"
+                />
+                {passwordError && <FieldError>{passwordError}</FieldError>}
+              </div>
               <Button surface="dark" variant="primary" fullWidth type="submit">
                 Continue
               </Button>
