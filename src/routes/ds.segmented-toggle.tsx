@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { MessageSquare, Mic, Sun, Moon, LayoutGrid, List } from "lucide-react";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
-import { DSPage, Section, SurfacePair, PropsBlock } from "@/components/ds-surface";
+import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/segmented-toggle")({
   head: () => ({
@@ -37,25 +37,12 @@ const VIEW_OPTIONS: ReadonlyArray<SegmentedToggleOption<"card" | "list">> = [
 function DSSegmentedToggle() {
   return (
     <DSPage title="Segmented toggle">
-      {/* ─── Default — Voice / Text ─────────────────────────────────────── */}
-      <Section title="Default">
-        <SurfacePair
-          renderRow={(surface) => <ChatToggleDemo surface={surface} />}
-        />
-      </Section>
-
-      {/* ─── Theme variant ──────────────────────────────────────────────── */}
-      <Section title="Theme variant">
-        <SurfacePair
-          renderRow={(surface) => <ThemeToggleDemo surface={surface} />}
-        />
-      </Section>
-
-      {/* ─── Compact (icon-only) ────────────────────────────────────────── */}
-      <Section title="Compact — size=&quot;sm&quot;, icon-only">
-        <SurfacePair
-          renderRow={(surface) => <ViewToggleDemo surface={surface} />}
-        />
+      {/* ─── Variants ───────────────────────────────────────────────────── */}
+      <Section
+        title="Variants"
+        subtitle="Default and Theme are md with labels; Compact is the size=&quot;sm&quot;, icon-only rail (Home card/list switcher)."
+      >
+        <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
 
       {/* ─── Anatomy ────────────────────────────────────────────────────── */}
@@ -98,6 +85,12 @@ type SegmentedToggleOption<V extends string> = {
 }
 
 // ─── Interactive demos ──────────────────────────────────────────────────────
+
+const VARIANT_ROWS: MatrixRow[] = [
+  { label: "Default", render: (s) => <ChatToggleDemo surface={s} /> },
+  { label: "Theme", render: (s) => <ThemeToggleDemo surface={s} /> },
+  { label: "Compact", render: (s) => <ViewToggleDemo surface={s} /> },
+];
 
 function ChatToggleDemo({ surface }: { surface: "dark" | "light" }) {
   const [mode, setMode] = useState<"text" | "voice">("text");

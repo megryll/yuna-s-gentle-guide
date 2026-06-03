@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Switch } from "@/components/Switch";
-import { DSPage, Section, SurfacePair, PropsBlock } from "@/components/ds-surface";
+import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/switches")({
   head: () => ({
@@ -16,25 +16,15 @@ export const Route = createFileRoute("/ds/switches")({
 function DSSwitches() {
   return (
     <DSPage title="Switches">
-      <Section title="States">
-        <SurfacePair
-          renderRow={(surface) => <SwitchStates surface={surface} />}
-        />
-      </Section>
-
       <Section
-        title="With label"
-        subtitle="Wrap in a <label> so the visible text is part of the tap target."
+        title="Variants"
+        subtitle="On its own, paired with a label, or inside a settings row. The label is optional — when present, wrap the control in a <label> so the text is part of the tap target."
       >
-        <SurfacePair
-          renderRow={(surface) => <SwitchWithLabel surface={surface} />}
-        />
+        <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
 
-      <Section title="Inside a settings row">
-        <SurfacePair
-          renderRow={(surface) => <SwitchRow surface={surface} />}
-        />
+      <Section title="States">
+        <SurfaceMatrix rows={STATE_ROWS} />
       </Section>
 
       <Section title="Props">
@@ -52,32 +42,35 @@ function DSSwitches() {
 
 // ─── Interactive demos ──────────────────────────────────────────────────────
 
-function SwitchStates({ surface }: { surface: "dark" | "light" }) {
-  const [on, setOn] = useState(true);
-  const [off, setOff] = useState(false);
-  const labelClass =
-    surface === "dark" ? "text-white/75" : "text-foreground/70";
+const VARIANT_ROWS: MatrixRow[] = [
+  { label: "Standalone", render: () => <StateSwitch initial label="Daily reminders" /> },
+  { label: "With label", render: (s) => <SwitchWithLabel surface={s} /> },
+  { label: "Settings row", render: (s) => <SwitchRow surface={s} /> },
+];
+
+const STATE_ROWS: MatrixRow[] = [
+  { label: "On", render: () => <StateSwitch initial label="On example" /> },
+  { label: "Off", render: () => <StateSwitch initial={false} label="Off example" /> },
+  { label: "Disabled", render: () => <StateSwitch initial disabled label="Disabled example" /> },
+];
+
+function StateSwitch({
+  initial,
+  disabled,
+  label,
+}: {
+  initial: boolean;
+  disabled?: boolean;
+  label: string;
+}) {
+  const [on, setOn] = useState(initial);
   return (
-    <div className="flex items-center gap-8">
-      <div className="flex flex-col items-center gap-2">
-        <Switch checked={on} onChange={setOn} label="On example" />
-        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
-          On
-        </span>
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <Switch checked={off} onChange={setOff} label="Off example" />
-        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
-          Off
-        </span>
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <Switch checked disabled onChange={() => {}} label="Disabled example" />
-        <span className={`text-[11px] tracking-[0.2em] uppercase ${labelClass}`}>
-          Disabled
-        </span>
-      </div>
-    </div>
+    <Switch
+      checked={disabled ? initial : on}
+      onChange={disabled ? () => {} : setOn}
+      disabled={disabled}
+      label={label}
+    />
   );
 }
 

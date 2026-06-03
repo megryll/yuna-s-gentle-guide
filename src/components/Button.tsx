@@ -15,6 +15,12 @@ import { cn } from "@/lib/utils";
  *   - "primary"   — strongest CTA (solid fill)
  *   - "secondary" — outlined, no fill
  *   - "ghost"     — no border or fill
+ *   - "card"      — full-width rounded-2xl bordered block with a title
+ *                   (children), optional `subtitle`, and optional `trailing`
+ *                   element (e.g. a chevron). The list-row "card-as-button".
+ *                   Ignores `size` — it's always a full-width block.
+ *   - "link"      — inline text link, no border/fill/padding. For footer
+ *                   actions (Referral Code, Login, Forgot password).
  *
  * size: "md" (default) | "sm" | "xs" (h-[26px], inline chip) | "icon" (h-9) | "icon-sm" (h-8) | "icon-lg" (h-11)
  *
@@ -23,6 +29,8 @@ import { cn } from "@/lib/utils";
  *   is set automatically.
  *
  * label (icon sizes only): renders a small text caption below the icon circle.
+ * subtitle (card variant only): secondary line under the title.
+ * trailing (card variant only): node rendered at the row's trailing edge.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap select-none " +
@@ -46,7 +54,7 @@ const buttonVariants = cva(
         false: "",
       },
       surface: { dark: "", light: "" },
-      variant: { primary: "", secondary: "", ghost: "" },
+      variant: { primary: "", secondary: "", ghost: "", card: "", link: "" },
     },
     compoundVariants: [
       // ─── Dark surface ────────────────────────────────────────────────────
@@ -105,6 +113,8 @@ export interface ButtonProps
   asChild?: boolean;
   pressed?: boolean;
   label?: string;
+  subtitle?: string;
+  trailing?: React.ReactNode;
 }
 
 const ICON_SIZES: ReadonlySet<IconSize> = new Set(["icon", "icon-sm", "icon-lg"]);
@@ -119,6 +129,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth,
       pressed,
       label,
+      subtitle,
+      trailing,
       asChild = false,
       children,
       ...props
@@ -130,6 +142,73 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const ariaPressed =
       pressed !== undefined ? pressed : props["aria-pressed"];
     const isIcon = ICON_SIZES.has(size as IconSize);
+
+    // Card — full-width list-row "card-as-button": title + optional subtitle +
+    // optional trailing element. Authored in white-on-dark vocabulary so
+    // `.theme-light` inverts it for light mode automatically.
+    if (variant === "card") {
+      return (
+        <Comp
+          className={cn(
+            "w-full rounded-2xl border px-5 py-4 flex items-center gap-3 text-left",
+            "transition-transform duration-100 ease-out active:scale-[0.99]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
+            "disabled:opacity-50 disabled:pointer-events-none",
+            surface === "dark"
+              ? "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
+              : "border-border text-foreground active:bg-accent focus-visible:ring-foreground/30",
+            className,
+          )}
+          ref={ref}
+          aria-pressed={ariaPressed}
+          {...props}
+        >
+          <span className="flex-1 min-w-0">
+            <span className="block text-[17px] font-semibold leading-tight">{children}</span>
+            {subtitle && (
+              <span
+                className={cn(
+                  "block text-[14px] mt-1",
+                  surface === "dark" ? "text-white/70" : "text-muted-foreground",
+                )}
+              >
+                {subtitle}
+              </span>
+            )}
+          </span>
+          {trailing && (
+            <span
+              className={cn(
+                "shrink-0",
+                surface === "dark" ? "text-white/60" : "text-foreground/55",
+              )}
+            >
+              {trailing}
+            </span>
+          )}
+        </Comp>
+      );
+    }
+
+    // Link — inline text action, no border/fill/padding.
+    if (variant === "link") {
+      return (
+        <Comp
+          className={cn(
+            "inline-flex items-center gap-1 select-none bg-transparent p-0 text-sm",
+            "transition-opacity duration-100 ease-out active:opacity-70",
+            "focus-visible:outline-none focus-visible:underline underline-offset-4",
+            "disabled:opacity-50 disabled:pointer-events-none",
+            surface === "dark" ? "text-white/85" : "text-foreground/85",
+            className,
+          )}
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </Comp>
+      );
+    }
 
     if (label && isIcon) {
       return (

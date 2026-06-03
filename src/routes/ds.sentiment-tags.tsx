@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SentimentTag } from "@/components/SentimentTag";
-import { DSPage, Section, SurfacePair, PropsBlock } from "@/components/ds-surface";
+import { DSPage, Section, SurfacePair, PropsBlock } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/sentiment-tags")({
   head: () => ({

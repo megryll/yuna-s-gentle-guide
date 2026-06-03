@@ -5,8 +5,9 @@ import {
   DSPage,
   PropsBlock,
   Section,
-  SurfacePair,
-} from "@/components/ds-surface";
+  SurfaceMatrix,
+  type MatrixRow,
+} from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/slider")({
   head: () => ({
@@ -26,22 +27,12 @@ const PACE_STEPS = ["0.5x", "0.75x", "1.0x", "1.25x", "1.5x"] as const;
 
 function DSSlider() {
   return (
-    <DSPage
-      title="Slider"
-      intro="A thin rail with a small thumb. Linear runs left-to-right across a set of steps; bipolar rests at the center and grows out into positive or negative."
-    >
+    <DSPage title="Slider">
       <Section
-        title="Linear"
-        subtitle="Stepped, left-to-right — for an ordered set like voice pace. value is the 0-based step index; the green fill grows from the left to the thumb."
+        title="Variants"
+        subtitle="Linear is stepped left-to-right for an ordered set like voice pace. Bipolar rests at center and runs -1 → 1, turning green toward the positive end and orange toward the negative."
       >
-        <SurfacePair align="start" renderRow={(surface) => <LinearDemo surface={surface} />} />
-      </Section>
-
-      <Section
-        title="Bipolar"
-        subtitle="Center-out rating — the thumb starts at the midpoint. value runs -1 → 1; the fill turns green toward the positive end, orange toward the negative."
-      >
-        <SurfacePair align="start" renderRow={(surface) => <BipolarDemo surface={surface} />} />
+        <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
 
       <Section title="Props">
@@ -67,6 +58,11 @@ function DSSlider() {
     </DSPage>
   );
 }
+
+const VARIANT_ROWS: MatrixRow[] = [
+  { label: "Linear", render: (s) => <LinearDemo surface={s} /> },
+  { label: "Bipolar", render: (s) => <BipolarDemo surface={s} /> },
+];
 
 function LinearDemo({ surface }: { surface: "dark" | "light" }) {
   const [idx, setIdx] = useState(2);

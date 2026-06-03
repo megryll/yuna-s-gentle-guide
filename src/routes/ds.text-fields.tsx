@@ -4,6 +4,7 @@ import { ArrowUp, Mic } from "lucide-react";
 import { TextField, FieldError } from "@/components/TextField";
 import { Button } from "@/components/Button";
 import { Waveform } from "@/components/Waveform";
+import { DSPage, PropsBlock, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/text-fields")({
   head: () => ({
@@ -19,6 +20,41 @@ export const Route = createFileRoute("/ds/text-fields")({
 });
 
 type Surface = "dark" | "light";
+
+const STATE_ROWS: MatrixRow[] = [
+  {
+    label: "Default",
+    render: (s) => <TextField surface={s} placeholder="Add a note for yourself…" readOnly />,
+  },
+  {
+    label: "Active",
+    render: (s) => <TextField surface={s} active defaultValue="Grateful for the slow morning" />,
+  },
+  {
+    label: "Error",
+    render: (s) => (
+      <div className="flex flex-col gap-2">
+        <TextField
+          surface={s}
+          type="password"
+          error
+          defaultValue="short"
+          placeholder="At least 8 characters"
+        />
+        <FieldError>Your password needs at least 8 characters.</FieldError>
+      </div>
+    ),
+  },
+];
+
+const SIZE_ROWS: MatrixRow[] = [
+  {
+    label: "Regular",
+    render: (s) => <TextField surface={s} placeholder="Add a note for yourself…" />,
+  },
+  { label: "Compact", render: (s) => <TextField surface={s} size="sm" placeholder="Type here…" /> },
+  { label: "Large", render: (s) => <TextField surface={s} size="lg" placeholder="Enter your name" /> },
+];
 
 function DSTextFields() {
   // One mic stream at a time — `recordingSurface` says which showcase owns it.
@@ -65,46 +101,43 @@ function DSTextFields() {
 
   useEffect(() => () => stopRecording(), []);
 
+  // Defined here (not module scope) so the hold-to-talk row can read the
+  // page-level recording state.
+  const trailingRows: MatrixRow[] = [
+    { label: "Icon button", render: (s) => <TrailingIconField surface={s} /> },
+    {
+      label: "Hold to talk",
+      render: (s) => (
+        <HoldToTalkField
+          surface={s}
+          recording={recordingSurface === s}
+          analyser={analyser}
+          onStart={() => startRecording(s)}
+          onStop={stopRecording}
+        />
+      ),
+    },
+  ];
+
   return (
-    <main className="ml-44 min-h-screen bg-background text-foreground">
-      <div className="max-w-5xl mx-auto px-10 py-12">
-        <header className="mb-10">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
-            Design System
-          </p>
-          <h1 className="text-3xl tracking-tight">Text Fields</h1>
-        </header>
+    <DSPage title="Text Fields">
+      <Section title="States">
+        <SurfaceMatrix rows={STATE_ROWS} />
+      </Section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 items-start">
-          <section>
-            <h2 className="text-lg tracking-tight mb-4">Surface: dark</h2>
-            <DarkSurface>
-              <Showcase
-                surface="dark"
-                recording={recordingSurface === "dark"}
-                analyser={analyser}
-                onStart={() => startRecording("dark")}
-                onStop={stopRecording}
-              />
-            </DarkSurface>
-          </section>
-          <section>
-            <h2 className="text-lg tracking-tight mb-4">Surface: light</h2>
-            <LightSurface>
-              <Showcase
-                surface="light"
-                recording={recordingSurface === "light"}
-                analyser={analyser}
-                onStart={() => startRecording("light")}
-                onStop={stopRecording}
-              />
-            </LightSurface>
-          </section>
-        </div>
+      <Section title="Sizes" subtitle="Regular (default) · Compact (sm) · Large (lg).">
+        <SurfaceMatrix rows={SIZE_ROWS} />
+      </Section>
 
-        <Section title="Props">
-          <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
-{`<TextField
+      <Section
+        title="Trailing"
+        subtitle="An inline DS Button — icon-only, or labelled. Hold the labelled button to record a voice note."
+      >
+        <SurfaceMatrix rows={trailingRows} />
+      </Section>
+
+      <Section title="Props">
+        <PropsBlock>{`<TextField
   surface?:  "dark" | "light"          // default: "dark"
   size?:     "md" | "sm" | "lg"        // Regular (default) | Compact | Large
   error?:    boolean                   // orange alert border + aria-invalid
@@ -113,17 +146,39 @@ function DSTextFields() {
   trailing?: ReactNode                 // inline DS Button (icon or labelled)
   containerClassName?: string          // class on the pill wrapper
   ...native input props                // value, onChange, placeholder, …
-/>`}
-          </pre>
-        </Section>
-      </div>
-    </main>
+/>`}</PropsBlock>
+      </Section>
+    </DSPage>
   );
 }
 
-// ── Per-surface showcase: States · Sizes · Trailing ───────────────────────────
+// ─── Trailing-button demos ────────────────────────────────────────────────
 
-function Showcase({
+function TrailingIconField({ surface }: { surface: Surface }) {
+  const [text, setText] = useState("");
+  return (
+    <TextField
+      surface={surface}
+      value={text}
+      onChange={(ev) => setText(ev.target.value)}
+      placeholder="Enter your name"
+      trailing={
+        <Button
+          surface={surface}
+          variant="primary"
+          size="icon-sm"
+          type="button"
+          aria-label="Send"
+          disabled={!text.trim()}
+        >
+          <ArrowUp size={13} strokeWidth={2} />
+        </Button>
+      }
+    />
+  );
+}
+
+function HoldToTalkField({
   surface,
   recording,
   analyser,
@@ -136,214 +191,53 @@ function Showcase({
   onStart: () => void;
   onStop: () => void;
 }) {
-  const [iconText, setIconText] = useState("");
   const [labelText, setLabelText] = useState("");
-  const [regular, setRegular] = useState("");
-  const [compact, setCompact] = useState("");
-  const [large, setLarge] = useState("");
   const barClass = surface === "dark" ? "bg-white" : "bg-foreground";
-
   return (
-    <div className="flex flex-col gap-9 max-w-sm">
-      <Group title="States">
-        <Row label="Default">
-          <TextField surface={surface} placeholder="Add a note for yourself…" readOnly />
-        </Row>
-        <Row label="Active">
-          <TextField surface={surface} active defaultValue="Grateful for the slow morning" />
-        </Row>
-        <Row label="Error">
-          <div className="flex flex-col gap-2">
-            <TextField
-              surface={surface}
-              type="password"
-              error
-              defaultValue="short"
-              placeholder="At least 8 characters"
-            />
-            <FieldError>Your password needs at least 8 characters.</FieldError>
-          </div>
-        </Row>
-      </Group>
-
-      <Group title="Sizes">
-        <Row label="Regular">
-          <TextField
-            surface={surface}
-            value={regular}
-            onChange={(ev) => setRegular(ev.target.value)}
-            placeholder="Add a note for yourself…"
-          />
-        </Row>
-        <Row label="Compact">
-          <TextField
-            surface={surface}
-            size="sm"
-            value={compact}
-            onChange={(ev) => setCompact(ev.target.value)}
-            placeholder="Type here…"
-          />
-        </Row>
-        <Row label="Large">
-          <TextField
-            surface={surface}
-            size="lg"
-            value={large}
-            onChange={(ev) => setLarge(ev.target.value)}
-            placeholder="Enter your name"
-          />
-        </Row>
-      </Group>
-
-      <Group title="Trailing">
-        <Row label="Icon button">
-          <TextField
-            surface={surface}
-            value={iconText}
-            onChange={(ev) => setIconText(ev.target.value)}
-            placeholder="Enter your name"
-            trailing={
-              <Button
-                surface={surface}
-                variant="primary"
-                size="icon-sm"
-                type="button"
-                aria-label="Send"
-                disabled={!iconText.trim()}
-              >
-                <ArrowUp size={13} strokeWidth={2} />
-              </Button>
-            }
-          />
-        </Row>
-        <Row label="Labelled button — hold to talk">
-          <TextField
-            surface={surface}
-            value={recording ? "" : labelText}
-            onChange={(ev) => setLabelText(ev.target.value)}
-            placeholder={recording ? "" : "Type a Message…"}
-            readOnly={recording}
-            active={recording}
-            className={recording ? "hidden" : undefined}
-            leading={
-              recording ? <Waveform analyser={analyser} barClassName={barClass} /> : undefined
-            }
-            trailing={
-              <Button
-                surface={surface}
-                variant="primary"
-                size={labelText.trim() && !recording ? "icon" : "md"}
-                type="button"
-                pressed={recording}
-                className={recording ? "opacity-80" : undefined}
-                onMouseDown={(e) => e.preventDefault()}
-                onPointerDown={(e) => {
-                  if (labelText.trim() || recording) return;
-                  e.preventDefault();
-                  onStart();
-                }}
-                onPointerUp={() => recording && onStop()}
-                onPointerCancel={() => recording && onStop()}
-                onPointerLeave={() => recording && onStop()}
-                aria-label={
-                  recording
-                    ? "Release to send voice note"
-                    : labelText.trim()
-                      ? "Send"
-                      : "Hold to record voice note"
-                }
-              >
-                {labelText.trim() && !recording ? (
-                  <ArrowUp size={15} strokeWidth={2} />
-                ) : (
-                  <>
-                    <Mic size={15} strokeWidth={2} />
-                    Hold to talk
-                  </>
-                )}
-              </Button>
-            }
-          />
-        </Row>
-      </Group>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mb-12">
-      <h2 className="text-lg tracking-tight mb-4">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function Group({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-[11px] tracking-[0.3em] uppercase text-current opacity-70">
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[11px] tracking-[0.25em] uppercase text-current opacity-60">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function DarkSurface({ children }: { children: React.ReactNode }) {
-  return <SurfacePanel tone="dark">{children}</SurfacePanel>;
-}
-
-function LightSurface({ children }: { children: React.ReactNode }) {
-  return <SurfacePanel tone="light">{children}</SurfacePanel>;
-}
-
-function SurfacePanel({
-  tone,
-  children,
-}: {
-  tone: Surface;
-  children: React.ReactNode;
-}) {
-  const bg = tone === "dark" ? "/background.png" : "/light-blur-bg.png";
-  const textColor = tone === "dark" ? "text-white" : "text-foreground";
-  return (
-    <div className="relative rounded-2xl overflow-hidden border border-border">
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${bg})` }}
-      />
-      <div className={`relative px-6 py-7 ${textColor}`}>{children}</div>
-    </div>
+    <TextField
+      surface={surface}
+      value={recording ? "" : labelText}
+      onChange={(ev) => setLabelText(ev.target.value)}
+      placeholder={recording ? "" : "Type a Message…"}
+      readOnly={recording}
+      active={recording}
+      className={recording ? "hidden" : undefined}
+      leading={recording ? <Waveform analyser={analyser} barClassName={barClass} /> : undefined}
+      trailing={
+        <Button
+          surface={surface}
+          variant="primary"
+          size={labelText.trim() && !recording ? "icon" : "md"}
+          type="button"
+          pressed={recording}
+          className={recording ? "opacity-80" : undefined}
+          onMouseDown={(e) => e.preventDefault()}
+          onPointerDown={(e) => {
+            if (labelText.trim() || recording) return;
+            e.preventDefault();
+            onStart();
+          }}
+          onPointerUp={() => recording && onStop()}
+          onPointerCancel={() => recording && onStop()}
+          onPointerLeave={() => recording && onStop()}
+          aria-label={
+            recording
+              ? "Release to send voice note"
+              : labelText.trim()
+                ? "Send"
+                : "Hold to record voice note"
+          }
+        >
+          {labelText.trim() && !recording ? (
+            <ArrowUp size={15} strokeWidth={2} />
+          ) : (
+            <>
+              <Mic size={15} strokeWidth={2} />
+              Hold to talk
+            </>
+          )}
+        </Button>
+      }
+    />
   );
 }

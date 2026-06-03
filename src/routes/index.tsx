@@ -3,6 +3,9 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { Button } from "@/components/Button";
+import { ChatBubble } from "@/components/ChatBubble";
+import { YunaAvatar } from "@/components/YunaAvatar";
 import { useDarkBlurImage, useWelcomeImage } from "@/lib/theme-prefs";
 import { usePlatform } from "@/lib/platform";
 
@@ -21,17 +24,11 @@ function Index() {
   const welcomeBg = useWelcomeImage();
   const blurBg = useDarkBlurImage();
   const platform = usePlatform();
-  // Android can't render backdrop-filter, so the frosted cards over the
-  // un-blurred forest photo look harsh. Paint the pre-blurred photo into
-  // each card's background instead — fixed attachment so the patch aligns
-  // with what's behind the card. Chat bubbles keep a light white wash to
-  // help text contrast; the bottom sheet uses the blur image alone.
-  const bubbleStyle =
-    platform === "android"
-      ? ({
-          background: `linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), url(${blurBg}) center/cover fixed no-repeat`,
-        } as const)
-      : undefined;
+  // Android can't render backdrop-filter, so the frosted bottom sheet over the
+  // un-blurred forest photo looks harsh. Paint the pre-blurred photo into its
+  // background instead — fixed attachment so the patch aligns with what's
+  // behind the sheet. (Chat bubbles get the same treatment via ChatBubble's
+  // `frostedImage` prop.)
   const sheetStyle =
     platform === "android"
       ? ({
@@ -56,95 +53,41 @@ function Index() {
         <div className="flex-1 flex flex-col justify-center">
         <div className="flex items-end gap-3">
           <div
-            className="relative h-14 w-14 shrink-0"
+            className="shrink-0"
             style={{
               animation:
                 "welcome-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
             }}
           >
-            {/* Outer breathing halo */}
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
-              style={{
-                width: 220,
-                height: 220,
-                background:
-                  "radial-gradient(circle, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.14) 28%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0) 70%)",
-                animation: "glow-breathe 7.5s ease-in-out infinite",
-                filter: "blur(2px)",
-                transform: "translate(-50%, -50%)",
-                willChange: "transform, opacity",
-              }}
-            />
-            {/* Slow drifting glow that softens the breathe */}
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
-              style={{
-                width: 160,
-                height: 160,
-                background:
-                  "radial-gradient(circle at 40% 40%, rgba(255,255,255,0.28), rgba(255,255,255,0) 65%)",
-                animation: "glow-drift 11s ease-in-out infinite",
-                mixBlendMode: "screen",
-                filter: "blur(6px)",
-                transform: "translate(-50%, -50%)",
-                willChange: "transform",
-              }}
-            />
-            {/* Rotating conic ring tracing the stroke */}
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 pointer-events-none rounded-full"
-              style={{
-                width: 64,
-                height: 64,
-                background:
-                  "conic-gradient(from 0deg, rgba(255,255,255,0.95), rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.95))",
-                WebkitMask:
-                  "radial-gradient(circle, transparent 58%, #000 62%, #000 96%, transparent 100%)",
-                mask: "radial-gradient(circle, transparent 58%, #000 62%, #000 96%, transparent 100%)",
-                animation: "glow-spin 9s linear infinite",
-                filter: "blur(1.5px)",
-                transform: "translate(-50%, -50%)",
-                willChange: "transform",
-              }}
-            />
-            <img
-              src="/avatar.png"
-              alt="Yuna avatar"
-              className="relative h-14 w-14"
-            />
+            <YunaAvatar glow size={56} />
           </div>
           <div className="flex-1 min-w-0 flex flex-col gap-3">
-            <div
-              className="rounded-2xl border border-white/25 bg-white/10 backdrop-blur-sm px-5 py-4"
+            <ChatBubble
+              from="yuna"
+              size="lg"
+              tail={false}
+              frostedImage={blurBg}
               style={{
                 animation:
                   "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 120ms both",
-                ...bubbleStyle,
               }}
             >
-              <p className="text-[20px] leading-[1.4] text-white">
-                Hi, I'm Yuna.
-                <br />
-                <br />
-                Here to listen, reflect, and grow with you.
-              </p>
-            </div>
-            <div
-              className="rounded-2xl rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm px-5 py-4"
+              Hi, I'm Yuna.
+              <br />
+              <br />
+              Here to listen, reflect, and grow with you.
+            </ChatBubble>
+            <ChatBubble
+              from="yuna"
+              size="lg"
+              frostedImage={blurBg}
               style={{
                 animation:
                   "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 220ms both",
-                ...bubbleStyle,
               }}
             >
-              <p className="text-[20px] leading-[1.4] text-white">
-                How would you like to get started?
-              </p>
-            </div>
+              How would you like to get started?
+            </ChatBubble>
           </div>
         </div>
         </div>
@@ -159,57 +102,35 @@ function Index() {
         }}
       >
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
+          <Button
+            surface="dark"
+            variant="card"
             onClick={() => navigate({ to: "/employer-access" })}
-            className="w-full rounded-2xl border border-white/40 px-5 py-4 flex items-center gap-3 transition-transform duration-100 ease-out active:scale-[0.99]"
+            subtitle="Free access and 100% private"
+            trailing={<ChevronRight size={20} strokeWidth={1.75} aria-hidden />}
           >
-            <div className="flex-1 min-w-0 text-left">
-              <div className="text-[17px] font-semibold leading-tight text-white">
-                Sign up through my employer
-              </div>
-              <div className="text-[14px] text-white/70 mt-1">
-                Free access and 100% private
-              </div>
-            </div>
-            <ChevronRight
-              size={20}
-              strokeWidth={1.75}
-              aria-hidden
-              className="shrink-0 text-white/60"
-            />
-          </button>
+            Sign up through my employer
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            surface="dark"
+            variant="card"
             onClick={() => navigate({ to: "/auth" })}
-            className="w-full rounded-2xl border border-white/40 px-5 py-4 flex items-center gap-3 transition-transform duration-100 ease-out active:scale-[0.99]"
+            subtitle="3-day free trial, cancel anytime"
+            trailing={<ChevronRight size={20} strokeWidth={1.75} aria-hidden />}
           >
-            <div className="flex-1 min-w-0 text-left">
-              <div className="text-[17px] font-semibold leading-tight text-white">
-                Sign up on my own
-              </div>
-              <div className="text-[14px] text-white/70 mt-1">
-                3-day free trial, cancel anytime
-              </div>
-            </div>
-            <ChevronRight
-              size={20}
-              strokeWidth={1.75}
-              aria-hidden
-              className="shrink-0 text-white/60"
-            />
-          </button>
+            Sign up on my own
+          </Button>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-[14px] text-white/85">
-          <button type="button" className="text-right active:opacity-70 transition-opacity">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <Button surface="dark" variant="link" className="justify-self-end">
             Referral Code
-          </button>
+          </Button>
           <span aria-hidden className="text-white/30">|</span>
-          <Link to="/login" className="text-left active:opacity-70 transition-opacity">
-            Login
-          </Link>
+          <Button asChild surface="dark" variant="link" className="justify-self-start">
+            <Link to="/login">Login</Link>
+          </Button>
         </div>
       </div>
       </>

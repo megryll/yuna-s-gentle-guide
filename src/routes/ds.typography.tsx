@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DSPage, Section, SurfacePair } from "@/components/ds-surface";
+import { DSPage, Section, SurfacePair } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/typography")({
   head: () => ({
@@ -38,17 +38,7 @@ const SCALE: ScaleRow[] = [
 
 function DSTypography() {
   return (
-    <DSPage
-      title="Typography"
-      intro={
-        <>
-          Two font families. Headings use <strong>Fraunces</strong> (variable
-          serif). Body copy and button labels use <strong>Stara</strong>{" "}
-          (warm serif, set on <code>body</code> so it inherits everywhere).
-          Don't add a third.
-        </>
-      }
-    >
+    <DSPage title="Typography">
       {/* ─── Families ───────────────────────────────────────────────────── */}
       <Section title="Families">
         <div className="grid grid-cols-1 gap-3">
@@ -77,10 +67,7 @@ function DSTypography() {
       </Section>
 
       {/* ─── Scale ──────────────────────────────────────────────────────── */}
-      <Section
-        title="Scale"
-        subtitle="Arbitrary text-[Npx] sizes are intentional — Tailwind's rounded scale doesn't hit the integer sizes the design needs."
-      >
+      <Section title="Scale">
         <div className="rounded-2xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -109,74 +96,35 @@ function DSTypography() {
         </div>
       </Section>
 
-      {/* ─── On photo bgs ────────────────────────────────────────────────── */}
+      {/* ─── Color ──────────────────────────────────────────────────────── */}
       <Section
-        title="On photo backgrounds"
-        subtitle="Body and meta labels must clear the alpha contrast floors enforced by the shims in src/styles.css."
+        title="Color"
+        subtitle="Text is white on dark surfaces, ink (text-foreground) on light. Opacity steps down for secondary, meta, and hint."
       >
         <SurfacePair
           align="start"
-          innerLabel="Display — Fraunces"
-          renderRow={(surface) => {
-            const ink = surface === "dark" ? "text-white" : "text-foreground";
-            return (
-              <div className="flex flex-col gap-2">
-                <p className={`font-display text-3xl tracking-tight ${ink}`}>
-                  Quiet space
-                </p>
-                <p className={`font-display text-2xl tracking-tight ${ink}`}>
-                  Section heading
-                </p>
-                <p className={`font-display text-xl tracking-tight ${ink}`}>
-                  Card heading
-                </p>
-              </div>
-            );
-          }}
-        />
-        <div className="h-4" />
-        <SurfacePair
-          align="start"
-          innerLabel="Body — Stara"
           renderRow={(surface) => {
             const isDark = surface === "dark";
-            const primary = isDark ? "text-white" : "text-foreground";
+            const ink = isDark ? "text-white" : "text-foreground";
             const secondary = isDark ? "text-white/85" : "text-foreground/85";
             const meta = isDark ? "text-white/75" : "text-foreground/75";
             const hint = isDark ? "text-white/55" : "text-foreground/60";
             return (
               <div className="flex flex-col gap-2">
-                <p className={`text-[18px] leading-snug ${primary}`}>
+                <p className={`font-display text-2xl tracking-tight ${ink}`}>
+                  Quiet space for your mind
+                </p>
+                <p className={`text-[15px] leading-snug ${ink}`}>
                   Here to listen, reflect, and grow with you.
                 </p>
                 <p className={`text-[15px] leading-snug ${secondary}`}>
-                  Body / secondary at 85% (floor).
+                  A calmer place to check in with yourself.
                 </p>
                 <p className={`text-[13px] leading-snug ${meta}`}>
-                  Meta / value at 75% (floor on dark, 70% on light).
+                  Last reflection saved a few moments ago.
                 </p>
                 <p className={`text-[13px] leading-snug ${hint}`}>
-                  Disabled / hint at 55% (floor).
-                </p>
-              </div>
-            );
-          }}
-        />
-        <div className="h-4" />
-        <SurfacePair
-          align="start"
-          innerLabel="Tracked uppercase — Stara"
-          renderRow={(surface) => {
-            const isDark = surface === "dark";
-            const eyebrow = isDark ? "text-white/65" : "text-foreground/65";
-            const toggle = isDark ? "text-white" : "text-foreground";
-            return (
-              <div className="flex flex-col gap-2">
-                <p className={`text-[11px] tracking-[0.3em] uppercase ${eyebrow}`}>
-                  Eyebrow label
-                </p>
-                <p className={`text-[11px] tracking-[0.16em] uppercase ${toggle}`}>
-                  Toggle label
+                  Tap to begin whenever you're ready.
                 </p>
               </div>
             );

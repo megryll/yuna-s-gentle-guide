@@ -42,6 +42,7 @@ const PAGES: Entry[] = [
 
 const DS_PAGES: Entry[] = [
   { label: "Typography", to: "/ds/typography" },
+  { label: "Avatars", to: "/ds/avatars" },
   { label: "Buttons", to: "/ds/buttons" },
   { label: "Text Fields", to: "/ds/text-fields" },
   { label: "Toast Alerts", to: "/ds/toasts" },
@@ -49,6 +50,7 @@ const DS_PAGES: Entry[] = [
   { label: "Slider", to: "/ds/slider" },
   { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
   { label: "Sentiment Tags", to: "/ds/sentiment-tags" },
+  { label: "Chat Bubbles", to: "/ds/chat-bubbles" },
 ];
 
 function readSearchObject(search: unknown): Record<string, unknown> {

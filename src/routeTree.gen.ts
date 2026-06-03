@@ -32,7 +32,9 @@ import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
+import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
+import { Route as DsAvatarsRouteImport } from './routes/ds.avatars'
 
 const YouRoute = YouRouteImport.update({
   id: '/you',
@@ -149,9 +151,19 @@ const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
   path: '/ds/segmented-toggle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsChatBubblesRoute = DsChatBubblesRouteImport.update({
+  id: '/ds/chat-bubbles',
+  path: '/ds/chat-bubbles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
   id: '/ds/buttons',
   path: '/ds/buttons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsAvatarsRoute = DsAvatarsRouteImport.update({
+  id: '/ds/avatars',
+  path: '/ds/avatars',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -171,7 +183,9 @@ export interface FileRoutesByFullPath {
   '/wrap-up': typeof WrapUpRoute
   '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
+  '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -197,7 +211,9 @@ export interface FileRoutesByTo {
   '/wrap-up': typeof WrapUpRoute
   '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
+  '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -224,7 +240,9 @@ export interface FileRoutesById {
   '/wrap-up': typeof WrapUpRoute
   '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
+  '/ds/avatars': typeof DsAvatarsRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -252,7 +270,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/wrap-up-2'
     | '/you'
+    | '/ds/avatars'
     | '/ds/buttons'
+    | '/ds/chat-bubbles'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -278,7 +298,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/wrap-up-2'
     | '/you'
+    | '/ds/avatars'
     | '/ds/buttons'
+    | '/ds/chat-bubbles'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -304,7 +326,9 @@ export interface FileRouteTypes {
     | '/wrap-up'
     | '/wrap-up-2'
     | '/you'
+    | '/ds/avatars'
     | '/ds/buttons'
+    | '/ds/chat-bubbles'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -331,7 +355,9 @@ export interface RootRouteChildren {
   WrapUpRoute: typeof WrapUpRoute
   WrapUp2Route: typeof WrapUp2Route
   YouRoute: typeof YouRoute
+  DsAvatarsRoute: typeof DsAvatarsRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  DsChatBubblesRoute: typeof DsChatBubblesRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSentimentTagsRoute: typeof DsSentimentTagsRoute
   DsSliderRoute: typeof DsSliderRoute
@@ -505,11 +531,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSegmentedToggleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/chat-bubbles': {
+      id: '/ds/chat-bubbles'
+      path: '/ds/chat-bubbles'
+      fullPath: '/ds/chat-bubbles'
+      preLoaderRoute: typeof DsChatBubblesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/buttons': {
       id: '/ds/buttons'
       path: '/ds/buttons'
       fullPath: '/ds/buttons'
       preLoaderRoute: typeof DsButtonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/avatars': {
+      id: '/ds/avatars'
+      path: '/ds/avatars'
+      fullPath: '/ds/avatars'
+      preLoaderRoute: typeof DsAvatarsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -531,7 +571,9 @@ const rootRouteChildren: RootRouteChildren = {
   WrapUpRoute: WrapUpRoute,
   WrapUp2Route: WrapUp2Route,
   YouRoute: YouRoute,
+  DsAvatarsRoute: DsAvatarsRoute,
   DsButtonsRoute: DsButtonsRoute,
+  DsChatBubblesRoute: DsChatBubblesRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSentimentTagsRoute: DsSentimentTagsRoute,
   DsSliderRoute: DsSliderRoute,

@@ -37,7 +37,9 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
 8. **Don't hardcode hex colors.** Use Tailwind tokens (`foreground`, `background`, `muted`, `border`, `accent`, etc.) defined in `src/styles.css` `@theme inline`.
 
-9. **Card-as-button is its own pattern, not a Button.** The `rounded-2xl hairline` clickable content cards on Home/You/Progress/Activities are intentionally separate. Don't force them into the DS Button — they may become their own primitive later.
+9. **Two different "card" things — don't conflate them.**
+   - **List-row option cards** — a full-width selectable row (title + optional subtitle + trailing chevron, e.g. Welcome's sign-up choices) — are `<Button variant="card">`. Use the prop (`subtitle`, `trailing`), never hand-rolled `rounded-2xl border` markup.
+   - **Content / feed cards** — the `rounded-2xl hairline` tappable content tiles on Home/You/Progress/Activities — remain their own pattern. Don't force them into the DS Button; they may become their own primitive later.
 
 10. **Keep things tight.** No new abstractions, helpers, or wrappers unless they're earned by ≥2 call sites. Prefer editing existing files over creating new ones. Don't write comments that just narrate the code; only comment when the *why* isn't obvious.
 
@@ -52,31 +54,66 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
    Don't reach for `text-white/40` or `text-foreground/55` for any text the user is meant to read — the design needs more weight (heavier icon, fill, layout), not lower ink. Inline-style colors (`#cdebb5` on a pale-green chip, hardcoded green gradients, etc.) must be mode-aware via `useAppMode()` or they fail this rule in the opposite mode.
 
+## Theming: three axes
+
+Every pixel is decided by three independent axes. Thread them through **props and tokens** — never branch on them with hardcoded styles. The shims in `styles.css` do the heavy lifting; your job is to use the vocabulary they recognize.
+
+**1. Cluster — which background a thing sits on.** Carried by the `surface` prop:
+- `surface="dark"` — photo-bg cluster (Welcome, Auth, Intro; Home/You/Progress while in dark mode).
+- `surface="light"` — light app-tab cluster.
+
+DS components take `surface` — pass it, don't restyle. When unset it defaults per the component (`Button` defaults to `light`).
+
+**2. App mode — the user's Light/Dark toggle** (`useAppMode()` → `"dark" | "light"`). Drives the photo and inverts ink:
+- `PhoneFrame themed` swaps the photo (`/dark4-blur.png` ↔ `/light-blur-bg.png`) and adds `.theme-light` in light mode. `.theme-light` remaps every `text-white/*` → ink and `border-white/*` → dark — so **a dark-cluster screen authored with `text-white/85` reads correctly in light mode automatically. Author once, in white-on-dark vocabulary.**
+- A `surface="dark"` screen must drop its DS components to `surface="light"` when the app is in light mode. `ScreenChrome` already derives this (`effectiveSurface`); copy that pattern on bespoke screens — don't leave dark-styled controls on the light photo.
+- **Mode lock:** onboarding routes (auth, login, accept-terms, intro, employer-access) stay on the dark photo regardless of the toggle via `useDarkBlurImage()`; Welcome uses the lush `useWelcomeImage()`. In-app screens follow the toggle (`themed`).
+- **Overlays** (drawer, dialog) add `.overlay-on-dark` in dark mode to repoint `bg-background`/`bg-card` → white-alpha. Reuse the `mode === "dark" && "overlay-on-dark"` pattern from `ui/drawer.tsx`; don't hand-pick overlay fills.
+- **Inline / arbitrary colors are invisible to `.theme-light`.** Any non-token color (a green chip, a gradient) must branch on `useAppMode()` itself, or it breaks in the opposite mode (rule 11).
+
+**3. Platform — simulated device** (`usePlatform()` → `"ios" | "android"`). `PhoneFrame` adds `.platform-android`, which **kills all backdrop blur** and lifts white-alpha / off-white surface opacities so frosted cards stay defined without it:
+- Never let `backdrop-blur` be the *only* thing separating a surface from its background — it vanishes on Android. Pair it with a fill the shim can lift.
+- Use standard Tailwind alpha stops (`bg-white/10`, `bg-background/60`, …) so the Android remaps apply; a one-off arbitrary alpha won't be covered.
+- The only place iOS/Android diverges in type is `font-sans-ui`, and that's reserved for simulated OS chrome (keyboard, notification banners, permission dialog) — never app content (rule 6).
+
+**Always preview a new/changed screen in all four combinations — dark × light, iOS × Android — via the admin toggles before calling it done.**
+
 ## Source of truth — file map
 
 | Concern | File |
 |---|---|
-| Buttons | `src/components/Button.tsx` + `src/routes/ds.buttons.tsx` |
+| Buttons (incl. `card` + `link` variants) | `src/components/Button.tsx` + `src/routes/ds.buttons.tsx` |
+| Avatars (+ glow aura) | `src/components/YunaAvatar.tsx` + `src/routes/ds.avatars.tsx` |
+| Chat bubbles | `src/components/ChatBubble.tsx` + `src/routes/ds.chat-bubbles.tsx` |
 | Tokens (color, radius) | `src/styles.css` (`:root`, `.dark`, `@theme inline`) |
 | Fonts | `src/styles.css` (`@font-face`, `body`, `.font-display`, `.font-sans-ui`) |
 | Phone frame | `src/components/PhoneFrame.tsx` |
 | App-tab chrome (header + AppBar) | `src/components/ScreenChrome.tsx` |
+| Light/dark mode (toggle, photo, ink inversion) | `src/lib/theme-prefs.ts` + `.theme-light` / `.overlay-on-dark` in `src/styles.css` |
+| iOS/Android platform (blur kill, surface lift) | `src/lib/platform.ts` + `.platform-android` in `src/styles.css` |
+| DS-page doc kit (DSPage / Section / SurfaceMatrix / PropsBlock) | `src/ds-docs/surface.tsx` |
 | Sidebar (page index) | `src/components/AdminSidebar.tsx` |
 
 ## Adding a new screen
 
 1. Pick the cluster: photo-bg (welcome/auth/intro) or light app-tab (home/you/etc.).
-2. Wrap in `PhoneFrame` (photo-bg) or `ScreenChrome` (light cluster).
+2. Wrap in `PhoneFrame` (photo-bg) or `ScreenChrome` (light cluster). For in-app screens that follow the user's toggle, pass `themed`; onboarding routes lock to the dark photo (see Theming).
 3. Apply the cluster's padding rule (rule 4 above).
-4. Every CTA goes through `<Button>` from `@/components/Button`. Pass `surface="dark"` for photo-bg, `surface="light"` for light cluster.
-5. Register the page under "Pages" in `AdminSidebar.tsx`.
+4. Build the UI by composing existing DS components and adjusting their **props** — don't hand-roll a button / input / toggle / tag (rule 2). Pass `surface="dark"` on the photo cluster and `surface="light"` on the light cluster, and flip a dark-cluster screen's components to `surface="light"` when the app is in light mode.
+5. For anything the DS doesn't cover, check whether it's a missing variant (extend the source + DS page, rule 3) before writing one-off markup.
+6. Register the page under "Pages" (`PAGES`) in `AdminSidebar.tsx`.
+7. Preview in dark × light and iOS × Android before declaring done.
 
 ## Adding a new design-system primitive
 
-1. Build the component in `src/components/<Name>.tsx`.
-2. Build a `/ds/<name>` route showing all variants × sizes × states + a Props section.
-3. Add it under "Design System" in `AdminSidebar.tsx`.
-4. Migrate call sites.
+1. Build the component in `src/components/<Name>.tsx`. Give it a `surface` prop if it can ever sit on the dark cluster, and a JSDoc header documenting every prop (this is the source the DS page mirrors).
+2. Build a `/ds/<name>` route with the doc kit in `src/ds-docs/surface.tsx` (`ds-docs/` is doc-only — the app never imports it). The house anatomy is strict, so the DS reads as one reusable system rather than per-app pages:
+   - **Sections are only `Variants`, `Sizes`, `States`** (include the ones that apply), then `Props` last. Never invent app-specific section names ("From", "Glow", "Onboarding"). Row labels name the variant/size/state itself (`Primary`, `md`, `Disabled`), never where it's used.
+   - **App-agnostic — no prose tying a component to a screen or call site.** Drop "used on Home", "the rightmost one", usage history, px-where-used. No section subtitles unless one genuinely prevents misuse; let the examples speak.
+   - Render every row on **both** photo surfaces with `<SurfaceMatrix rows={…}>` (labelled rows × dark + light columns) — or `<SurfacePair>` for free-form layouts. Never document on one surface only.
+   - Close with `<Section title="Props"><PropsBlock>{…}</PropsBlock></Section>` — a plain-text prop signature with types + defaults mirroring the real API. Keep it, the JSDoc, and the component in sync (rule 3).
+3. Register it under "Design System" (`DS_PAGES`) in `AdminSidebar.tsx`.
+4. Migrate call sites — via the prop, not by copying classes.
 
 ## Flag, don't silently fix
 
@@ -93,3 +130,6 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 - [ ] No `font-sans-ui` outside simulated OS chrome (Stara wins for all app content)
 - [ ] No `hover:` states added (active: only)
 - [ ] Padding matches the cluster rules
+- [ ] `surface` matches the cluster, and flips to `light` when the app is in light mode
+- [ ] Reads correctly in dark **and** light mode (no sub-floor contrast; inline/arbitrary colors are mode-aware)
+- [ ] Reads correctly on iOS **and** Android (no surface relies on blur alone)
