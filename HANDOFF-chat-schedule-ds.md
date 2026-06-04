@@ -13,10 +13,10 @@ In-app-screen DS audit thread, separate from the onboarding-flow audit in
 
 ## Git state
 
-- Branch: `main`. Last commit: `8d02434` (app-bar light fix + employer subcopy).
-- **Part A below is UNCOMMITTED** (7 files). Build passes; not yet git-committed.
+- Branch: `main`. **Part A is committed** as `9b8ed4e` (with this doc).
+  Last pushed commit is `8d02434` — `9b8ed4e` is **local, not pushed yet**.
 - `.claude/` is untracked (local) — do **not** commit it.
-- **First next step: commit the Part A changes** (they're complete + build-green).
+- Next: `git push origin main` when ready; then decide A/B on the Schedule drawer.
 
 ---
 
@@ -104,7 +104,7 @@ the overlay-CTA convention; contrast floors met; standard alpha stops; DS
 - **`backdrop-blur` sm/md drift** across frosted surfaces — DS source is `md`.
 
 ## Suggested next steps (priority order)
-1. **Commit Part A** (build-green, complete).
+1. **Push** Part A (`9b8ed4e`) when ready.
 2. Decide A/B on the Schedule drawer.
 3. Extract `IconMedallion` (resolves Schedule #1 + chat #6 + wrap-ups).
 4. Continue in-app audit: VoiceSession voice mode, wrap-up / wrap-up-2.
