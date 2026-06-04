@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YouRouteImport } from './routes/you'
-import { Route as WrapUp2RouteImport } from './routes/wrap-up-2'
 import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -33,6 +32,7 @@ import { Route as DsSuggestionChipRouteImport } from './routes/ds.suggestion-chi
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
+import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
 import { Route as DsDividerRouteImport } from './routes/ds.divider'
 import { Route as DsCheckBadgeRouteImport } from './routes/ds.check-badge'
@@ -45,11 +45,6 @@ import { Route as DsAppBarRouteImport } from './routes/ds.app-bar'
 const YouRoute = YouRouteImport.update({
   id: '/you',
   path: '/you',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WrapUp2Route = WrapUp2RouteImport.update({
-  id: '/wrap-up-2',
-  path: '/wrap-up-2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WrapUpRoute = WrapUpRouteImport.update({
@@ -162,6 +157,11 @@ const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
   path: '/ds/segmented-toggle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsIconsRoute = DsIconsRouteImport.update({
+  id: '/ds/icons',
+  path: '/ds/icons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsDrawerRoute = DsDrawerRouteImport.update({
   id: '/ds/drawer',
   path: '/ds/drawer',
@@ -217,7 +217,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
-  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
@@ -227,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -251,7 +251,6 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
-  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
@@ -261,6 +260,7 @@ export interface FileRoutesByTo {
   '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -286,7 +286,6 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
-  '/wrap-up-2': typeof WrapUp2Route
   '/you': typeof YouRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
@@ -296,6 +295,7 @@ export interface FileRoutesById {
   '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
@@ -322,7 +322,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
-    | '/wrap-up-2'
     | '/you'
     | '/ds/app-bar'
     | '/ds/avatars'
@@ -332,6 +331,7 @@ export interface FileRouteTypes {
     | '/ds/check-badge'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/icons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -356,7 +356,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
-    | '/wrap-up-2'
     | '/you'
     | '/ds/app-bar'
     | '/ds/avatars'
@@ -366,6 +365,7 @@ export interface FileRouteTypes {
     | '/ds/check-badge'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/icons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -390,7 +390,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tools'
     | '/wrap-up'
-    | '/wrap-up-2'
     | '/you'
     | '/ds/app-bar'
     | '/ds/avatars'
@@ -400,6 +399,7 @@ export interface FileRouteTypes {
     | '/ds/check-badge'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/icons'
     | '/ds/segmented-toggle'
     | '/ds/sentiment-tags'
     | '/ds/slider'
@@ -425,7 +425,6 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
-  WrapUp2Route: typeof WrapUp2Route
   YouRoute: typeof YouRoute
   DsAppBarRoute: typeof DsAppBarRoute
   DsAvatarsRoute: typeof DsAvatarsRoute
@@ -435,6 +434,7 @@ export interface RootRouteChildren {
   DsCheckBadgeRoute: typeof DsCheckBadgeRoute
   DsDividerRoute: typeof DsDividerRoute
   DsDrawerRoute: typeof DsDrawerRoute
+  DsIconsRoute: typeof DsIconsRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSentimentTagsRoute: typeof DsSentimentTagsRoute
   DsSliderRoute: typeof DsSliderRoute
@@ -453,13 +453,6 @@ declare module '@tanstack/react-router' {
       path: '/you'
       fullPath: '/you'
       preLoaderRoute: typeof YouRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/wrap-up-2': {
-      id: '/wrap-up-2'
-      path: '/wrap-up-2'
-      fullPath: '/wrap-up-2'
-      preLoaderRoute: typeof WrapUp2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wrap-up': {
@@ -616,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSegmentedToggleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/icons': {
+      id: '/ds/icons'
+      path: '/ds/icons'
+      fullPath: '/ds/icons'
+      preLoaderRoute: typeof DsIconsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/drawer': {
       id: '/ds/drawer'
       path: '/ds/drawer'
@@ -689,7 +689,6 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
-  WrapUp2Route: WrapUp2Route,
   YouRoute: YouRoute,
   DsAppBarRoute: DsAppBarRoute,
   DsAvatarsRoute: DsAvatarsRoute,
@@ -699,6 +698,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsCheckBadgeRoute: DsCheckBadgeRoute,
   DsDividerRoute: DsDividerRoute,
   DsDrawerRoute: DsDrawerRoute,
+  DsIconsRoute: DsIconsRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSentimentTagsRoute: DsSentimentTagsRoute,
   DsSliderRoute: DsSliderRoute,

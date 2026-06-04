@@ -82,7 +82,7 @@ export function FirstSessionDisclaimers({
       }}
     >
       <DrawerContent>
-        <div className="px-8 pt-12 pb-12 text-center">
+        <div className="px-6 pt-12 pb-10 text-center">
           <DrawerTitle>
             {current.title}
           </DrawerTitle>

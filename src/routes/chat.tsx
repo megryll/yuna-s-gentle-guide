@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Mic, MessageCircle, Phone, Settings, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, Mic, MessageCircle, Phone, Settings, User, Volume2, VolumeX, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { YunaMark } from "@/components/YunaMark";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { IconMedallion } from "@/components/IconMedallion";
 import {
   AMBIENCE_FILES,
   getAmbience,
@@ -770,7 +770,7 @@ function Chat() {
 
   const endChat = () => {
     clearVoiceGreeted();
-    navigate({ to: "/wrap-up-2" });
+    navigate({ to: "/wrap-up" });
   };
 
   const switchToText = () => {
@@ -846,16 +846,13 @@ function Chat() {
 
         {!inVoice && (
           <div className="absolute left-5 top-[112px] z-10">
-            <div
-              aria-hidden="true"
-              className="h-16 w-16 rounded-full overflow-hidden bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center"
-            >
+            <IconMedallion>
               {avatar ? (
                 <YunaAvatar variant={avatar} size={64} />
               ) : (
-                <YunaMark size={28} className="text-white" />
+                <User size={28} strokeWidth={1.6} className="text-white" aria-hidden />
               )}
-            </div>
+            </IconMedallion>
             <Button
               surface="dark"
               variant="primary"

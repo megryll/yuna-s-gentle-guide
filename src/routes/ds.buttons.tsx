@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUp, Bookmark, ChevronLeft, ChevronRight, Menu, MoreHorizontal, Volume2, X } from "lucide-react";
+import { ArrowUp, Bookmark, ChevronDown, ChevronLeft, ChevronRight, Menu, MoreHorizontal, Volume2, X } from "lucide-react";
 import { Button } from "@/components/Button";
 import { DSPage, PropsBlock, Row, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
 
@@ -57,6 +57,7 @@ function DSButtons() {
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Primary", render: (s) => <SizeRow surface={s} variant="primary" label="Continue" /> },
   { label: "Secondary", render: (s) => <SizeRow surface={s} variant="secondary" label="Continue" /> },
+  { label: "With icon", render: (s) => <IconLabelRow surface={s} /> },
   { label: "Link", render: (s) => <LinkRow surface={s} /> },
   { label: "Icon buttons", render: (s) => <IconButtonsRow surface={s} /> },
   { label: "Card", render: (s) => <CardRow surface={s} /> },
@@ -99,6 +100,29 @@ function SizeRow({
           {label}
         </Button>
       ))}
+    </Row>
+  );
+}
+
+// Icons live in the button's children, not a prop — place one before the label
+// (leading), after it (trailing), or both. The base gap spaces them; size the
+// glyph at the call site (text sizes don't auto-size svgs the way icon sizes do).
+function IconLabelRow({ surface }: { surface: "dark" | "light" }) {
+  return (
+    <Row className="gap-3">
+      <Button surface={surface} variant="secondary" size="sm">
+        <Volume2 size={16} strokeWidth={1.75} aria-hidden />
+        Leading
+      </Button>
+      <Button surface={surface} variant="secondary" size="sm">
+        Trailing
+        <ChevronDown size={16} strokeWidth={1.75} aria-hidden />
+      </Button>
+      <Button surface={surface} variant="secondary" size="sm">
+        <Volume2 size={16} strokeWidth={1.75} aria-hidden />
+        Both
+        <ChevronDown size={16} strokeWidth={1.75} aria-hidden />
+      </Button>
     </Row>
   );
 }

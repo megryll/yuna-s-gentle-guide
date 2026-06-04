@@ -1,12 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronDown, Share2, User, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { Slider } from "@/components/Slider";
-import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { IconMedallion } from "@/components/IconMedallion";
 import { HomeCardRow } from "@/components/HomeCards";
-import { useSentimentToneColor } from "@/components/SentimentTag";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { clearStoredMessages, loadStoredMessages, type ChatMsg } from "@/lib/chat-store";
 import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
@@ -25,176 +24,84 @@ export const Route = createFileRoute("/wrap-up")({
   component: WrapUp,
 });
 
-type Status = "loading" | "ready" | "error";
+// Hero keepsake shown in the photo card. Comma, not an em dash, per Yuna's voice.
+const HERO_MESSAGE = "Keep shining, you're making remarkable progress.";
 
-// Hold the loading state for a beat even if the LLM resolves early. Keeps
-// the skeleton on screen long enough to read as intentional rather than a
-// flicker.
-const MIN_LOADING_MS = 1250;
+// Detected-emotion breakdown for the session. Soft, on-brand hues (the same
+// muted palette the wrap-up highlights use) rather than the saturated
+// primaries of the reference mock. Values sum to 100. A real impl would
+// classify the transcript server-side.
+type Emotion = { name: string; value: number; color: string; note: string };
+
+const EMOTIONS: Emotion[] = [
+  {
+    name: "Joy",
+    value: 45,
+    color: "#F4B183",
+    note: "This came through as you talked about making space to rest.",
+  },
+  {
+    name: "Trust",
+    value: 25,
+    color: "#A7C7E7",
+    note: "You leaned into this as you shared what's been weighing on you.",
+  },
+  {
+    name: "Surprise",
+    value: 12,
+    color: "#F2D08A",
+    note: "A few moments caught you off guard as you reflected.",
+  },
+  {
+    name: "Fear",
+    value: 10,
+    color: "#C5B6E0",
+    note: "This sat underneath the worry about getting everything done.",
+  },
+  {
+    name: "Sadness",
+    value: 8,
+    color: "#9FD0CB",
+    note: "A quieter thread, present when you spoke about feeling stretched thin.",
+  },
+];
 
 // Two list-view home cards Yuna surfaces as new activities for this session.
 const PLACED_FOR_YOU: HomeCard[] = HOME_CARDS.filter((c) => c.isNew).slice(0, 2);
 
-// Palette tying each detected emotion to a soft, readable hue. Real impl
-// would classify the transcript server-side; this prototype hardcodes the
-// pairings so the sentiment-tagged-quote pattern reads true. Green +
-// orange-family emotions reuse the SentimentTag palette so positive and
-// negative signals look like the same language across the screen.
-function useEmotionColors(): Record<string, string> {
-  const toneColor = useSentimentToneColor();
-  return {
-    Overwhelm: "#F7A7A7",
-    Relief: toneColor("positive"),
-    Resolve: toneColor("negative"),
-    Hopefulness: "#A7C7E7",
-    "Self-compassion": "#C5B6E0",
-    Gratitude: toneColor("negative"),
-    Tenderness: "#F2B4D3",
-    Curiosity: "#B5DEDB",
-  };
-}
-
-// One highlight pairs a quote with the emotions Yuna heard underneath it.
-type Highlight = { quote: string; emotions: string[] };
-
-// Fallback used when the session has no substantive user turns. Quotes
-// match the prototype's stress-and-planning theme.
-const FALLBACK_HIGHLIGHTS: Highlight[] = [
-  {
-    quote: "Maybe I could try to organize my tasks better and take some time off to relax.",
-    emotions: ["Overwhelm", "Resolve"],
-  },
-  {
-    quote:
-      "I think I'll start by making a list of all the tasks I need to do and then prioritize them. I also want to set aside some time each day for relaxation.",
-    emotions: ["Relief", "Resolve", "Hopefulness"],
-  },
-  {
-    quote: "Yes, I think I might need to do that. Thank you for your support.",
-    emotions: ["Gratitude", "Self-compassion"],
-  },
-];
-
-// Cycling emotion sets used when we pair real extracted quotes with
-// prototype tags. Three sets keep enough variety that consecutive cards
-// don't all repeat the same colors.
-const PROTOTYPE_EMOTION_SETS: string[][] = [
-  ["Overwhelm", "Resolve"],
-  ["Relief", "Hopefulness"],
-  ["Gratitude", "Self-compassion"],
-  ["Curiosity", "Tenderness"],
+// Fallback change-talk quotes when the session has no substantive user turns.
+const FALLBACK_QUOTES = [
+  "Maybe I could try to organize my tasks better and take some time off to relax.",
+  "I think I'll start by making a list of all the tasks I need to do and then prioritize them. I also want to set aside some time each day for relaxation.",
+  "Yes, I think I might need to do that. Thank you for your support.",
 ];
 
 function WrapUp() {
   const navigate = useNavigate();
-  const { avatar } = useYunaIdentity();
-
-  const [status, setStatus] = useState<Status>("loading");
-  const [keepsake, setKeepsake] = useState<string>("");
-  const [themes, setThemes] = useState<string[]>([]);
-  // Sliders default to 0 (center). Touched flags let us persist null when
-  // the user never moved them, so "neutral" stays distinct from "no input."
-  const [stress, setStress] = useState(0);
-  const [mood, setMood] = useState(0);
-  const [stressTouched, setStressTouched] = useState(false);
-  const [moodTouched, setMoodTouched] = useState(false);
-
+  const { name, avatar } = useYunaIdentity();
   const idRef = useRef<string>(keepsakeUid());
 
-  // Extract a small set of user-text quotes from the conversation to use as
-  // session highlights. Memoized so loading transitions don't re-walk the
-  // transcript on every render.
-  const highlights = useMemo(() => extractHighlights(), []);
+  const quotes = useMemo(() => extractQuotes(), []);
+  const displayQuotes = quotes.length > 0 ? quotes : FALLBACK_QUOTES;
+  // Drop-shadow lifts white copy off the dark photo; in light mode the heading
+  // inverts to ink and the shadow reads as a halo, so drop it.
+  const mode = useAppMode();
 
-  useEffect(() => {
-    const messages = loadStoredMessages();
-
-    const textTurns = messages
-      .filter((m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text")
-      .map((m) => ({
-        role: m.from === "you" ? "user" : "assistant",
-        content: m.text,
-      }));
-
-    let cancelled = false;
-    const startedAt = Date.now();
-    const waitMinimum = async () => {
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < MIN_LOADING_MS) {
-        await new Promise((r) => setTimeout(r, MIN_LOADING_MS - elapsed));
-      }
-    };
-
-    if (textTurns.length === 0) {
-      (async () => {
-        await waitMinimum();
-        if (cancelled) return;
-        setKeepsake("You're making remarkable progress.");
-        setThemes([]);
-        setStatus("ready");
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    (async () => {
-      try {
-        const res = await fetch("/api/wrap-up", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript: textTurns }),
-        });
-        if (!res.ok) throw new Error(`wrap-up ${res.status}`);
-        const data = (await res.json()) as {
-          keepsake?: string;
-          themes?: string[];
-        };
-        const q = (data.keepsake ?? "").trim();
-        if (!q) throw new Error("empty keepsake");
-        await waitMinimum();
-        if (cancelled) return;
-        setKeepsake(q);
-        setThemes(Array.isArray(data.themes) ? data.themes.slice(0, 3) : []);
-        setStatus("ready");
-      } catch (err) {
-        if (cancelled) return;
-        console.warn("Wrap-up generation failed", err);
-        await waitMinimum();
-        if (cancelled) return;
-        setKeepsake("You're making remarkable progress.");
-        setThemes([]);
-        setStatus("error");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const persist = () => {
+  const onDone = () => {
     const k: Keepsake = {
       id: idRef.current,
-      quote: keepsake,
-      themes,
-      mood: moodTouched ? mood : null,
-      stress: stressTouched ? stress : null,
+      quote: HERO_MESSAGE,
+      themes: [],
+      mood: null,
+      stress: null,
       createdAt: Date.now(),
     };
     saveKeepsake(k);
-  };
-
-  const onDone = () => {
-    if (keepsake) persist();
     clearStoredMessages();
     setUserType("returning");
-    requestSchedulePrompt(themes[0]);
+    requestSchedulePrompt();
     navigate({ to: "/home" });
   };
-
-  const isLoading = status === "loading";
-  const displayQuotes = highlights.length > 0 ? highlights : FALLBACK_HIGHLIGHTS;
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
@@ -211,219 +118,231 @@ function WrapUp() {
               <X strokeWidth={1.6} aria-hidden />
             </Button>
           </div>
-          {isLoading ? (
-            <SkeletonScreen />
-          ) : (
-            <>
-              <SessionHero avatar={avatar} message={keepsake} />
 
-              <ReflectionSection
-                stress={stress}
-                stressTouched={stressTouched}
-                onStressChange={(v) => {
-                  setStress(v);
-                  setStressTouched(true);
-                }}
-                mood={mood}
-                moodTouched={moodTouched}
-                onMoodChange={(v) => {
-                  setMood(v);
-                  setMoodTouched(true);
-                }}
-              />
+          {/* ── Header ──────────────────────────────────────────────────── */}
+          <header className="flex flex-col items-center text-center gap-3 pt-6 yuna-fade-in">
+            <IconMedallion size="md">
+              {avatar ? (
+                <YunaAvatar variant={avatar} size={56} />
+              ) : (
+                <User size={24} strokeWidth={1.6} className="text-white" aria-hidden />
+              )}
+            </IconMedallion>
+            <h1
+              className={
+                "font-display text-[30px] leading-tight text-white" +
+                (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
+              }
+            >
+              Well done{name ? `, ${name}` : ""}!
+            </h1>
+            <p className="text-[15px] leading-relaxed text-white/85">
+              Congrats on completing this session.
+            </p>
+          </header>
 
-              <HighlightsCard highlights={displayQuotes} />
+          {/* ── Hero keepsake card ──────────────────────────────────────── */}
+          <HeroCard message={HERO_MESSAGE} onShare={() => undefined} />
 
-              <PlacedForYou items={PLACED_FOR_YOU} />
+          {/* ── Emotions ────────────────────────────────────────────────── */}
+          <EmotionsSection emotions={EMOTIONS} />
 
-              <div className="pt-2 pb-2">
-                <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
-                  Finish session
-                </Button>
-              </div>
-            </>
-          )}
+          {/* ── Change-talk highlights ──────────────────────────────────── */}
+          <HighlightsSection quotes={displayQuotes} />
+
+          {/* ── New activities ──────────────────────────────────────────── */}
+          <PlacedForYou items={PLACED_FOR_YOU} />
+
+          <div className="pt-2 pb-2">
+            <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
+              Finish session
+            </Button>
+          </div>
         </div>
       </div>
     </PhoneFrame>
   );
 }
 
-// ── Session hero ────────────────────────────────────────────────────────────
-// Floating (no card) hero: tiny eyebrow, Yuna avatar, and the personalized
-// AI keepsake as the headline. White text gets a soft drop shadow so it
-// stays legible against bright spots of the photo bg.
-function SessionHero({ avatar, message }: { avatar: AvatarVariant | null; message: string }) {
-  // Drop-shadow lifts white copy off the dark forest photo; in light mode the
-  // text inverts to ink and the shadow reads as an ugly halo, so drop it.
-  const mode = useAppMode();
+// ── Hero keepsake card ────────────────────────────────────────────────────────
+// Frosted card sized to its content: a centered keepsake line and a Share action.
+function HeroCard({ message, onShare }: { message: string; onShare: () => void }) {
   return (
-    <section className="flex flex-col items-center text-center gap-4 pt-20 pb-10 yuna-fade-in">
-      <p className="text-[11px] tracking-[0.32em] uppercase text-white/65">Session complete</p>
-
-      <span className="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0 ring-1 ring-white/15">
-        {avatar ? (
-          <YunaAvatar variant={avatar} size={64} />
-        ) : (
-          <span className="h-3 w-3 rounded-full bg-white" />
-        )}
-      </span>
-
-      <p
-        className={
-          "font-display italic text-[24px] leading-[1.3] text-white max-w-[280px]" +
-          (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
-        }
-      >
+    <section className="rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-6 py-7 flex flex-col items-center text-center gap-5 yuna-rise">
+      <p className="font-display italic text-[24px] leading-[1.35] text-white max-w-[260px]">
         {message}
       </p>
+      <Button surface="dark" variant="secondary" size="sm" onClick={onShare}>
+        <Share2 size={15} strokeWidth={1.8} aria-hidden />
+        Share
+      </Button>
     </section>
   );
 }
 
-// ── Reflection: sliders + tags ──────────────────────────────────────────────
-// Two center-out sliders capture the directional shift Yuna's session may
-// have produced (stress + mood). The tag clusters below capture qualitative
-// signal — positive on top, negative below — at a smaller pill size so both
-// clusters fit without scrolling. Lives outside a card so the section reads
-// at the screen's body width.
-function ReflectionSection({
-  stress,
-  stressTouched,
-  onStressChange,
-  mood,
-  moodTouched,
-  onMoodChange,
+// ── Emotions ──────────────────────────────────────────────────────────────────
+// A donut of the session's detected emotions, with an expandable legend below.
+function EmotionsSection({ emotions }: { emotions: Emotion[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <section className="flex flex-col gap-6 yuna-rise">
+      <h2 className="font-display text-[20px] leading-tight text-white text-center">
+        Your emotions
+      </h2>
+
+      <div className="flex justify-center">
+        <EmotionDonut data={emotions} />
+      </div>
+
+      <ul className="flex flex-col gap-2">
+        {emotions.map((e, i) => (
+          <li key={e.name}>
+            <EmotionRow
+              emotion={e}
+              expanded={open === i}
+              onToggle={() => setOpen(open === i ? null : i)}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function EmotionDonut({ data }: { data: Emotion[] }) {
+  const size = 176;
+  const stroke = 26;
+  const cx = size / 2;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const gap = 6; // path units of empty space between segments
+
+  let acc = 0;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label="Emotion breakdown for this session"
+    >
+      {/* Track */}
+      <circle
+        cx={cx}
+        cy={cx}
+        r={r}
+        fill="none"
+        stroke="rgba(255,255,255,0.12)"
+        strokeWidth={stroke}
+      />
+      <g transform={`rotate(-90 ${cx} ${cx})`}>
+        {data.map((d) => {
+          const len = (d.value / 100) * circ;
+          const dash = Math.max(len - gap, 1);
+          const seg = (
+            <circle
+              key={d.name}
+              cx={cx}
+              cy={cx}
+              r={r}
+              fill="none"
+              stroke={d.color}
+              strokeWidth={stroke}
+              strokeDasharray={`${dash} ${circ - dash}`}
+              strokeDashoffset={-acc}
+            />
+          );
+          acc += len;
+          return seg;
+        })}
+      </g>
+    </svg>
+  );
+}
+
+function EmotionRow({
+  emotion,
+  expanded,
+  onToggle,
 }: {
-  stress: number;
-  stressTouched: boolean;
-  onStressChange: (v: number) => void;
-  mood: number;
-  moodTouched: boolean;
-  onMoodChange: (v: number) => void;
+  emotion: Emotion;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <section className="flex flex-col gap-9 yuna-rise pt-5 pb-14">
-      <h2 className="font-display text-[18px] leading-tight text-white text-center">
-        How did this session land?
-      </h2>
-
-      <div className="flex flex-col gap-9">
-        <Slider
-          variant="bipolar"
-          surface="dark"
-          leftLabel="Increased stress"
-          rightLabel="Decreased stress"
-          value={stress}
-          touched={stressTouched}
-          onChange={onStressChange}
+    <div className="rounded-xl border border-white/12 bg-white/[0.06] backdrop-blur-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-white/[0.04] transition-colors"
+      >
+        <span
+          aria-hidden
+          className="h-2.5 w-2.5 rounded-full shrink-0"
+          style={{ background: emotion.color }}
         />
-        <Slider
-          variant="bipolar"
-          surface="dark"
-          leftLabel="Worsened mood"
-          rightLabel="Improved mood"
-          value={mood}
-          touched={moodTouched}
-          onChange={onMoodChange}
+        <span className="flex-1 text-[15px] text-white/90">{emotion.name}</span>
+        <span className="text-[14px] font-medium tracking-[0.02em] text-white/75">
+          {emotion.value}%
+        </span>
+        <ChevronDown
+          size={16}
+          strokeWidth={2}
+          aria-hidden
+          className={
+            "text-white/55 transition-transform duration-200 " + (expanded ? "rotate-180" : "")
+          }
         />
-      </div>
-    </section>
+      </button>
+      {expanded && (
+        <p className="px-4 pb-3.5 -mt-0.5 text-[14px] leading-relaxed text-white/75">
+          {emotion.note}
+        </p>
+      )}
+    </div>
   );
 }
 
-// ── Moments & emotions ──────────────────────────────────────────────────────
-// One section. Each quote is shown with the emotions Yuna detected
-// underneath it — sentiment-tagged highlights instead of a separate chart.
-// The left-edge ribbon picks up the quote's emotion colors so the link
-// between text and feeling is felt before it's read.
-function HighlightsCard({ highlights }: { highlights: Highlight[] }) {
-  if (highlights.length === 0) return null;
+// ── Change-talk highlights ────────────────────────────────────────────────────
+// Quotes from the conversation, each in a frosted card topped with a small
+// quote mark — the "change talk" Yuna heard during the session.
+function HighlightsSection({ quotes }: { quotes: string[] }) {
   return (
-    <section className="flex flex-col gap-9 yuna-rise">
-      <h2 className="font-display text-[18px] leading-tight text-white text-center">
-        Highlights and emotions
-      </h2>
+    <section className="flex flex-col gap-5 yuna-rise">
+      <div className="flex flex-col items-center text-center gap-2">
+        <h2 className="font-display text-[20px] leading-tight text-white">Your highlights</h2>
+        <p className="text-[14px] leading-relaxed text-white/75 max-w-[280px]">
+          A closer look at the change talk from our conversation.
+        </p>
+      </div>
 
       <div className="flex flex-col gap-3">
-        {highlights.map((h, i) => (
-          <HighlightItem key={i} highlight={h} />
+        {quotes.map((q, i) => (
+          <div
+            key={i}
+            className="rounded-2xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col items-center text-center"
+          >
+            <span aria-hidden className="font-display text-white/40 text-[44px] leading-none -mb-5">
+              &ldquo;
+            </span>
+            <p className="text-[15px] leading-relaxed text-white/90">{q}</p>
+          </div>
         ))}
       </div>
     </section>
   );
 }
 
-function HighlightItem({ highlight }: { highlight: Highlight }) {
-  const emotionColors = useEmotionColors();
-  const colors = highlight.emotions.map((e) => emotionColors[e]).filter(Boolean);
-  const ribbon =
-    colors.length === 0
-      ? "rgba(255,255,255,0.25)"
-      : colors.length === 1
-        ? colors[0]
-        : `linear-gradient(180deg, ${colors.join(", ")})`;
-
-  return (
-    <div className="relative rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm p-4 overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{
-          padding: 2,
-          background: ribbon,
-          WebkitMask:
-            "linear-gradient(90deg, #000 0px, #000 22px, transparent 32px), " +
-            "linear-gradient(#000 0 0) content-box, " +
-            "linear-gradient(#000 0 0)",
-          WebkitMaskComposite: "source-in, xor",
-          mask:
-            "linear-gradient(90deg, #000 0px, #000 22px, transparent 32px), " +
-            "linear-gradient(#000 0 0) content-box, " +
-            "linear-gradient(#000 0 0)",
-          maskComposite: "intersect, exclude",
-        }}
-      />
-      <div className="flex flex-col gap-3">
-        <p className="text-[16px] leading-relaxed text-white/90">“{highlight.quote}”</p>
-
-        {highlight.emotions.length > 0 && (
-          <div className="pt-3 border-t border-white/12 flex flex-wrap gap-1.5">
-            {highlight.emotions.map((name) => (
-              <EmotionPill key={name} name={name} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EmotionPill({ name }: { name: string }) {
-  const emotionColors = useEmotionColors();
-  const color = emotionColors[name] ?? "rgba(255,255,255,0.5)";
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-1 text-[12px] leading-none text-white/85">
-      <span
-        aria-hidden
-        className="h-1.5 w-1.5 rounded-full shrink-0"
-        style={{ background: color }}
-      />
-      {name}
-    </span>
-  );
-}
-
-// ── Activities Yuna placed for you ──────────────────────────────────────────
-// Cards are display-only here — the wrap-up reflection isn't a launch surface,
-// so the visual stays the same but the tile doesn't react to taps.
+// ── New activities ────────────────────────────────────────────────────────────
+// Display-only home cards Yuna placed for this session — the wrap-up isn't a
+// launch surface, so the tiles don't react to taps.
 function PlacedForYou({ items }: { items: HomeCard[] }) {
   return (
-    <div className="flex flex-col gap-9 yuna-rise">
-      <h2 className="font-display text-[18px] leading-tight text-white text-center">
+    <section className="flex flex-col gap-5 yuna-rise">
+      <h2 className="font-display text-[20px] leading-tight text-white text-center">
         New activities
       </h2>
-
       <ul className="flex flex-col gap-5">
         {items.map((c) => (
           <li key={c.id}>
@@ -431,65 +350,13 @@ function PlacedForYou({ items }: { items: HomeCard[] }) {
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
-// ── Skeleton ────────────────────────────────────────────────────────────────
-function SkeletonScreen() {
-  return (
-    <div aria-busy aria-live="polite" className="flex flex-col gap-6 yuna-fade-in">
-      <div className="flex flex-col gap-2">
-        <SkeletonBar widthClass="w-[55%]" heightClass="h-7" />
-        <SkeletonBar widthClass="w-[70%]" heightClass="h-3" />
-      </div>
-
-      <div className="relative rounded-2xl border border-white/[0.25] bg-white/[0.06] backdrop-blur-sm px-5 py-7 overflow-hidden min-h-[200px]">
-        <span aria-hidden className="absolute inset-0 pointer-events-none keepsake-shimmer" />
-        <div className="relative flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="block h-9 w-9 rounded-full bg-white/15" />
-            <span className="block h-5 w-5 rounded bg-white/15" />
-          </div>
-          <SkeletonBar widthClass="w-[40%]" heightClass="h-3" />
-          <SkeletonBar widthClass="w-[90%]" />
-          <SkeletonBar widthClass="w-[78%]" />
-          <SkeletonBar widthClass="w-[55%]" />
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/[0.25] bg-white/[0.06] backdrop-blur-sm px-5 py-6 flex flex-col gap-4">
-        <SkeletonBar widthClass="w-[60%]" heightClass="h-4" />
-        <div className="grid grid-cols-2 gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <SkeletonBar key={i} widthClass="w-full" heightClass="h-9" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SkeletonBar({
-  widthClass,
-  heightClass = "h-4",
-}: {
-  widthClass: string;
-  heightClass?: string;
-}) {
-  return (
-    <span
-      className={`block ${heightClass} rounded-full bg-white/15 ${widthClass}`}
-      style={{ animation: "yuna-fade 1.6s ease-in-out infinite alternate" }}
-    />
-  );
-}
-
-// ── Quote extraction ────────────────────────────────────────────────────────
-// Pick up to three substantive user text turns to surface as highlights.
-// Pairs each with a prototype emotion set so the sentiment column is
-// populated — real impl would classify per quote.
-function extractHighlights(): Highlight[] {
+// ── Quote extraction ──────────────────────────────────────────────────────────
+// Pick up to three substantive user text turns from the stored conversation.
+function extractQuotes(): string[] {
   const messages = loadStoredMessages();
   const candidates = messages
     .filter((m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text")
@@ -498,7 +365,7 @@ function extractHighlights(): Highlight[] {
     .filter((t) => t.split(/\s+/).length >= 5);
 
   const seen = new Set<string>();
-  const ranked = [...candidates]
+  return [...candidates]
     .sort((a, b) => b.length - a.length)
     .filter((t) => {
       if (seen.has(t)) return false;
@@ -506,9 +373,4 @@ function extractHighlights(): Highlight[] {
       return true;
     })
     .slice(0, 3);
-
-  return ranked.map((quote, i) => ({
-    quote,
-    emotions: PROTOTYPE_EMOTION_SETS[i % PROTOTYPE_EMOTION_SETS.length],
-  }));
 }

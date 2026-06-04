@@ -31,7 +31,6 @@ const PAGES: Entry[] = [
   { label: "Home", to: "/home" },
   { label: "Session", to: "/chat" },
   { label: "Wrap-up", to: "/wrap-up" },
-  { label: "Wrap-up 2", to: "/wrap-up-2" },
   { label: "Profile", to: "/you" },
   { label: "Focus area 1", to: "/focus-area/1", sub: true },
   { label: "Focus area 2", to: "/focus-area/2", sub: true },
@@ -43,6 +42,7 @@ const PAGES: Entry[] = [
 const DS_PAGES: Entry[] = [
   { label: "Typography", to: "/ds/typography" },
   { label: "Avatars", to: "/ds/avatars" },
+  { label: "Icons", to: "/ds/icons" },
   { label: "Buttons", to: "/ds/buttons" },
   { label: "Text Fields", to: "/ds/text-fields" },
   { label: "Toast Alerts", to: "/ds/toasts" },

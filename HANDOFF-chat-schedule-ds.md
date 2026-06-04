@@ -1,6 +1,18 @@
-# Handoff — Chat screen (implemented) + Schedule drawer (findings)
+# Handoff — Chat screen (implemented) + Schedule drawer (implemented)
 
-_Last updated: 2026-06-04_
+_Last updated: 2026-06-04 (session 2 — IconMedallion + Schedule drawer fixes)_
+
+## ⏯ Resume here (session 2)
+
+`IconMedallion` extracted, the `/ds/icons` page reframed as an icon-library
+reference, all Part B Schedule-drawer fixes done, plus a round of user-requested
+refinements (details in "Part C" below). Build green; previewed `/ds/icons`
+(dark+light), the Schedule drawer (centered), and wrap-up (User fallback).
+**Uncommitted.** No open items left from this thread — both prior flags resolved
+(FirstSessionDisclaimers padding swept; the italic label moved to Stara).
+- Still unpushed: Part A (`9b8ed4e`) + this session's work.
+- Next in-app audit target: VoiceSession voice mode.
+
 
 In-app-screen DS audit thread, separate from the onboarding-flow audit in
 `DS-AUDIT-PROGRESS.md`. Same rules of engagement:
@@ -98,13 +110,66 @@ the overlay-CTA convention; contrast floors met; standard alpha stops; DS
 
 ---
 
+---
+
+## Part C — IconMedallion + Schedule drawer fixes → IMPLEMENTED (uncommitted)
+
+### New DS primitive: `IconMedallion`
+- **`src/components/IconMedallion.tsx`** — circular frosted plate
+  (`bg-white/10 ring-1 ring-white/15`, white-on-dark vocab, inverts via
+  `.theme-light`, no blur dependency) holding a lucide icon / `YunaAvatar` / a
+  `User` fallback. Props: `size` ("md" 56 | "lg" 64, default lg), `label` (a11y;
+  decorative/aria-hidden by default), `className`, `children`. JSDoc included.
+- **`src/routes/ds.icons.tsx`** — new **Icons** page, reframed as an icon-library
+  reference (per request): lucide-react explainer prose, **Sizes** (House at
+  14/16/18/20/22/26/28px), **Library** grid of every glyph used across the app
+  (33 lucide + `YunaMark`, name-labelled), and a compact **Medallion** treatment
+  (icon-in-plate on both surfaces, no avatar/photo fill) + Props. Light matrix
+  column wrapped in `.theme-light`.
+- **`AdminSidebar.tsx`** — "Icons" registered in `DS_PAGES` (after Avatars).
+
+### User-requested refinements (this session)
+- **Avatar loading fallback → `User` icon.** The medallion's no-avatar fallback
+  was a bespoke white dot (wrap-up, wrap-up-2) / `YunaMark` (chat). All three now
+  show a lucide `User` (bust+head) so the placeholder is a standard glyph.
+  `YunaMark` import dropped from `chat.tsx` (still used in `YunaHeaderTrigger`, so
+  kept in the library grid).
+- **Schedule info card centered** (`text-left` → `text-center`); the **"Date"
+  label removed** (date is implied by the calendar pill); pills centered.
+- **"Commit to a follow-up:"** moved from `font-display italic text-[15px]` →
+  Stara `text-sm text-white/75`.
+- **`FirstSessionDisclaimers` padding** swept `px-8 pt-12 pb-12` → `px-6 pt-12 pb-10`
+  to match Schedule (the two centered-confirmation drawers now agree).
+
+### Migrated call sites (4)
+- `SchedulePrioritizeDrawer.tsx` (icon), `wrap-up.tsx` (avatar, lg),
+  `wrap-up-2.tsx` (avatar, **md**), `chat.tsx` (avatar chip).
+- **Visual note (flag):** the 3 ring sites are byte-identical pre/post. **chat**
+  was the near-variant (`bg-white/15 border-white/25 backdrop-blur-sm`) — now
+  unified to the ring/`bg-white/10` no-blur treatment. Slightly lighter + drops
+  the blur (which died on Android anyway). Reads fine in dark; flag if you want
+  chat's chip to stay heavier.
+
+### Schedule drawer Part B fixes (findings #1–#6)
+- **#1** medallion → `IconMedallion` (above).
+- **#2** local `Chip` → renamed `MetaPill` (+ comment) — no longer shadows the DS
+  chip concept; kept bespoke (display-only, 1 site, rule 10).
+- **#3** close button `surface="dark"` → `surface="light"` (overlay-CTA convention).
+- **#4** info card `backdrop-blur-sm` → `backdrop-blur-md` (DS blur radius).
+- **#5** topic `text-[18px]` → `text-lg` (same px, on-scale). The italic
+  "Commit to a follow-up:" label held as editorial — see Resume-here.
+- **#6** padding `px-8 pt-12 pb-12` → `px-6 pt-12 pb-10` (per user: not
+  intentional; aligned to the standard gutter). `FirstSessionDisclaimers` shares
+  the old value — flagged, not swept.
+
 ## Cross-cutting threads
-- **IconMedallion primitive** — covers Schedule #1 + chat avatar chip +
-  wrap-up/wrap-up-2. Highest-leverage next DS addition.
-- **`backdrop-blur` sm/md drift** across frosted surfaces — DS source is `md`.
+- ~~IconMedallion primitive~~ — **done** (Part C). Covered Schedule #1 + chat
+  chip + wrap-up/wrap-up-2.
+- **`backdrop-blur` sm/md drift** — Schedule info card fixed; remaining frosted
+  surfaces still worth a sweep. DS source is `md`.
 
 ## Suggested next steps (priority order)
-1. **Push** Part A (`9b8ed4e`) when ready.
-2. Decide A/B on the Schedule drawer.
-3. Extract `IconMedallion` (resolves Schedule #1 + chat #6 + wrap-ups).
-4. Continue in-app audit: VoiceSession voice mode, wrap-up / wrap-up-2.
+1. **Push** Part A (`9b8ed4e`) + Part C when ready.
+2. Decide the two open items (FirstSessionDisclaimers padding sweep; the italic
+   "Commit to a follow-up:" label) — see Resume-here.
+3. Continue in-app audit: VoiceSession voice mode.

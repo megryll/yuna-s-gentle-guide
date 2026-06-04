@@ -1,6 +1,9 @@
-import { CalendarClock, CalendarDays, Clock, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarClock, CalendarDays, ChevronDown, Clock } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/Button";
+import { IconMedallion } from "@/components/IconMedallion";
+import { Toast } from "@/components/Toast";
 import {
   clearSchedulePrompt,
   getScheduleTopic,
@@ -36,43 +39,28 @@ export function SchedulePrioritizeDrawer({
       }}
     >
       <DrawerContent>
-        <div className="relative px-8 pt-12 pb-12 text-center">
-          <div className="absolute right-4 top-4">
-            <Button
-              surface="dark"
-              variant="plain"
-              size="icon"
-              onClick={onDismiss}
-              aria-label="Close"
-            >
-              <X strokeWidth={1.6} aria-hidden />
-            </Button>
-          </div>
-
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">
+        <div className="px-6 pt-12 pb-10 text-center">
+          <IconMedallion className="mx-auto">
             <CalendarClock size={26} strokeWidth={1.6} className="text-white" aria-hidden />
-          </span>
+          </IconMedallion>
 
           <DrawerTitle className="mt-6">
             Schedule To Prioritize Yourself
           </DrawerTitle>
 
-          <div className="mt-8 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm p-5 text-left">
-            <p className="font-display italic text-[15px] text-white/75">Commit to a follow-up:</p>
-            <p className="mt-2 text-[18px] font-semibold leading-snug text-white">
+          <div className="mt-8 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md p-5 text-center">
+            <p className="text-sm text-white/75">Commit to a follow-up:</p>
+            <p className="mt-2 text-lg font-semibold leading-snug text-white">
               {topic || DEFAULT_TOPIC}
             </p>
 
-            <div className="mt-5 flex items-center gap-3">
-              <span className="text-[15px] font-semibold text-white">Date</span>
-              <div className="flex flex-1 justify-end gap-2">
-                <Chip icon={<CalendarDays size={14} strokeWidth={1.8} aria-hidden />}>
-                  {FOLLOW_UP_DATE}
-                </Chip>
-                <Chip icon={<Clock size={14} strokeWidth={1.8} aria-hidden />}>
-                  {FOLLOW_UP_TIME}
-                </Chip>
-              </div>
+            <div className="mt-5 flex items-center justify-center gap-2">
+              <MetaPill icon={<CalendarDays size={14} strokeWidth={1.8} aria-hidden />}>
+                {FOLLOW_UP_DATE}
+              </MetaPill>
+              <MetaPill icon={<Clock size={14} strokeWidth={1.8} aria-hidden />}>
+                {FOLLOW_UP_TIME}
+              </MetaPill>
             </div>
           </div>
 
@@ -91,26 +79,63 @@ export function SchedulePrioritizeDrawer({
   );
 }
 
-function Chip({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+// Date / time pill — mirrors the Intro voice/pace control pills: a small
+// secondary Button with a leading icon + value + downward chevron. The picker
+// is illustrative (fixed display values, not live), so there's no onClick; the
+// chevron signals the affordance and keeps the style consistent with Intro.
+function MetaPill({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[13px] text-white/85">
+    <Button surface="dark" variant="secondary" size="xs" type="button" className="gap-1.5">
       <span className="text-white/70">{icon}</span>
       {children}
-    </span>
+      <ChevronDown size={9} strokeWidth={1.5} aria-hidden className="text-white/70" />
+    </Button>
   );
 }
 
 // Mounted inside Home's PhoneFrame. Fires once when the user lands back on
 // Home from a session wrap-up (see requestSchedulePrompt), then clears on
-// either action so a normal Home visit never re-shows it.
+// either action so a normal Home visit never re-shows it. Tapping Schedule
+// closes the drawer and surfaces a confirmation toast at the top of Home.
 export function SchedulePrioritizeGate() {
   const active = useSchedulePromptActive();
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (!confirmed) return;
+    const t = window.setTimeout(() => setConfirmed(false), 3200);
+    return () => window.clearTimeout(t);
+  }, [confirmed]);
+
   return (
-    <SchedulePrioritizeDrawer
-      open={active}
-      topic={getScheduleTopic()}
-      onSchedule={clearSchedulePrompt}
-      onDismiss={clearSchedulePrompt}
-    />
+    <>
+      <SchedulePrioritizeDrawer
+        open={active}
+        topic={getScheduleTopic()}
+        onSchedule={() => {
+          clearSchedulePrompt();
+          setConfirmed(true);
+        }}
+        onDismiss={clearSchedulePrompt}
+      />
+      <ScheduleConfirmToast open={confirmed} />
+    </>
+  );
+}
+
+// Positioned, animated wrapper around the DS Toast — slides/fades in from the
+// top edge of the phone frame. success variant is a fixed green fill (legible
+// on both photos), so it needs no surface flip with app mode.
+function ScheduleConfirmToast({ open }: { open: boolean }) {
+  return (
+    <div
+      className={
+        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-xs " +
+        "transition-all duration-300 ease-out " +
+        (open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")
+      }
+    >
+      <Toast variant="success" message="You'll receive a notification when it's starting." />
+    </div>
   );
 }
