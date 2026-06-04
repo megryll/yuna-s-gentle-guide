@@ -24,11 +24,11 @@ function DSAppBar() {
           sits in its cradle) still read in context. */}
       <Section
         title="Variants"
-        subtitle="surface=&quot;dark&quot; floats a frosted, masked bar with a bulge cradle for the lifted Chat circle; surface=&quot;light&quot; is a flat bordered bar on bg-background."
+        subtitle="One frosted, masked bar with a bulge cradle for the lifted Chat circle. Light mode is the same bar under `.theme-light` over the light photo — labels invert to ink, the frosted fill lifts, and the Chat circle becomes an ink pill with a white icon."
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Stage surface="dark" />
-          <Stage surface="light" />
+          <Stage mode="dark" />
+          <Stage mode="light" />
         </div>
       </Section>
 
@@ -40,15 +40,15 @@ function DSAppBar() {
             <span className="text-muted-foreground">Tab icon</span>
             <code>h-6 w-6 (24px) · label text-[12px]</code>
             <span className="text-muted-foreground">Emphasized Chat</span>
-            <code>60px circle, bg-white; dark surface lifts it translateY(-12px)</code>
+            <code>60px circle, bg-white, lifted translateY(-12px) into the bulge cradle (→ ink pill in light mode)</code>
             <span className="text-muted-foreground">Active</span>
             <code>icon + label full ink/white, label font-semibold</code>
             <span className="text-muted-foreground">Inactive</span>
-            <code>text-white/60 (dark) · text-muted-foreground (light)</code>
+            <code>text-white/60 → ink in light mode (.theme-light)</code>
             <span className="text-muted-foreground">Notification dot</span>
             <code>bg-yuna-green, returning users on /home only</code>
-            <span className="text-muted-foreground">Dark backdrop</span>
-            <code>bg-white/10 backdrop-blur-md, SVG bulge mask</code>
+            <span className="text-muted-foreground">Backdrop</span>
+            <code>bg-white/10 backdrop-blur-md, SVG bulge mask; .theme-light lifts the fill</code>
           </div>
         </div>
       </Section>
@@ -69,16 +69,20 @@ function DSAppBar() {
 
 // A full-width photo background with the real AppBar pinned to its bottom edge,
 // centered at a realistic phone width so the tabs sit at true spacing instead
-// of being crushed by a mini device frame. Mirrors the live platform toggle so
-// the dark surface's backdrop blur degrades to its Android fill in context.
-function Stage({ surface }: { surface: "dark" | "light" }) {
+// of being crushed by a mini device frame. The bar always renders surface="dark"
+// — that's the only way the app uses it; light mode is the same bar under
+// `.theme-light` over the light photo, exactly as PhoneFrame produces it.
+// Mirrors the live platform toggle so the backdrop blur degrades to its Android
+// fill in context.
+function Stage({ mode }: { mode: "dark" | "light" }) {
   const platform = usePlatform();
-  const dark = surface === "dark";
-  const bg = modeImage(surface);
+  const light = mode === "light";
+  const bg = modeImage(mode);
   return (
     <div
       className={
         "relative h-60 rounded-2xl overflow-hidden border border-border bg-cover bg-center " +
+        (light ? "theme-light " : "") +
         (platform === "android" ? "platform-android" : "")
       }
       style={{ backgroundImage: `url(${bg})` }}
@@ -86,14 +90,14 @@ function Stage({ surface }: { surface: "dark" | "light" }) {
       <p
         className={
           "absolute top-4 left-5 z-10 text-[11px] tracking-[0.25em] uppercase " +
-          (dark ? "text-white/65" : "text-foreground/65")
+          (light ? "text-foreground/65" : "text-white/65")
         }
       >
-        {dark ? "Dark surface" : "Light surface"}
+        {light ? "Light mode" : "Dark mode"}
       </p>
       <div className="absolute inset-x-0 bottom-0">
         <div className="mx-auto w-full max-w-[390px]">
-          <AppBar surface={surface} />
+          <AppBar surface="dark" />
         </div>
       </div>
     </div>

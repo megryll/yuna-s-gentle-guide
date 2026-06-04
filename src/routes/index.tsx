@@ -106,7 +106,7 @@ function Index() {
             surface="dark"
             variant="card"
             onClick={() => navigate({ to: "/employer-access" })}
-            subtitle="Free access and 100% private"
+            subtitle="100% free, and private from your employer"
             trailing={<ChevronRight size={20} strokeWidth={1.75} aria-hidden />}
           >
             Sign up through my employer
