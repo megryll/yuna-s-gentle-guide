@@ -42,6 +42,7 @@ function DSButtons() {
   label?:    string        // icon sizes only — caption below the circle
   subtitle?: string        // card variant — secondary line under the title
   trailing?: ReactNode     // card variant — trailing element (e.g. a chevron)
+  selected?: boolean       // card variant — selected/checked row; adds highlight + auto check
   asChild?:  boolean       // wrap a <Link> with asChild
   disabled?: boolean
   ...native button props
@@ -201,6 +202,9 @@ function CardStateStack({ surface }: { surface: "dark" | "light" }) {
   return (
     <div className="w-full max-w-[320px] flex flex-col gap-3">
       <Button surface={surface} variant="card">Default</Button>
+      <Button surface={surface} variant="card" selected>
+        Selected
+      </Button>
       <Button surface={surface} variant="card" className={pressedClass("card", surface)}>
         Pressed
       </Button>

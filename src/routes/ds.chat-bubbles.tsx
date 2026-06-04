@@ -32,10 +32,15 @@ function DSChatBubbles() {
         <SurfaceMatrix rows={SIZE_ROWS} />
       </Section>
 
+      <Section title="States">
+        <SurfaceMatrix rows={STATE_ROWS} />
+      </Section>
+
       <Section title="Props">
         <PropsBlock>{`<ChatBubble
   from?:         "yuna" | "user"   // default: "yuna"
   size?:         "md" | "lg"       // default: "md"
+  typing?:       boolean           // default: false — animated typing indicator
   tail?:         boolean           // default: true
   frostedImage?: string            // Android backdrop-blur fallback photo
   attachment?:   ReactNode         // full-bleed footer below the text
@@ -94,4 +99,11 @@ const VARIANT_ROWS: MatrixRow[] = [
 const SIZE_ROWS: MatrixRow[] = [
   { label: "Medium", render: (s) => themed(s, box(<ChatBubble from="yuna" size="md">How are you feeling today?</ChatBubble>)) },
   { label: "Large", render: (s) => themed(s, box(<ChatBubble from="yuna" size="lg">Hi, I'm Yuna.</ChatBubble>)) },
+];
+
+const STATE_ROWS: MatrixRow[] = [
+  {
+    label: "Typing",
+    render: (s) => themed(s, <div className="flex justify-start"><ChatBubble from="yuna" typing /></div>),
+  },
 ];

@@ -13,6 +13,10 @@ import { usePlatform } from "@/lib/platform";
  *   - "md" (default) — conversational density.
  *   - "lg"           — hero density.
  *
+ * typing: renders the animated three-dot "Yuna is typing" indicator in place
+ *   of children, keeping the yuna bubble chrome. For the pending state before
+ *   a reply lands; pair with from="yuna".
+ *
  * tail: rounds three corners and squares the speaker's bottom corner. Set
  *   false for the non-final bubbles in a same-speaker group.
  *
@@ -33,6 +37,7 @@ import { usePlatform } from "@/lib/platform";
 export function ChatBubble({
   from = "yuna",
   size = "md",
+  typing = false,
   tail = true,
   frostedImage,
   attachment,
@@ -42,12 +47,13 @@ export function ChatBubble({
 }: {
   from?: "yuna" | "user";
   size?: "md" | "lg";
+  typing?: boolean;
   tail?: boolean;
   frostedImage?: string;
   attachment?: ReactNode;
   className?: string;
   style?: CSSProperties;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const isUser = from === "user";
   const platform = usePlatform();
@@ -80,9 +86,26 @@ export function ChatBubble({
             : "px-4 py-2.5 text-sm leading-relaxed",
         )}
       >
-        {children}
+        {typing ? <TypingDots /> : children}
       </div>
       {attachment}
     </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <span className="flex gap-1" role="status" aria-label="Yuna is typing">
+      {[0, 150, 300].map((d) => (
+        <span
+          key={d}
+          className="h-1.5 w-1.5 rounded-full bg-white"
+          style={{
+            animation: "yuna-fade 900ms ease-in-out infinite alternate",
+            animationDelay: `${d}ms`,
+          }}
+        />
+      ))}
+    </span>
   );
 }

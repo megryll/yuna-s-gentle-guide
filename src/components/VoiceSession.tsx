@@ -932,23 +932,15 @@ function ModeOption({
   onSelect: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="card"
+      surface="light"
+      selected={selected}
+      subtitle={description}
       onClick={onSelect}
-      aria-pressed={selected}
-      className={
-        "w-full text-left rounded-2xl px-4 py-3 border transition-colors " +
-        (selected
-          ? "border-foreground/40 bg-foreground/5"
-          : "border-border bg-transparent active:bg-foreground/[0.03]")
-      }
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-base text-foreground">{label}</span>
-        {selected && <CheckGlyph />}
-      </div>
-      <p className="text-[13px] text-foreground/65 mt-0.5">{description}</p>
-    </button>
+      {label}
+    </Button>
   );
 }
 
@@ -977,24 +969,6 @@ function LockGlyph() {
     >
       <rect x="4" y="10" width="16" height="11" rx="2" />
       <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
-}
-
-function CheckGlyph() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }

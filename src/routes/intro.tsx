@@ -1207,20 +1207,7 @@ function Bubble({
 function TypingBubble({ frostedImage }: { frostedImage?: string }) {
   return (
     <div className="yuna-fade-in w-full flex justify-start">
-      <ChatBubble from="yuna" frostedImage={frostedImage}>
-        <span className="flex gap-1">
-          {[0, 150, 300].map((d) => (
-            <span
-              key={d}
-              className="h-1.5 w-1.5 rounded-full bg-white"
-              style={{
-                animation: "yuna-fade 900ms ease-in-out infinite alternate",
-                animationDelay: `${d}ms`,
-              }}
-            />
-          ))}
-        </span>
-      </ChatBubble>
+      <ChatBubble from="yuna" typing frostedImage={frostedImage} />
     </div>
   );
 }

@@ -27,9 +27,10 @@ import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { pauseAmbient, startAmbient } from "@/lib/ambient-audio";
 import { getNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { Button } from "@/components/Button";
+import { ChatBubble } from "@/components/ChatBubble";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
-import { useAppMode } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -145,6 +146,7 @@ function Chat() {
   const { q, revisit, mode } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
+  const blurBg = useModeImage();
   const inVoice = mode === "voice";
   // Initial chat-now landing in voice mode (no revisit flag). This branch
   // defers the mic-permission prompt: Yuna introduces herself, walks the
@@ -888,10 +890,11 @@ function Chat() {
               className="flex-1 overflow-y-auto px-5 pt-20 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {messages.map((m) => {
-                if (m.kind === "voice-pitch") return <VoicePitchCard key={m.id} />;
-                return <Bubble key={m.id} msg={m} />;
+                if (m.kind === "voice-pitch")
+                  return <VoicePitchCard key={m.id} frostedImage={blurBg} />;
+                return <Bubble key={m.id} msg={m} frostedImage={blurBg} />;
               })}
-              {typing && <TypingBubble />}
+              {typing && <TypingBubble frostedImage={blurBg} />}
             </div>
 
             {/* Input + Call Yuna footer */}
@@ -977,25 +980,28 @@ function Chat() {
   );
 }
 
-function Bubble({ msg }: { msg: Extract<Msg, { kind: "text" }> }) {
+function Bubble({
+  msg,
+  frostedImage,
+}: {
+  msg: Extract<Msg, { kind: "text" }>;
+  frostedImage?: string;
+}) {
   const mine = msg.from === "you";
   return (
-    <div className={"flex yuna-rise " + (mine ? "justify-end" : "justify-start")}>
-      <div
-        className={
-          "max-w-[82%] px-4 py-2.5 text-sm leading-relaxed rounded-2xl " +
-          (mine
-            ? "bg-white text-neutral-900 rounded-br-sm"
-            : "border border-white/25 bg-white/10 backdrop-blur-sm text-white rounded-bl-sm")
-        }
+    <div className={"yuna-rise w-full flex " + (mine ? "justify-end" : "justify-start")}>
+      <ChatBubble
+        from={mine ? "user" : "yuna"}
+        frostedImage={mine ? undefined : frostedImage}
+        className="max-w-[82%]"
       >
         {msg.text}
-      </div>
+      </ChatBubble>
     </div>
   );
 }
 
-function VoicePitchCard() {
+function VoicePitchCard({ frostedImage }: { frostedImage?: string }) {
   const appMode = useAppMode();
   // Dark cluster keeps the bright leaf for both stroke and fill. Light
   // cluster splits them: stroke is a darker olive so the curve reads on the
@@ -1007,13 +1013,14 @@ function VoicePitchCard() {
   const voiceFill = isDark ? "#cdebb5" : "#54B047";
   const voiceFillTop = isDark ? 0.14 : 0.32;
   return (
-    <div className="flex yuna-rise justify-start">
-      <div className="max-w-[82%] border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm overflow-hidden text-white">
-        <p className="text-sm leading-relaxed px-4 pt-3 pb-2">
-          People who chat with me over voice are{" "}
-          <span className="font-semibold">75% more likely</span> to find value in our conversations.
-        </p>
-        <div className="px-3 pb-3">
+    <div className="yuna-rise w-full flex justify-start">
+      <ChatBubble
+        from="yuna"
+        frostedImage={frostedImage}
+        className="max-w-[82%]"
+        attachment={
+          <>
+            <div className="px-3 pb-3">
           <svg viewBox="0 -12 280 144" className="w-full block" aria-hidden="true">
             <defs>
               <linearGradient id="vpVoice" x1="0" x2="0" y1="0" y2="1">
@@ -1139,21 +1146,22 @@ function VoicePitchCard() {
           <p className="text-[11px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
             Reported positive impact
           </p>
-        </div>
-        <p className="text-sm leading-relaxed px-4 pt-1 pb-3">Want to give me a call?</p>
-      </div>
+            </div>
+            <p className="text-sm leading-relaxed px-4 pt-1 pb-3">Want to give me a call?</p>
+          </>
+        }
+      >
+        People who chat with me over voice are{" "}
+        <span className="font-semibold">75% more likely</span> to find value in our conversations.
+      </ChatBubble>
     </div>
   );
 }
 
-function TypingBubble() {
+function TypingBubble({ frostedImage }: { frostedImage?: string }) {
   return (
-    <div className="flex yuna-fade-in justify-start">
-      <div className="border border-white/25 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
-        <Dot delay={0} />
-        <Dot delay={150} />
-        <Dot delay={300} />
-      </div>
+    <div className="yuna-fade-in w-full flex justify-start">
+      <ChatBubble from="yuna" typing frostedImage={frostedImage} />
     </div>
   );
 }
@@ -1172,18 +1180,6 @@ const CHAT_MODE_OPTIONS = [
     icon: <MessageCircle size={14} strokeWidth={1.6} aria-hidden />,
   },
 ];
-
-function Dot({ delay }: { delay: number }) {
-  return (
-    <span
-      className="h-1.5 w-1.5 rounded-full bg-white"
-      style={{
-        animation: "yuna-fade 900ms ease-in-out infinite alternate",
-        animationDelay: `${delay}ms`,
-      }}
-    />
-  );
-}
 
 function CloseIcon() {
   return <X size={22} strokeWidth={1.6} aria-hidden="true" />;

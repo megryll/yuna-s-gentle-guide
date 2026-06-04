@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,9 @@ import { cn } from "@/lib/utils";
  * label (icon sizes only): renders a small text caption below the icon circle.
  * subtitle (card variant only): secondary line under the title.
  * trailing (card variant only): node rendered at the row's trailing edge.
+ * selected (card variant only): selected/checked state for a list-row choice —
+ *   adds a filled highlight + an auto checkmark (unless `trailing` is set) and
+ *   sets aria-pressed.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-full whitespace-nowrap select-none " +
@@ -115,6 +119,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   pressed?: boolean;
+  selected?: boolean;
   label?: string;
   subtitle?: string;
   trailing?: React.ReactNode;
@@ -131,6 +136,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       fullWidth,
       pressed,
+      selected,
       label,
       subtitle,
       trailing,
@@ -150,20 +156,26 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // optional trailing element. Authored in white-on-dark vocabulary so
     // `.theme-light` inverts it for light mode automatically.
     if (variant === "card") {
+      const isSelected = !!selected;
+      const showCheck = isSelected && !trailing;
       return (
         <Comp
           className={cn(
             "w-full rounded-2xl border px-5 py-4 flex items-center gap-3 text-left",
-            "transition-transform duration-100 ease-out active:scale-[0.99]",
+            "transition-[transform,background-color,border-color] duration-100 ease-out active:scale-[0.99]",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
             "disabled:opacity-50 disabled:pointer-events-none",
             surface === "dark"
-              ? "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
-              : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
+              ? isSelected
+                ? "border-white bg-white/10 text-white active:bg-white/10 focus-visible:ring-white/60"
+                : "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
+              : isSelected
+                ? "border-foreground/40 bg-foreground/5 text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30"
+                : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
             className,
           )}
           ref={ref}
-          aria-pressed={ariaPressed}
+          aria-pressed={selected !== undefined ? isSelected : ariaPressed}
           {...props}
         >
           <span className="flex-1 min-w-0">
@@ -179,14 +191,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               </span>
             )}
           </span>
-          {trailing && (
+          {(trailing || showCheck) && (
             <span
               className={cn(
                 "shrink-0",
-                surface === "dark" ? "text-white/60" : "text-foreground/55",
+                showCheck
+                  ? surface === "dark"
+                    ? "text-white"
+                    : "text-foreground"
+                  : surface === "dark"
+                    ? "text-white/60"
+                    : "text-foreground/55",
               )}
             >
-              {trailing}
+              {trailing ?? <Check size={20} strokeWidth={2} aria-hidden />}
             </span>
           )}
         </Comp>
