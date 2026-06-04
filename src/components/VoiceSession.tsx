@@ -820,7 +820,7 @@ function VoicePad({
               </span>
               <Button
                 surface="dark"
-                variant="ghost"
+                variant="plain"
                 size="icon-sm"
                 aria-label="Voice options"
                 onClick={onOpenModeDrawer}
@@ -846,7 +846,7 @@ function VoicePad({
               </Button>
               <Button
                 surface="dark"
-                variant="ghost"
+                variant="plain"
                 size="icon"
                 aria-label="Voice options"
                 onClick={onOpenModeDrawer}
@@ -895,7 +895,7 @@ function ModeDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="rounded-t-[1.5rem]">
+      <DrawerContent>
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
           <DrawerTitle>
             Voice mode

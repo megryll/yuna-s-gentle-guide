@@ -30,7 +30,7 @@ function DSDrawer() {
         <DevicePair
           renderRow={(surface) => (
             <Drawer open dismissible={false} modal={false}>
-              <DrawerContent mode={surface} className="rounded-t-[1.5rem]">
+              <DrawerContent mode={surface}>
                 <DrawerHeader className="text-left px-6 pt-3 pb-4">
                   {/* sr-only label keeps the a11y title without visible text */}
                   <DrawerTitle className="sr-only">Example drawer</DrawerTitle>

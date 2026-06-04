@@ -115,7 +115,7 @@ function SettingsRoute() {
               onClick={() => navigate({ to: "/home" })}
               aria-label="Back"
             >
-              <ChevronLeft size={14} strokeWidth={1.5} />
+              <ChevronLeft strokeWidth={1.5} />
             </Button>
             <h1 className="font-display text-2xl leading-8 tracking-tight text-foreground">
               Settings

@@ -543,6 +543,15 @@
   .overlay-on-dark .bg-accent\/70 { background-color: rgba(255, 255, 255, 0.12); }
   .overlay-on-dark .bg-accent\/40 { background-color: rgba(255, 255, 255, 0.06); }
   .overlay-on-dark .active\:bg-accent\/40:active { background-color: rgba(255, 255, 255, 0.06); }
+  /* Light-cluster press tint (`active:bg-foreground/8` on secondary/card
+     buttons, menu + settings rows, suggestion chips). The ink tint is
+     invisible on the dark photo, so flip it to a white tint inside dark
+     overlays — same role as the `active:bg-white/*` floors above. */
+  .overlay-on-dark .active\:bg-foreground\/8:active { background-color: rgba(255, 255, 255, 0.1); }
+  /* Selected-row highlight (ChoiceList) — an ink tint a notch stronger than
+     the press tint. Flip to a white tint inside dark overlays so the row
+     still marks itself on the dark photo. */
+  .overlay-on-dark .bg-foreground\/10 { background-color: rgba(255, 255, 255, 0.14); }
   .overlay-on-dark .hover\:bg-destructive\/10:hover { background-color: rgba(255, 120, 120, 0.10); }
   .overlay-on-dark .active\:bg-background\/80:active { background-color: rgba(255, 255, 255, 0.12); }
 

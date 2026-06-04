@@ -36,7 +36,7 @@ function FocusAreaRoute() {
             onClick={() => navigate({ to: "/you" })}
             aria-label="Back"
           >
-            <ChevronLeft size={14} strokeWidth={1.5} />
+            <ChevronLeft strokeWidth={1.5} />
           </Button>
         </header>
 

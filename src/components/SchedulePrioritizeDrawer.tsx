@@ -35,17 +35,17 @@ export function SchedulePrioritizeDrawer({
         if (!o) onDismiss();
       }}
     >
-      <DrawerContent mode="dark" className="rounded-t-[1.5rem]">
+      <DrawerContent>
         <div className="relative px-8 pt-12 pb-12 text-center">
           <div className="absolute right-4 top-4">
             <Button
               surface="dark"
-              variant="ghost"
+              variant="plain"
               size="icon"
               onClick={onDismiss}
               aria-label="Close"
             >
-              <X size={18} strokeWidth={1.6} aria-hidden />
+              <X strokeWidth={1.6} aria-hidden />
             </Button>
           </div>
 
@@ -57,7 +57,7 @@ export function SchedulePrioritizeDrawer({
             Schedule To Prioritize Yourself
           </DrawerTitle>
 
-          <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm p-5 text-left">
+          <div className="mt-8 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm p-5 text-left">
             <p className="font-display italic text-[15px] text-white/75">Commit to a follow-up:</p>
             <p className="mt-2 text-[18px] font-semibold leading-snug text-white">
               {topic || DEFAULT_TOPIC}
@@ -93,7 +93,7 @@ export function SchedulePrioritizeDrawer({
 
 function Chip({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-[13px] text-white/85">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[13px] text-white/85">
       <span className="text-white/70">{icon}</span>
       {children}
     </span>

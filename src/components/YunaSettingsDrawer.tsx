@@ -71,7 +71,7 @@ export function YunaSettingsDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleClose}>
-      <DrawerContent className="max-h-[85%] rounded-t-[1.5rem]">
+      <DrawerContent className="max-h-[85%]">
         {screen === "main" ? (
           <>
             <DrawerHeader className="text-left px-6 pt-2">

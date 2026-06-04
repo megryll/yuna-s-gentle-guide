@@ -1,6 +1,7 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { PhoneFrameContext } from "@/components/PhoneFrame";
 import { usePlatform } from "@/lib/platform";
+import { modeImage } from "@/lib/theme-prefs";
 
 /**
  * DS-documentation page kit — NOT a prototype component.
@@ -10,8 +11,8 @@ import { usePlatform } from "@/lib/platform";
  * shippable components live in src/components/.
  *
  * Every primitive is documented on both photo backgrounds the app sits on
- * (/background.png and /light-blur-bg.png) so contrast can be eyeballed in the
- * same context the user sees.
+ * (the app's own dark/light mode photos, via `modeImage`) so contrast can be
+ * eyeballed in the same context the user sees.
  */
 
 export function DSPage({
@@ -91,7 +92,7 @@ export function SurfacePanel({
   children: ReactNode;
   align?: "center" | "start";
 }) {
-  const bg = tone === "dark" ? "/background.png" : "/light-blur-bg.png";
+  const bg = modeImage(tone);
   const itemsClass = align === "start" ? "items-start" : "items-center";
   return (
     <div className="relative rounded-2xl overflow-hidden border border-border">
@@ -148,7 +149,7 @@ export function DeviceFrame({
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const platform = usePlatform();
   const dark = surface === "dark";
-  const bg = dark ? "/background.png" : "/light-blur-bg.png";
+  const bg = modeImage(surface);
   return (
     <div className="flex flex-col items-center gap-2">
       {label && (
@@ -296,7 +297,7 @@ function MatrixColumn({ tone, rows }: { tone: "dark" | "light"; rows: MatrixRow[
 }
 
 function MatrixBg({ tone, col }: { tone: "dark" | "light"; col: number }) {
-  const bg = tone === "dark" ? "/background.png" : "/light-blur-bg.png";
+  const bg = modeImage(tone);
   return (
     <div
       aria-hidden

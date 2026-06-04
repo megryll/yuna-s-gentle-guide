@@ -105,12 +105,12 @@ export function AppMenuDrawer({
           <h2 className="font-display text-3xl tracking-tight">Account</h2>
           <Button
             surface="light"
-            variant="ghost"
+            variant="plain"
             size="icon"
             onClick={() => onOpenChange(false)}
             aria-label="Close"
           >
-            <X size={14} strokeWidth={1.5} />
+            <X strokeWidth={1.5} />
           </Button>
         </div>
 
@@ -149,7 +149,7 @@ export function AppMenuDrawer({
                     key={r.label}
                     onClick={() => { r.onClick?.(); onOpenChange(false); }}
                     className={
-                      "w-full flex items-center gap-3 px-4 py-3 text-left active:bg-accent transition-colors " +
+                      "w-full flex items-center gap-3 px-4 py-3 text-left active:bg-foreground/8 transition-colors " +
                       (i > 0 ? "border-t border-border" : "")
                     }
                   >
@@ -173,7 +173,7 @@ export function AppMenuDrawer({
           <div className="mt-8 rounded-2xl hairline overflow-hidden bg-background">
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-accent transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-foreground/8 transition-colors"
             >
               <span className="h-8 w-8 flex items-center justify-center text-foreground shrink-0">
                 <LogoutIcon />

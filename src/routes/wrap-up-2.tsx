@@ -11,6 +11,7 @@ import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
 import { requestSchedulePrompt } from "@/lib/schedule-prompt";
+import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/wrap-up-2")({
   head: () => ({
@@ -81,6 +82,9 @@ function WrapUp2() {
 
   const quotes = useMemo(() => extractQuotes(), []);
   const displayQuotes = quotes.length > 0 ? quotes : FALLBACK_QUOTES;
+  // Drop-shadow lifts white copy off the dark photo; in light mode the heading
+  // inverts to ink and the shadow reads as a halo, so drop it.
+  const mode = useAppMode();
 
   const onDone = () => {
     const k: Keepsake = {
@@ -110,7 +114,7 @@ function WrapUp2() {
               onClick={onDone}
               aria-label="Close wrap-up"
             >
-              <X size={16} strokeWidth={1.6} aria-hidden />
+              <X strokeWidth={1.6} aria-hidden />
             </Button>
           </div>
 
@@ -123,7 +127,12 @@ function WrapUp2() {
                 <span className="h-3 w-3 rounded-full bg-white" />
               )}
             </span>
-            <h1 className="font-display text-[30px] leading-tight text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
+            <h1
+              className={
+                "font-display text-[30px] leading-tight text-white" +
+                (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
+              }
+            >
               Well done{name ? `, ${name}` : ""}!
             </h1>
             <p className="text-[15px] leading-relaxed text-white/85">

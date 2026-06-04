@@ -95,7 +95,7 @@ function EmployerAccessScreen() {
             onClick={() => navigate({ to: "/" })}
             aria-label="Back"
           >
-            <ChevronLeft size={14} strokeWidth={1.5} />
+            <ChevronLeft strokeWidth={1.5} />
           </Button>
           <span className="h-9 w-9" />
         </div>
@@ -226,7 +226,7 @@ function EmployerHelpDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
+      <DrawerContent mode="dark" className="max-h-[88%]">
         <DrawerHeader className="text-left px-6 pt-8 pb-6">
           <DrawerTitle>
             Let&rsquo;s get you access.
@@ -309,7 +309,7 @@ function EmployerTroubleDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent mode="dark" className="max-h-[88%] rounded-t-[1.5rem]">
+      <DrawerContent mode="dark" className="max-h-[88%]">
         <DrawerHeader className="text-left px-6 pt-8 pb-6">
           <DrawerTitle>
             We&rsquo;re having trouble verifying your employer.

@@ -51,7 +51,7 @@ function LoginScreen() {
             onClick={goBack}
             aria-label="Back"
           >
-            <ChevronLeft size={14} strokeWidth={1.5} />
+            <ChevronLeft strokeWidth={1.5} />
           </Button>
           <span className="h-9 w-9" />
         </div>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { ChatBubble } from "@/components/ChatBubble";
 import { Switch } from "@/components/Switch";
 import { TextField } from "@/components/TextField";
 import { getVoice, setName as saveName, setVoice, useYunaIdentity } from "@/lib/yuna-session";
@@ -909,9 +910,9 @@ function Intro() {
               />
             </div>
             {bubbles.map((b) => (
-              <Bubble key={b.id} bubble={b} />
+              <Bubble key={b.id} bubble={b} frostedImage={darkBg} />
             ))}
-            {typing && <TypingBubble />}
+            {typing && <TypingBubble frostedImage={darkBg} />}
             {stepIdx === 4 && phase === "wait-tap" && (
               <div className="yuna-rise -mx-8 mt-1">
                 <VoicePicker
@@ -1138,79 +1139,88 @@ function YunaAvatarLarge({
 
 // ── Bubbles ──────────────────────────────────────────────────────────────────
 
-function Bubble({ bubble }: { bubble: BubbleData }) {
+function Bubble({
+  bubble,
+  frostedImage,
+}: {
+  bubble: BubbleData;
+  frostedImage?: string;
+}) {
   const mine = bubble.from === "you";
+  const card = bubble.card;
+  // Privacy renders an inline link inside the text region, not a footer.
+  const isPrivacy = card?.kind === "privacy";
+
+  let attachment: React.ReactNode = undefined;
+  if (card && !isPrivacy) {
+    if (card.kind === "mood-stats") {
+      attachment = (
+        <div className="border-t border-white/15 bg-white">
+          <Attachment kind={card.kind} />
+        </div>
+      );
+    } else if (card.kind === "push-preview") {
+      attachment = (
+        <div className="border-t border-white/20 bg-white/5 px-3 py-3">
+          <Attachment kind={card.kind} />
+        </div>
+      );
+    } else {
+      attachment = (
+        <div className="border-t border-white/20 bg-white/10 px-4 py-3">
+          <Attachment kind={card.kind} />
+        </div>
+      );
+    }
+  }
+
   return (
     <div
       className={
         "yuna-rise w-full flex " + (mine ? "justify-end" : "justify-start")
       }
     >
-      <div
-        className={
-          "rounded-2xl overflow-hidden " +
-          (mine
-            ? "max-w-[85%] bg-white text-neutral-900 rounded-br-sm"
-            : "max-w-[calc(85%+8px)] rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm text-white")
-        }
+      <ChatBubble
+        from={mine ? "user" : "yuna"}
+        size="lg"
+        frostedImage={mine ? undefined : frostedImage}
+        attachment={attachment}
+        className={mine ? "max-w-[85%]" : "max-w-[calc(85%+8px)]"}
       >
-        <p
-          className={
-            (mine ? "text-[18px]" : "text-[20px]") +
-            " leading-[1.4] px-4 py-3 whitespace-pre-line"
-          }
-        >
-          {bubble.text}
-        </p>
-        {bubble.card &&
-          (bubble.card.kind === "mood-stats" ? (
-            <div
-              className="border-t border-white/15"
-              style={{ backgroundColor: "#FFFFFF" }}
-            >
-              <Attachment kind={bubble.card.kind} />
-            </div>
-          ) : bubble.card.kind === "push-preview" ? (
-            <div className="border-t border-white/20 bg-white/5 px-3 py-3">
-              <Attachment kind={bubble.card.kind} />
-            </div>
-          ) : bubble.card.kind === "privacy" ? (
-            <div className="px-4 pb-3 -mt-1">
-              <a
-                href="https://yuna.io/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-white/70 underline underline-offset-2 decoration-white/50 text-[16px] active:opacity-80 transition-opacity"
-              >
-                Read our Privacy Policy
-                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
-              </a>
-            </div>
-          ) : (
-            <div className="border-t border-white/20 bg-white/10 px-4 py-3">
-              <Attachment kind={bubble.card.kind} />
-            </div>
-          ))}
-      </div>
+        {bubble.text}
+        {isPrivacy && (
+          <a
+            href="https://yuna.io/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex w-fit items-center gap-1 text-white/85 underline underline-offset-2 decoration-white/50 text-[16px] active:opacity-80 transition-opacity"
+          >
+            Read our Privacy Policy
+            <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
+          </a>
+        )}
+      </ChatBubble>
     </div>
   );
 }
 
-function TypingBubble() {
+function TypingBubble({ frostedImage }: { frostedImage?: string }) {
   return (
     <div className="yuna-fade-in w-full flex justify-start">
-      <div className="rounded-2xl rounded-bl-sm border border-white/25 bg-white/10 backdrop-blur-sm px-4 py-3 flex gap-1">
-        {[0, 150, 300].map((d) => (
-          <span
-            key={d}
-            className="h-1.5 w-1.5 rounded-full bg-white"
-            style={{
-              animation: "yuna-fade 900ms ease-in-out infinite alternate",
-              animationDelay: `${d}ms`,
-            }}
-          />
-        ))}
-      </div>
+      <ChatBubble from="yuna" frostedImage={frostedImage}>
+        <span className="flex gap-1">
+          {[0, 150, 300].map((d) => (
+            <span
+              key={d}
+              className="h-1.5 w-1.5 rounded-full bg-white"
+              style={{
+                animation: "yuna-fade 900ms ease-in-out infinite alternate",
+                animationDelay: `${d}ms`,
+              }}
+            />
+          ))}
+        </span>
+      </ChatBubble>
     </div>
   );
 }
@@ -1253,7 +1263,7 @@ function NameForm({
             aria-label="Send"
             disabled={!value.trim()}
           >
-            <ArrowUp size={13} strokeWidth={2} />
+            <ArrowUp strokeWidth={2} />
           </Button>
         }
       />
@@ -1283,7 +1293,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline gap-1.5">
             <span className="font-display text-[22px] leading-none">4.7</span>
-            <span className="text-[11px] tracking-[0.08em] uppercase text-white/70">
+            <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
               Out of 5
             </span>
           </div>
@@ -1291,7 +1301,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         </div>
         <div className="ml-auto flex flex-col gap-1.5 items-center">
           <span className="font-display text-[22px] leading-none">60k</span>
-          <span className="text-[11px] tracking-[0.08em] uppercase text-white/70">
+          <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
             Happy users
           </span>
         </div>
@@ -1418,10 +1428,7 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   if (kind === "push-preview") {
     return (
       <div className="rounded-md bg-white/80 text-neutral-900 px-3 py-2.5 flex items-start gap-3">
-        <div
-          className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0"
-          style={{ backgroundColor: "#66BA24" }}
-        >
+        <div className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0 bg-yuna-green">
           <YunaPushMark />
         </div>
         <div className="flex-1 min-w-0">
@@ -1586,13 +1593,13 @@ function ControlPill({
       onClick={onClick}
     >
       {icon}
-      <span className="text-white/70">{label}</span>
+      <span className="text-white/75">{label}</span>
       <span className="font-semibold text-white">{value}</span>
       <ChevronDown
         size={9}
         strokeWidth={1.5}
         aria-hidden="true"
-        className="text-white/70"
+        className="text-white/75"
       />
     </Button>
   );
@@ -1611,7 +1618,7 @@ function LanguageDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="rounded-t-[1.5rem]">
+      <DrawerContent mode="dark">
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
           <DrawerTitle>
             Language
@@ -1642,7 +1649,7 @@ function PaceDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="rounded-t-[1.5rem]">
+      <DrawerContent mode="dark">
         <DrawerHeader className="text-left px-6 pt-3 pb-3">
           <DrawerTitle>
             Voice pace

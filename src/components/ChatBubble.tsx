@@ -20,6 +20,11 @@ import { usePlatform } from "@/lib/platform";
  *   can't render. Pass the screen's background photo and it's painted behind
  *   the bubble on Android so the frosted look survives.
  *
+ * attachment: a full-bleed footer node rendered below the text (e.g. a stat
+ *   card, an OS push preview, a chart). The caller styles its own top divider
+ *   / fill / padding; the bubble just clips it to the rounded shape
+ *   (overflow-hidden) and drops the text region's bottom rounding into it.
+ *
  * Authored in white-on-dark vocabulary; `.theme-light` inverts it for light
  * mode automatically, so no `surface` prop is needed. Layout (alignment,
  * max-width) belongs to the caller. Put any entrance animation in `style` on
@@ -30,6 +35,7 @@ export function ChatBubble({
   size = "md",
   tail = true,
   frostedImage,
+  attachment,
   className,
   style,
   children,
@@ -38,6 +44,7 @@ export function ChatBubble({
   size?: "md" | "lg";
   tail?: boolean;
   frostedImage?: string;
+  attachment?: ReactNode;
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
@@ -49,9 +56,7 @@ export function ChatBubble({
     <div
       className={cn(
         "rounded-2xl",
-        size === "lg"
-          ? "px-5 py-4 text-[20px] leading-[1.4]"
-          : "px-4 py-2.5 text-sm leading-relaxed",
+        attachment && "overflow-hidden",
         isUser
           ? "bg-white text-neutral-900"
           : "border border-white/25 bg-white/10 backdrop-blur-md text-white",
@@ -67,7 +72,17 @@ export function ChatBubble({
           : style
       }
     >
-      {children}
+      <div
+        className={cn(
+          "whitespace-pre-line",
+          size === "lg"
+            ? "px-5 py-4 text-[20px] leading-[1.4]"
+            : "px-4 py-2.5 text-sm leading-relaxed",
+        )}
+      >
+        {children}
+      </div>
+      {attachment}
     </div>
   );
 }

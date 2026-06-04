@@ -88,7 +88,7 @@ export function HomeScreen({
             </Button>
             <Button
               surface="dark"
-              variant="ghost"
+              variant="plain"
               size="icon-lg"
               onClick={() => navigate({ to: "/settings" })}
               aria-label="Open settings"
@@ -317,21 +317,21 @@ function ViewToggle({
 }
 
 function SavedToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+  // Enclosed round icon button: bordered (secondary) when off, flipping to the
+  // filled primary circle when on. Surface follows appMode so it reads as one
+  // family with ViewToggle.
+  const appMode = useAppMode();
   return (
-    <button
-      type="button"
+    <Button
+      surface={appMode === "dark" ? "dark" : "light"}
+      variant="secondary"
+      size="icon-sm"
+      pressed={on}
       onClick={onClick}
-      aria-pressed={on}
       aria-label={on ? "Show all activities" : "Show saved only"}
-      className={
-        "inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors " +
-        (on
-          ? "bg-white text-neutral-900"
-          : "border border-white/25 text-white/75 active:bg-white/10")
-      }
     >
-      <Bookmark size={14} strokeWidth={1.75} fill={on ? "currentColor" : "none"} aria-hidden />
-    </button>
+      <Bookmark strokeWidth={1.75} fill={on ? "currentColor" : "none"} aria-hidden />
+    </Button>
   );
 }
 

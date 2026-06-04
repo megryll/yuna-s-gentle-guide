@@ -14,7 +14,10 @@ import { cn } from "@/lib/utils";
  * variant: fill style
  *   - "primary"   — strongest CTA (solid fill)
  *   - "secondary" — outlined, no fill
- *   - "ghost"     — no border or fill
+ *   - "plain"     — naked icon glyph: no border, no fill, no active-bg box
+ *                   (presses via opacity only). For inline icon affordances
+ *                   like a card's More / bookmark / share. Pair with an icon
+ *                   size; pressed flips it to the filled primary look.
  *   - "card"      — full-width rounded-2xl bordered block with a title
  *                   (children), optional `subtitle`, and optional `trailing`
  *                   element (e.g. a chevron). The list-row "card-as-button".
@@ -22,7 +25,9 @@ import { cn } from "@/lib/utils";
  *   - "link"      — inline text link, no border/fill/padding. For footer
  *                   actions (Referral Code, Login, Forgot password).
  *
- * size: "md" (default) | "sm" | "xs" (h-[26px], inline chip) | "icon" (h-9) | "icon-sm" (h-8) | "icon-lg" (h-11)
+ * size: "md" (default) | "sm" | "xs" (h-[26px], inline chip)
+ *   icon sizes also fix the glyph size (half the box) so callers never set it:
+ *   "icon-sm" (h-8, 16px glyph) | "icon" (h-9, 18px glyph) | "icon-lg" (h-11, 22px glyph)
  *
  * pressed (toggle): when true, button visually flips to the primary variant
  *   for the current surface, regardless of the `variant` prop. aria-pressed
@@ -45,16 +50,16 @@ const buttonVariants = cva(
         md: "px-6 py-3.5 text-sm tracking-wide",
         sm: "px-4 py-2 text-xs tracking-wide",
         xs: "h-[26px] px-3 text-[12px]",
-        icon: "h-9 w-9 p-0",
-        "icon-sm": "h-8 w-8 p-0",
-        "icon-lg": "h-11 w-11 p-0",
+        icon: "h-9 w-9 p-0 [&_svg]:size-[18px]",
+        "icon-sm": "h-8 w-8 p-0 [&_svg]:size-4",
+        "icon-lg": "h-11 w-11 p-0 [&_svg]:size-[22px]",
       },
       fullWidth: {
         true: "w-full",
         false: "",
       },
       surface: { dark: "", light: "" },
-      variant: { primary: "", secondary: "", ghost: "", card: "", link: "" },
+      variant: { primary: "", secondary: "", plain: "", card: "", link: "" },
     },
     compoundVariants: [
       // ─── Dark surface ────────────────────────────────────────────────────
@@ -72,9 +77,8 @@ const buttonVariants = cva(
       },
       {
         surface: "dark",
-        variant: "ghost",
-        className:
-          "text-white active:bg-white/15 focus-visible:ring-white/60",
+        variant: "plain",
+        className: "text-white active:opacity-60 focus-visible:ring-white/60",
       },
       // ─── Light surface ───────────────────────────────────────────────────
       {
@@ -87,13 +91,12 @@ const buttonVariants = cva(
         surface: "light",
         variant: "secondary",
         className:
-          "border border-border text-foreground active:bg-accent focus-visible:ring-foreground/30",
+          "border border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
       },
       {
         surface: "light",
-        variant: "ghost",
-        className:
-          "text-foreground active:bg-accent focus-visible:ring-foreground/30",
+        variant: "plain",
+        className: "text-foreground active:opacity-60 focus-visible:ring-foreground/30",
       },
     ],
     defaultVariants: {
@@ -156,7 +159,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "disabled:opacity-50 disabled:pointer-events-none",
             surface === "dark"
               ? "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
-              : "border-border text-foreground active:bg-accent focus-visible:ring-foreground/30",
+              : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
             className,
           )}
           ref={ref}

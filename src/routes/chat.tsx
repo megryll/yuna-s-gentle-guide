@@ -809,7 +809,7 @@ function Chat() {
           <div className="justify-self-start">
             <Button
               surface="dark"
-              variant="ghost"
+              variant="plain"
               size="icon-lg"
               onClick={() => setSettingsOpen(true)}
               aria-label="Open Yuna settings"
@@ -832,7 +832,7 @@ function Chat() {
           <div className="justify-self-end">
             <Button
               surface="dark"
-              variant="ghost"
+              variant="plain"
               size="icon-lg"
               onClick={endChat}
               aria-label="End conversation"
@@ -902,7 +902,7 @@ function Chat() {
                     <PhoneCallIcon />
                     Continue Over Voice
                   </Button>
-                  <Button surface="dark" variant="ghost" fullWidth onClick={dismissVoicePitch}>
+                  <Button surface="dark" variant="secondary" fullWidth onClick={dismissVoicePitch}>
                     Keep Texting For Now
                   </Button>
                 </div>

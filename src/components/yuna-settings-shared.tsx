@@ -70,7 +70,7 @@ export function SubScreen({
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pt-2 pb-3 yuna-fade-in">
         <Button
           surface="light"
-          variant="ghost"
+          variant="plain"
           size="icon"
           onClick={onBack}
           aria-label="Back"
@@ -104,7 +104,7 @@ export function ChoiceList({
             onClick={() => onChange(o.id)}
             className={
               "w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors " +
-              (selected ? "bg-accent/70 text-foreground" : "active:bg-accent/40 text-foreground") +
+              (selected ? "bg-foreground/10 text-foreground" : "active:bg-foreground/8 text-foreground") +
               (i > 0 ? " border-t border-border" : "")
             }
           >
@@ -206,7 +206,7 @@ export function NavRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-accent/40 transition-colors border-t border-border first:border-t-0"
+      className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-foreground/8 transition-colors border-t border-border first:border-t-0"
     >
       <span className="h-9 w-9 rounded-full flex items-center justify-center text-foreground shrink-0">
         {icon}

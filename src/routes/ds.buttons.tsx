@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Mic, PhoneOff, Volume2 } from "lucide-react";
+import { ArrowUp, Bookmark, ChevronLeft, ChevronRight, Menu, MoreHorizontal, Volume2, X } from "lucide-react";
 import { Button } from "@/components/Button";
 import { DSPage, PropsBlock, Row, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
 
@@ -14,7 +15,6 @@ export const Route = createFileRoute("/ds/buttons")({
 });
 
 const TEXT_SIZES = ["md", "sm", "xs"] as const;
-const ICON_SIZES = ["icon-sm", "icon", "icon-lg"] as const;
 
 function DSButtons() {
   return (
@@ -25,7 +25,7 @@ function DSButtons() {
 
       <Section
         title="States"
-        subtitle="Tap and hold to feel the pressed state; there are no hover states."
+        subtitle="Every variant in its three states; press is simulated here — there are no hover states."
       >
         <SurfaceMatrix rows={STATE_ROWS} />
       </Section>
@@ -33,8 +33,10 @@ function DSButtons() {
       <Section title="Props">
         <PropsBlock>{`<Button
   surface?:  "dark" | "light"                          // default: "light"
-  variant?:  "primary" | "secondary" | "ghost" | "card" | "link"   // default: "primary"
+  variant?:  "primary" | "secondary" | "plain" | "card" | "link"   // default: "primary"
+             // plain = naked icon glyph (no border/fill/box); pressed → primary look
   size?:     "md" | "sm" | "xs" | "icon" | "icon-sm" | "icon-lg"   // default: "md" (ignored by card/link)
+             // icon* sizes also set the glyph size (16 / 18 / 22px) — don't size icons at the call site
   fullWidth?: boolean                                  // default: false
   pressed?:  boolean       // toggles into primary look; sets aria-pressed
   label?:    string        // icon sizes only — caption below the circle
@@ -54,17 +56,30 @@ function DSButtons() {
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Primary", render: (s) => <SizeRow surface={s} variant="primary" label="Continue" /> },
   { label: "Secondary", render: (s) => <SizeRow surface={s} variant="secondary" label="Continue" /> },
-  { label: "Ghost", render: (s) => <SizeRow surface={s} variant="ghost" label="Use code" /> },
-  { label: "Icon buttons", render: (s) => <IconSizeRow surface={s} /> },
-  { label: "Card", render: (s) => <CardRow surface={s} /> },
   { label: "Link", render: (s) => <LinkRow surface={s} /> },
+  { label: "Icon buttons", render: (s) => <IconButtonsRow surface={s} /> },
+  { label: "Card", render: (s) => <CardRow surface={s} /> },
 ];
 
 const STATE_ROWS: MatrixRow[] = [
   { label: "Primary", render: (s) => <StateStack surface={s} variant="primary" /> },
   { label: "Secondary", render: (s) => <StateStack surface={s} variant="secondary" /> },
-  { label: "Ghost", render: (s) => <StateStack surface={s} variant="ghost" /> },
-  { label: "Icon buttons", render: (s) => <IconStateRow surface={s} /> },
+  { label: "Link", render: (s) => <LinkStateRow surface={s} /> },
+  { label: "Card", render: (s) => <CardStateStack surface={s} /> },
+  {
+    label: "Icon — plain",
+    render: (s) => <IconStateRow surface={s} variant="plain" glyph={<Menu strokeWidth={1.6} />} />,
+  },
+  {
+    label: "Icon — secondary",
+    render: (s) => (
+      <IconStateRow surface={s} variant="secondary" glyph={<ChevronLeft strokeWidth={1.5} />} />
+    ),
+  },
+  {
+    label: "Icon — primary",
+    render: (s) => <IconStateRow surface={s} variant="primary" glyph={<ArrowUp strokeWidth={2} />} />,
+  },
 ];
 
 function SizeRow({
@@ -73,7 +88,7 @@ function SizeRow({
   label,
 }: {
   surface: "dark" | "light";
-  variant: "primary" | "secondary" | "ghost";
+  variant: "primary" | "secondary";
   label: string;
 }) {
   return (
@@ -98,13 +113,6 @@ function CardRow({ surface }: { surface: "dark" | "light" }) {
       >
         Sign up through my employer
       </Button>
-      <Button
-        surface={surface}
-        variant="card"
-        trailing={<ChevronRight size={20} strokeWidth={1.75} />}
-      >
-        Title only, no subtitle
-      </Button>
     </div>
   );
 }
@@ -112,24 +120,46 @@ function CardRow({ surface }: { surface: "dark" | "light" }) {
 function LinkRow({ surface }: { surface: "dark" | "light" }) {
   return (
     <Row className="gap-5">
-      <Button surface={surface} variant="link">Referral Code</Button>
       <Button surface={surface} variant="link">Login</Button>
-      <Button surface={surface} variant="link" className="underline underline-offset-4">
-        Forgot password?
-      </Button>
     </Row>
   );
 }
 
-function IconSizeRow({ surface }: { surface: "dark" | "light" }) {
+// Icon buttons as the prototype actually uses them: plain (no border) spans
+// all three sizes (Card More, drawer/header close, header menu); secondary
+// (border) and primary (filled) appear only at the two smaller sizes (back +
+// save toggle; Send + speaker). Button sizes every glyph — callers don't.
+function IconButtonsRow({ surface }: { surface: "dark" | "light" }) {
   return (
-    <Row>
-      {ICON_SIZES.map((s) => (
-        <Button key={s} surface={surface} variant="secondary" size={s} aria-label="Back">
-          <BackArrow />
+    <div className="flex flex-col gap-3">
+      <Row className="gap-3">
+        <Button surface={surface} variant="plain" size="icon-sm" aria-label="More">
+          <MoreHorizontal strokeWidth={2} />
         </Button>
-      ))}
-    </Row>
+        <Button surface={surface} variant="plain" size="icon" aria-label="Close">
+          <X strokeWidth={1.6} />
+        </Button>
+        <Button surface={surface} variant="plain" size="icon-lg" aria-label="Menu">
+          <Menu strokeWidth={1.6} />
+        </Button>
+      </Row>
+      <Row className="gap-3">
+        <Button surface={surface} variant="secondary" size="icon-sm" aria-label="Save">
+          <Bookmark strokeWidth={1.75} />
+        </Button>
+        <Button surface={surface} variant="secondary" size="icon" aria-label="Back">
+          <ChevronLeft strokeWidth={1.5} />
+        </Button>
+      </Row>
+      <Row className="gap-3">
+        <Button surface={surface} variant="primary" size="icon-sm" aria-label="Send">
+          <ArrowUp strokeWidth={2} />
+        </Button>
+        <Button surface={surface} variant="primary" size="icon" aria-label="Mute Yuna">
+          <Volume2 strokeWidth={1.6} />
+        </Button>
+      </Row>
+    </div>
   );
 }
 
@@ -138,15 +168,15 @@ function StateStack({
   variant,
 }: {
   surface: "dark" | "light";
-  variant: "primary" | "secondary" | "ghost";
+  variant: "primary" | "secondary";
 }) {
   return (
     <div className="flex flex-col gap-2 w-full max-w-[260px]">
       <Button surface={surface} variant={variant} fullWidth>
         Default
       </Button>
-      <Button surface={surface} variant={variant} fullWidth className={focusRing(surface)}>
-        Focused
+      <Button surface={surface} variant={variant} fullWidth className={pressedClass(variant, surface)}>
+        Pressed
       </Button>
       <Button surface={surface} variant={variant} fullWidth disabled>
         Disabled
@@ -155,44 +185,93 @@ function StateStack({
   );
 }
 
-function IconStateRow({ surface }: { surface: "dark" | "light" }) {
+function LinkStateRow({ surface }: { surface: "dark" | "light" }) {
   return (
-    <Row className="gap-6">
-      <Button surface={surface} variant="secondary" size="icon-lg" label="Default" aria-label="Default">
-        <MicGlyph />
+    <Row className="gap-5">
+      <Button surface={surface} variant="link">Default</Button>
+      <Button surface={surface} variant="link" className={pressedClass("link", surface)}>
+        Pressed
       </Button>
-      <Button surface={surface} variant="secondary" size="icon-lg" pressed label="Pressed" aria-label="Pressed">
-        <SpeakerGlyph />
-      </Button>
-      <Button surface={surface} variant="secondary" size="icon-lg" disabled label="Disabled" aria-label="Disabled">
-        <EndGlyph />
-      </Button>
+      <Button surface={surface} variant="link" disabled>Disabled</Button>
     </Row>
   );
 }
 
-// Static ring mirroring the button's focus-visible appearance, so the
-// "Focused" state is visible in the matrix without stealing real focus.
-function focusRing(surface: "dark" | "light") {
-  return surface === "dark"
-    ? "ring-2 ring-offset-0 ring-white/60"
-    : "ring-2 ring-offset-0 ring-foreground/40";
+function CardStateStack({ surface }: { surface: "dark" | "light" }) {
+  return (
+    <div className="w-full max-w-[320px] flex flex-col gap-3">
+      <Button surface={surface} variant="card">Default</Button>
+      <Button surface={surface} variant="card" className={pressedClass("card", surface)}>
+        Pressed
+      </Button>
+      <Button surface={surface} variant="card" disabled>Disabled</Button>
+    </div>
+  );
 }
 
-// ─── Icon glyphs ────────────────────────────────────────────────────────────
-
-function BackArrow() {
-  return <ChevronLeft size={14} strokeWidth={1.5} />;
+// Icon buttons in default / pressed / disabled. Press is simulated with a
+// static class (no `label` prop, so it lands on the styled element) mirroring
+// each variant's `active:` feedback, since the matrix can't show a real tap.
+function IconStateRow({
+  surface,
+  variant,
+  glyph,
+}: {
+  surface: "dark" | "light";
+  variant: "plain" | "secondary" | "primary";
+  glyph: ReactNode;
+}) {
+  const states: { caption: string; className?: string; disabled?: boolean }[] = [
+    { caption: "Default" },
+    { caption: "Pressed", className: pressedClass(variant, surface) },
+    { caption: "Disabled", disabled: true },
+  ];
+  return (
+    <Row className="gap-6">
+      {states.map(({ caption, className, disabled }) => (
+        <div key={caption} className="flex flex-col items-center gap-2">
+          <Button
+            surface={surface}
+            variant={variant}
+            size="icon"
+            className={className}
+            disabled={disabled}
+            aria-label={caption}
+          >
+            {glyph}
+          </Button>
+          <span
+            className={
+              "text-[11px] tracking-[0.2em] uppercase " +
+              (surface === "dark" ? "text-white/70" : "text-muted-foreground")
+            }
+          >
+            {caption}
+          </span>
+        </div>
+      ))}
+    </Row>
+  );
 }
 
-function MicGlyph() {
-  return <Mic size={16} strokeWidth={1.5} />;
+// Static class mirroring each variant's `active:` press feedback, so the
+// "Pressed" state is visible at rest in the matrix.
+function pressedClass(
+  variant: "primary" | "secondary" | "card" | "link" | "plain",
+  surface: "dark" | "light",
+): string {
+  switch (variant) {
+    case "secondary":
+      return surface === "dark" ? "bg-white/15" : "bg-foreground/8";
+    case "card":
+      return surface === "dark" ? "bg-white/10" : "bg-foreground/8";
+    case "link":
+      return "opacity-70";
+    case "plain":
+      return "opacity-60";
+    case "primary":
+    default:
+      return "opacity-80";
+  }
 }
 
-function SpeakerGlyph() {
-  return <Volume2 size={16} strokeWidth={1.5} />;
-}
-
-function EndGlyph() {
-  return <PhoneOff size={16} strokeWidth={1.5} />;
-}

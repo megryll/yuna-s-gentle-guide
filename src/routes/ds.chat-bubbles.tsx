@@ -38,6 +38,7 @@ function DSChatBubbles() {
   size?:         "md" | "lg"       // default: "md"
   tail?:         boolean           // default: true
   frostedImage?: string            // Android backdrop-blur fallback photo
+  attachment?:   ReactNode         // full-bleed footer below the text
   className?:    string
   style?:        CSSProperties     // entrance animation goes here
 >
@@ -62,6 +63,28 @@ const VARIANT_ROWS: MatrixRow[] = [
             <br />
             <br />
             Here to listen, reflect, and grow with you.
+          </ChatBubble>,
+        ),
+      ),
+  },
+  {
+    label: "Attachment",
+    render: (s) =>
+      themed(
+        s,
+        box(
+          <ChatBubble
+            from="yuna"
+            attachment={
+              <div className="border-t border-white/20 bg-white/10 px-4 py-3 flex items-baseline gap-1.5">
+                <span className="font-display text-[22px] leading-none">4.7</span>
+                <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
+                  Out of 5
+                </span>
+              </div>
+            }
+          >
+            Our mission is to help people find support.
           </ChatBubble>,
         ),
       ),

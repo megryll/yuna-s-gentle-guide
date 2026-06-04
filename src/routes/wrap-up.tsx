@@ -13,6 +13,7 @@ import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
 import { requestSchedulePrompt } from "@/lib/schedule-prompt";
+import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -207,7 +208,7 @@ function WrapUp() {
               onClick={onDone}
               aria-label="Close wrap-up"
             >
-              <X size={16} strokeWidth={1.6} aria-hidden />
+              <X strokeWidth={1.6} aria-hidden />
             </Button>
           </div>
           {isLoading ? (
@@ -253,6 +254,9 @@ function WrapUp() {
 // AI keepsake as the headline. White text gets a soft drop shadow so it
 // stays legible against bright spots of the photo bg.
 function SessionHero({ avatar, message }: { avatar: AvatarVariant | null; message: string }) {
+  // Drop-shadow lifts white copy off the dark forest photo; in light mode the
+  // text inverts to ink and the shadow reads as an ugly halo, so drop it.
+  const mode = useAppMode();
   return (
     <section className="flex flex-col items-center text-center gap-4 pt-20 pb-10 yuna-fade-in">
       <p className="text-[11px] tracking-[0.32em] uppercase text-white/65">Session complete</p>
@@ -265,7 +269,12 @@ function SessionHero({ avatar, message }: { avatar: AvatarVariant | null; messag
         )}
       </span>
 
-      <p className="font-display italic text-[24px] leading-[1.3] text-white max-w-[280px] drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
+      <p
+        className={
+          "font-display italic text-[24px] leading-[1.3] text-white max-w-[280px]" +
+          (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
+        }
+      >
         {message}
       </p>
     </section>

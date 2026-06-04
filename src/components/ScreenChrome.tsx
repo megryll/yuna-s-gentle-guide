@@ -48,7 +48,7 @@ export function ScreenChrome({
             <div className="justify-self-start">
               <Button
                 surface={effectiveSurface}
-                variant="ghost"
+                variant="plain"
                 size="icon-lg"
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open menu"
@@ -62,7 +62,7 @@ export function ScreenChrome({
             <div className="justify-self-end">
               <Button
                 surface={effectiveSurface}
-                variant="ghost"
+                variant="plain"
                 size="icon-lg"
                 onClick={openCall}
                 aria-label="Call Yuna"

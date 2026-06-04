@@ -54,7 +54,7 @@ function AcceptTerms() {
             onClick={() => navigate({ to: "/auth" })}
             aria-label="Back"
           >
-            <ChevronLeft size={14} strokeWidth={1.5} />
+            <ChevronLeft strokeWidth={1.5} />
           </Button>
           <span className="h-9 w-9" />
         </div>
@@ -121,7 +121,7 @@ function ActiveTerm({
     <div className="yuna-rise rounded-2xl border border-white/35 bg-white/10 backdrop-blur-sm px-5 pt-4 pb-3 flex flex-col gap-3">
       <p className="text-[15px] leading-snug text-white">{text}</p>
       <div className="flex items-center justify-between">
-        <Button surface="dark" variant="ghost" size="sm" className="-ml-4">
+        <Button surface="dark" variant="link">
           Read more
         </Button>
         <Button surface="dark" variant="primary" size="sm" onClick={onAgree}>

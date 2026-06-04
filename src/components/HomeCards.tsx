@@ -1,20 +1,18 @@
 import { useState } from "react";
-import {
-  ArrowRight,
-  Bookmark,
-  MoreHorizontal,
-  Play,
-  Share2,
-  Star,
-} from "lucide-react";
-import {
-  KIND_META,
-  type CardKindMeta,
-  type HomeCard,
-} from "@/lib/home-cards";
+import { ArrowRight, Play, Star } from "lucide-react";
+import { KIND_META, type HomeCard } from "@/lib/home-cards";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { TextField } from "@/components/TextField";
+import {
+  Card,
+  CardCTA,
+  CardFooter,
+  CardHeader,
+  DailyTag,
+  NewBadge,
+  cardSurface,
+} from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
 
@@ -64,36 +62,21 @@ export function HomeCardRow({
   const mode = useAppMode();
   const isLight = mode === "light";
   const photoPath = card.naturePath ?? meta.naturePath;
-  const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72))"
-    : "linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55))";
-  const background = `${tintLayer}, url(${photoPath})`;
+  const { style, ringClass } = cardSurface({ naturePath: photoPath, isLight });
 
   return (
     <div className="relative">
-      {card.isNew && (
-        <span
-          className="absolute -top-1.5 left-3 z-10 text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
-          style={{ backgroundColor: "#66BA24" }}
-        >
-          New
-        </span>
-      )}
+      {card.isNew && <NewBadge className="-top-1.5 left-3" />}
       <button
         type="button"
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
         className={
           "relative w-full text-left rounded-xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden ring-1 " +
-          (isLight ? "ring-black/10 " : "ring-white/15 ") +
+          ringClass + " " +
           (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
         }
-        style={{
-          backgroundImage: background,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
+        style={style}
       >
         <div className="flex-1 min-w-0">
           <p
@@ -159,7 +142,7 @@ function GuidedSessionCard({
   const meta = KIND_META[card.type];
   const { avatar } = useYunaIdentity();
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader
         meta={meta}
         leading={
@@ -191,7 +174,7 @@ function GuidedSessionCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -203,7 +186,7 @@ function MeditationCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "meditation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -219,7 +202,7 @@ function MeditationCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -232,7 +215,7 @@ function GratitudeCard({
   const meta = KIND_META[card.type];
   const [entries, setEntries] = useState<[string, string, string]>(["", "", ""]);
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col justify-center">
         <p className="font-display text-[20px] leading-[1.75] tracking-tight text-white">
@@ -272,7 +255,7 @@ function GratitudeCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -284,7 +267,7 @@ function SelfDiscoveryCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "self-discovery" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white">
@@ -304,7 +287,7 @@ function SelfDiscoveryCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -316,7 +299,7 @@ function AffirmationCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "affirmation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -332,13 +315,13 @@ function AffirmationCard({
             onClick={onClick}
             aria-label="Play affirmation"
           >
-            <Play size={16} strokeWidth={2} fill="currentColor" aria-hidden />
+            <Play strokeWidth={2} fill="currentColor" aria-hidden />
           </Button>
         }
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -350,7 +333,7 @@ function LearnSkillCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "learn-skill" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -366,7 +349,7 @@ function LearnSkillCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -378,7 +361,7 @@ function AccountabilityCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "accountability" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -394,7 +377,7 @@ function AccountabilityCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
@@ -406,7 +389,7 @@ function BookCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "book" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <CardShell tone={meta.tone} accent={meta.accent} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
       <CardHeader meta={meta} />
       <div className="flex-1 flex items-center gap-4">
         {card.cover ? (
@@ -449,206 +432,13 @@ function BookCard({
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
-    </CardShell>
+    </Card>
   );
 }
 
 // ─── Card chrome shared bits ─────────────────────────────────────────────────
-
-function CardShell({
-  tone,
-  accent,
-  isNew,
-  naturePath,
-  children,
-}: {
-  tone: "dark" | "light";
-  accent: string;
-  isNew?: boolean;
-  naturePath?: string;
-  children: React.ReactNode;
-}) {
-  const mode = useAppMode();
-  const isDark = tone === "dark";
-  const isLight = mode === "light";
-
-  const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72))"
-    : "linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55))";
-  const background = naturePath
-    ? `${tintLayer}, url(${naturePath})`
-    : isDark
-      ? `linear-gradient(155deg, ${accent}CC 0%, ${accent}55 35%, rgba(15, 18, 24, 0.78) 100%)`
-      : `linear-gradient(160deg, #F4ECDE 0%, #EFE3CC 100%)`;
-
-  return (
-    <div className="relative">
-      {isNew && (
-        <span
-          className="absolute -top-2 left-4 z-10 text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow"
-          style={{ backgroundColor: "#66BA24" }}
-        >
-          New
-        </span>
-      )}
-      <div
-        className={
-          "rounded-2xl p-5 aspect-square flex flex-col overflow-hidden ring-1 " +
-          (isLight ? "ring-black/10 " : "ring-white/15 ") +
-          (isDark ? "text-white" : "text-neutral-900")
-        }
-        style={{
-          backgroundImage: background,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function CardHeader({
-  meta,
-  cadence,
-  eyebrow,
-  leading,
-}: {
-  meta: CardKindMeta;
-  cadence?: "Daily";
-  eyebrow?: string;
-  leading?: React.ReactNode;
-}) {
-  const isDark = meta.tone === "dark";
-  const eyebrowColor = isDark ? "text-white" : "text-neutral-900";
-  const iconColor = isDark
-    ? "text-white"
-    : "text-neutral-600 active:text-neutral-900";
-
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0 flex flex-row items-center gap-1 flex-wrap">
-        <p
-          className={
-            "text-[12px] font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 " +
-            eyebrowColor
-          }
-        >
-          {leading ?? <span aria-hidden>{meta.emoji}</span>}
-          {eyebrow ?? meta.label}
-        </p>
-        {cadence && <DailyTag tone={meta.tone} />}
-      </div>
-      <button
-        type="button"
-        aria-label="More"
-        onClick={(e) => e.stopPropagation()}
-        className={"transition-colors shrink-0 " + iconColor}
-      >
-        <MoreHorizontal size={20} strokeWidth={2} aria-hidden />
-      </button>
-    </div>
-  );
-}
-
-function CardFooter({
-  primary,
-  meta,
-  isSaved,
-  onToggleSave,
-  tone = "dark",
-}: {
-  primary: React.ReactNode;
-  meta?: string;
-  isSaved?: boolean;
-  onToggleSave?: () => void;
-  tone?: "dark" | "light";
-}) {
-  const isDark = tone === "dark";
-  const iconColor = isDark
-    ? "text-white"
-    : "text-neutral-600 active:text-neutral-900";
-
-  return (
-    <div className="mt-5 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3 shrink-0">
-        {onToggleSave && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSave();
-            }}
-            aria-pressed={isSaved}
-            aria-label={isSaved ? "Remove bookmark" : "Save"}
-            className={"transition-colors " + iconColor}
-          >
-            <Bookmark
-              size={20}
-              strokeWidth={2}
-              fill={isSaved ? "currentColor" : "none"}
-              aria-hidden
-            />
-          </button>
-        )}
-        <span aria-hidden className={iconColor}>
-          <Share2 size={20} strokeWidth={2} />
-        </span>
-      </div>
-      <div className="flex items-center gap-3 min-w-0">
-        {meta && (
-          <span
-            className={
-              "text-[12px] font-medium tracking-[0.08em] uppercase " +
-              (isDark ? "text-white/80" : "text-neutral-700")
-            }
-          >
-            {meta}
-          </span>
-        )}
-        {primary}
-      </div>
-    </div>
-  );
-}
-
-function CardCTA({
-  tone,
-  onClick,
-  children,
-}: {
-  tone: "dark" | "light";
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      surface={tone === "dark" ? "dark" : "light"}
-      variant="secondary"
-      onClick={onClick}
-      className="h-10 px-5 text-[12.5px] font-medium uppercase tracking-[0.1em]"
-    >
-      {children}
-    </Button>
-  );
-}
-
-function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
-  const isDark = tone === "dark";
-  return (
-    <span
-      className={
-        "text-[12px] font-medium tracking-[0.12em] uppercase " +
-        (isDark ? "text-white" : "text-neutral-900")
-      }
-    >
-      <span aria-hidden className="mx-0.5">•</span>
-      Daily
-    </span>
-  );
-}
+// Card / CardHeader / CardFooter / CardCTA / DailyTag now live in the Card
+// primitive (components/Card.tsx). ActionCircle is row-only — kept local.
 
 function ActionCircle({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
   const isDark = tone === "dark";
