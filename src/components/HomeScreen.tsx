@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bookmark, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
-import { VOICES } from "@/lib/voices";
+import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppBar } from "@/components/AppBar";
@@ -132,7 +132,7 @@ export function HomeScreen({
               onClick={() => open(PRIMARY_SUGGESTION.label)}
               leading={
                 <span className="block shrink-0 -my-2 -ml-3">
-                  <YunaAvatar variant={avatar ?? undefined} size={52} className="block" />
+                  <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={52} className="block" />
                 </span>
               }
             >

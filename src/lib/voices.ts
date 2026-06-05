@@ -9,6 +9,12 @@ export type VoiceId = AvatarVariant;
 
 export const VOICE_IDS: VoiceId[] = AVATAR_VARIANTS;
 
+// Shown when the user lands somewhere that needs a face/voice without having
+// picked one (e.g. navigating straight to Home, skipping the intro). A
+// photoreal, human-looking woman — not the abstract brand mark or an
+// illustrated variant. Matches the intro's index-0 pre-selection.
+export const DEFAULT_VOICE: VoiceId = "iris";
+
 export type VoiceConfig = {
   id: VoiceId;
   elevenlabsId: string;
