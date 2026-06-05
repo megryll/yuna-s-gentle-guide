@@ -64,23 +64,19 @@ export function HomeCardRow({
   const isLight = isSolid ? meta.tone === "light" : false;
   const pinDark = !isLight;
   const photoPath = card.naturePath ?? meta.naturePath;
-  const { style, ringClass } = isSolid
-    ? {
-        style: { backgroundColor: meta.solidBg },
-        ringClass: meta.tone === "dark" ? "ring-white/20" : "ring-foreground/20",
-      }
-    : cardSurface({ naturePath: photoPath });
+  const style = isSolid
+    ? { backgroundColor: meta.solidBg }
+    : cardSurface({ naturePath: photoPath }).style;
 
   return (
     <div className="relative">
-      {card.isNew && <NewBadge className="-top-1.5 left-3" />}
+      {card.isNew && <NewBadge className="-top-1.5 left-4" />}
       <button
         type="button"
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
         className={
-          "relative w-full text-left rounded-2xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden ring-1 " +
-          ringClass + " " +
+          "relative w-full text-left rounded-2xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden " +
           (pinDark ? "card-fixed-dark " : "") +
           (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
         }
@@ -151,9 +147,9 @@ function GuidedSessionCard({
         meta={meta}
         leading={
           avatar ? (
-            <YunaAvatar variant={avatar} size={16} />
+            <YunaAvatar variant={avatar} size={24} className="ring-1 ring-white" />
           ) : (
-            <span aria-hidden className="h-4 w-4 rounded-full bg-white/25" />
+            <span aria-hidden className="h-6 w-6 rounded-full bg-white/25 ring-1 ring-white" />
           )
         }
       />

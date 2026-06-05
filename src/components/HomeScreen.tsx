@@ -35,10 +35,10 @@ const RETURNING_GREETINGS: { title: (name: string | null) => string; sub: string
   { title: () => "However today is going,", sub: "we can take it one step at a time." },
 ];
 
-// First card is the "An introductory session" guided-session — the only card
-// a brand-new user sees, and intentionally skipped in the returning feed so
-// it doesn't sit beneath richer, personalized content.
-const INTRO_CARD = HOME_CARDS[0];
+// The home feed is the same for new and returning users — only the greeting
+// and the welcome audio differ by user type. HOME_CARDS[0] is the first
+// check-in card, kept out of the feed (slice(1)) so it doesn't sit beneath the
+// richer, personalized content.
 const POST_INTRO_CARDS = HOME_CARDS.slice(1);
 
 export function HomeScreen({
@@ -58,7 +58,7 @@ export function HomeScreen({
   const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
-  const cards = variant === "new" ? [INTRO_CARD] : POST_INTRO_CARDS;
+  const cards = POST_INTRO_CARDS;
   const initialSavedIds = useMemo(
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
@@ -124,12 +124,17 @@ export function HomeScreen({
             </p>
           </div>
 
-          <div className="mt-5 flex justify-center yuna-rise">
+          <div className="mt-4 flex justify-center yuna-rise">
             <SuggestionChip
               variant="primary"
+              size="lg"
               fullWidth={false}
               onClick={() => open(PRIMARY_SUGGESTION.label)}
-              leading={<YunaAvatar variant={avatar ?? undefined} size={26} />}
+              leading={
+                <span className="block shrink-0 -my-2 -ml-3">
+                  <YunaAvatar variant={avatar ?? undefined} size={52} className="block" />
+                </span>
+              }
             >
               {PRIMARY_SUGGESTION.label}
             </SuggestionChip>
@@ -211,7 +216,7 @@ function CreatedForYou({
   const items = savedOnly ? cards.filter((c) => savedIds.has(c.id)) : cards;
 
   return (
-    <div className="mt-16">
+    <div className="mt-12">
       <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">Created For You</p>
         <div className="flex items-center gap-2">

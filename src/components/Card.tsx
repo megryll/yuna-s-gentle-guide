@@ -36,14 +36,14 @@ export type CardChromeMeta = {
   tone: "dark" | "light";
 };
 
-// Background + ring for a photo content card, shared by the tile and the list
-// row. Always the dark cluster — a black wash + white ink — in both app modes,
-// so photo cards read identically light and dark.
+// Background for a photo content card, shared by the tile and the list row.
+// Always the dark cluster — a black wash + white ink — in both app modes, so
+// photo cards read identically light and dark.
 export function cardSurface({
   naturePath,
 }: {
   naturePath: string;
-}): { style: React.CSSProperties; ringClass: string } {
+}): { style: React.CSSProperties } {
   return {
     style: {
       backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(${naturePath})`,
@@ -51,19 +51,21 @@ export function cardSurface({
       backgroundPosition: "center",
       backgroundRepeat: "no-repeat",
     },
-    ringClass: "ring-white/15",
   };
 }
 
 export function NewBadge({ className }: { className?: string }) {
+  // White-on-green in both app modes. `card-fixed-dark` pins the inner
+  // `text-white` against the `.theme-light` shim (which would otherwise invert
+  // it to ink in light mode); the green fill isn't a shim target, so it holds.
   return (
     <span
       className={cn(
-        "absolute z-10 text-[9px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full text-white shadow bg-yuna-green",
+        "absolute z-10 text-[11px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full shadow bg-yuna-green card-fixed-dark",
         className,
       )}
     >
-      New
+      <span className="text-white">New</span>
     </span>
   );
 }
@@ -85,25 +87,19 @@ export function Card({
 }) {
   const isDark = tone === "dark";
 
-  // Solid cards carry a fixed fill + a tone-derived ring; photo cards get the
-  // dark photo wash. Either way the look is mode-independent — a dark-toned
-  // card pins its white ink against `.theme-light` via `card-fixed-dark`.
-  // Solid-card ring echoes the card's ink/button-text color at a softer alpha:
-  // white on dark fills, foreground ink on pale fills.
-  const { style, ringClass } = solidFill
-    ? {
-        style: { backgroundColor: solidFill } as React.CSSProperties,
-        ringClass: isDark ? "ring-white/20" : "ring-foreground/20",
-      }
-    : cardSurface({ naturePath: naturePath ?? "" });
+  // Solid cards carry a fixed fill; photo cards get the dark photo wash. Either
+  // way the look is mode-independent — a dark-toned card pins its white ink
+  // against `.theme-light` via `card-fixed-dark`.
+  const style: React.CSSProperties = solidFill
+    ? { backgroundColor: solidFill }
+    : cardSurface({ naturePath: naturePath ?? "" }).style;
 
   return (
     <div className="relative">
-      {isNew && <NewBadge className="-top-2 left-4" />}
+      {isNew && <NewBadge className="-top-2 left-5" />}
       <div
         className={cn(
-          "rounded-[2.5rem] p-5 aspect-square flex flex-col overflow-hidden ring-1",
-          ringClass,
+          "rounded-[2.5rem] p-5 aspect-square flex flex-col overflow-hidden",
           isDark ? "text-white" : "text-neutral-900",
           isDark && "card-fixed-dark",
           className,
@@ -234,7 +230,12 @@ export function CardCTA({
       surface={tone === "dark" ? "dark" : "light"}
       variant="secondary"
       onClick={onClick}
-      className="h-10 px-5 text-[12.5px] font-medium uppercase tracking-[0.1em]"
+      className={cn(
+        "h-10 px-5 text-[12.5px] font-medium uppercase tracking-[0.1em]",
+        // Light-tone CTAs (gratitude, book) sit on pale fills where the soft
+        // border-border hairline reads weak — pin to the ink token.
+        tone === "light" && "border-foreground",
+      )}
     >
       {children}
     </Button>

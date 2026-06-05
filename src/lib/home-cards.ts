@@ -108,7 +108,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     tone: "dark",
     action: "play",
     ctaLabel: "Try this meditation",
-    naturePath: "/nature/Background-1.png",
+    naturePath: "/nature/Background-13.png",
   },
   gratitude: {
     label: "Gratitude List",
@@ -134,7 +134,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     tone: "dark",
     action: "play",
     ctaLabel: "Play affirmation",
-    naturePath: "/nature/Background-13.png",
+    naturePath: "/nature/Background-1.png",
   },
   "learn-skill": {
     label: "Recommended Skill",
@@ -175,12 +175,11 @@ export const HOME_CARDS: HomeCard[] = [
   },
   {
     type: "meditation",
-    id: "calm-heartbreak",
-    title: "Meditation For You: Finding Calm After Heartbreak",
+    id: "midday-reset",
+    title: "Meditation For You: A Five-Minute Midday Reset",
     cadence: "Daily",
-    naturePath: "/nature/Background-14.png",
+    naturePath: "/nature/Background-13.png",
     isNew: true,
-    isSaved: true,
   },
   {
     type: "gratitude",
@@ -188,6 +187,7 @@ export const HOME_CARDS: HomeCard[] = [
     prompt: "I feel grateful today, because:",
     cadence: "Daily",
     naturePath: "/nature/Background-7.png",
+    isNew: true,
   },
   {
     type: "self-discovery",
@@ -204,7 +204,7 @@ export const HOME_CARDS: HomeCard[] = [
     quote:
       "I have the strength to overcome obstacles. Each step forward is progress. Embrace challenges and keep moving confidently.",
     cadence: "Daily",
-    naturePath: "/nature/Background-18.png",
+    naturePath: "/nature/Background-14.png",
     isSaved: true,
   },
   {
@@ -231,18 +231,19 @@ export const HOME_CARDS: HomeCard[] = [
     naturePath: "/nature/Background-19.png",
   },
   {
+    type: "meditation",
+    id: "calm-heartbreak",
+    title: "Meditation For You: Finding Calm After Heartbreak",
+    cadence: "Daily",
+    naturePath: "/nature/Background-18.png",
+    isSaved: true,
+  },
+  {
     type: "guided-session",
     id: "perfectionism-work",
     title: "Untangle perfectionism at work, one thread at a time",
     subtitle: "You've used the word 'should' a lot this week. Let's dig in.",
     naturePath: "/nature/Background-15.png",
-  },
-  {
-    type: "meditation",
-    id: "midday-reset",
-    title: "Meditation For You: A Five-Minute Midday Reset",
-    cadence: "Daily",
-    naturePath: "/nature/Background-8.png",
   },
   {
     type: "gratitude",
@@ -266,7 +267,7 @@ export const HOME_CARDS: HomeCard[] = [
     quote:
       "Rest isn't a reward I earn. It's how I stay rooted enough to keep showing up. Softness today is strength tomorrow.",
     cadence: "Daily",
-    naturePath: "/nature/Background-13.png",
+    naturePath: "/nature/Background-8.png",
   },
   {
     type: "learn-skill",
@@ -295,7 +296,6 @@ export const HOME_CARDS: HomeCard[] = [
     title: "Bedtime Body Scan: Releasing the Day's Tension",
     cadence: "Daily",
     naturePath: "/nature/Background-1.png",
-    isNew: true,
   },
   {
     type: "book",
