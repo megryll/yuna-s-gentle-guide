@@ -68,7 +68,7 @@ function ToolsRoute() {
             <li key={t.id}>
               <div
                 style={{ animationDelay: `${i * 60}ms` }}
-                className="yuna-rise relative w-full rounded-2xl overflow-hidden aspect-[16/9]"
+                className="yuna-rise relative w-full rounded-3xl overflow-hidden aspect-[16/9]"
               >
                 <img
                   src={t.image}

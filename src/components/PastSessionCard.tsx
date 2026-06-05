@@ -62,7 +62,7 @@ export function PastSessionCard({
         type="button"
         onClick={onClick}
         style={style}
-        className={`yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass} active:opacity-90 transition-opacity`}
+        className={`yuna-rise w-full text-left rounded-3xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass} active:opacity-90 transition-opacity`}
       >
         {inner}
       </button>
@@ -72,7 +72,7 @@ export function PastSessionCard({
   return (
     <div
       style={style}
-      className={`yuna-rise w-full text-left rounded-2xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass}`}
+      className={`yuna-rise w-full text-left rounded-3xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass}`}
     >
       {inner}
     </div>

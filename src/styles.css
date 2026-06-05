@@ -481,6 +481,27 @@
   .theme-light .active\:bg-white\/15:active { background-color: rgba(20, 20, 22, 0.1); }
   .theme-light .active\:bg-white\/25:active { background-color: rgba(20, 20, 22, 0.12); }
 
+  /* ─── Dark-toned content cards keep white ink in BOTH modes ────────────────
+     A dark content card — any photo card, or a deep-fill solid (forest skill,
+     plum questionnaire) — is authored white-on-dark and stays that color
+     regardless of the app's Light/Dark toggle. Inside `.theme-light` the global
+     shim above would invert its ink; re-assert the dark-cluster look for
+     anything under `.card-fixed-dark`. The extra class raises specificity over
+     the matching `.theme-light .*`. */
+  .theme-light .card-fixed-dark .text-white { color: rgb(255, 255, 255); }
+  .theme-light .card-fixed-dark .text-white\/90 { color: rgba(255, 255, 255, 0.9); }
+  .theme-light .card-fixed-dark .text-white\/85 { color: rgba(255, 255, 255, 0.85); }
+  .theme-light .card-fixed-dark .text-white\/80 { color: rgba(255, 255, 255, 0.8); }
+  .theme-light .card-fixed-dark .text-white\/75 { color: rgba(255, 255, 255, 0.75); }
+  .theme-light .card-fixed-dark .text-white\/70 { color: rgba(255, 255, 255, 0.7); }
+  .theme-light .card-fixed-dark .border-white\/40 { border-color: rgba(255, 255, 255, 0.4); }
+  .theme-light .card-fixed-dark .border-white\/15 { border-color: rgba(255, 255, 255, 0.15); }
+  .theme-light .card-fixed-dark .bg-white { background-color: rgb(255, 255, 255); }
+  .theme-light .card-fixed-dark .bg-white.text-neutral-900 { color: rgb(29, 31, 37); }
+  .theme-light .card-fixed-dark .bg-white\/15 { background-color: rgba(255, 255, 255, 0.15); }
+  .theme-light .card-fixed-dark .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+  .theme-light .card-fixed-dark .active\:bg-white\/15:active { background-color: rgba(255, 255, 255, 0.15); }
+
   /* ─── Overlay-on-dark inversion (.overlay-on-dark) ─────────────────────────
      In dark mode, drawers/dialogs/tooltips drop their light frosted-glass
      surfaces and ride the same dark photo bg as the screen. Token-tinted

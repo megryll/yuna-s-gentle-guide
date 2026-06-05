@@ -14,7 +14,6 @@ import {
   cardSurface,
 } from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
-import { useAppMode } from "@/lib/theme-prefs";
 
 type ItemProps = {
   card: HomeCard;
@@ -59,10 +58,18 @@ export function HomeCardRow({
   const { avatar } = useYunaIdentity();
   const isGuided = card.type === "guided-session";
 
-  const mode = useAppMode();
-  const isLight = mode === "light";
+  const isSolid = meta.solidBg != null;
+  // Photo rows always use the dark cluster (black tint + white ink) in both
+  // modes, matching the card view; solid rows keep their fixed tone.
+  const isLight = isSolid ? meta.tone === "light" : false;
+  const pinDark = !isLight;
   const photoPath = card.naturePath ?? meta.naturePath;
-  const { style, ringClass } = cardSurface({ naturePath: photoPath, isLight });
+  const { style, ringClass } = isSolid
+    ? {
+        style: { backgroundColor: meta.solidBg },
+        ringClass: meta.tone === "dark" ? "ring-white/20" : "ring-foreground/20",
+      }
+    : cardSurface({ naturePath: photoPath });
 
   return (
     <div className="relative">
@@ -72,8 +79,9 @@ export function HomeCardRow({
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
         className={
-          "relative w-full text-left rounded-xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden ring-1 " +
+          "relative w-full text-left rounded-2xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden ring-1 " +
           ringClass + " " +
+          (pinDark ? "card-fixed-dark " : "") +
           (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
         }
         style={style}
@@ -89,11 +97,7 @@ export function HomeCardRow({
           </p>
           <div className="mt-3.5 flex items-center gap-1 flex-wrap">
             <span className={`text-[12px] font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
-              {isGuided && avatar ? (
-                <YunaAvatar variant={avatar} size={15} />
-              ) : (
-                <span aria-hidden>{meta.emoji}</span>
-              )}
+              {isGuided && avatar && <YunaAvatar variant={avatar} size={15} />}
               {meta.label}
             </span>
             {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
@@ -142,7 +146,7 @@ function GuidedSessionCard({
   const meta = KIND_META[card.type];
   const { avatar } = useYunaIdentity();
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader
         meta={meta}
         leading={
@@ -186,7 +190,7 @@ function MeditationCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "meditation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -215,20 +219,20 @@ function GratitudeCard({
   const meta = KIND_META[card.type];
   const [entries, setEntries] = useState<[string, string, string]>(["", "", ""]);
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col justify-center">
-        <p className="font-display text-[20px] leading-[1.75] tracking-tight text-white">
+        <p className="font-display text-[20px] leading-[1.75] tracking-tight text-foreground">
           {card.prompt}
         </p>
         <ul className="mt-4 flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-center gap-2.5">
-              <span className="text-[11px] tracking-[0.18em] uppercase text-white/85 shrink-0 w-5">
+              <span className="text-[11px] tracking-[0.18em] uppercase text-foreground/55 shrink-0 w-5">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <TextField
-                surface="dark"
+                surface="light"
                 size="sm"
                 containerClassName="flex-1"
                 value={entries[i]}
@@ -252,6 +256,7 @@ function GratitudeCard({
             My Gratitude Journal
           </CardCTA>
         }
+        tone={meta.tone}
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />
@@ -267,7 +272,7 @@ function SelfDiscoveryCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "self-discovery" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white">
@@ -299,7 +304,7 @@ function AffirmationCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "affirmation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -333,7 +338,7 @@ function LearnSkillCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "learn-skill" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -361,7 +366,7 @@ function AccountabilityCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "accountability" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
@@ -389,31 +394,31 @@ function BookCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "book" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath}>
+    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} />
       <div className="flex-1 flex items-center gap-4">
         {card.cover ? (
           <img
             src={card.cover}
             alt={`${card.title} cover`}
-            className="h-24 w-[72px] shrink-0 rounded-md object-cover border border-white/30 shadow-md"
+            className="h-24 w-[72px] shrink-0 rounded-md object-cover border border-black/10 shadow-md"
           />
         ) : (
           <span
             aria-hidden
-            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-white/30 shadow-md flex items-center justify-center text-[11px] font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
+            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-black/10 shadow-md flex items-center justify-center text-[11px] font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
           >
             {card.title}
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] tracking-[0.18em] uppercase text-white">
+          <p className="text-[11px] tracking-[0.18em] uppercase text-foreground">
             {card.author}
           </p>
-          <p className="mt-1 font-display text-[22px] leading-[1.75] tracking-tight text-white">
+          <p className="mt-1 font-display text-[22px] leading-[1.75] tracking-tight text-foreground">
             {card.title}
           </p>
-          <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-white/85">
+          <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-foreground/80">
             <span className="font-medium">{card.rating.toFixed(1)}</span>
             <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
             <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
@@ -429,6 +434,7 @@ function BookCard({
             {meta.ctaLabel}
           </CardCTA>
         }
+        tone={meta.tone}
         isSaved={isSaved}
         onToggleSave={onToggleSave}
       />

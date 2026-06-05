@@ -79,7 +79,6 @@ export type CardKind = HomeCard["type"];
 
 export type CardKindMeta = {
   label: string;
-  emoji: string;
   accent: string;
   // dark = white text on accent-tinted dark gradient
   // light = dark text on pale warm bg
@@ -88,12 +87,15 @@ export type CardKindMeta = {
   ctaLabel: string;
   // Fallback photo when an individual card doesn't override `naturePath`.
   naturePath: string;
+  // When set, the card renders on this solid fill instead of a tinted photo
+  // (fixed in both light/dark app modes — see Card `solidFill`). Pair a pale
+  // fill with tone "light" (dark ink) and a deep fill with tone "dark" (white).
+  solidBg?: string;
 };
 
 export const KIND_META: Record<CardKind, CardKindMeta> = {
   "guided-session": {
     label: "Guided Session",
-    emoji: "🛏️",
     accent: "#5E8B6D",
     tone: "dark",
     action: "play",
@@ -102,7 +104,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   meditation: {
     label: "Personalised Meditation",
-    emoji: "🧘",
     accent: "#6FA88B",
     tone: "dark",
     action: "play",
@@ -111,25 +112,24 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   gratitude: {
     label: "Gratitude List",
-    emoji: "🙏",
     accent: "#C7916A",
-    tone: "dark",
+    tone: "light",
     action: "arrow",
     ctaLabel: "My gratitude journal",
     naturePath: "/nature/Background-17.png",
+    solidBg: "#B4C6D6",
   },
   "self-discovery": {
     label: "Questionnaire",
-    emoji: "📋",
     accent: "#5E9389",
     tone: "dark",
     action: "arrow",
     ctaLabel: "Try it now",
     naturePath: "/nature/Background-9.png",
+    solidBg: "#6E5A6B",
   },
   affirmation: {
     label: "Affirmation",
-    emoji: "⭐",
     accent: "#B58547",
     tone: "dark",
     action: "play",
@@ -138,16 +138,15 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   "learn-skill": {
     label: "Recommended Skill",
-    emoji: "📒",
     accent: "#7BB068",
     tone: "dark",
     action: "arrow",
     ctaLabel: "Learn this skill",
     naturePath: "/nature/Background-6.png",
+    solidBg: "#2C5C3D",
   },
   accountability: {
     label: "Accountability Partner",
-    emoji: "🤝",
     accent: "#7E84CC",
     tone: "dark",
     action: "check",
@@ -156,12 +155,12 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   book: {
     label: "Book Recommendation",
-    emoji: "📗",
     accent: "#8FB46A",
-    tone: "dark",
+    tone: "light",
     action: "check",
     ctaLabel: "I read this",
     naturePath: "/nature/Background-3.png",
+    solidBg: "#F2E7C9",
   },
 };
 

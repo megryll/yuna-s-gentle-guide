@@ -13,6 +13,8 @@ type Props = {
   size?: Size;
   fullWidth?: boolean;
   surface?: AppMode;
+  /** Optional element rendered at the chip's leading edge (e.g. an avatar). */
+  leading?: React.ReactNode;
 };
 
 const FILLED_BG_DARK = "rgba(253, 252, 250, 0.2)";
@@ -30,6 +32,7 @@ export function SuggestionChip({
   size = "md",
   fullWidth = true,
   surface,
+  leading,
 }: Props) {
   const appMode = useAppMode();
   const mode = surface ?? appMode;
@@ -74,6 +77,11 @@ export function SuggestionChip({
       }
       style={inlineStyle}
     >
+      {leading && (
+        <span className="shrink-0 -ml-1 flex items-center" aria-hidden>
+          {leading}
+        </span>
+      )}
       <span className={(fullWidth ? "flex-1 " : "") + "min-w-0"}>
         {children}
       </span>

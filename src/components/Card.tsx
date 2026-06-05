@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Bookmark, MoreHorizontal, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppMode, type AppMode } from "@/lib/theme-prefs";
 import { Button } from "@/components/Button";
 
 /**
@@ -12,49 +11,47 @@ import { Button } from "@/components/Button";
  * Anatomy: <Card> shell + optional <CardHeader> (eyebrow + More), centered
  * body (caller-owned), and optional <CardFooter> (save/share + a primary CTA).
  *
- * Color model: content is authored white-on-dark (text-white/*) and inverts
- * for the light cluster via the global `.theme-light` shim — same as the rest
- * of the photo-bg screens. Only the photo tint + ring can't be inverted by a
- * shim (they're inline/arbitrary), so they follow `surface` (defaults to the
- * live app mode); pass `surface` explicitly to pin a card to one cluster.
+ * Color model: a card is either photo-tinted (`naturePath`) or a flat solid
+ * (`solidFill`), and its look is FIXED across the app's light/dark toggle.
+ *   • Photo cards always use the dark cluster — a black wash + white ink — so
+ *     they read identically in light and dark mode.
+ *   • Solid cards carry a fixed fill: pair a pale fill with tone "light" (dark
+ *     ink) or a deep fill with tone "dark" (white ink).
+ * Any tone "dark" card pins its white ink against the global `.theme-light`
+ * shim via the `card-fixed-dark` class (the shim would otherwise invert it).
  *
  * Card props:
  *   tone:      "dark" | "light"  — content tone (dark = white text)
- *   naturePath: string           — background photo (tinted per surface)
+ *   naturePath: string           — background photo (dark-washed)
+ *   solidFill?: string           — flat fill (overrides photo)
  *   isNew?:    boolean           — green "New" flag, top-left
- *   surface?:  "dark" | "light"  — tint cluster; default useAppMode()
  *
- * CardHeader props: meta {label, emoji, tone}, cadence?, eyebrow?, leading?
+ * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
  * CardCTA props:    tone, onClick, children
  */
 
 export type CardChromeMeta = {
   label: string;
-  emoji: string;
   tone: "dark" | "light";
 };
 
-// Background + ring for a content card, shared by the tile and the list row.
-// The photo is tinted per cluster — a white wash in light, a black wash in dark.
+// Background + ring for a photo content card, shared by the tile and the list
+// row. Always the dark cluster — a black wash + white ink — in both app modes,
+// so photo cards read identically light and dark.
 export function cardSurface({
   naturePath,
-  isLight,
 }: {
   naturePath: string;
-  isLight: boolean;
 }): { style: React.CSSProperties; ringClass: string } {
-  const tintLayer = isLight
-    ? "linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72))"
-    : "linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55))";
   return {
     style: {
-      backgroundImage: `${tintLayer}, url(${naturePath})`,
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(${naturePath})`,
       backgroundSize: "cover",
       backgroundPosition: "center",
       backgroundRepeat: "no-repeat",
     },
-    ringClass: isLight ? "ring-black/10" : "ring-white/15",
+    ringClass: "ring-white/15",
   };
 }
 
@@ -75,30 +72,40 @@ export function Card({
   tone,
   isNew,
   naturePath,
-  surface,
+  solidFill,
   className,
   children,
 }: {
   tone: "dark" | "light";
   isNew?: boolean;
-  naturePath: string;
-  surface?: AppMode;
+  naturePath?: string;
+  solidFill?: string;
   className?: string;
   children: React.ReactNode;
 }) {
-  const appMode = useAppMode();
-  const isLight = (surface ?? appMode) === "light";
   const isDark = tone === "dark";
-  const { style, ringClass } = cardSurface({ naturePath, isLight });
+
+  // Solid cards carry a fixed fill + a tone-derived ring; photo cards get the
+  // dark photo wash. Either way the look is mode-independent — a dark-toned
+  // card pins its white ink against `.theme-light` via `card-fixed-dark`.
+  // Solid-card ring echoes the card's ink/button-text color at a softer alpha:
+  // white on dark fills, foreground ink on pale fills.
+  const { style, ringClass } = solidFill
+    ? {
+        style: { backgroundColor: solidFill } as React.CSSProperties,
+        ringClass: isDark ? "ring-white/20" : "ring-foreground/20",
+      }
+    : cardSurface({ naturePath: naturePath ?? "" });
 
   return (
     <div className="relative">
       {isNew && <NewBadge className="-top-2 left-4" />}
       <div
         className={cn(
-          "rounded-2xl p-5 aspect-square flex flex-col overflow-hidden ring-1",
+          "rounded-[2.5rem] p-5 aspect-square flex flex-col overflow-hidden ring-1",
           ringClass,
           isDark ? "text-white" : "text-neutral-900",
+          isDark && "card-fixed-dark",
           className,
         )}
         style={style}
@@ -132,7 +139,7 @@ export function CardHeader({
             eyebrowColor
           }
         >
-          {leading ?? <span aria-hidden>{meta.emoji}</span>}
+          {leading}
           {eyebrow ?? meta.label}
         </p>
         {cadence && <DailyTag tone={meta.tone} />}

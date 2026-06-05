@@ -9,6 +9,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
+import { YunaAvatar } from "@/components/YunaAvatar";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
@@ -21,6 +22,18 @@ const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around. I'll be here when you're ready to chat.";
 
 const PRIMARY_SUGGESTION = { label: "Chat Now", primary: true } as const;
+
+// Rotating home greeting — a fresh title/subtitle each page load. Picked on
+// mount (see useState/useEffect below) so it varies on every reload without a
+// server/client hydration mismatch.
+const RETURNING_GREETINGS: { title: (name: string | null) => string; sub: string }[] = [
+  { title: (n) => (n ? `Welcome back, ${n}.` : "Welcome back."), sub: "What should we dig into?" },
+  { title: (n) => (n ? `Good to see you, ${n}.` : "Good to see you."), sub: "Where should we start today?" },
+  { title: () => "Let's pick up where we left off.", sub: "What's on your mind right now?" },
+  { title: (n) => (n ? `Hi ${n}.` : "Hi there."), sub: "Take a breath. I'm here when you're ready." },
+  { title: () => "Glad you're here.", sub: "What would feel good to talk through today?" },
+  { title: () => "However today is going,", sub: "we can take it one step at a time." },
+];
 
 // First card is the "An introductory session" guided-session — the only card
 // a brand-new user sees, and intentionally skipped in the returning feed so
@@ -37,7 +50,12 @@ export function HomeScreen({
 }) {
   const navigate = useNavigate();
   const startChat = useStartChat();
-  const { name, voice } = useYunaIdentity();
+  const { name, voice, avatar } = useYunaIdentity();
+  const [greetIdx, setGreetIdx] = useState(0);
+  useEffect(() => {
+    setGreetIdx(Math.floor(Math.random() * RETURNING_GREETINGS.length));
+  }, []);
+  const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
   const cards = variant === "new" ? [INTRO_CARD] : POST_INTRO_CARDS;
@@ -97,21 +115,24 @@ export function HomeScreen({
             </Button>
           </div>
 
-          <div className="mt-10 yuna-rise">
+          <div className="mt-10 yuna-rise text-center">
             <h1 className="text-2xl leading-snug tracking-tight text-white">
-              {returning ? (name ? `Welcome back, ${name}.` : "Welcome back.") : "Welcome in."}
+              {returning ? greeting.title(name) : "Welcome in."}
             </h1>
-            <p className="mt-2 text-sm text-white/80 max-w-[18rem]">
-              {returning ? "What should we dig into?" : "I'll be here when you're ready to chat."}
+            <p className="mt-2 text-sm text-white/80 max-w-[18rem] mx-auto">
+              {returning ? greeting.sub : "I'll be here when you're ready to chat."}
             </p>
           </div>
 
-          <div className="mt-5 flex flex-col gap-2.5">
-            <div className="yuna-rise">
-              <SuggestionChip variant="primary" onClick={() => open(PRIMARY_SUGGESTION.label)}>
-                {PRIMARY_SUGGESTION.label}
-              </SuggestionChip>
-            </div>
+          <div className="mt-5 flex justify-center yuna-rise">
+            <SuggestionChip
+              variant="primary"
+              fullWidth={false}
+              onClick={() => open(PRIMARY_SUGGESTION.label)}
+              leading={<YunaAvatar variant={avatar ?? undefined} size={26} />}
+            >
+              {PRIMARY_SUGGESTION.label}
+            </SuggestionChip>
           </div>
 
           <CreatedForYou

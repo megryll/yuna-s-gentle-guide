@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SuggestionChip } from "@/components/SuggestionChip";
+import { YunaAvatar } from "@/components/YunaAvatar";
 import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/suggestion-chip")({
@@ -34,6 +35,7 @@ function DSSuggestionChip() {
   size?:      "sm" | "md" | "lg"      // default "md"
   fullWidth?: boolean                 // default true
   surface?:   "dark" | "light"        // default useAppMode()
+  leading?:   ReactNode               // element at the leading edge (e.g. an avatar)
   disabled?:  boolean
 >
   {label}
@@ -60,6 +62,20 @@ const VARIANT_ROWS: MatrixRow[] = [
     label: "Primary",
     render: (s) => (
       <SuggestionChip variant="primary" surface={s} fullWidth={false} onClick={() => {}}>
+        Chat Now
+      </SuggestionChip>
+    ),
+  },
+  {
+    label: "Leading",
+    render: (s) => (
+      <SuggestionChip
+        variant="primary"
+        surface={s}
+        fullWidth={false}
+        leading={<YunaAvatar size={26} />}
+        onClick={() => {}}
+      >
         Chat Now
       </SuggestionChip>
     ),
