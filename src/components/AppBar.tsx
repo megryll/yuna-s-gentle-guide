@@ -205,7 +205,7 @@ function Tab({
       </span>
       <span
         className={
-          "text-[12px] tracking-[0.01em] transition-colors " +
+          "text-xs tracking-[0.01em] transition-colors " +
           (active ? labelActiveClass : labelInactiveClass)
         }
       >
@@ -221,8 +221,8 @@ function NotificationDot({ surface: _surface }: { surface: Surface }) {
       aria-hidden="true"
       className="absolute -top-0.5 -right-1 h-2 w-2 rounded-full"
       style={{
-        backgroundColor: "#66BA24",
-        boxShadow: "0 0 0 3px rgba(102, 186, 36, 0.35)",
+        backgroundColor: "var(--secondary-green)",
+        boxShadow: "0 0 0 3px color-mix(in srgb, var(--secondary-green) 35%, transparent)",
       }}
     />
   );

@@ -217,7 +217,7 @@ export function DevicePair({
 
 export function PropsBlock({ children }: { children: string }) {
   return (
-    <pre className="text-[12px] leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
+    <pre className="text-xs leading-relaxed bg-muted/40 border border-border rounded-2xl p-5 overflow-x-auto">
       {children}
     </pre>
   );

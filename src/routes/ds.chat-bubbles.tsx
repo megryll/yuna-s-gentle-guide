@@ -82,7 +82,7 @@ const VARIANT_ROWS: MatrixRow[] = [
             from="yuna"
             attachment={
               <div className="border-t border-white/20 bg-white/10 px-4 py-3 flex items-baseline gap-1.5">
-                <span className="font-display text-[22px] leading-none">4.7</span>
+                <span className="font-display text-2xl leading-none">4.7</span>
                 <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
                   Out of 5
                 </span>

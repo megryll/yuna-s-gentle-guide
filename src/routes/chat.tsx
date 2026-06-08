@@ -1140,7 +1140,7 @@ function VoicePitchCard({ frostedImage }: { frostedImage?: string }) {
               TEXT
             </text>
           </svg>
-          <p className="text-[11px] tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
+          <p className="text-uppercase tracking-[0.22em] uppercase text-white/90 text-center -mt-1">
             Reported positive impact
           </p>
             </div>

@@ -9,16 +9,16 @@ import { useAppMode, type AppMode } from "@/lib/theme-prefs";
 
 export type SentimentTone = "positive" | "negative";
 
-// Positive reuses the brand yuna-green (same as the sliders); negative the
+// Positive reuses the brand secondary-green (same as the sliders); negative the
 // toast alert orange — so positive/negative signals read as one green/orange
 // language across sliders, sentiment pills, and toasts.
 const TONE_COLOR_DARK: Record<SentimentTone, string> = {
-  positive: "var(--yuna-green)",
+  positive: "var(--secondary-green)",
   negative: "var(--alert-orange)",
 };
 
 const TONE_COLOR_LIGHT: Record<SentimentTone, string> = {
-  positive: "var(--yuna-green)",
+  positive: "var(--secondary-green)",
   negative: "var(--alert-orange)",
 };
 
@@ -57,7 +57,7 @@ export function SentimentTag({
     <span
       className={
         "inline-flex items-center justify-center whitespace-nowrap " +
-        "h-8 rounded-full px-3 text-[14px] leading-none gap-1.5 " +
+        "h-8 rounded-full px-3 text-sm leading-none gap-1.5 " +
         surfaceClass
       }
     >

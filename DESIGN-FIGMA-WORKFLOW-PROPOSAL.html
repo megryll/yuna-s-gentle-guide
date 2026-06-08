@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Design → Figma Workflow Proposal</title>
+</head>
+<body>
+<h1>Design &rarr; Figma Workflow Proposal</h1>
+<p><strong>Status:</strong> Draft for engineering review<br>
+<strong>Author:</strong> Megan<br>
+<strong>Date:</strong> 2026-06-08</p>
+
+<h2>Context</h2>
+<p>We design the Yuna prototype <strong>in code</strong> (React + Tailwind v4, tokens in <code>src/styles.css</code>, DS components in <code>src/components/*</code>). Figma is used <strong>downstream</strong> for two things:</p>
+<ol>
+<li><strong>Stakeholder review / comments</strong></li>
+<li><strong>QA reference</strong> &mdash; QA currently treats Figma as the source of truth</li>
+</ol>
+
+<h2>Problem</h2>
+<p>When screens are exported to Figma via a generic HTML&rarr;Figma plugin, they land as flattened layers: raw hex colors and pixel values, <strong>no linked variables, color names, or spacing tokens</strong>. This is structural &mdash; converters read <em>computed</em> styles, so by export time <code>bg-foreground</code> is just <code>rgb(...)</code> and <code>px-6</code> is just <code>24px</code>. The semantic token is already gone.</p>
+<p><strong>Key principle:</strong> tokens should be <strong>pushed from the code source of truth</strong>, not <strong>recovered from flattened Figma output</strong>. The &ldquo;plugin auto-detects variables on import&rdquo; approach can&rsquo;t work and shouldn&rsquo;t be pursued.</p>
+<p><strong>Stack advantage:</strong> because we use Tailwind, the token <em>names</em> live in the DOM as class strings (<code>bg-foreground</code>, <code>px-6</code>, <code>rounded-2xl</code>). They&rsquo;re only lost when something computes them to pixels. Any tool that reads <code>className</code> (vs. computed style) keeps them.</p>
+
+<h2>Proposed workflow &mdash; two tracks</h2>
+
+<h3>Track A &mdash; Web-tool features (the &ldquo;good start&rdquo;, build first)</h3>
+<p>Lightweight additions to the existing admin/prototype shell. High daily value, low risk, no backend.</p>
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>Feature</th><th>What it does</th><th>Effort</th></tr>
+<tr><td><strong>Viewport switcher</strong></td><td>Toggle phone sizes (SE / 15 / 15 Plus &mdash; sizes already exist in <code>PhoneFrame</code>) from the admin sidebar</td><td>S</td></tr>
+<tr><td><strong>All-screens overview</strong></td><td>A route laying out every screen as scaled iframes/thumbnails in a grid &mdash; see a whole flow at once (Figma-canvas value, without the canvas)</td><td>M</td></tr>
+<tr><td><strong>className inspector</strong></td><td>Click an element &rarr; show its <strong>token names</strong> (<code>bg-foreground</code>, <code>px-6</code>) read from the live class string, not pixels</td><td>M</td></tr>
+</table>
+<p>The inspector is uniquely cheap/accurate for us because of Tailwind &mdash; no hex&rarr;token reverse lookup needed.</p>
+
+<h3>Track B &mdash; Honest token bridge to Figma (parallel; needed because QA trusts Figma)</h3>
+<p>So the Figma artifact QA reads is actually backed by named variables, not flattened pixels.</p>
+<ol>
+<li><strong>Export tokens</strong> from <code>src/styles.css</code> to a DTCG tokens JSON (one script; code stays source of truth).</li>
+<li><strong>Import into Figma via Tokens Studio</strong>, which creates real Figma Variables. Our theming axes map cleanly onto Figma <strong>Variable Modes</strong> (light/dark, and platform iOS/Android).</li>
+<li><strong>For screens</strong>, use the <strong>Figma MCP</strong> (<code>figma-generate-library</code> to seed components against those variables once, then <code>figma-generate-design</code> per screen) instead of the dumb HTML&rarr;Figma converter &mdash; MCP generation references variables rather than flattening them. Optionally wire <strong>Code Connect</strong> so Figma components &harr; <code>src/components/*</code>.</li>
+</ol>
+
+<h4>What we gain</h4>
+<ul>
+<li><strong>Figma becomes an honest source of truth for QA.</strong> Screens land with named variables and components instead of flattened hex/px &mdash; what QA inspects in Figma matches what&rsquo;s in the code, so the &ldquo;Figma says X, build says Y&rdquo; ambiguity goes away.</li>
+<li><strong>Tokens stay in sync, automatically.</strong> Code remains the single source; the export keeps Figma variables from drifting. A color or radius change in <code>styles.css</code> propagates to Figma instead of being hand-re-entered (and silently going stale).</li>
+<li><strong>Light/dark and platform &ldquo;just work&rdquo; in Figma.</strong> Our theming axes map to Figma Variable Modes, so reviewers and QA can flip modes on a real design rather than us exporting separate flattened copies per mode.</li>
+<li><strong>Faster, cleaner exports.</strong> MCP generation assembles screens from the existing component/variable library, so a ported screen is editable and on-system &mdash; not a pile of detached rectangles a designer has to rebuild before it&rsquo;s usable.</li>
+<li><strong>Two-way traceability via Code Connect.</strong> A Figma component links back to its <code>src/components/*</code> source, so reviewers/QA can see exactly which code a design maps to.</li>
+<li><strong>Comments land on the right thing.</strong> Stakeholder feedback attaches to real components/variables, making it actionable in code rather than tied to a throwaway flattened layer.</li>
+</ul>
+
+<h2>Open questions for engineering</h2>
+<ol>
+<li>Track A is independent and shippable now &mdash; agree it goes first?</li>
+<li>Track B: is Tokens Studio acceptable, or do we want a different code&rarr;Figma-variable sync path?</li>
+<li>Can the token export run in CI so Figma variables can&rsquo;t drift from <code>styles.css</code>?</li>
+<li>How much MCP-based screen generation do we want vs. keeping Figma as variables + a few key screens?</li>
+</ol>
+
+<h2>Recommendation</h2>
+<p>Start <strong>Track A</strong> (viewport switch &rarr; overview &rarr; inspector) for immediate daily value, and scope <strong>Track B Step 1&ndash;2</strong> (token export + Tokens Studio import) in parallel since that&rsquo;s what makes the QA/Figma source-of-truth honest. Hold MCP screen-generation and Code Connect until the variable foundation exists.</p>
+</body>
+</html>

@@ -117,7 +117,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "My gratitude journal",
     naturePath: "/nature/Background-17.png",
-    solidBg: "#B4C6D6",
+    solidBg: "#D4E3F4",
   },
   "self-discovery": {
     label: "Questionnaire",
@@ -143,7 +143,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Learn this skill",
     naturePath: "/nature/Background-6.png",
-    solidBg: "#2C5C3D",
+    solidBg: "#115430",
   },
   accountability: {
     label: "Accountability Partner",
@@ -160,7 +160,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "check",
     ctaLabel: "I read this",
     naturePath: "/nature/Background-3.png",
-    solidBg: "#F2E7C9",
+    solidBg: "#F8F1DC",
   },
 };
 

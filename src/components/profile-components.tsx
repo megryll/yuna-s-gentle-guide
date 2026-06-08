@@ -7,10 +7,14 @@ import { useAppMode } from "@/lib/theme-prefs";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
-// Brand greens (not yet tokenised in styles.css — keep consistent with HomeCards.tsx)
-const GREEN = "#115430";
-const GREEN_ACCENT = "#66BA24";
+// Brand greens, both tokenised: GREEN = --primary-green, GREEN_ACCENT =
+// --secondary-green. Alpha tints go through greenMix() rather than a hex-alpha
+// suffix, since a var() can't be concatenated with one.
+const GREEN = "var(--primary-green)";
+const GREEN_ACCENT = "var(--secondary-green)";
 const RING_MINT = "#cdebb5";
+const greenMix = (pct: number) =>
+  `color-mix(in srgb, var(--secondary-green) ${pct}%, transparent)`;
 
 // ─── Progress ring ─────────────────────────────────────────────────────────
 
@@ -100,7 +104,9 @@ export function FocusAreaBentoCard({
           right: -6,
           fontSize: 96,
           lineHeight: 1,
-          color: isLight ? "rgba(17,84,48,0.08)" : "rgba(255,255,255,0.07)",
+          color: isLight
+            ? "color-mix(in srgb, var(--primary-green) 8%, transparent)"
+            : "rgba(255,255,255,0.07)",
           fontVariationSettings: "'SOFT' 0, 'WONK' 0",
         }}
       >
@@ -108,7 +114,7 @@ export function FocusAreaBentoCard({
       </span>
       <div className="relative flex-1 flex flex-col justify-between p-4">
         <div className="flex flex-col gap-2">
-          <span className="text-[12px] tracking-[0.2em] uppercase text-white/65">
+          <span className="text-xs tracking-[0.2em] uppercase text-white/65">
             Focus Area {num}
           </span>
           <span
@@ -119,7 +125,7 @@ export function FocusAreaBentoCard({
           </span>
         </div>
         <div className="flex items-center justify-between mt-4">
-          <span className="text-[12px] leading-[18px] text-white/60">{taskCount} tasks</span>
+          <span className="text-xs leading-[18px] text-white/60">{taskCount} tasks</span>
           <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
         </div>
       </div>
@@ -162,11 +168,11 @@ export function InsightCard({
           <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
         </span>
         <span className="flex-1 min-w-0 flex items-center gap-2">
-          <span className="text-[14px] font-normal leading-[22px] text-white truncate">{title}</span>
+          <span className="text-sm font-normal leading-[22px] text-white truncate">{title}</span>
           {date && (
             <span
-              className="text-[11px] font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
-              style={{ backgroundColor: `${GREEN_ACCENT}33`, color: tagText }}
+              className="text-uppercase font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
+              style={{ backgroundColor: greenMix(20), color: tagText }}
             >
               {date}
             </span>
@@ -187,11 +193,11 @@ export function InsightCard({
       >
         <div className="flex flex-col gap-4 px-4 pb-6">
           <span aria-hidden className="h-px bg-white/12" />
-          <p className="text-[14px] leading-[22px] text-white/85">{desc}</p>
+          <p className="text-sm leading-[22px] text-white/85">{desc}</p>
 
           {meaning.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-white/60">
+              <p className="text-uppercase font-semibold tracking-[0.08em] uppercase text-white/60">
                 What this might mean
               </p>
               <ul className="flex flex-col gap-2">
@@ -202,7 +208,7 @@ export function InsightCard({
                       className="mt-2 h-1 w-1 rounded-full shrink-0"
                       style={{ backgroundColor: GREEN_ACCENT }}
                     />
-                    <span className="text-[12.5px] leading-[18px] text-white/80">{item}</span>
+                    <span className="text-xs leading-[18px] text-white/80">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -213,7 +219,7 @@ export function InsightCard({
             <div
               className="rounded-2xl flex gap-2.5 items-start"
               style={{
-                background: `${GREEN_ACCENT}1A`,
+                background: greenMix(10),
                 borderLeft: `3px solid ${GREEN_ACCENT}`,
                 padding: "16px 16px 16px 19px",
               }}
@@ -254,7 +260,7 @@ export function MoreButton({ count, onClick }: { count: number; onClick?: () => 
       onClick={onClick}
       className="gap-2.5 px-5 py-2.5"
     >
-      <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-white/70">
+      <span className="text-uppercase font-bold tracking-[0.08em] uppercase text-white/70">
         +{count} more
       </span>
       <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
@@ -278,15 +284,15 @@ export function EmptyStateCard({
   return (
     <div
       className="relative rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col items-center gap-2 p-4"
-      style={{ backgroundColor: `${GREEN_ACCENT}14` }}
+      style={{ backgroundColor: greenMix(8) }}
     >
       <p
-        className="text-[11px] font-bold tracking-[0.06em] uppercase text-center"
+        className="text-uppercase font-bold tracking-[0.06em] uppercase text-center"
         style={{ color: isLight ? GREEN : "#cdebb5" }}
       >
         {heading}
       </p>
-      <p className="text-[12.5px] leading-[18px] text-white/80 text-center max-w-[16rem]">{body}</p>
+      <p className="text-xs leading-[18px] text-white/80 text-center max-w-[16rem]">{body}</p>
       <img
         src={leafSrc}
         alt=""

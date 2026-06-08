@@ -41,20 +41,20 @@ function FocusAreaRoute() {
         </header>
 
         <div className="px-6 pt-6 flex flex-col items-center text-center gap-3">
-          <span className="text-[11px] tracking-[0.32em] uppercase text-white/65">
+          <span className="text-uppercase tracking-[0.32em] uppercase text-white/65">
             {meta.eyebrow}
           </span>
           <h1
-            className="font-display font-semibold text-white"
-            style={{ fontSize: 28, lineHeight: "38px", fontVariationSettings: "'SOFT' 0, 'WONK' 1" }}
+            className="font-display font-semibold text-3xl leading-tight text-white"
+            style={{ fontVariationSettings: "'SOFT' 0, 'WONK' 1" }}
           >
             {meta.title}
           </h1>
-          <p className="text-[14px] leading-[22px] text-white/80">{meta.body}</p>
+          <p className="text-sm leading-[22px] text-white/80">{meta.body}</p>
         </div>
 
         <div className="px-6 mt-8">
-          <h2 className="font-display text-[18px] leading-tight text-white text-center mb-3">
+          <h2 className="font-display text-xl leading-tight text-white text-center mb-3">
             Created For You
           </h2>
           <div className="flex flex-col gap-2">
@@ -66,7 +66,7 @@ function FocusAreaRoute() {
 
         <div className="px-6 mt-8 pb-12 relative">
           <div className="relative mb-3 flex items-center justify-center gap-1.5">
-            <h2 className="font-display text-[18px] leading-tight text-white">
+            <h2 className="font-display text-xl leading-tight text-white">
               Coming Up Next
             </h2>
             <button
@@ -99,7 +99,7 @@ function FocusAreaRoute() {
                     backgroundPosition: "center",
                   }}
                 >
-                  <p className="text-[14px] leading-[22px] text-neutral-900 m-0">
+                  <p className="text-sm leading-[22px] text-neutral-900 m-0">
                     New growth tasks unlock as you chat with Yuna and complete existing tasks.
                   </p>
                 </div>

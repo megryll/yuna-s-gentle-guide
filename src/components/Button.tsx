@@ -53,7 +53,7 @@ const buttonVariants = cva(
       size: {
         md: "px-6 py-3.5 text-sm tracking-wide",
         sm: "px-4 py-2 text-xs tracking-wide",
-        xs: "h-[26px] px-3 text-[12px]",
+        xs: "h-[26px] px-3 text-xs",
         icon: "h-9 w-9 p-0 [&_svg]:size-[18px]",
         "icon-sm": "h-8 w-8 p-0 [&_svg]:size-4",
         "icon-lg": "h-11 w-11 p-0 [&_svg]:size-[22px]",
@@ -179,11 +179,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props}
         >
           <span className="flex-1 min-w-0">
-            <span className="block text-[17px] font-semibold leading-tight">{children}</span>
+            <span className="block text-lg font-semibold leading-tight">{children}</span>
             {subtitle && (
               <span
                 className={cn(
-                  "block text-[14px] mt-1",
+                  "block text-sm mt-1",
                   surface === "dark" ? "text-white/70" : "text-muted-foreground",
                 )}
               >
@@ -256,7 +256,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </span>
           <span
             className={cn(
-              "text-[11px] tracking-[0.2em] uppercase",
+              "text-uppercase tracking-[0.2em] uppercase",
               surface === "dark" ? "text-white/70" : "text-muted-foreground",
             )}
           >

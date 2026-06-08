@@ -46,14 +46,14 @@ function DSToasts() {
         <DevicePair
           renderRow={() => (
             <div className="absolute top-8 inset-x-0 px-4">
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 bg-yuna-green shadow-[0_12px_30px_-12px_rgba(0,0,0,0.45)]">
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 bg-secondary-green shadow-[0_12px_30px_-12px_rgba(0,0,0,0.45)]">
                 <span
                   aria-hidden
-                  className="h-[18px] w-[18px] rounded-full shrink-0 bg-yuna-green-foreground/40"
+                  className="h-[18px] w-[18px] rounded-full shrink-0 bg-neutral/40"
                 />
                 <span
                   aria-hidden
-                  className="block h-3 flex-1 max-w-[70%] rounded-full bg-yuna-green-foreground/30"
+                  className="block h-3 flex-1 max-w-[70%] rounded-full bg-neutral/30"
                 />
               </div>
             </div>

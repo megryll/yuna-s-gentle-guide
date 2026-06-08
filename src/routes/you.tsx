@@ -45,13 +45,10 @@ function YouRoute() {
               key={stat.label}
               className="flex-1 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm py-5 px-2 flex flex-col items-center gap-1"
             >
-              <span
-                className="font-display font-normal text-white"
-                style={{ fontSize: 26, lineHeight: "30px" }}
-              >
+              <span className="font-display font-normal text-2xl leading-none text-white">
                 {stat.value}
               </span>
-              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/75">
+              <span className="text-uppercase font-medium tracking-[0.12em] uppercase text-white/75">
                 {stat.label}
               </span>
             </div>
@@ -108,10 +105,10 @@ function YouRoute() {
         </div>
 
         <div className="flex flex-col items-center gap-3 mt-10">
-          <p className="font-display text-[20px] leading-7 text-white/90 text-center">
+          <p className="font-display text-xl leading-7 text-white/90 text-center">
             Something feel off?
           </p>
-          <p className="text-[14px] leading-[22px] text-white/75 text-center max-w-[20rem]">
+          <p className="text-sm leading-[22px] text-white/75 text-center max-w-[20rem]">
             Yuna's understanding grows over time. If anything here doesn't feel right, you can help
             refine it.
           </p>
@@ -127,7 +124,7 @@ function YouRoute() {
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="font-display text-[20px] leading-7 text-white text-center">{heading}</h2>
+      <h2 className="font-display text-xl leading-7 text-white text-center">{heading}</h2>
       {children}
     </div>
   );
@@ -152,7 +149,7 @@ function YouEmptyState() {
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center text-center pt-10">
           <EmptyHeroGlow />
-          <h1 className="font-display text-[26px] leading-[1.15] tracking-tight mt-6">
+          <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-6">
             Your space, just beginning
           </h1>
         </div>
@@ -212,10 +209,10 @@ function EmptyHeroGlow() {
 function PreviewRow({ heading, body }: { heading: string; body: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5">
-      <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-white/65">
+      <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/65">
         {heading}
       </p>
-      <p className="text-[14px] leading-[20px] text-white/65 mt-1">{body}</p>
+      <p className="text-sm leading-[20px] text-white/65 mt-1">{body}</p>
     </div>
   );
 }

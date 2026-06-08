@@ -49,7 +49,7 @@ export function SuggestionChips({
           disabled={!interactive || disabled}
           className={
             (vertical ? "" : "shrink-0 ") +
-            "rounded-full hairline px-3.5 py-1.5 text-[12px] leading-snug bg-background transition-colors " +
+            "rounded-full hairline px-3.5 py-1.5 text-xs leading-snug bg-background transition-colors " +
             (interactive
               ? "active:bg-foreground/8 disabled:opacity-50 disabled:pointer-events-none"
               : "text-muted-foreground cursor-default")

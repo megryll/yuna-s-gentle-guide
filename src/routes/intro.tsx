@@ -1193,7 +1193,7 @@ function Bubble({
             href="https://yuna.io/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 flex w-fit items-center gap-1 text-white/85 underline underline-offset-2 decoration-white/50 text-[16px] active:opacity-80 transition-opacity"
+            className="mt-2 flex w-fit items-center gap-1 text-white/85 underline underline-offset-2 decoration-white/50 text-base active:opacity-80 transition-opacity"
           >
             Read our Privacy Policy
             <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
@@ -1279,16 +1279,16 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
         />
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-[22px] leading-none">4.7</span>
-            <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
+            <span className="font-display text-2xl leading-none">4.7</span>
+            <span className="text-uppercase tracking-[0.08em] uppercase text-white/75">
               Out of 5
             </span>
           </div>
           <StarRow count={5} />
         </div>
         <div className="ml-auto flex flex-col gap-1.5 items-center">
-          <span className="font-display text-[22px] leading-none">60k</span>
-          <span className="text-[11px] tracking-[0.08em] uppercase text-white/75">
+          <span className="font-display text-2xl leading-none">60k</span>
+          <span className="text-uppercase tracking-[0.08em] uppercase text-white/75">
             Happy users
           </span>
         </div>
@@ -1415,19 +1415,19 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   if (kind === "push-preview") {
     return (
       <div className="rounded-md bg-white/80 text-neutral-900 px-3 py-2.5 flex items-start gap-3">
-        <div className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0 bg-yuna-green">
+        <div className="h-10 w-10 rounded-[10px] flex items-center justify-center shrink-0 bg-secondary-green">
           <YunaPushMark />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-sans-ui text-[13px] font-semibold leading-tight truncate">
+            <span className="font-sans-ui text-sm font-semibold leading-tight truncate">
               Quick gut check
             </span>
-            <span className="font-sans-ui text-[11px] text-neutral-500 shrink-0">
+            <span className="font-sans-ui text-uppercase text-neutral-500 shrink-0">
               5m ago
             </span>
           </div>
-          <p className="text-[13px] leading-snug mt-0.5 text-neutral-800">
+          <p className="text-sm leading-snug mt-0.5 text-neutral-800">
             How's tomorrow's meeting sitting with you{name ? `, ${name}` : ""}? If the spiral starts tonight, I'm right here.
           </p>
         </div>
@@ -1445,7 +1445,7 @@ function FaceIdToggle() {
   return (
     <div className="flex items-center gap-3 text-white">
       <ScanFace size={22} strokeWidth={1.75} aria-hidden className="shrink-0" />
-      <span className="flex-1 min-w-0 text-[15px] font-semibold leading-snug">
+      <span className="flex-1 min-w-0 text-base font-semibold leading-snug">
         Face ID
       </span>
       <Switch checked={on} onChange={request} label="Enable Face ID" />
@@ -1733,11 +1733,11 @@ function PushPermissionModal({
         <div className="px-5 pt-5 pb-4 text-center">
           <h3
             id="push-modal-title"
-            className="font-sans-ui text-[16px] font-semibold leading-snug"
+            className="font-sans-ui text-base font-semibold leading-snug"
           >
             &ldquo;Yuna&rdquo; Would Like to Send You Notifications
           </h3>
-          <p className="mt-2 font-sans-ui text-[12px] text-white/75 leading-snug">
+          <p className="mt-2 font-sans-ui text-xs text-white/75 leading-snug">
             Notifications may include alerts, sounds, and icon badges. These
             can be configured in Settings.
           </p>
@@ -1746,14 +1746,14 @@ function PushPermissionModal({
           <button
             type="button"
             onClick={onDeny}
-            className="px-3 py-2.5 font-sans-ui text-[15px] text-white border-r border-white/15 active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 active:bg-white/10"
           >
             Don&rsquo;t Allow
           </button>
           <button
             type="button"
             onClick={onAllow}
-            className="px-3 py-2.5 font-sans-ui text-[15px] font-semibold text-white active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white active:bg-white/10"
           >
             Allow
           </button>
@@ -1790,11 +1790,11 @@ function FaceIdPermissionModal({
         <div className="px-5 pt-5 pb-4 text-center">
           <h3
             id="faceid-modal-title"
-            className="font-sans-ui text-[16px] font-semibold leading-snug"
+            className="font-sans-ui text-base font-semibold leading-snug"
           >
             Do You Want to Allow &ldquo;Yuna&rdquo; to Use Face ID?
           </h3>
-          <p className="mt-2 font-sans-ui text-[12px] text-white/75 leading-snug">
+          <p className="mt-2 font-sans-ui text-xs text-white/75 leading-snug">
             Face ID lets you securely unlock the app so only you can open it.
           </p>
         </div>
@@ -1802,14 +1802,14 @@ function FaceIdPermissionModal({
           <button
             type="button"
             onClick={onDeny}
-            className="px-3 py-2.5 font-sans-ui text-[15px] text-white border-r border-white/15 active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 active:bg-white/10"
           >
             Don&rsquo;t Allow
           </button>
           <button
             type="button"
             onClick={onAllow}
-            className="px-3 py-2.5 font-sans-ui text-[15px] font-semibold text-white active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white active:bg-white/10"
           >
             OK
           </button>

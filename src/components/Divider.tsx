@@ -33,7 +33,7 @@ export function Divider({ surface = "light", label, className, ...props }: Divid
     <div
       role="separator"
       className={cn(
-        "flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase",
+        "flex items-center gap-3 text-uppercase tracking-[0.2em] uppercase",
         text,
         className,
       )}

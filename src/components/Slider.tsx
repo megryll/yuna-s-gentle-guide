@@ -90,14 +90,14 @@ export function Slider({
     const fillWidth = Math.abs(value) * 50;
     // Positive reuses the linear rail's green; negative matches the toast
     // alert orange — same tokens, so the language is consistent everywhere.
-    const fillCls = positive ? "bg-yuna-green" : negative ? "bg-alert-orange" : "";
+    const fillCls = positive ? "bg-secondary-green" : negative ? "bg-alert-orange" : "";
 
     return (
       <div className="flex flex-col gap-0.5">
         {(leftLabel || rightLabel) && (
           <div
             className={
-              "flex items-center justify-between text-[13px] font-medium tracking-[0.04em] uppercase " +
+              "flex items-center justify-between text-sm font-medium tracking-[0.04em] uppercase " +
               s.end
             }
           >
@@ -144,7 +144,7 @@ export function Slider({
   return (
     <div className="flex flex-col">
       {label && (
-        <p className={"text-[11px] tracking-[0.25em] uppercase mb-4 " + s.eyebrow}>{label}</p>
+        <p className={"text-uppercase tracking-[0.25em] uppercase mb-4 " + s.eyebrow}>{label}</p>
       )}
       <SliderPrimitive.Root
         className={rootCls}
@@ -156,7 +156,7 @@ export function Slider({
         aria-label={label}
       >
         <SliderPrimitive.Track className={trackCls}>
-          <SliderPrimitive.Range className="absolute h-full rounded-full bg-yuna-green" />
+          <SliderPrimitive.Range className="absolute h-full rounded-full bg-secondary-green" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb className={thumbCls} />
       </SliderPrimitive.Root>

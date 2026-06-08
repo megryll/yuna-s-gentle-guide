@@ -218,7 +218,7 @@ function CreatedForYou({
   return (
     <div className="mt-12">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <p className="text-[11px] tracking-[0.25em] uppercase text-white/70">Created For You</p>
+        <p className="text-uppercase tracking-[0.25em] uppercase text-white/70">Created For You</p>
         <div className="flex items-center gap-2">
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <SavedToggle on={savedOnly} onClick={() => setSavedOnly(!savedOnly)} />
@@ -264,10 +264,10 @@ function ExperienceFeedback() {
   const hasPick = picked !== null;
   return (
     <div className="mt-8 yuna-rise px-1 py-4 text-center text-white">
-      <p className="font-display text-[20px] leading-snug tracking-tight max-w-[18rem] mx-auto">
+      <p className="font-display text-xl leading-snug tracking-tight max-w-[18rem] mx-auto">
         {hasPick ? "Thank you for sharing." : "What was your Yuna experience like today?"}
       </p>
-      <p className="mt-2 text-[14px] leading-relaxed text-white/75">
+      <p className="mt-2 text-sm leading-relaxed text-white/75">
         {hasPick ? "Your feedback helps us improve!" : "Our team reads every submission"}
       </p>
       <div className="mt-5 flex items-center justify-between gap-2 max-w-[18rem] mx-auto">

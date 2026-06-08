@@ -173,7 +173,7 @@ export function ImagePicker({
             <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
               <p className="text-sm font-medium text-white">{o.label}</p>
               {o.description && (
-                <p className="text-[11px] tracking-[0.18em] uppercase text-white/80 mt-0.5">
+                <p className="text-uppercase tracking-[0.18em] uppercase text-white/80 mt-0.5">
                   {o.description}
                 </p>
               )}
@@ -469,11 +469,11 @@ function VoiceIntroCard({
           aria-label={playing ? "Pause voice preview" : "Play voice preview"}
         >
           {playing ? <PausePill /> : <PlayPill />}
-          <span className="text-[11px] tracking-[0.1em] uppercase text-white">
+          <span className="text-uppercase tracking-[0.1em] uppercase text-white">
             {playing ? "Pause" : "Play"}
           </span>
         </Button>
-        <p className="text-[14px] leading-snug text-white/90">{voice.desc}</p>
+        <p className="text-sm leading-snug text-white/90">{voice.desc}</p>
       </div>
     </div>
   );

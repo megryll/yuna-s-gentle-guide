@@ -43,7 +43,7 @@ type ToggleRow = {
 type Row = LinkRow | ToggleRow;
 
 const GROUP_ONE: Row[] = [
-  { id: "natureSounds", label: "Nature sounds", Icon: Leaf, kind: "toggle", defaultOn: true },
+  { id: "natureSounds", label: "Background sounds", Icon: Leaf, kind: "toggle", defaultOn: true },
   { id: "account", label: "Account Settings", Icon: User, kind: "link" },
   { id: "subscription", label: "Subscription", Icon: Star, kind: "link" },
   { id: "voice", label: "Customize Voice", Icon: Users, kind: "link" },
@@ -203,7 +203,7 @@ function SettingsRowItem({
       <div className={baseClass}>
         <div className="flex items-center gap-4">
           <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
-          <span className="text-[15px] leading-6 font-medium text-foreground">{row.label}</span>
+          <span className="text-base leading-6 font-medium text-foreground">{row.label}</span>
         </div>
         <Switch checked={!!toggleOn} onChange={onToggle} label={row.label} />
       </div>
@@ -214,7 +214,7 @@ function SettingsRowItem({
     <button type="button" className={`${baseClass} active:bg-foreground/[0.05] transition-colors`}>
       <div className="flex items-center gap-4">
         <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
-        <span className="text-[15px] leading-6 font-medium text-foreground">{row.label}</span>
+        <span className="text-base leading-6 font-medium text-foreground">{row.label}</span>
       </div>
       <ChevronRight size={16} strokeWidth={2} className="text-foreground/55" aria-hidden />
     </button>

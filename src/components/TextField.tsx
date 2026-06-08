@@ -66,7 +66,7 @@ const SURFACE_LIGHT_ERROR = "border-alert-orange bg-white/40 focus-within:border
 // consistently whether or not a trailing control is present.
 const SIZE_MD = "pl-5 py-1.5 min-h-11 text-sm";
 // Compact — used inside cards (e.g. the gratitude journal rows).
-const SIZE_SM = "pl-4 py-1.5 text-[13px]";
+const SIZE_SM = "pl-4 py-1.5 text-sm";
 // Large — roomier pill for hero/standalone fields. Min-height pairs with an
 // icon-lg trailing button (h-11) the way md pairs with icon-sm.
 const SIZE_LG = "pl-6 py-2.5 min-h-14 text-base";
@@ -142,7 +142,7 @@ export function FieldError({ children }: { children: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="flex items-start gap-1.5 pl-1 text-[13px] leading-snug text-alert-orange yuna-fade-in"
+      className="flex items-start gap-1.5 pl-1 text-sm leading-snug text-alert-orange yuna-fade-in"
     >
       <CircleAlert size={14} strokeWidth={2} className="mt-px shrink-0" />
       <span>{children}</span>

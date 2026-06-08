@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { ChevronDown, Share2, User, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { Surface } from "@/components/Surface";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
 import { HomeCardRow } from "@/components/HomeCards";
@@ -27,41 +28,41 @@ export const Route = createFileRoute("/wrap-up")({
 // Hero keepsake shown in the photo card. Comma, not an em dash, per Yuna's voice.
 const HERO_MESSAGE = "Keep shining, you're making remarkable progress.";
 
-// Detected-emotion breakdown for the session. Soft, on-brand hues (the same
-// muted palette the wrap-up highlights use) rather than the saturated
-// primaries of the reference mock. Values sum to 100. A real impl would
-// classify the transcript server-side.
+// Detected-emotion breakdown for the session. Hues come from the secondary
+// palette tokens (soft, on-brand, mode-stable — see styles.css) rather than the
+// saturated chart primaries of the reference mock. Values sum to 100. A real
+// impl would classify the transcript server-side.
 type Emotion = { name: string; value: number; color: string; note: string };
 
 const EMOTIONS: Emotion[] = [
   {
     name: "Joy",
     value: 45,
-    color: "#F4B183",
+    color: "var(--peach-soft)",
     note: "This came through as you talked about making space to rest.",
   },
   {
     name: "Trust",
     value: 25,
-    color: "#A7C7E7",
+    color: "var(--blue)",
     note: "You leaned into this as you shared what's been weighing on you.",
   },
   {
     name: "Surprise",
     value: 12,
-    color: "#F2D08A",
+    color: "var(--amber)",
     note: "A few moments caught you off guard as you reflected.",
   },
   {
     name: "Fear",
     value: 10,
-    color: "#C5B6E0",
+    color: "var(--purple-soft)",
     note: "This sat underneath the worry about getting everything done.",
   },
   {
     name: "Sadness",
     value: 8,
-    color: "#9FD0CB",
+    color: "var(--teal-soft)",
     note: "A quieter thread, present when you spoke about feeling stretched thin.",
   },
 ];
@@ -130,13 +131,13 @@ function WrapUp() {
             </IconMedallion>
             <h1
               className={
-                "font-display text-[30px] leading-tight text-white" +
+                "font-display text-3xl leading-tight text-white" +
                 (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
               }
             >
               Well done{name ? `, ${name}` : ""}!
             </h1>
-            <p className="text-[15px] leading-relaxed text-white/85">
+            <p className="text-base leading-relaxed text-white/85">
               Congrats on completing this session.
             </p>
           </header>
@@ -168,15 +169,18 @@ function WrapUp() {
 // Frosted card sized to its content: a centered keepsake line and a Share action.
 function HeroCard({ message, onShare }: { message: string; onShare: () => void }) {
   return (
-    <section className="rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm px-6 py-7 flex flex-col items-center text-center gap-5 yuna-rise">
-      <p className="font-display italic text-[24px] leading-[1.35] text-white max-w-[260px]">
+    <Surface
+      as="section"
+      className="px-6 py-7 flex flex-col items-center text-center gap-5 yuna-rise"
+    >
+      <p className="font-display italic text-2xl leading-[1.35] text-white max-w-[260px]">
         {message}
       </p>
       <Button surface="dark" variant="secondary" size="sm" onClick={onShare}>
         <Share2 size={15} strokeWidth={1.8} aria-hidden />
         Share
       </Button>
-    </section>
+    </Surface>
   );
 }
 
@@ -186,7 +190,7 @@ function EmotionsSection({ emotions }: { emotions: Emotion[] }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <section className="flex flex-col gap-6 yuna-rise">
-      <h2 className="font-display text-[20px] leading-tight text-white text-center">
+      <h2 className="font-display text-xl leading-tight text-white text-center">
         Your emotions
       </h2>
 
@@ -217,6 +221,13 @@ function EmotionDonut({ data }: { data: Emotion[] }) {
   const circ = 2 * Math.PI * r;
   const gap = 6; // path units of empty space between segments
 
+  // Track is the only mode-dependent part — segment hues are mode-stable
+  // tokens. Inline SVG values are invisible to the .theme-light shim, so pick
+  // ink-alpha on the light photo directly. (CSS vars only resolve through the
+  // `style` prop, not SVG presentation attributes, so segments use style too.)
+  const isLight = useAppMode() === "light";
+  const trackColor = isLight ? "rgba(20,20,22,0.10)" : "rgba(255,255,255,0.12)";
+
   let acc = 0;
   return (
     <svg
@@ -227,14 +238,7 @@ function EmotionDonut({ data }: { data: Emotion[] }) {
       aria-label="Emotion breakdown for this session"
     >
       {/* Track */}
-      <circle
-        cx={cx}
-        cy={cx}
-        r={r}
-        fill="none"
-        stroke="rgba(255,255,255,0.12)"
-        strokeWidth={stroke}
-      />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
       <g transform={`rotate(-90 ${cx} ${cx})`}>
         {data.map((d) => {
           const len = (d.value / 100) * circ;
@@ -246,7 +250,7 @@ function EmotionDonut({ data }: { data: Emotion[] }) {
               cy={cx}
               r={r}
               fill="none"
-              stroke={d.color}
+              style={{ stroke: d.color }}
               strokeWidth={stroke}
               strokeDasharray={`${dash} ${circ - dash}`}
               strokeDashoffset={-acc}
@@ -270,7 +274,7 @@ function EmotionRow({
   onToggle: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-white/12 bg-white/[0.06] backdrop-blur-sm overflow-hidden">
+    <Surface radius="xl" className="overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -282,8 +286,8 @@ function EmotionRow({
           className="h-2.5 w-2.5 rounded-full shrink-0"
           style={{ background: emotion.color }}
         />
-        <span className="flex-1 text-[15px] text-white/90">{emotion.name}</span>
-        <span className="text-[14px] font-medium tracking-[0.02em] text-white/75">
+        <span className="flex-1 text-base text-white/90">{emotion.name}</span>
+        <span className="text-sm font-medium tracking-[0.02em] text-white/75">
           {emotion.value}%
         </span>
         <ChevronDown
@@ -296,11 +300,11 @@ function EmotionRow({
         />
       </button>
       {expanded && (
-        <p className="px-4 pb-3.5 -mt-0.5 text-[14px] leading-relaxed text-white/75">
+        <p className="px-4 pb-3.5 -mt-0.5 text-sm leading-relaxed text-white/75">
           {emotion.note}
         </p>
       )}
-    </div>
+    </Surface>
   );
 }
 
@@ -311,23 +315,20 @@ function HighlightsSection({ quotes }: { quotes: string[] }) {
   return (
     <section className="flex flex-col gap-5 yuna-rise">
       <div className="flex flex-col items-center text-center gap-2">
-        <h2 className="font-display text-[20px] leading-tight text-white">Your highlights</h2>
-        <p className="text-[14px] leading-relaxed text-white/75 max-w-[280px]">
+        <h2 className="font-display text-xl leading-tight text-white">Your highlights</h2>
+        <p className="text-sm leading-relaxed text-white/75 max-w-[280px]">
           A closer look at the change talk from our conversation.
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
         {quotes.map((q, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-white/[0.06] backdrop-blur-sm p-5 flex flex-col items-center text-center"
-          >
+          <Surface key={i} className="p-5 flex flex-col items-center text-center">
             <span aria-hidden className="font-display text-white/40 text-[44px] leading-none -mb-5">
               &ldquo;
             </span>
-            <p className="text-[15px] leading-relaxed text-white/90">{q}</p>
-          </div>
+            <p className="text-base leading-relaxed text-white/90">{q}</p>
+          </Surface>
         ))}
       </div>
     </section>
@@ -340,7 +341,7 @@ function HighlightsSection({ quotes }: { quotes: string[] }) {
 function PlacedForYou({ items }: { items: HomeCard[] }) {
   return (
     <section className="flex flex-col gap-5 yuna-rise">
-      <h2 className="font-display text-[20px] leading-tight text-white text-center">
+      <h2 className="font-display text-xl leading-tight text-white text-center">
         New activities
       </h2>
       <ul className="flex flex-col gap-5">

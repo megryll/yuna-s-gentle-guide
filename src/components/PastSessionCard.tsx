@@ -39,7 +39,7 @@ export function PastSessionCard({
   const inner = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] tracking-[0.2em] uppercase text-white/70">
+        <p className="text-xs tracking-[0.2em] uppercase text-white/70">
           {session.date} · {session.length}
         </p>
       </div>

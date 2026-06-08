@@ -61,7 +61,7 @@ export function NewBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "absolute z-10 text-[11px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full shadow bg-yuna-green card-fixed-dark",
+        "absolute z-10 text-uppercase tracking-[0.2em] uppercase pl-2.5 pr-2 py-1 rounded-full shadow bg-secondary-green card-fixed-dark",
         className,
       )}
     >
@@ -131,7 +131,7 @@ export function CardHeader({
       <div className="min-w-0 flex flex-row items-center gap-1 flex-wrap">
         <p
           className={
-            "text-[12px] font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 " +
+            "text-xs font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 " +
             eyebrowColor
           }
         >
@@ -203,7 +203,7 @@ export function CardFooter({
         {meta && (
           <span
             className={
-              "text-[12px] font-medium tracking-[0.08em] uppercase " +
+              "text-xs font-medium tracking-[0.08em] uppercase " +
               (isDark ? "text-white/80" : "text-neutral-700")
             }
           >
@@ -231,7 +231,7 @@ export function CardCTA({
       variant="secondary"
       onClick={onClick}
       className={cn(
-        "h-10 px-5 text-[12.5px] font-medium uppercase tracking-[0.1em]",
+        "h-10 px-5 text-xs font-medium uppercase tracking-[0.1em]",
         // Light-tone CTAs (gratitude, book) sit on pale fills where the soft
         // border-border hairline reads weak — pin to the ink token.
         tone === "light" && "border-foreground",
@@ -247,7 +247,7 @@ export function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
   return (
     <span
       className={
-        "text-[12px] font-medium tracking-[0.12em] uppercase " +
+        "text-xs font-medium tracking-[0.12em] uppercase " +
         (isDark ? "text-white" : "text-neutral-900")
       }
     >

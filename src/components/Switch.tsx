@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /**
  * Switch — iOS-style toggle.
  *
- * On-state uses the `--yuna-green` token. Off-state uses a translucent
+ * On-state uses the `--secondary-green` token. Off-state uses a translucent
  * foreground fill so it adapts to light/dark surfaces. Thumb is a small
  * white circle that slides between ends. Pass `disabled` to dim the control
  * and block toggling.
@@ -31,7 +31,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
           "disabled:cursor-not-allowed disabled:opacity-40",
-          checked ? "bg-yuna-green" : "bg-foreground/20",
+          checked ? "bg-secondary-green" : "bg-foreground/20",
           className,
         )}
         {...props}

@@ -28,6 +28,7 @@ import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
+import { Route as DsSurfaceRouteImport } from './routes/ds.surface'
 import { Route as DsSuggestionChipRouteImport } from './routes/ds.suggestion-chip'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
@@ -35,6 +36,7 @@ import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-tog
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
 import { Route as DsDividerRouteImport } from './routes/ds.divider'
+import { Route as DsColorsRouteImport } from './routes/ds.colors'
 import { Route as DsCheckBadgeRouteImport } from './routes/ds.check-badge'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsCardsRouteImport } from './routes/ds.cards'
@@ -137,6 +139,11 @@ const DsSwitchesRoute = DsSwitchesRouteImport.update({
   path: '/ds/switches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsSurfaceRoute = DsSurfaceRouteImport.update({
+  id: '/ds/surface',
+  path: '/ds/surface',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsSuggestionChipRoute = DsSuggestionChipRouteImport.update({
   id: '/ds/suggestion-chip',
   path: '/ds/suggestion-chip',
@@ -170,6 +177,11 @@ const DsDrawerRoute = DsDrawerRouteImport.update({
 const DsDividerRoute = DsDividerRouteImport.update({
   id: '/ds/divider',
   path: '/ds/divider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsColorsRoute = DsColorsRouteImport.update({
+  id: '/ds/colors',
+  path: '/ds/colors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsCheckBadgeRoute = DsCheckBadgeRouteImport.update({
@@ -224,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
@@ -231,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/suggestion-chip': typeof DsSuggestionChipRoute
+  '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
@@ -258,6 +272,7 @@ export interface FileRoutesByTo {
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
@@ -265,6 +280,7 @@ export interface FileRoutesByTo {
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/suggestion-chip': typeof DsSuggestionChipRoute
+  '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
@@ -293,6 +309,7 @@ export interface FileRoutesById {
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/check-badge': typeof DsCheckBadgeRoute
+  '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
@@ -300,6 +317,7 @@ export interface FileRoutesById {
   '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/suggestion-chip': typeof DsSuggestionChipRoute
+  '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
@@ -329,6 +347,7 @@ export interface FileRouteTypes {
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/check-badge'
+    | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
@@ -336,6 +355,7 @@ export interface FileRouteTypes {
     | '/ds/sentiment-tags'
     | '/ds/slider'
     | '/ds/suggestion-chip'
+    | '/ds/surface'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/toasts'
@@ -363,6 +383,7 @@ export interface FileRouteTypes {
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/check-badge'
+    | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
@@ -370,6 +391,7 @@ export interface FileRouteTypes {
     | '/ds/sentiment-tags'
     | '/ds/slider'
     | '/ds/suggestion-chip'
+    | '/ds/surface'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/toasts'
@@ -397,6 +419,7 @@ export interface FileRouteTypes {
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/check-badge'
+    | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
@@ -404,6 +427,7 @@ export interface FileRouteTypes {
     | '/ds/sentiment-tags'
     | '/ds/slider'
     | '/ds/suggestion-chip'
+    | '/ds/surface'
     | '/ds/switches'
     | '/ds/text-fields'
     | '/ds/toasts'
@@ -432,6 +456,7 @@ export interface RootRouteChildren {
   DsCardsRoute: typeof DsCardsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
   DsCheckBadgeRoute: typeof DsCheckBadgeRoute
+  DsColorsRoute: typeof DsColorsRoute
   DsDividerRoute: typeof DsDividerRoute
   DsDrawerRoute: typeof DsDrawerRoute
   DsIconsRoute: typeof DsIconsRoute
@@ -439,6 +464,7 @@ export interface RootRouteChildren {
   DsSentimentTagsRoute: typeof DsSentimentTagsRoute
   DsSliderRoute: typeof DsSliderRoute
   DsSuggestionChipRoute: typeof DsSuggestionChipRoute
+  DsSurfaceRoute: typeof DsSurfaceRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
   DsToastsRoute: typeof DsToastsRoute
@@ -581,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSwitchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/surface': {
+      id: '/ds/surface'
+      path: '/ds/surface'
+      fullPath: '/ds/surface'
+      preLoaderRoute: typeof DsSurfaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/suggestion-chip': {
       id: '/ds/suggestion-chip'
       path: '/ds/suggestion-chip'
@@ -628,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/ds/divider'
       fullPath: '/ds/divider'
       preLoaderRoute: typeof DsDividerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/colors': {
+      id: '/ds/colors'
+      path: '/ds/colors'
+      fullPath: '/ds/colors'
+      preLoaderRoute: typeof DsColorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/check-badge': {
@@ -696,6 +736,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsCardsRoute: DsCardsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
   DsCheckBadgeRoute: DsCheckBadgeRoute,
+  DsColorsRoute: DsColorsRoute,
   DsDividerRoute: DsDividerRoute,
   DsDrawerRoute: DsDrawerRoute,
   DsIconsRoute: DsIconsRoute,
@@ -703,6 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsSentimentTagsRoute: DsSentimentTagsRoute,
   DsSliderRoute: DsSliderRoute,
   DsSuggestionChipRoute: DsSuggestionChipRoute,
+  DsSurfaceRoute: DsSurfaceRoute,
   DsSwitchesRoute: DsSwitchesRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
   DsToastsRoute: DsToastsRoute,

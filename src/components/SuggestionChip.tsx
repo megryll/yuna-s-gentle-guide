@@ -40,10 +40,10 @@ export function SuggestionChip({
 
   const sizeClasses =
     size === "sm"
-      ? "gap-3 pl-3 pr-1.5 py-1.5 text-[14px] leading-tight"
+      ? "gap-3 pl-3 pr-1.5 py-1.5 text-sm leading-tight"
       : size === "lg"
-        ? "gap-3 pl-5 pr-3 py-3 text-[16px] leading-snug"
-        : "gap-3 pl-4 pr-2 py-2 text-[14px] leading-snug";
+        ? "gap-3 pl-5 pr-3 py-3 text-base leading-snug"
+        : "gap-3 pl-4 pr-2 py-2 text-sm leading-snug";
 
   // Chip body + text are driven entirely by `surface` so the chip renders
   // identically inside `.theme-light` (Home in light mode) and outside it

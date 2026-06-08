@@ -47,10 +47,12 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
    | Role | Dark cluster | Light cluster |
    |---|---|---|
-   | Primary text | `text-white` (1.00) | `text-white` / `text-foreground` (inverts to ink) |
-   | Body / secondary | `text-white/85` | `text-white/85` (→ ink 0.88) |
-   | Meta / value | `text-white/75` (min) | `text-white/70` (→ ink 0.75, min) |
-   | Hint / disabled | `text-white/55` (min) | `text-white/55` (→ ink 0.6, min) |
+   | Primary text | `text-white` (1.00) | `text-white` / `text-foreground` (inverts to ink, 1.00) |
+   | Body / secondary | `text-white/85` | `text-white/85` (→ ink 0.85) |
+   | Meta / value | `text-white/75` (min) | `text-white/75` (→ ink 0.75, min) |
+   | Hint / disabled | `text-white/60` (min) | `text-white/60` (→ ink 0.60, min) |
+
+   The same opacity holds across clusters — the light cluster inverts white to ink at the *same* alpha, so a token reads identically whichever photo it sits on.
 
    Don't reach for `text-white/40` or `text-foreground/55` for any text the user is meant to read — the design needs more weight (heavier icon, fill, layout), not lower ink. Inline-style colors (`#cdebb5` on a pale-green chip, hardcoded green gradients, etc.) must be mode-aware via `useAppMode()` or they fail this rule in the opposite mode.
 

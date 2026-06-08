@@ -91,7 +91,7 @@ function DemoCard({ isNew }: { isNew?: boolean }) {
       <Card tone="dark" naturePath={NATURE} isNew={isNew}>
         <CardHeader meta={{ label: "Meditation", tone: "dark" }} cadence="Daily" />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
-          <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
+          <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
             A Five-Minute Midday Reset
           </h3>
         </div>
@@ -125,7 +125,7 @@ function DemoSolidCard({
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3
             className={
-              "font-display text-[22px] leading-[1.75] tracking-tight text-center " +
+              "font-display text-2xl leading-[1.75] tracking-tight text-center " +
               (isDark ? "text-white" : "text-foreground")
             }
           >

@@ -41,6 +41,7 @@ const PAGES: Entry[] = [
 
 const DS_PAGES: Entry[] = [
   { label: "Typography", to: "/ds/typography" },
+  { label: "Colors", to: "/ds/colors" },
   { label: "Avatars", to: "/ds/avatars" },
   { label: "Icons", to: "/ds/icons" },
   { label: "Buttons", to: "/ds/buttons" },
@@ -53,6 +54,7 @@ const DS_PAGES: Entry[] = [
   { label: "Sentiment Tags", to: "/ds/sentiment-tags" },
   { label: "Chat Bubbles", to: "/ds/chat-bubbles" },
   { label: "Cards", to: "/ds/cards" },
+  { label: "Surface", to: "/ds/surface" },
   { label: "App Bar", to: "/ds/app-bar" },
   { label: "Divider", to: "/ds/divider" },
   { label: "Check Badge", to: "/ds/check-badge" },
@@ -140,8 +142,8 @@ function NavLink({ entry, active }: { entry: Entry; active: boolean }) {
   const base =
     "rounded-md transition-colors " +
     (entry.sub
-      ? "text-[11px] tracking-wide ml-3 pl-3 pr-2 py-1 border-l border-border/60 "
-      : "text-[11px] tracking-wide px-2 py-1.5 ");
+      ? "text-uppercase tracking-wide ml-3 pl-3 pr-2 py-1 border-l border-border/60 "
+      : "text-uppercase tracking-wide px-2 py-1.5 ");
   return (
     <Link
       to={entry.to}

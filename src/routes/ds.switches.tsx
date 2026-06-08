@@ -100,14 +100,14 @@ function SwitchRow({ surface }: { surface: "dark" | "light" }) {
       <div className={`flex items-center justify-between py-3 border-b ${rowBorder}`}>
         <div className="flex flex-col">
           <span className={`text-[15px] ${labelClass}`}>Daily reminders</span>
-          <span className={`text-[12px] mt-0.5 ${subClass}`}>9:00 AM</span>
+          <span className={`text-xs mt-0.5 ${subClass}`}>9:00 AM</span>
         </div>
         <Switch checked={a} onChange={setA} label="Daily reminders" />
       </div>
       <div className="flex items-center justify-between py-3">
         <div className="flex flex-col">
           <span className={`text-[15px] ${labelClass}`}>Voice replies</span>
-          <span className={`text-[12px] mt-0.5 ${subClass}`}>Yuna speaks back</span>
+          <span className={`text-xs mt-0.5 ${subClass}`}>Yuna speaks back</span>
         </div>
         <Switch checked={b} onChange={setB} label="Voice replies" />
       </div>

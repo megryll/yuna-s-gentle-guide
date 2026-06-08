@@ -815,7 +815,7 @@ function VoicePad({
           {holdMode ? (
             <div className="inline-flex items-center gap-2 text-white/85">
               <MicGlyph />
-              <span className="text-[12px] uppercase tracking-[0.18em]">
+              <span className="text-xs uppercase tracking-[0.18em]">
                 {listening ? "Release to send" : "Hold to talk"}
               </span>
               <Button
@@ -839,7 +839,7 @@ function VoicePad({
                 onClick={onToggleMic}
                 disabled={phase === "ending" || phase === "connecting"}
                 aria-pressed={muted}
-                className="text-[12px] uppercase tracking-[0.18em]"
+                className="text-xs uppercase tracking-[0.18em]"
               >
                 {muted ? <MicOffGlyph /> : <MicGlyph />}
                 {muted ? "Unmute mic" : "Mute mic"}
@@ -863,7 +863,7 @@ function VoicePad({
 
 function PrivacyFooter({ onLeaveFeedback }: { onLeaveFeedback: () => void }) {
   return (
-    <div className="shrink-0 w-full flex items-center justify-center gap-2 pt-4 text-[12px] tracking-[0.02em] text-white/75">
+    <div className="shrink-0 w-full flex items-center justify-center gap-2 pt-4 text-xs tracking-[0.02em] text-white/75">
       <span className="inline-flex items-center gap-1.5">
         <span>100% Private</span>
         <LockGlyph />

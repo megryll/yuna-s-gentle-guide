@@ -12,9 +12,9 @@ const STEPS = [
   {
     title: (
       <>
-        Yuna is <span className="text-yuna-green">not</span>
+        Yuna is <span className="text-secondary-green">not</span>
         <br />
-        <span className="text-yuna-green">a real person</span>
+        <span className="text-secondary-green">a real person</span>
       </>
     ),
     body: [
@@ -25,9 +25,9 @@ const STEPS = [
   {
     title: (
       <>
-        Yuna is <span className="text-yuna-green">not</span>
+        Yuna is <span className="text-secondary-green">not</span>
         <br />
-        <span className="text-yuna-green">a crisis service</span>
+        <span className="text-secondary-green">a crisis service</span>
       </>
     ),
     body: [
@@ -38,7 +38,7 @@ const STEPS = [
   {
     title: (
       <>
-        This chat is <span className="text-yuna-green">100% private</span>
+        This chat is <span className="text-secondary-green">100% private</span>
       </>
     ),
     body: [
@@ -87,7 +87,7 @@ export function FirstSessionDisclaimers({
             {current.title}
           </DrawerTitle>
 
-          <div className="mt-7 flex flex-col gap-5 text-[15px] leading-relaxed text-white/85">
+          <div className="mt-7 flex flex-col gap-5 text-base leading-relaxed text-white/85">
             {current.body.map((line) => (
               <p key={line}>{line}</p>
             ))}

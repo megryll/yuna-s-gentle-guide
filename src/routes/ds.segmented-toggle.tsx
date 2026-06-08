@@ -48,7 +48,7 @@ function DSSegmentedToggle() {
       {/* ─── Anatomy ────────────────────────────────────────────────────── */}
       <Section title="Anatomy">
         <div className="rounded-2xl border border-border p-6 bg-muted/30">
-          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[12px]">
+          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
             <span className="text-muted-foreground">Rail height</span>
             <code>md: h-9 (36px) · sm: h-8 (32px)</code>
             <span className="text-muted-foreground">Segment height</span>

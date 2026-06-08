@@ -104,7 +104,7 @@ function EmployerAccessScreen() {
           <h1 className="font-display text-3xl leading-[1.1] tracking-tight">
             {unlocked ? "You're in." : "Your benefit is waiting."}
           </h1>
-          <p className="mt-3 text-[15px] leading-snug text-white/85">
+          <p className="mt-3 text-base leading-snug text-white/85">
             {unlocked
               ? "Your pass is ready to claim!"
               : "Enter the email linked to your benefits or your access code to unlock your pass."}
@@ -122,7 +122,7 @@ function EmployerAccessScreen() {
                 100% Private, guaranteed
                 <Lock size={13} strokeWidth={1.75} />
               </p>
-              <p className="text-center text-[13px] leading-relaxed text-white/75">
+              <p className="text-center text-sm leading-relaxed text-white/75">
                 Your organization pays for your access, but they won't see who
                 claims an account or anything you discuss with Yuna.
               </p>
@@ -232,10 +232,10 @@ function EmployerHelpDrawer({
             Let&rsquo;s get you access.
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto px-6 pb-8 text-[15px] leading-snug text-white/85">
+        <div className="flex-1 overflow-y-auto px-6 pb-8 text-base leading-snug text-white/85">
           <p>There are two ways to verify your employer:</p>
 
-          <h3 className="mt-6 font-display font-normal text-[18px] text-white">
+          <h3 className="mt-6 font-display font-normal text-xl text-white">
             1. Using your email
           </h3>
           <p className="mt-3">
@@ -247,7 +247,7 @@ function EmployerHelpDrawer({
             HR representative.
           </p>
 
-          <h3 className="mt-6 font-display font-normal text-[18px] text-white">
+          <h3 className="mt-6 font-display font-normal text-xl text-white">
             2. Using an access code
           </h3>
           <p className="mt-3">
@@ -259,7 +259,7 @@ function EmployerHelpDrawer({
             the code is usually there.
           </p>
 
-          <p className="mt-8 text-center text-[13px] leading-relaxed text-white/75">
+          <p className="mt-8 text-center text-sm leading-relaxed text-white/75">
             Still having issues? Email us at{" "}
             <span className="font-semibold text-white">support@yuna.io</span>{" "}
             and we will respond within 2 business days.
@@ -316,7 +316,7 @@ function EmployerTroubleDrawer({
           </DrawerTitle>
         </DrawerHeader>
         <div className="flex-1 overflow-y-auto px-6 pb-8">
-          <p className="text-[15px] leading-snug text-white/85">
+          <p className="text-base leading-snug text-white/85">
             This is probably on our end. Share a few details and our team will
             reach out within one business day.
           </p>
@@ -367,7 +367,7 @@ function EmployerTroubleDrawer({
           </form>
 
           <div className="mt-7">
-            <p className="text-[15px] font-semibold text-white">
+            <p className="text-base font-semibold text-white">
               A few things to try:
             </p>
             <ul className="mt-3 flex flex-col gap-2.5">
@@ -378,7 +378,7 @@ function EmployerTroubleDrawer({
               ].map((label) => (
                 <li
                   key={label}
-                  className="flex items-center gap-2.5 text-[14px] text-white/85"
+                  className="flex items-center gap-2.5 text-sm text-white/85"
                 >
                   <CheckBadge size="sm" />
                   <span>{label}</span>
@@ -516,7 +516,7 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
 
       <div className="relative px-5 pt-5 pb-4">
         <div className="flex items-start justify-between">
-          <h3 className="font-display text-[22px] leading-[1.05] tracking-tight">
+          <h3 className="font-display text-2xl leading-[1.05] tracking-tight">
             Unlimited Access
           </h3>
           <img
@@ -529,9 +529,9 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
         <div className="mt-3.5 flex items-center gap-3">
           <span
             className={
-              "text-[11px] tracking-[0.2em] uppercase px-2.5 h-6 inline-flex items-center rounded-full " +
+              "text-uppercase tracking-[0.2em] uppercase px-2.5 h-6 inline-flex items-center rounded-full " +
               (unlocked
-                ? "bg-yuna-green text-white shadow-[0_0_10px_rgba(102,186,36,0.55)]"
+                ? "bg-secondary-green text-white shadow-[0_0_10px_color-mix(in_srgb,var(--secondary-green)_55%,transparent)]"
                 : "bg-transparent text-white border border-white/40")
             }
           >
@@ -539,13 +539,13 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
           </span>
         </div>
 
-        <div className="mt-3.5 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-[13px] text-white/90">
+        <div className="mt-3.5 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-sm text-white/90">
           {["Unlimited sessions", "24/7", "Private"].map((label) => (
             <div key={label} className="flex items-center gap-1.5">
               <Check
                 size={13}
                 strokeWidth={2.5}
-                className={unlocked ? "text-yuna-green" : "text-white"}
+                className={unlocked ? "text-secondary-green" : "text-white"}
               />
               <span>{label}</span>
             </div>
@@ -602,12 +602,12 @@ function PassField({
 }) {
   return (
     <div>
-      <p className="text-[11px] tracking-[0.22em] uppercase text-white/60">
+      <p className="text-uppercase tracking-[0.22em] uppercase text-white/60">
         {label}
       </p>
       <div className="mt-2 h-[18px] flex items-center">
         {unlocked ? (
-          <p className="text-[15px] font-semibold tracking-wide yuna-fade-in">
+          <p className="text-base font-semibold tracking-wide yuna-fade-in">
             {value}
           </p>
         ) : (
@@ -640,7 +640,7 @@ function Waveform({
           key={i}
           className={
             "w-[2px] rounded-[1px] " +
-            (tinted ? "bg-yuna-green/75" : "bg-white/25")
+            (tinted ? "bg-secondary-green/75" : "bg-white/25")
           }
           style={{ height: `${h}px` }}
         />

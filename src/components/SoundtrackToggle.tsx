@@ -9,7 +9,7 @@ export function SoundtrackToggle() {
       role="group"
       aria-label="Background audio"
     >
-      <span className="text-[11px] tracking-wide px-2 text-muted-foreground">
+      <span className="text-uppercase tracking-wide px-2 text-muted-foreground">
         Background audio
       </span>
       {SOUNDTRACKS.map((track) => (
@@ -40,7 +40,7 @@ function ToggleButton({
       onClick={onClick}
       aria-pressed={active}
       className={
-        "text-[11px] tracking-wide px-3 py-1 rounded-full transition-colors " +
+        "text-uppercase tracking-wide px-3 py-1 rounded-full transition-colors " +
         (active ? "bg-foreground text-background" : "text-muted-foreground active:text-foreground")
       }
     >

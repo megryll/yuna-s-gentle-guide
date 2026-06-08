@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DSPage, Section, SurfacePair } from "@/ds-docs/surface";
+import { DSPage, Section } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/typography")({
   head: () => ({
@@ -12,8 +12,9 @@ export const Route = createFileRoute("/ds/typography")({
 });
 
 // ─── Scale catalogue ────────────────────────────────────────────────────────
-// Real sizes in use across src/routes/ — top by frequency. Bound to a
-// semantic role so call sites can pick by intent rather than pixel guess.
+// The Tailwind named type scale (text-xs … text-3xl) plus one custom step,
+// `text-uppercase` (11px), for tracked-uppercase labels. No arbitrary px sizes
+// in app code — pick the named token by the semantic role below.
 
 type ScaleRow = {
   size: string;
@@ -23,17 +24,14 @@ type ScaleRow = {
 };
 
 const SCALE: ScaleRow[] = [
-  { size: "text-3xl", px: 30, family: "display", role: "Page hero & drawer titles — auth, intro, employer access" },
-  { size: "text-2xl", px: 24, family: "display", role: "Section hero — you page" },
-  { size: "text-xl", px: 20, family: "display", role: "Large heading inside cards" },
-  { size: "text-[18px]", px: 18, family: "body", role: "Body emphasis, drawer body copy" },
-  { size: "text-[17px]", px: 17, family: "body", role: "Join drawer option labels" },
-  { size: "text-[15px]", px: 15, family: "body", role: "Body — chat messages, list items" },
-  { size: "text-sm", px: 14, family: "body", role: "Default secondary body" },
-  { size: "text-[13px]", px: 13, family: "body", role: "Inline body, sentiment tag md" },
-  { size: "text-xs", px: 12, family: "body", role: "Meta text, captions" },
-  { size: "text-[12px]", px: 12, family: "body", role: "Suggestion chip label" },
-  { size: "text-[11px]", px: 11, family: "body", role: "Button labels, eyebrows, tracked uppercase" },
+  { size: "text-3xl", px: 30, family: "display", role: "Page hero & overlay titles" },
+  { size: "text-2xl", px: 24, family: "display", role: "Section hero & card titles" },
+  { size: "text-xl", px: 20, family: "display", role: "Large heading & subsection titles" },
+  { size: "text-lg", px: 18, family: "display", role: "Dialog, card & option titles, body emphasis" },
+  { size: "text-base", px: 16, family: "body", role: "Primary body & list items" },
+  { size: "text-sm", px: 14, family: "body", role: "Default body & secondary copy" },
+  { size: "text-xs", px: 12, family: "body", role: "Meta text, captions & chip labels" },
+  { size: "text-uppercase", px: 11, family: "body", role: "Eyebrows, badges & button labels (tracked uppercase)" },
 ];
 
 function DSTypography() {
@@ -57,7 +55,7 @@ function DSTypography() {
             family="Stara"
             tagline="Body — set on `body`, inherits to buttons + inputs"
             sample="Here to listen, reflect, and grow with you."
-            classNames="text-[18px] leading-snug"
+            classNames="text-xl leading-snug"
             details={[
               "Weights: 500, 600, 700 (+ italics)",
               "Source: /fonts/Stara-Medium.otf, Stara-SemiBold.otf, Stara-Bold.otf",
@@ -94,42 +92,6 @@ function DSTypography() {
             </tbody>
           </table>
         </div>
-      </Section>
-
-      {/* ─── Color ──────────────────────────────────────────────────────── */}
-      <Section
-        title="Color"
-        subtitle="Text is white on dark surfaces, ink (text-foreground) on light. Opacity steps down for secondary, meta, and hint."
-      >
-        <SurfacePair
-          align="start"
-          renderRow={(surface) => {
-            const isDark = surface === "dark";
-            const ink = isDark ? "text-white" : "text-foreground";
-            const secondary = isDark ? "text-white/85" : "text-foreground/85";
-            const meta = isDark ? "text-white/75" : "text-foreground/75";
-            const hint = isDark ? "text-white/55" : "text-foreground/60";
-            return (
-              <div className="flex flex-col gap-2">
-                <p className={`font-display text-2xl tracking-tight ${ink}`}>
-                  Quiet space for your mind
-                </p>
-                <p className={`text-[15px] leading-snug ${ink}`}>
-                  Here to listen, reflect, and grow with you.
-                </p>
-                <p className={`text-[15px] leading-snug ${secondary}`}>
-                  A calmer place to check in with yourself.
-                </p>
-                <p className={`text-[13px] leading-snug ${meta}`}>
-                  Last reflection saved a few moments ago.
-                </p>
-                <p className={`text-[13px] leading-snug ${hint}`}>
-                  Tap to begin whenever you're ready.
-                </p>
-              </div>
-            );
-          }}
-        />
       </Section>
 
       {/* ─── Weights ────────────────────────────────────────────────────── */}
@@ -203,6 +165,15 @@ function FamilyCard({
 
 function ScaleSample({ row }: { row: ScaleRow }) {
   const fontClass = row.family === "display" ? "font-display" : "";
+  // The 11px tier is always a tracked-uppercase label (eyebrows, button labels,
+  // badges) — show it that way rather than in sentence case.
+  if (row.px === 11) {
+    return (
+      <span className={`${row.size} ${fontClass} tracking-[0.2em] uppercase`}>
+        The quiet
+      </span>
+    );
+  }
   return (
     <span className={`${row.size} ${fontClass} tracking-tight`}>
       The quiet

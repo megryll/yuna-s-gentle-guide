@@ -104,7 +104,7 @@ function AcceptTerms() {
 function AcceptedTerm({ text }: { text: string }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm pl-5 pr-3.5 py-3.5 flex items-center gap-3">
-      <p className="flex-1 text-[15px] leading-snug text-white/90">{text}</p>
+      <p className="flex-1 text-base leading-snug text-white/90">{text}</p>
       <CheckBadge />
     </div>
   );
@@ -119,7 +119,7 @@ function ActiveTerm({
 }) {
   return (
     <div className="yuna-rise rounded-2xl border border-white/35 bg-white/10 backdrop-blur-sm px-5 pt-4 pb-3 flex flex-col gap-3">
-      <p className="text-[15px] leading-snug text-white">{text}</p>
+      <p className="text-base leading-snug text-white">{text}</p>
       <div className="flex items-center justify-between">
         <Button surface="dark" variant="link">
           Read more

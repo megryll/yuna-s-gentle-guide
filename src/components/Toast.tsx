@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  *
  * A brief notification shown at the top of a screen — the calmer replacement
  * for the old full-bleed OS banners. The whole pill carries the variant color
- * as a solid fill, with a bare glyph (no badge) and copy in a deep tonal ink —
- * a darkened shade of the fill itself — rather than white.
+ * as a solid fill, with a bare glyph (no badge) and copy in neutral (the brand
+ * near-black) rather than white.
  *
  * variant: the semantic tone
  *   - "error"   — something needs fixing (warm orange, never red)
@@ -32,16 +32,16 @@ export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const ICON = { error: CircleAlert, success: Check, neutral: Info } as const;
 
-// Solid fill per variant — text/glyph is a deep tonal ink (a darkened shade of
-// the fill) rather than white. Neutral inverts against its surface so it never
-// competes with the colored variants.
+// Solid fill per variant — text/glyph is neutral 100% (the brand near-black)
+// rather than white. Neutral inverts against its surface so it never competes
+// with the colored variants.
 const FILL = {
-  error: { box: "bg-alert-orange text-alert-orange-foreground", muted: "text-alert-orange-foreground/75" },
-  success: { box: "bg-yuna-green text-yuna-green-foreground", muted: "text-yuna-green-foreground/75" },
+  error: { box: "bg-alert-orange text-neutral", muted: "text-neutral/75" },
+  success: { box: "bg-secondary-green text-neutral", muted: "text-neutral/75" },
 } as const;
 const FILL_NEUTRAL = {
-  dark: "bg-white text-neutral-900",
-  light: "bg-neutral-900 text-white",
+  dark: "bg-white text-neutral",
+  light: "bg-neutral text-white",
 } as const;
 
 export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
@@ -59,7 +59,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
       ? colored.muted
       : surface === "light"
         ? "text-white/80"
-        : "text-neutral-900/65";
+        : "text-neutral/65";
 
     return (
       <div
@@ -76,9 +76,9 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         <Icon size={18} strokeWidth={2.25} className="shrink-0" />
         <div className="relative min-w-0 flex-1">
           {title && (
-            <p className="text-[14px] font-semibold leading-tight">{title}</p>
+            <p className="text-sm font-semibold leading-tight">{title}</p>
           )}
-          <p className={cn("text-[13px] leading-snug", title && cn("mt-0.5", mutedCls))}>
+          <p className={cn("text-sm leading-snug", title && cn("mt-0.5", mutedCls))}>
             {message}
           </p>
         </div>

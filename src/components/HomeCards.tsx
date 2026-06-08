@@ -70,7 +70,7 @@ export function HomeCardRow({
 
   return (
     <div className="relative">
-      {card.isNew && <NewBadge className="-top-1.5 left-4" />}
+      {card.isNew && <NewBadge className="-top-3 left-4" />}
       <button
         type="button"
         onClick={interactive ? onClick : undefined}
@@ -85,14 +85,14 @@ export function HomeCardRow({
         <div className="flex-1 min-w-0">
           <p
             className={
-              `font-display text-[18px] leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
+              `font-display text-xl leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
               (isQuote ? "italic" : "")
             }
           >
             {title}
           </p>
           <div className="mt-3.5 flex items-center gap-1 flex-wrap">
-            <span className={`text-[12px] font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
+            <span className={`text-xs font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
               {isGuided && avatar && <YunaAvatar variant={avatar} size={15} />}
               {meta.label}
             </span>
@@ -155,11 +155,11 @@ function GuidedSessionCard({
       />
 
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
-        <h3 className="font-display text-[24px] leading-[1.75] tracking-tight text-white max-w-[18rem]">
+        <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white max-w-[18rem]">
           {card.title}
         </h3>
         {card.subtitle && (
-          <p className="mt-4 text-[14px] leading-relaxed text-white/85 max-w-[18rem]">
+          <p className="mt-4 text-sm leading-relaxed text-white/85 max-w-[18rem]">
             {card.subtitle}
           </p>
         )}
@@ -189,7 +189,7 @@ function MeditationCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
-        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
+        <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           {card.title}
         </h3>
       </div>
@@ -218,13 +218,13 @@ function GratitudeCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col justify-center">
-        <p className="font-display text-[20px] leading-[1.75] tracking-tight text-foreground">
+        <p className="font-display text-xl leading-[1.75] tracking-tight text-foreground">
           {card.prompt}
         </p>
         <ul className="mt-4 flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-center gap-2.5">
-              <span className="text-[11px] tracking-[0.18em] uppercase text-foreground/55 shrink-0 w-5">
+              <span className="text-uppercase tracking-[0.18em] uppercase text-foreground/55 shrink-0 w-5">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <TextField
@@ -271,10 +271,10 @@ function SelfDiscoveryCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
-        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white">
+        <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white">
           {card.title}
         </h3>
-        <p className="mt-3 text-[14px] leading-relaxed text-white/80 max-w-[20rem]">
+        <p className="mt-3 text-sm leading-relaxed text-white/80 max-w-[20rem]">
           {card.description}
         </p>
       </div>
@@ -303,7 +303,7 @@ function AffirmationCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
-        <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
+        <p className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           “{card.quote}”
         </p>
       </div>
@@ -337,7 +337,7 @@ function LearnSkillCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
-        <h3 className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
+        <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           {card.title}
         </h3>
       </div>
@@ -365,7 +365,7 @@ function AccountabilityCard({
     <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader meta={meta} eyebrow={card.eyebrow} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
-        <p className="font-display text-[22px] leading-[1.75] tracking-tight text-white text-center">
+        <p className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           “{card.goal}”
         </p>
       </div>
@@ -402,19 +402,19 @@ function BookCard({
         ) : (
           <span
             aria-hidden
-            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-black/10 shadow-md flex items-center justify-center text-[11px] font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
+            className="h-24 w-[72px] shrink-0 rounded-md bg-gradient-to-br from-pink-300 via-amber-200 to-sky-300 border border-black/10 shadow-md flex items-center justify-center text-uppercase font-bold uppercase text-neutral-700 text-center px-1 leading-tight"
           >
             {card.title}
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] tracking-[0.18em] uppercase text-foreground">
+          <p className="text-uppercase tracking-[0.18em] uppercase text-foreground">
             {card.author}
           </p>
-          <p className="mt-1 font-display text-[22px] leading-[1.75] tracking-tight text-foreground">
+          <p className="mt-1 font-display text-2xl leading-[1.75] tracking-tight text-foreground">
             {card.title}
           </p>
-          <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-foreground/80">
+          <p className="mt-2 inline-flex items-center gap-1 text-sm text-foreground/80">
             <span className="font-medium">{card.rating.toFixed(1)}</span>
             <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
             <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />

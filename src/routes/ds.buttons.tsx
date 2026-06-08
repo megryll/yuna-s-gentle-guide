@@ -59,7 +59,9 @@ const VARIANT_ROWS: MatrixRow[] = [
   { label: "Secondary", render: (s) => <SizeRow surface={s} variant="secondary" label="Continue" /> },
   { label: "With icon", render: (s) => <IconLabelRow surface={s} /> },
   { label: "Link", render: (s) => <LinkRow surface={s} /> },
-  { label: "Icon buttons", render: (s) => <IconButtonsRow surface={s} /> },
+  { label: "Icon — primary", render: (s) => <IconButtonsRow surface={s} variant="primary" /> },
+  { label: "Icon — secondary", render: (s) => <IconButtonsRow surface={s} variant="secondary" /> },
+  { label: "Icon — plain", render: (s) => <IconButtonsRow surface={s} variant="plain" /> },
   { label: "Card", render: (s) => <CardRow surface={s} /> },
 ];
 
@@ -69,8 +71,8 @@ const STATE_ROWS: MatrixRow[] = [
   { label: "Link", render: (s) => <LinkStateRow surface={s} /> },
   { label: "Card", render: (s) => <CardStateStack surface={s} /> },
   {
-    label: "Icon — plain",
-    render: (s) => <IconStateRow surface={s} variant="plain" glyph={<Menu strokeWidth={1.6} />} />,
+    label: "Icon — primary",
+    render: (s) => <IconStateRow surface={s} variant="primary" glyph={<ArrowUp strokeWidth={2} />} />,
   },
   {
     label: "Icon — secondary",
@@ -79,8 +81,8 @@ const STATE_ROWS: MatrixRow[] = [
     ),
   },
   {
-    label: "Icon — primary",
-    render: (s) => <IconStateRow surface={s} variant="primary" glyph={<ArrowUp strokeWidth={2} />} />,
+    label: "Icon — plain",
+    render: (s) => <IconStateRow surface={s} variant="plain" glyph={<Menu strokeWidth={1.6} />} />,
   },
 ];
 
@@ -154,28 +156,15 @@ function LinkRow({ surface }: { surface: "dark" | "light" }) {
 // all three sizes (Card More, drawer/header close, header menu); secondary
 // (border) and primary (filled) appear only at the two smaller sizes (back +
 // save toggle; Send + speaker). Button sizes every glyph — callers don't.
-function IconButtonsRow({ surface }: { surface: "dark" | "light" }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <Row className="gap-3">
-        <Button surface={surface} variant="plain" size="icon-sm" aria-label="More">
-          <MoreHorizontal strokeWidth={2} />
-        </Button>
-        <Button surface={surface} variant="plain" size="icon" aria-label="Close">
-          <X strokeWidth={1.6} />
-        </Button>
-        <Button surface={surface} variant="plain" size="icon-lg" aria-label="Menu">
-          <Menu strokeWidth={1.6} />
-        </Button>
-      </Row>
-      <Row className="gap-3">
-        <Button surface={surface} variant="secondary" size="icon-sm" aria-label="Save">
-          <Bookmark strokeWidth={1.75} />
-        </Button>
-        <Button surface={surface} variant="secondary" size="icon" aria-label="Back">
-          <ChevronLeft strokeWidth={1.5} />
-        </Button>
-      </Row>
+function IconButtonsRow({
+  surface,
+  variant,
+}: {
+  surface: "dark" | "light";
+  variant: "primary" | "secondary" | "plain";
+}) {
+  if (variant === "primary") {
+    return (
       <Row className="gap-3">
         <Button surface={surface} variant="primary" size="icon-sm" aria-label="Send">
           <ArrowUp strokeWidth={2} />
@@ -184,7 +173,32 @@ function IconButtonsRow({ surface }: { surface: "dark" | "light" }) {
           <Volume2 strokeWidth={1.6} />
         </Button>
       </Row>
-    </div>
+    );
+  }
+  if (variant === "secondary") {
+    return (
+      <Row className="gap-3">
+        <Button surface={surface} variant="secondary" size="icon-sm" aria-label="Save">
+          <Bookmark strokeWidth={1.75} />
+        </Button>
+        <Button surface={surface} variant="secondary" size="icon" aria-label="Back">
+          <ChevronLeft strokeWidth={1.5} />
+        </Button>
+      </Row>
+    );
+  }
+  return (
+    <Row className="gap-3">
+      <Button surface={surface} variant="plain" size="icon-sm" aria-label="More">
+        <MoreHorizontal strokeWidth={2} />
+      </Button>
+      <Button surface={surface} variant="plain" size="icon" aria-label="Close">
+        <X strokeWidth={1.6} />
+      </Button>
+      <Button surface={surface} variant="plain" size="icon-lg" aria-label="Menu">
+        <Menu strokeWidth={1.6} />
+      </Button>
+    </Row>
   );
 }
 

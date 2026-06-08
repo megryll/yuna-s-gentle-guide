@@ -75,7 +75,7 @@ export function SegmentedToggle<V extends string>({
           >
             {opt.icon}
             {opt.label ? (
-              <span className="text-[11px] tracking-[0.16em] uppercase">
+              <span className="text-uppercase tracking-[0.16em] uppercase">
                 {opt.label}
               </span>
             ) : null}

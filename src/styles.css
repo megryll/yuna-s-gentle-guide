@@ -85,6 +85,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  /* Custom type step below text-xs: the 11px tracked-uppercase label tier
+     (eyebrows, badges, button labels). Named for its role, not its px. */
+  --text-uppercase: 0.6875rem; /* 11px */
+  --text-uppercase--line-height: 1rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -119,12 +123,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-primary-beige: var(--primary-beige);
+  --color-primary-green: var(--primary-green);
+  --color-neutral: var(--neutral);
   --color-alert-red: var(--alert-red);
+  --color-alert-red-pressed: var(--alert-red-pressed);
   --color-alert-orange: var(--alert-orange);
-  --color-alert-orange-foreground: var(--alert-orange-foreground);
-  --color-yuna-green: var(--yuna-green);
-  --color-yuna-green-deep: var(--yuna-green-deep);
-  --color-yuna-green-foreground: var(--yuna-green-foreground);
+  --color-alert-orange-pressed: var(--alert-orange-pressed);
+  --color-secondary-green: var(--secondary-green);
+  --color-secondary-green-pressed: var(--secondary-green-pressed);
 }
 
 :root {
@@ -166,22 +172,41 @@
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
   --primary-beige: #F5F0ED;
+  /* Deep forest green — focus-area accents, insight tags, the light-mode
+     progress ring. The deeper companion to --secondary-green. */
+  --primary-green: #115430;
+  /* Warm near-black brand neutral. Foundational palette tone; the UI ink the
+     app actually renders text with is --foreground. */
+  --neutral: #1E2220;
   --alert-red: #E0493F;
+  /* Deeper red for pressed / active states. */
+  --alert-red-pressed: #C53A30;
   /* Warm orange for form validation — gentler than the red alert tone,
      and legible on both the dark photo bg and light surfaces. */
   --alert-orange: #F2994A;
-  /* Deep tonal ink for text/glyphs sitting on the alert-orange fill
-     (e.g. solid Toast). ~5.2:1 on #F2994A — clears AA for body text. */
-  --alert-orange-foreground: #572F0F;
+  /* Deeper orange for pressed / active states. */
+  --alert-orange-pressed: #D97E2E;
   /* Yuna brand green — sampled from the avatar mark (avatar.png). The single
      "positive / on / progress" green across the app: slider fills, switches,
      sentiment pills, and the success Toast. */
-  --yuna-green: #66BA24;
-  /* Slightly deeper variant for thumbs / pressed states. */
-  --yuna-green-deep: #4D9C1A;
-  /* Deep tonal ink for text/glyphs sitting on the yuna-green fill (e.g. the
-     success Toast). ~5:1 on #66BA24 — clears AA for body text. */
-  --yuna-green-foreground: #0F3D20;
+  --secondary-green: #66BA24;
+  /* Deeper shade for pressed / thumb states. */
+  --secondary-green-pressed: #4D9C1A;
+  /* Secondary palette — soft, on-brand accent hues beyond the core palette.
+     Each family pairs a light tint with a deeper companion. Deliberately muted
+     rather than saturated chart primaries so they read calmly on both photo
+     backgrounds; mode-stable (one value for dark + light). Used for data viz
+     (e.g. the wrap-up breakdown donut + legend) and accent fills. */
+  --blue-soft: #D4E3F4;
+  --blue: #A7C7E7;
+  --purple-soft: #C5B6E0;
+  --purple: #6E5A6B;
+  --amber-soft: #F8F1DC;
+  --amber: #F2D08A;
+  --peach-soft: #F4B183;
+  --peach: #D98C52;
+  --teal-soft: #9FD0CB;
+  --teal: #5E9389;
 }
 
 .dark {
@@ -229,17 +254,19 @@
      need to clear a contrast floor. Use these tokens; do not invent new
      opacity stops below the floor.
 
+     Both clusters share the same floors — the light cluster inverts white to
+     ink at the *same* alpha, so a token reads identically on either photo.
      Dark cluster (photo bg + .theme-dark / .overlay-on-dark):
        - Primary text:      text-white          (1.00)
        - Body / secondary:  text-white/85       (≥0.85)
        - Meta / value:      text-white/75       (≥0.75)   ← floor for labels
-       - Disabled / hint:   text-white/55       (≥0.55)   ← floor for any text
+       - Disabled / hint:   text-white/60       (≥0.60)   ← floor for any text
 
      Light cluster (.theme-light, light photo bg):
        - Primary text:      text-foreground / text-white (inverted to ink)
        - Body / secondary:  text-foreground/85           (≥0.85)
-       - Meta / value:      text-foreground/70           (≥0.70)   ← floor
-       - Disabled / hint:   text-foreground/55           (≥0.55)   ← floor
+       - Meta / value:      text-foreground/75           (≥0.75)   ← floor
+       - Disabled / hint:   text-foreground/60           (≥0.60)   ← floor
 
      The overlay-on-dark + theme-light blocks below remap any tokens that
      would otherwise fall below these floors. If you reach for a lower
@@ -413,26 +440,27 @@
      photo flips to /light-blur-bg.png, so we invert those utilities in-place
      via `.theme-light`. Scoped to PhoneFrame's inner div so the admin sidebar
      and DS pages stay unaffected. */
-  /* Per the DS contrast rule: light cluster floors at 0.55 for hint text and
-     0.70 for meta/value. White-alpha tokens get remapped to ink-alpha so the
-     floors are enforced even when call sites still use the white-on-dark
-     vocabulary (`text-white/75`, etc.). */
+  /* Per the DS contrast rule: light cluster floors at 0.60 for hint text and
+     0.75 for meta/value. White-alpha tokens get remapped to ink-alpha at the
+     SAME alpha (so a token reads identically in either cluster) even when call
+     sites still use the white-on-dark vocabulary (`text-white/75`, etc.). */
   /* Ink value matches `--foreground` so light-mode body copy shares the
      same tone as filled elements (CTAs, chat bubbles, the toggle's active
      pill). Sits between pure black and mid-grey for warmth on the photo bg. */
   .theme-light .text-white { color: rgb(29, 31, 37); }
   .theme-light .text-white\/95 { color: rgba(29, 31, 37, 0.95); }
   .theme-light .text-white\/90 { color: rgba(29, 31, 37, 0.9); }
-  .theme-light .text-white\/85 { color: rgba(29, 31, 37, 0.88); }
-  .theme-light .text-white\/80 { color: rgba(29, 31, 37, 0.85); }
-  .theme-light .text-white\/75 { color: rgba(29, 31, 37, 0.8); }
-  .theme-light .text-white\/70 { color: rgba(29, 31, 37, 0.75); }
-  .theme-light .text-white\/65 { color: rgba(29, 31, 37, 0.72); }
-  .theme-light .text-white\/60 { color: rgba(29, 31, 37, 0.7); }
+  .theme-light .text-white\/85 { color: rgba(29, 31, 37, 0.85); }
+  .theme-light .text-white\/80 { color: rgba(29, 31, 37, 0.8); }
+  .theme-light .text-white\/75 { color: rgba(29, 31, 37, 0.75); }
+  .theme-light .text-white\/70 { color: rgba(29, 31, 37, 0.7); }
+  .theme-light .text-white\/65 { color: rgba(29, 31, 37, 0.65); }
+  .theme-light .text-white\/60 { color: rgba(29, 31, 37, 0.6); }
+  /* Legacy hint call sites authored at /55 lift to the 0.60 floor. */
   .theme-light .text-white\/55 { color: rgba(29, 31, 37, 0.6); }
-  .theme-light .text-white\/50 { color: rgba(29, 31, 37, 0.55); }
-  .theme-light .text-white\/45 { color: rgba(29, 31, 37, 0.5); }
-  .theme-light .text-white\/40 { color: rgba(29, 31, 37, 0.45); }
+  .theme-light .text-white\/50 { color: rgba(29, 31, 37, 0.5); }
+  .theme-light .text-white\/45 { color: rgba(29, 31, 37, 0.45); }
+  .theme-light .text-white\/40 { color: rgba(29, 31, 37, 0.4); }
 
   .theme-light .border-white { border-color: rgba(20, 20, 22, 0.9); }
   .theme-light .border-white\/40 { border-color: rgba(20, 20, 22, 0.35); }

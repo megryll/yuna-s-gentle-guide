@@ -82,7 +82,7 @@ export function ChatBubble({
         className={cn(
           "whitespace-pre-line",
           size === "lg"
-            ? "px-5 py-4 text-[20px] leading-[1.4]"
+            ? "px-5 py-4 text-xl leading-[1.4]"
             : "px-4 py-2.5 text-sm leading-relaxed",
         )}
       >

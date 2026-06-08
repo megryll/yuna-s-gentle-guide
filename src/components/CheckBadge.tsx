@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * CheckBadge — a filled green circle with a white check. Marks a completed or
  * confirmed item: an accepted term, a verified step, a checklist row.
  *
- * The green (`bg-yuna-green`) and white check read on both photo surfaces, so
+ * The green (`bg-secondary-green`) and white check read on both photo surfaces, so
  * there's no `surface` prop.
  *
  * size: "sm" (18px) | "md" (28px, default)
@@ -32,7 +32,7 @@ export function CheckBadge({ size = "md", label, className }: CheckBadgeProps) {
       aria-label={label}
       aria-hidden={label ? undefined : true}
       className={cn(
-        "inline-flex items-center justify-center rounded-full shrink-0 bg-yuna-green text-white",
+        "inline-flex items-center justify-center rounded-full shrink-0 bg-secondary-green text-white",
         s.box,
         className,
       )}

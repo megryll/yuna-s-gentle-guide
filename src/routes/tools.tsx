@@ -79,8 +79,8 @@ function ToolsRoute() {
                 <div className="absolute inset-0" style={{ background: overlay }} />
                 {t.isNew && (
                   <span
-                    className="absolute top-3 left-3 text-[11px] tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
-                    style={{ backgroundColor: "#66BA24" }}
+                    className="absolute top-3 left-3 text-uppercase tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
+                    style={{ backgroundColor: "var(--secondary-green)" }}
                   >
                     New
                   </span>
@@ -91,10 +91,10 @@ function ToolsRoute() {
                   </p>
                   <p
                     className={
-                      "mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug " + captionClass
+                      "mt-1.5 flex items-center gap-1.5 text-sm leading-snug " + captionClass
                     }
                   >
-                    <span aria-hidden className="text-[14px] leading-none">
+                    <span aria-hidden className="text-sm leading-none">
                       {t.emoji}
                     </span>
                     {t.caption}

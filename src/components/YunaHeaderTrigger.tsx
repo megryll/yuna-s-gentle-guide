@@ -29,7 +29,7 @@ export function YunaHeaderTrigger({
         variant="secondary"
         onClick={() => setOpen(true)}
         aria-label="Open Yuna settings"
-        className="h-9 gap-2 px-3 text-[11px] uppercase tracking-[0.2em]"
+        className="h-9 gap-2 px-3 text-uppercase uppercase tracking-[0.2em]"
       >
         <span
           className={
