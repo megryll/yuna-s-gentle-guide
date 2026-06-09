@@ -7,6 +7,7 @@ import { Badge } from "@/components/Badge";
 import type { Insight } from "@/lib/profile-data";
 import { useAppMode } from "@/lib/theme-prefs";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
 // Brand greens, both tokenised: GREEN = --primary-green, GREEN_ACCENT =
@@ -215,11 +216,7 @@ export function InsightCard({
                 aria-hidden
                 className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0"
               >
-                {avatar ? (
-                  <YunaAvatar variant={avatar} size={40} />
-                ) : (
-                  <span className="h-2 w-2 rounded-full bg-white" />
-                )}
+                <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={40} />
               </span>
               <p
                 className="font-display italic m-0 text-white/95"

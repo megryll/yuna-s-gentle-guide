@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Share2, User, X } from "lucide-react";
+import { Share2, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Slider } from "@/components/Slider";
@@ -16,6 +16,7 @@ import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
 import { requestSchedulePrompt } from "@/lib/schedule-prompt";
 import { useAppMode } from "@/lib/theme-prefs";
+import { DEFAULT_VOICE } from "@/lib/voices";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -209,11 +210,7 @@ function HeroCard({
       }
     >
       <IconMedallion size="lg">
-        {avatar ? (
-          <YunaAvatar variant={avatar} size={64} />
-        ) : (
-          <User size={26} strokeWidth={1.6} className="text-white" aria-hidden />
-        )}
+        <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
       </IconMedallion>
       <p className="font-display italic text-2xl leading-[1.35] text-white max-w-[260px]">
         {message}
