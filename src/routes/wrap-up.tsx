@@ -119,7 +119,7 @@ function WrapUp() {
           <div className="flex flex-col gap-6">
             {/* ── Title bar: centered eyebrow, close button pinned right ──── */}
             <div className="relative flex items-center justify-center">
-              <p className="text-uppercase tracking-[0.32em] uppercase text-white/65">
+              <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
                 Session complete
               </p>
               <div className="absolute right-0 top-1/2 -translate-y-1/2">

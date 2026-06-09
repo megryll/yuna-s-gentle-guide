@@ -116,7 +116,7 @@ export function FocusAreaBentoCard({
       </span>
       <div className="relative flex-1 flex flex-col justify-between p-4">
         <div className="flex flex-col gap-2">
-          <span className="text-xs tracking-[0.2em] uppercase text-white/65">
+          <span className="text-xs tracking-[0.2em] uppercase text-white/75">
             Focus Area {num}
           </span>
           <span
@@ -127,7 +127,7 @@ export function FocusAreaBentoCard({
           </span>
         </div>
         <div className="flex items-center justify-between mt-4">
-          <span className="text-xs leading-[18px] text-white/60">{taskCount} tasks</span>
+          <span className="text-xs leading-[18px] text-white/75">{taskCount} tasks</span>
           <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
         </div>
       </div>
@@ -181,7 +181,7 @@ export function InsightCard({
 
           {meaning.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-uppercase font-semibold tracking-[0.08em] uppercase text-white/60">
+              <p className="text-uppercase font-semibold tracking-[0.08em] uppercase text-white/75">
                 What this might mean
               </p>
               <ul className="flex flex-col gap-2">
@@ -244,7 +244,7 @@ export function MoreButton({ count, onClick }: { count: number; onClick?: () => 
       onClick={onClick}
       className="gap-2.5 px-5 py-2.5"
     >
-      <span className="text-uppercase font-bold tracking-[0.08em] uppercase text-white/70">
+      <span className="text-uppercase font-bold tracking-[0.08em] uppercase text-white/75">
         +{count} more
       </span>
       <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />

@@ -41,7 +41,7 @@ function FocusAreaRoute() {
         </header>
 
         <div className="px-6 pt-6 flex flex-col items-center text-center gap-3">
-          <span className="text-uppercase tracking-[0.32em] uppercase text-white/65">
+          <span className="text-uppercase tracking-[0.32em] uppercase text-white/75">
             {meta.eyebrow}
           </span>
           <h1

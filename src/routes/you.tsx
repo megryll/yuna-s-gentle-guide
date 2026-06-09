@@ -211,10 +211,10 @@ function EmptyHeroGlow() {
 function PreviewRow({ heading, body }: { heading: string; body: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-md px-4 py-3.5">
-      <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/65">
+      <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/75">
         {heading}
       </p>
-      <p className="text-sm leading-[20px] text-white/65 mt-1">{body}</p>
+      <p className="text-sm leading-[20px] text-white/75 mt-1">{body}</p>
     </div>
   );
 }
