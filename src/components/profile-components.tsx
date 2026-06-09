@@ -14,7 +14,7 @@ import { useYunaIdentity } from "@/lib/yuna-session";
 // suffix, since a var() can't be concatenated with one.
 const GREEN = "var(--primary-green)";
 const GREEN_ACCENT = "var(--secondary-green)";
-const RING_MINT = "#cdebb5";
+const RING_MINT = "var(--mint)";
 const greenMix = (pct: number) =>
   `color-mix(in srgb, var(--secondary-green) ${pct}%, transparent)`;
 
@@ -272,7 +272,7 @@ export function EmptyStateCard({
     >
       <p
         className="text-uppercase font-bold tracking-[0.06em] uppercase text-center"
-        style={{ color: isLight ? GREEN : "#cdebb5" }}
+        style={{ color: isLight ? GREEN : RING_MINT }}
       >
         {heading}
       </p>

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
+import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
 
 type Tool = {
@@ -77,14 +78,7 @@ function ToolsRoute() {
                   aria-hidden
                 />
                 <div className="absolute inset-0" style={{ background: overlay }} />
-                {t.isNew && (
-                  <span
-                    className="absolute top-3 left-3 text-uppercase tracking-[0.2em] uppercase px-2 py-1 rounded-full text-white"
-                    style={{ backgroundColor: "var(--secondary-green)" }}
-                  >
-                    New
-                  </span>
-                )}
+                {t.isNew && <Badge className="absolute top-3 left-3">New</Badge>}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <p className={"font-display text-xl leading-tight tracking-tight " + titleClass}>
                     {t.title}
