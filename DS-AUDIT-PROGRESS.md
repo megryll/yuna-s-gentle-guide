@@ -66,9 +66,15 @@ done. See "✅ Session 5 — fixes applied" below for the per-theme detail.
    first child, `pb-10`→`pb-6`. Horizontal `px-8` left (rule permits px-8/px-6
    per cluster — the "pick one" audit note was stricter than the actual rule).
 
-**Building blocks:** `profile-components` (contrast + blur + mint token),
-`PastSessionCard` (now the `Card` `compact` variant — fixed-dark, header/footer
-omitted), `Waveform` (new `/ds/waveform` page + sidebar entry).
+**Building blocks:** `profile-components` (contrast + blur; pale mint derived
+from `--secondary-green` via color-mix, no new token), `PastSessionCard` (now
+the shared `CardRow` list-row layout extracted from `HomeCardRow` — fixed-dark,
+date below the title, same as the Home feed), `Waveform` (new `/ds/waveform`
+page + sidebar entry).
+
+**Also fixed (review follow-ups):** Yuna avatar now defaults to the first voice
+(`DEFAULT_VOICE`) instead of a generic glyph in the wrap-up keepsake + Profile
+insight quote box.
 
 ## Done this session
 
