@@ -49,6 +49,7 @@ const DS_PAGES: Entry[] = [
   { label: "Toast Alerts", to: "/ds/toasts" },
   { label: "Switches", to: "/ds/switches" },
   { label: "Slider", to: "/ds/slider" },
+  { label: "Waveform", to: "/ds/waveform" },
   { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
   { label: "Tags", to: "/ds/tags" },
   { label: "Chat Bubbles", to: "/ds/chat-bubbles" },

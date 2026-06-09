@@ -24,6 +24,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
+import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
@@ -118,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
   id: '/focus-area/$num',
   path: '/focus-area/$num',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsWaveformRoute = DsWaveformRouteImport.update({
+  id: '/ds/waveform',
+  path: '/ds/waveform',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsTypographyRoute = DsTypographyRouteImport.update({
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
+  '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRoutesByTo {
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
+  '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRoutesById {
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
+  '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
 }
 export interface FileRouteTypes {
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
+    | '/ds/waveform'
     | '/focus-area/$num'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
+    | '/ds/waveform'
     | '/focus-area/$num'
   id:
     | '__root__'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
+    | '/ds/waveform'
     | '/focus-area/$num'
   fileRoutesById: FileRoutesById
 }
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   DsTextFieldsRoute: typeof DsTextFieldsRoute
   DsToastsRoute: typeof DsToastsRoute
   DsTypographyRoute: typeof DsTypographyRoute
+  DsWaveformRoute: typeof DsWaveformRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
 }
 
@@ -590,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/focus-area/$num'
       fullPath: '/focus-area/$num'
       preLoaderRoute: typeof FocusAreaNumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/waveform': {
+      id: '/ds/waveform'
+      path: '/ds/waveform'
+      fullPath: '/ds/waveform'
+      preLoaderRoute: typeof DsWaveformRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/typography': {
@@ -770,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsTextFieldsRoute: DsTextFieldsRoute,
   DsToastsRoute: DsToastsRoute,
   DsTypographyRoute: DsTypographyRoute,
+  DsWaveformRoute: DsWaveformRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
 }
 export const routeTree = rootRouteImport
