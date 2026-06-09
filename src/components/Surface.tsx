@@ -51,7 +51,7 @@ export function Surface({
     : ["bg-white/[0.08]", border && "border border-white/15"];
 
   return (
-    <Tag className={cn(RADIUS[radius], shell, blur && "backdrop-blur-sm", className)}>
+    <Tag className={cn(RADIUS[radius], shell, blur && "backdrop-blur-md", className)}>
       {children}
     </Tag>
   );

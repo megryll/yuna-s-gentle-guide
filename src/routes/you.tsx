@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
+import { Surface } from "@/components/Surface";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 import { getProfileData, type Insight } from "@/lib/profile-data";
@@ -42,9 +43,9 @@ function YouRoute() {
             { value: data.messages, label: "Messages" },
             { value: data.insights, label: "Insights" },
           ].map((stat) => (
-            <div
+            <Surface
               key={stat.label}
-              className="flex-1 rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-sm py-5 px-2 flex flex-col items-center gap-1"
+              className="flex-1 py-5 px-2 flex flex-col items-center gap-1"
             >
               <span className="font-display font-normal text-2xl leading-none text-white">
                 {stat.value}
@@ -52,7 +53,7 @@ function YouRoute() {
               <span className="text-uppercase font-medium tracking-[0.12em] uppercase text-white/75">
                 {stat.label}
               </span>
-            </div>
+            </Surface>
           ))}
         </div>
 
@@ -209,7 +210,7 @@ function EmptyHeroGlow() {
 
 function PreviewRow({ heading, body }: { heading: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-sm px-4 py-3.5">
+    <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] backdrop-blur-md px-4 py-3.5">
       <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/65">
         {heading}
       </p>

@@ -95,7 +95,7 @@ export function FocusAreaBentoCard({
     <Link
       to="/focus-area/$num"
       params={{ num: String(num) }}
-      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-sm active:opacity-90 transition-opacity`}
+      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-md active:opacity-90 transition-opacity`}
       style={{ minHeight: 168 }}
     >
       <span
@@ -153,7 +153,7 @@ export function InsightCard({
 
   return (
     <div
-      className={`rounded-2xl overflow-hidden border border-white/15 ${cardBg} backdrop-blur-sm`}
+      className={`rounded-2xl overflow-hidden border border-white/15 ${cardBg} backdrop-blur-md`}
       style={accentLeft ? { borderLeft: `3px solid ${GREEN_ACCENT}` } : undefined}
     >
       <Accordion
@@ -267,7 +267,7 @@ export function EmptyStateCard({
   const isLight = mode === "light";
   return (
     <div
-      className="relative rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col items-center gap-2 p-4"
+      className="relative rounded-2xl overflow-hidden backdrop-blur-md flex flex-col items-center gap-2 p-4"
       style={{ backgroundColor: greenMix(8) }}
     >
       <p

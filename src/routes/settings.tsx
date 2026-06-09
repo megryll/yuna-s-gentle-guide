@@ -177,7 +177,7 @@ function SettingsRoute() {
 
 function CardGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-sm flex flex-col">
+    <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md flex flex-col">
       {children}
     </div>
   );
