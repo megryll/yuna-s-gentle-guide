@@ -1,6 +1,6 @@
 # DS Compliance Audit — Progress Handoff
 
-_Last updated: 2026-06-08 (session 4 — Creating Your Space)_
+_Last updated: 2026-06-09 (session 5 — cross-cutting fixes applied)_
 
 ## What this is
 
@@ -16,28 +16,59 @@ Intro**. Rules of engagement:
 
 ## Git state
 
-- Branch: `main`. Last commit: `a5a9a58`.
-- **Everything below is UNCOMMITTED.** Build passes. `.claude/` (a local lock)
-  is untracked — do **not** commit it.
-- Suggested next step: commit this session's work before continuing.
+- Session 5 fixes live on branch **`ds-audit-remaining-fixes`** (7 atomic
+  commits), branched off `main`. Build passes on every commit. Not yet merged.
 
-## ⏯ Resume here — SCREEN SWEEP COMPLETE
+## ⏯ Resume here — ALL CROSS-CUTTING THEMES + BUILDING BLOCKS FIXED
 
-**Every screen in `AdminSidebar` PAGES is audited** (see "✅ SWEEP COMPLETE" below
-for coverage + the 7 cross-cutting themes). All findings only — nothing changed.
+**Session 5 (2026-06-09) cleared the entire remaining punch list.** All 7
+cross-cutting themes are resolved and the three un-audited building blocks are
+done. See "✅ Session 5 — fixes applied" below for the per-theme detail.
 
-**Next is a decision, not more auditing:** pick a cross-cutting theme to fix
-source-first (the **type-scale decision** unblocks the most), get approval, then
-propagate via props. Remaining audit work is **building blocks**, not screens:
-`profile-components.tsx`, `PastSessionCard`, `Waveform`.
+**What's actually left:**
+- **Human 4-combo eyeball** (dark×light, iOS×Android) on the changed app
+  screens — most importantly the PastSessionCard light-mode change (now
+  fixed-dark, was pale-in-light, decision approved by user), the IconMedallion
+  swaps on the Sessions/Profile empty states, and the Profile stat tiles now on
+  `Surface`. Toggles live in the admin top bar.
+- **Flagged, deliberately NOT changed** (need a decision, not a silent fix):
+  - `profile-components` cards keep their brighter light-mode fill
+    (`bg-white/[0.55]`) rather than migrating to `Surface` (faint ink) — a
+    different, intentional treatment. Migrating would visibly change them.
+  - `backdrop-blur-sm` survives on out-of-scope sites (TextField, SegmentedToggle,
+    drawers, AppMenuDrawer, accept-terms, index hero, AdminSidebar). The blur
+    "standard" is genuinely split app-wide (10 md / 17 sm); `Surface` is now `md`.
+    Decide whether to standardize the rest.
+  - Wrap-up `HeroCard` keeps its mode-aware veil (it's a keepsake hero, not a
+    content tile) — intentionally not a `Card`.
 
-**Still-open from session 3 (carried, not blocking the sweep):** ~~delete the
-orphaned `accent` field + 8 hexes in `lib/home-cards.ts`?~~ ✅ done 2026-06-08.
-~~Resolve the held Card title type-scale decision~~ ✅ done. Waveform primitive
-lacks a `/ds` page. See "Next".
+## ✅ Session 5 — fixes applied (branch `ds-audit-remaining-fixes`)
 
-**Git note:** this doc's "Last commit `a5a9a58`" is stale — HEAD is now `f24484d`
-and there's a fresh batch of uncommitted Home-feed work. Don't trust the SHA below.
+1. **Type scale** — already done 2026-06-08 (see "Type-scale fix" below).
+2. **IconMedallion** — added `xl` (80px) size (component + `/ds/icons` row +
+   Props); migrated the hand-rolled `h-20 w-20` circles in Sessions and Profile
+   EmptyHeroGlow.
+3. **Surface adoption (surgical)** — Profile stat tiles → `Surface` (also fixes
+   their missing light-mode fill). Added the missing `bg-white/[0.08]` Android
+   shim so `Surface` stays defined when blur is killed. `profile-components`
+   cards intentionally left on their brighter light fill (flagged above).
+4. **Blur drift** — `Surface` standardized to `backdrop-blur-md` (propagates to
+   all Surface users on iOS; Android kills blur regardless, so this is iOS-only).
+   Bumped scoped sites: Settings card group, profile-components cards, Profile
+   preview rows.
+5. **Green** — was already tokenized; the live nits: Tools "New" pill → DS
+   `Badge`; the pale-mint `#cdebb5` hex → new `--mint` token. (AppBar dot was
+   already tokenized — audit note was stale.)
+6. **Sub-floor contrast** — lifted `/60`/`/65` reader text to the `/75` floor:
+   Profile preview rows + Focus Area eyebrow/count/labels/"+N more", Focus-area
+   screen eyebrow, Wrap-up "Session complete" eyebrow. Decorative arrows left.
+7. **Padding** — Wrap-up: moved hero `pt-14` off the scroll wrapper onto its
+   first child, `pb-10`→`pb-6`. Horizontal `px-8` left (rule permits px-8/px-6
+   per cluster — the "pick one" audit note was stricter than the actual rule).
+
+**Building blocks:** `profile-components` (contrast + blur + mint token),
+`PastSessionCard` (now the `Card` `compact` variant — fixed-dark, header/footer
+omitted), `Waveform` (new `/ds/waveform` page + sidebar entry).
 
 ## Done this session
 
