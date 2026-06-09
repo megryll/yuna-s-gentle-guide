@@ -179,11 +179,11 @@ function WrapUp() {
 }
 
 // ── Hero keepsake card ────────────────────────────────────────────────────────
-// A nature photo behind a centered keepsake line and a Share action. The tint
-// lightens the photo on the light cluster (so the inverted ink keepsake reads)
-// and darkens it on the dark cluster (for white copy) — same mode-aware
-// convention as PastSessionCard, since inline backgrounds are invisible to the
-// .theme-light shim.
+// A nature photo behind a centered keepsake line and a Share action. The
+// keepsake hero keeps a mode-aware veil — the tint lightens the photo on the
+// light cluster (so the inverted ink keepsake reads) and darkens it on the dark
+// cluster (for white copy), since inline backgrounds are invisible to the
+// .theme-light shim. (Distinct from the content Card, which is fixed-dark.)
 function HeroCard({
   message,
   avatar,

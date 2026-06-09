@@ -26,6 +26,10 @@ import { Badge } from "@/components/Badge";
  *   naturePath: string           — background photo (dark-washed)
  *   solidFill?: string           — flat fill (overrides photo)
  *   isNew?:    boolean           — green "New" flag, top-left
+ *   compact?:  boolean           — short auto-height row instead of the
+ *                                  square tile (e.g. past-session cards)
+ *   onClick?:  () => void        — makes the card a pressable button
+ *   style?:    CSSProperties      — merged into the bg style (e.g. anim delay)
  *
  * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
@@ -66,6 +70,9 @@ export function Card({
   isNew,
   naturePath,
   solidFill,
+  compact,
+  onClick,
+  style: styleProp,
   className,
   children,
 }: {
@@ -73,6 +80,9 @@ export function Card({
   isNew?: boolean;
   naturePath?: string;
   solidFill?: string;
+  compact?: boolean;
+  onClick?: () => void;
+  style?: React.CSSProperties;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -81,24 +91,39 @@ export function Card({
   // Solid cards carry a fixed fill; photo cards get the dark photo wash. Either
   // way the look is mode-independent — a dark-toned card pins its white ink
   // against `.theme-light` via `card-fixed-dark`.
-  const style: React.CSSProperties = solidFill
+  const bg: React.CSSProperties = solidFill
     ? { backgroundColor: solidFill }
     : cardSurface({ naturePath: naturePath ?? "" }).style;
+  const style = { ...bg, ...styleProp };
+
+  // `relative` so absolutely-positioned children (e.g. a compact row's trailing
+  // arrow) anchor to the card itself. The square tile is the default; `compact`
+  // is a short, auto-height row.
+  const shell = cn(
+    "relative flex flex-col overflow-hidden",
+    compact ? "rounded-3xl p-5 pb-4" : "rounded-[2.5rem] px-5 py-7 aspect-square",
+    isDark ? "text-white" : "text-neutral-900",
+    isDark && "card-fixed-dark",
+    className,
+  );
 
   return (
     <div className="relative">
       {isNew && <NewBadge className="-top-2 left-5" />}
-      <div
-        className={cn(
-          "rounded-[2.5rem] px-5 py-7 aspect-square flex flex-col overflow-hidden",
-          isDark ? "text-white" : "text-neutral-900",
-          isDark && "card-fixed-dark",
-          className,
-        )}
-        style={style}
-      >
-        {children}
-      </div>
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          style={style}
+          className={cn(shell, "w-full text-left active:opacity-90 transition-opacity")}
+        >
+          {children}
+        </button>
+      ) : (
+        <div style={style} className={shell}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { useAppMode } from "@/lib/theme-prefs";
+import { Card } from "@/components/Card";
 import type { PastSession } from "@/lib/sessions";
 
 const SESSION_NATURE_BGS = [
@@ -10,6 +10,11 @@ const SESSION_NATURE_BGS = [
   "/nature/Background-16.png",
 ];
 
+// A past session is the content Card's compact row variant: the photo-tinted
+// shell with the header (eyebrow + More) and footer (save / share + CTA) left
+// off, leaving just the date·length meta, the title, and a trailing arrow.
+// Like every photo Card it's fixed-dark — white ink on a dark wash in both
+// app modes (no mode-aware veil).
 export function PastSessionCard({
   session,
   index = 0,
@@ -19,30 +24,20 @@ export function PastSessionCard({
   index?: number;
   onClick?: () => void;
 }) {
-  const mode = useAppMode();
-  const isLight = mode === "light";
-
   const natureBg = SESSION_NATURE_BGS[index % SESSION_NATURE_BGS.length];
-  const tint = isLight ? "rgba(255, 255, 255, 0.72)" : "rgba(0, 0, 0, 0.55)";
 
-  const strokeClass = isLight
-    ? "ring-1 ring-black/10"
-    : "ring-1 ring-white/15";
-
-  const style = {
-    animationDelay: `${index * 60}ms`,
-    backgroundImage: `linear-gradient(${tint}, ${tint}), url(${natureBg})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  };
-
-  const inner = (
-    <>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs tracking-[0.2em] uppercase text-white/70">
-          {session.date} · {session.length}
-        </p>
-      </div>
+  return (
+    <Card
+      tone="dark"
+      naturePath={natureBg}
+      compact
+      onClick={onClick}
+      style={{ animationDelay: `${index * 60}ms` }}
+      className="yuna-rise gap-3"
+    >
+      <p className="text-xs tracking-[0.2em] uppercase text-white/75">
+        {session.date} · {session.length}
+      </p>
       <p className="font-display text-xl leading-tight tracking-tight text-white pr-12">
         {session.title}
       </p>
@@ -53,28 +48,6 @@ export function PastSessionCard({
       >
         <ArrowRight size={14} strokeWidth={2} />
       </span>
-    </>
-  );
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        style={style}
-        className={`yuna-rise w-full text-left rounded-3xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass} active:opacity-90 transition-opacity`}
-      >
-        {inner}
-      </button>
-    );
-  }
-
-  return (
-    <div
-      style={style}
-      className={`yuna-rise w-full text-left rounded-3xl p-5 pb-4 flex flex-col gap-3 overflow-hidden relative ${strokeClass}`}
-    >
-      {inner}
-    </div>
+    </Card>
   );
 }
