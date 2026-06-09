@@ -113,10 +113,13 @@ function WrapUp() {
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
       <div className="flex-1 flex flex-col px-8 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-16 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 flex flex-col gap-16 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Top cluster — the label/close bar and keepsake card stay tight;
-              the wider section gap only kicks in from the reflection onward. */}
-          <div className="flex flex-col gap-6">
+              the wider section gap only kicks in from the reflection onward.
+              pt-14 lives here (the first scroll child, like a back-arrow
+              header) rather than on the scroll wrapper, so it doesn't eat
+              viewport per the photo-bg-scrolling padding rule. */}
+          <div className="flex flex-col gap-6 pt-14">
             {/* ── Title bar: centered eyebrow, close button pinned right ──── */}
             <div className="relative flex items-center justify-center">
               <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
