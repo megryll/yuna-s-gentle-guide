@@ -2,6 +2,7 @@ import * as React from "react";
 import { Bookmark, MoreHorizontal, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/Button";
+import { Badge } from "@/components/Badge";
 
 /**
  * Content card primitive — the rounded photo-tinted tile behind Home's
@@ -55,19 +56,9 @@ export function cardSurface({
 }
 
 export function NewBadge({ className }: { className?: string }) {
-  // White-on-green in both app modes. `card-fixed-dark` pins the inner
-  // `text-white` against the `.theme-light` shim (which would otherwise invert
-  // it to ink in light mode); the green fill isn't a shim target, so it holds.
-  return (
-    <span
-      className={cn(
-        "absolute z-10 text-uppercase tracking-[0.2em] uppercase pl-2.5 pr-2 py-1 rounded-full shadow bg-secondary-green card-fixed-dark",
-        className,
-      )}
-    >
-      <span className="text-white">New</span>
-    </span>
-  );
+  // The corner "New" flag is the DS Badge pinned to the card with absolute
+  // positioning supplied by the caller.
+  return <Badge className={cn("absolute z-10", className)}>New</Badge>;
 }
 
 export function Card({
@@ -99,7 +90,7 @@ export function Card({
       {isNew && <NewBadge className="-top-2 left-5" />}
       <div
         className={cn(
-          "rounded-[2.5rem] p-5 aspect-square flex flex-col overflow-hidden",
+          "rounded-[2.5rem] px-5 py-7 aspect-square flex flex-col overflow-hidden",
           isDark ? "text-white" : "text-neutral-900",
           isDark && "card-fixed-dark",
           className,

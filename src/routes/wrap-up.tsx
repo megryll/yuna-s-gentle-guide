@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { ChevronDown, Share2, User, X } from "lucide-react";
+import { Share2, User, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { Slider } from "@/components/Slider";
 import { Surface } from "@/components/Surface";
-import { YunaAvatar } from "@/components/YunaAvatar";
+import { Accordion } from "@/components/Accordion";
+import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -79,22 +81,26 @@ const FALLBACK_QUOTES = [
 
 function WrapUp() {
   const navigate = useNavigate();
-  const { name, avatar } = useYunaIdentity();
+  const { avatar } = useYunaIdentity();
   const idRef = useRef<string>(keepsakeUid());
 
   const quotes = useMemo(() => extractQuotes(), []);
   const displayQuotes = quotes.length > 0 ? quotes : FALLBACK_QUOTES;
-  // Drop-shadow lifts white copy off the dark photo; in light mode the heading
-  // inverts to ink and the shadow reads as a halo, so drop it.
-  const mode = useAppMode();
+
+  // Bipolar reflection sliders rest at center (0). Touched flags let us persist
+  // null when the user never moved them, so "neutral" stays distinct from "no input."
+  const [stress, setStress] = useState(0);
+  const [mood, setMood] = useState(0);
+  const [stressTouched, setStressTouched] = useState(false);
+  const [moodTouched, setMoodTouched] = useState(false);
 
   const onDone = () => {
     const k: Keepsake = {
       id: idRef.current,
       quote: HERO_MESSAGE,
       themes: [],
-      mood: null,
-      stress: null,
+      mood: moodTouched ? mood : null,
+      stress: stressTouched ? stress : null,
       createdAt: Date.now(),
     };
     saveKeepsake(k);
@@ -107,43 +113,47 @@ function WrapUp() {
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
       <div className="flex-1 flex flex-col px-8 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-9 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex justify-end -mb-4">
-            <Button
-              surface="dark"
-              variant="secondary"
-              size="icon"
-              onClick={onDone}
-              aria-label="Close wrap-up"
-            >
-              <X strokeWidth={1.6} aria-hidden />
-            </Button>
+        <div className="flex-1 flex flex-col gap-16 overflow-y-auto overflow-x-hidden -mx-2 px-2 pt-14 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Top cluster — the label/close bar and keepsake card stay tight;
+              the wider section gap only kicks in from the reflection onward. */}
+          <div className="flex flex-col gap-6">
+            {/* ── Title bar: centered eyebrow, close button pinned right ──── */}
+            <div className="relative flex items-center justify-center">
+              <p className="text-uppercase tracking-[0.32em] uppercase text-white/65">
+                Session complete
+              </p>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                <Button
+                  surface="dark"
+                  variant="plain"
+                  size="icon"
+                  onClick={onDone}
+                  aria-label="Close wrap-up"
+                >
+                  <X strokeWidth={1.6} aria-hidden />
+                </Button>
+              </div>
+            </div>
+
+            {/* ── Hero keepsake card ──────────────────────────────────────── */}
+            <HeroCard message={HERO_MESSAGE} avatar={avatar} onShare={() => undefined} />
           </div>
 
-          {/* ── Header ──────────────────────────────────────────────────── */}
-          <header className="flex flex-col items-center text-center gap-3 pt-6 yuna-fade-in">
-            <IconMedallion size="md">
-              {avatar ? (
-                <YunaAvatar variant={avatar} size={56} />
-              ) : (
-                <User size={24} strokeWidth={1.6} className="text-white" aria-hidden />
-              )}
-            </IconMedallion>
-            <h1
-              className={
-                "font-display text-3xl leading-tight text-white" +
-                (mode === "dark" ? " drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]" : "")
-              }
-            >
-              Well done{name ? `, ${name}` : ""}!
-            </h1>
-            <p className="text-base leading-relaxed text-white/85">
-              Congrats on completing this session.
-            </p>
-          </header>
-
-          {/* ── Hero keepsake card ──────────────────────────────────────── */}
-          <HeroCard message={HERO_MESSAGE} onShare={() => undefined} />
+          {/* ── Reflection: how did the session land? ───────────────────── */}
+          <ReflectionSection
+            stress={stress}
+            stressTouched={stressTouched}
+            onStressChange={(v) => {
+              setStress(v);
+              setStressTouched(true);
+            }}
+            mood={mood}
+            moodTouched={moodTouched}
+            onMoodChange={(v) => {
+              setMood(v);
+              setMoodTouched(true);
+            }}
+          />
 
           {/* ── Emotions ────────────────────────────────────────────────── */}
           <EmotionsSection emotions={EMOTIONS} />
@@ -166,13 +176,42 @@ function WrapUp() {
 }
 
 // ── Hero keepsake card ────────────────────────────────────────────────────────
-// Frosted card sized to its content: a centered keepsake line and a Share action.
-function HeroCard({ message, onShare }: { message: string; onShare: () => void }) {
+// A nature photo behind a centered keepsake line and a Share action. The tint
+// lightens the photo on the light cluster (so the inverted ink keepsake reads)
+// and darkens it on the dark cluster (for white copy) — same mode-aware
+// convention as PastSessionCard, since inline backgrounds are invisible to the
+// .theme-light shim.
+function HeroCard({
+  message,
+  avatar,
+  onShare,
+}: {
+  message: string;
+  avatar: AvatarVariant | null;
+  onShare: () => void;
+}) {
+  const isLight = useAppMode() === "light";
+  const tint = isLight ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.55)";
+  const ring = isLight ? "ring-1 ring-black/10" : "ring-1 ring-white/15";
   return (
-    <Surface
-      as="section"
-      className="px-6 py-7 flex flex-col items-center text-center gap-5 yuna-rise"
+    <section
+      style={{
+        backgroundImage: `linear-gradient(${tint}, ${tint}), url(/nature/Background-13.png)`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+      className={
+        "shrink-0 rounded-2xl overflow-hidden px-6 py-7 flex flex-col items-center text-center gap-5 yuna-rise " +
+        ring
+      }
     >
+      <IconMedallion size="lg">
+        {avatar ? (
+          <YunaAvatar variant={avatar} size={64} />
+        ) : (
+          <User size={26} strokeWidth={1.6} className="text-white" aria-hidden />
+        )}
+      </IconMedallion>
       <p className="font-display italic text-2xl leading-[1.35] text-white max-w-[260px]">
         {message}
       </p>
@@ -180,7 +219,56 @@ function HeroCard({ message, onShare }: { message: string; onShare: () => void }
         <Share2 size={15} strokeWidth={1.8} aria-hidden />
         Share
       </Button>
-    </Surface>
+    </section>
+  );
+}
+
+// ── Reflection: how did the session land? ──────────────────────────────────────
+// Two center-out (bipolar) sliders let the user self-report the directional shift
+// the session produced — stress and mood. Rests at center; the active end label
+// emphasises once moved. Lives outside a card so it reads at body width.
+function ReflectionSection({
+  stress,
+  stressTouched,
+  onStressChange,
+  mood,
+  moodTouched,
+  onMoodChange,
+}: {
+  stress: number;
+  stressTouched: boolean;
+  onStressChange: (v: number) => void;
+  mood: number;
+  moodTouched: boolean;
+  onMoodChange: (v: number) => void;
+}) {
+  return (
+    <section className="flex flex-col gap-9 yuna-rise">
+      <h2 className="font-display text-xl leading-tight text-white text-center">
+        How did this session land?
+      </h2>
+
+      <div className="flex flex-col gap-9">
+        <Slider
+          variant="bipolar"
+          surface="dark"
+          leftLabel="Increased stress"
+          rightLabel="Decreased stress"
+          value={stress}
+          touched={stressTouched}
+          onChange={onStressChange}
+        />
+        <Slider
+          variant="bipolar"
+          surface="dark"
+          leftLabel="Worsened mood"
+          rightLabel="Improved mood"
+          value={mood}
+          touched={moodTouched}
+          onChange={onMoodChange}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -275,35 +363,26 @@ function EmotionRow({
 }) {
   return (
     <Surface radius="xl" className="overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-white/[0.04] transition-colors"
+      <Accordion
+        open={expanded}
+        onOpenChange={onToggle}
+        triggerLabel={emotion.name}
+        header={
+          <>
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 rounded-full shrink-0"
+              style={{ background: emotion.color }}
+            />
+            <span className="flex-1 text-base text-white/90">{emotion.name}</span>
+            <span className="text-sm font-medium tracking-[0.02em] text-white/75">
+              {emotion.value}%
+            </span>
+          </>
+        }
       >
-        <span
-          aria-hidden
-          className="h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ background: emotion.color }}
-        />
-        <span className="flex-1 text-base text-white/90">{emotion.name}</span>
-        <span className="text-sm font-medium tracking-[0.02em] text-white/75">
-          {emotion.value}%
-        </span>
-        <ChevronDown
-          size={16}
-          strokeWidth={2}
-          aria-hidden
-          className={
-            "text-white/55 transition-transform duration-200 " + (expanded ? "rotate-180" : "")
-          }
-        />
-      </button>
-      {expanded && (
-        <p className="px-4 pb-3.5 -mt-0.5 text-sm leading-relaxed text-white/75">
-          {emotion.note}
-        </p>
-      )}
+        <p className="px-4 pb-3.5 text-sm leading-relaxed text-white/75">{emotion.note}</p>
+      </Accordion>
     </Surface>
   );
 }

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  *   - "dark"  — dark or photo backgrounds
  *   - "light" — light backgrounds
  *
- * size: "md" (default) | "sm" (compact) | "lg" (large)
+ * size: "md" (default) | "lg" (large)
  *
  * leading / trailing: optional elements rendered inside the pill on the
  *   left / right (e.g. a status indicator or a send button).
@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
  */
 export interface TextFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   surface?: "dark" | "light";
-  size?: "md" | "sm" | "lg";
+  size?: "md" | "lg";
   error?: boolean;
   active?: boolean;
   leading?: React.ReactNode;
@@ -65,8 +65,6 @@ const SURFACE_LIGHT_ERROR = "border-alert-orange bg-white/40 focus-within:border
 // fields with an icon-sm trailing button (h-8), so the pill reads
 // consistently whether or not a trailing control is present.
 const SIZE_MD = "pl-5 py-1.5 min-h-11 text-sm";
-// Compact — used inside cards (e.g. the gratitude journal rows).
-const SIZE_SM = "pl-4 py-1.5 text-sm";
 // Large — roomier pill for hero/standalone fields. Min-height pairs with an
 // icon-lg trailing button (h-11) the way md pairs with icon-sm.
 const SIZE_LG = "pl-6 py-2.5 min-h-14 text-base";
@@ -97,20 +95,16 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
         : surface === "dark"
           ? SURFACE_DARK
           : SURFACE_LIGHT;
-    const sizeClass = size === "lg" ? SIZE_LG : size === "sm" ? SIZE_SM : SIZE_MD;
+    const sizeClass = size === "lg" ? SIZE_LG : SIZE_MD;
     // Inner trailing-aware right padding: small when a control is tucked
     // inside the pill, generous when the field is just text.
     const rightPad = trailing
       ? size === "lg"
         ? "pr-2"
-        : size === "md"
-          ? "pr-1.5"
-          : "pr-1"
+        : "pr-1.5"
       : size === "lg"
         ? "pr-6"
-        : size === "md"
-          ? "pr-5"
-          : "pr-4";
+        : "pr-5";
 
     const inputColor =
       surface === "dark"

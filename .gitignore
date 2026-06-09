@@ -24,6 +24,9 @@ api/_ssr
 .wrangler/
 .dev.vars
 
+# Claude Code local state (scheduling lock, etc.)
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -79,8 +79,7 @@ export type CardKind = HomeCard["type"];
 
 export type CardKindMeta = {
   label: string;
-  accent: string;
-  // dark = white text on accent-tinted dark gradient
+  // dark = white text on a tinted-photo gradient
   // light = dark text on pale warm bg
   tone: "dark" | "light";
   action: "play" | "arrow" | "check";
@@ -96,7 +95,6 @@ export type CardKindMeta = {
 export const KIND_META: Record<CardKind, CardKindMeta> = {
   "guided-session": {
     label: "Guided Session",
-    accent: "#5E8B6D",
     tone: "dark",
     action: "play",
     ctaLabel: "Begin session",
@@ -104,7 +102,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   meditation: {
     label: "Personalised Meditation",
-    accent: "#6FA88B",
     tone: "dark",
     action: "play",
     ctaLabel: "Try this meditation",
@@ -112,7 +109,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   gratitude: {
     label: "Gratitude List",
-    accent: "#C7916A",
     tone: "light",
     action: "arrow",
     ctaLabel: "My gratitude journal",
@@ -121,7 +117,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   "self-discovery": {
     label: "Questionnaire",
-    accent: "#5E9389",
     tone: "dark",
     action: "arrow",
     ctaLabel: "Try it now",
@@ -130,7 +125,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   affirmation: {
     label: "Affirmation",
-    accent: "#B58547",
     tone: "dark",
     action: "play",
     ctaLabel: "Play affirmation",
@@ -138,7 +132,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   "learn-skill": {
     label: "Recommended Skill",
-    accent: "#7BB068",
     tone: "dark",
     action: "arrow",
     ctaLabel: "Learn this skill",
@@ -147,7 +140,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   accountability: {
     label: "Accountability Partner",
-    accent: "#7E84CC",
     tone: "dark",
     action: "check",
     ctaLabel: "Mark as done",
@@ -155,7 +147,6 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
   book: {
     label: "Book Recommendation",
-    accent: "#8FB46A",
     tone: "light",
     action: "check",
     ctaLabel: "I read this",

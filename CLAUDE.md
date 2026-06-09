@@ -121,6 +121,7 @@ DS components take `surface` — pass it, don't restyle. When unset it defaults 
 
 - Inconsistent padding/styling that pre-dates the change — propose a standardization, don't quietly rewrite.
 - Unused props/types after a refactor — surface them, ask before deleting.
+- A component or variant with no remaining call sites — once a change removes the last real usage of a DS component, variant, size, or prop, flag it and propose deleting it (component + its DS page entry + sidebar registration) rather than leaving dead code. "Real usage" excludes the component's own `/ds/*` page and `ds-docs/` — a primitive referenced only by its own showcase is orphaned. Don't delete without surfacing it first.
 - A DS-shaped need that doesn't fit an existing variant — propose adding it instead of working around it with `className` overrides.
 - Build break or TS error encountered during a sweep — stop and report, don't paper over.
 

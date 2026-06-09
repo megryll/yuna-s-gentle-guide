@@ -31,9 +31,10 @@ source-first (the **type-scale decision** unblocks the most), get approval, then
 propagate via props. Remaining audit work is **building blocks**, not screens:
 `profile-components.tsx`, `PastSessionCard`, `Waveform`.
 
-**Still-open from session 3 (carried, not blocking the sweep):** delete the
-orphaned `accent` field + 8 hexes in `lib/home-cards.ts`? Resolve the held Card
-title type-scale decision. Waveform primitive lacks a `/ds` page. See "Next".
+**Still-open from session 3 (carried, not blocking the sweep):** ~~delete the
+orphaned `accent` field + 8 hexes in `lib/home-cards.ts`?~~ ✅ done 2026-06-08.
+~~Resolve the held Card title type-scale decision~~ ✅ done. Waveform primitive
+lacks a `/ds` page. See "Next".
 
 **Git note:** this doc's "Last commit `a5a9a58`" is stale — HEAD is now `f24484d`
 and there's a fresh batch of uncommitted Home-feed work. Don't trust the SHA below.
@@ -201,9 +202,10 @@ surface-flip) and the top-bar Upgrade/Menu (`Button`).
   from `cardSurface`/`Card` (and the `accent` prop + 8 `accent={meta.accent}`
   call sites; `naturePath` is now required). DS page no longer documents a
   Gradient variant or a Saved state.
-- **FLAG — orphaned `accent`:** `CardKindMeta.accent` + the 8 `accent` hexes in
-  `lib/home-cards.ts` are now read by nothing. Left in place pending an OK to
-  delete (per "flag, don't silently delete").
+- **~~FLAG — orphaned `accent`~~ ✅ RESOLVED 2026-06-08:** `CardKindMeta.accent`
+  + the 8 `accent` hexes in `lib/home-cards.ts` were read by nothing (dead since
+  the gradient fallback was removed). Deleted the field + 8 entries + tidied the
+  stale "accent-tinted" comment. Build passes.
 - **Folded in:** `#66BA24` → `bg-yuna-green` (NewBadge, both tile + row); the
   deferred **card glyph buttons** (More, bookmark) → `<Button variant="plain"
   size="icon-sm">` with `-mt/-mr/-ml` nudges to hold their corner positions.
@@ -218,9 +220,12 @@ silently applied:
   `text-[22px]` (standard, off-scale) / `text-[20px]`. DS scale has text-2xl(24),
   text-xl(20); 22 isn't on it. Standardizing (e.g. 22→text-xl) shrinks every
   card title — a real visual change. Awaiting a call.
-- **`CardCTA` override** — still `className="h-10 px-5 text-[12.5px] uppercase
-  tracking-[0.1em]"` on a secondary Button. Kept as a card-local preset; could
-  become a proper Button size instead.
+- **~~`CardCTA` override~~ ✅ RESOLVED 2026-06-08 — keep as card-local preset.**
+  The off-scale font is gone (type-scale fix already moved it to `text-xs`). What
+  remains (`h-10 px-5 uppercase tracking-[0.1em]`) is an editorial content-card
+  treatment (matches `DailyTag`), not a Button size — and the DS has been
+  *removing* uppercase-tracking from generic Buttons (session 1 accept-terms).
+  Single wrapper (1 consumer) → a new Button size fails rule 10. Left as-is.
 - **Gradient fallback hex** — `#F4ECDE`/`#EFE3CC`/`rgba(15,18,24…)` in
   `cardSurface` (no-photo path). Bespoke, like employer-access `PassCard` / the
   intro chart. Only hit when a card has no `naturePath` (rare).

@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardCTA, CardFooter, CardHeader } from "@/components/Card";
+import { HomeCardRow } from "@/components/HomeCards";
+import type { HomeCard } from "@/lib/home-cards";
 import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/cards")({
   head: () => ({
     meta: [
       { title: "Design System — Cards" },
-      { name: "description", content: "Photo-tinted content tile with header, body, and footer." },
+      { name: "description", content: "Photo-tinted content tile with header, body, and footer — plus its list-row layout." },
     ],
   }),
   component: DSCards,
@@ -20,16 +22,12 @@ function DSCards() {
         <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
 
-      <Section title="States">
-        <SurfaceMatrix rows={STATE_ROWS} />
-      </Section>
-
       <Section title="Props">
         <PropsBlock>{`<Card
   tone:       "dark" | "light"   // content tone (dark = white text)
   naturePath: string             // background photo (always dark-washed)
   solidFill?: string             // flat fill instead of photo
-  isNew?:     boolean            // green "New" flag, top-left
+  isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
 >
   <CardHeader
     meta:     { label, tone }
@@ -49,6 +47,12 @@ function DSCards() {
 
 <CardCTA tone onClick>{label}</CardCTA>   // uppercase-tracked secondary button
 
+<HomeCardRow
+  card:         HomeCard          // feed item rendered as a horizontal row
+  onClick:      () => void
+  interactive?: boolean           // default true; false = static (display-only)
+/>                                 // the list-view layout of the same content card
+
 // A card's look is FIXED across the app's light/dark toggle. Photo cards always
 // use the dark cluster (black wash + white ink). Solid cards carry a fixed
 // fill: pair a pale fill with tone "light" (dark ink) or a deep fill with tone
@@ -60,6 +64,22 @@ function DSCards() {
 }
 
 const NATURE = "/nature/Background-1.png";
+
+// Sample feed items for the list-row layout.
+const ROW_PHOTO: HomeCard = {
+  type: "meditation",
+  id: "demo-row-photo",
+  title: "A Five-Minute Midday Reset",
+  cadence: "Daily",
+  naturePath: NATURE,
+};
+const ROW_SOLID: HomeCard = {
+  type: "learn-skill",
+  id: "demo-row-solid",
+  title: "The Non-Judgemental Skill",
+  eyebrow: "Recommended Skill",
+  naturePath: NATURE,
+};
 
 // Light cluster content inverts via .theme-light (as on Home in light mode);
 // the matrix panels don't add it, so wrap the light render to match.
@@ -77,18 +97,23 @@ const VARIANT_ROWS: MatrixRow[] = [
     label: "Solid (dark)",
     render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#2C5C3D" />),
   },
+  { label: "List row", render: (s) => withCluster(s, <DemoRow />) },
 ];
 
-const STATE_ROWS: MatrixRow[] = [
-  { label: "Default", render: (s) => withCluster(s, <DemoCard />) },
-  { label: "New", render: (s) => withCluster(s, <DemoCard isNew />) },
-];
+function DemoRow() {
+  return (
+    <div className="max-w-[340px] flex flex-col gap-3">
+      <HomeCardRow card={ROW_PHOTO} onClick={() => {}} interactive={false} />
+      <HomeCardRow card={ROW_SOLID} onClick={() => {}} interactive={false} />
+    </div>
+  );
+}
 
-function DemoCard({ isNew }: { isNew?: boolean }) {
+function DemoCard() {
   const [saved, setSaved] = useState(false);
   return (
     <div className="max-w-[300px]">
-      <Card tone="dark" naturePath={NATURE} isNew={isNew}>
+      <Card tone="dark" naturePath={NATURE}>
         <CardHeader meta={{ label: "Meditation", tone: "dark" }} cadence="Daily" />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">

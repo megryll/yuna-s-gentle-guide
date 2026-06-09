@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/Button";
+import { Accordion } from "@/components/Accordion";
+import { Badge } from "@/components/Badge";
 import type { Insight } from "@/lib/profile-data";
 import { useAppMode } from "@/lib/theme-prefs";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -146,7 +148,6 @@ export function InsightCard({
   const { emoji, title, desc, meaning, yunaQuote, date } = insight;
   const mode = useAppMode();
   const isLight = mode === "light";
-  const tagText = isLight ? GREEN : "#cdebb5";
   const cardBg = isLight ? "bg-white/[0.55]" : "bg-white/[0.06]";
   const { avatar } = useYunaIdentity();
 
@@ -155,41 +156,24 @@ export function InsightCard({
       className={`rounded-2xl overflow-hidden border border-white/15 ${cardBg} backdrop-blur-sm`}
       style={accentLeft ? { borderLeft: `3px solid ${GREEN_ACCENT}` } : undefined}
     >
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full p-4 flex items-center gap-3 text-left active:bg-white/[0.04] transition-colors"
-        aria-expanded={expanded}
-      >
-        <span
-          className="h-9 w-9 rounded-lg shrink-0 flex items-center justify-center bg-white/10"
-          aria-hidden
-        >
-          <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
-        </span>
-        <span className="flex-1 min-w-0 flex items-center gap-2">
-          <span className="text-sm font-normal leading-[22px] text-white truncate">{title}</span>
-          {date && (
+      <Accordion
+        open={expanded}
+        onOpenChange={setExpanded}
+        triggerLabel={title}
+        header={
+          <>
             <span
-              className="text-uppercase font-bold tracking-[0.04em] uppercase rounded-md px-1.5 py-0.5 shrink-0"
-              style={{ backgroundColor: greenMix(20), color: tagText }}
+              className="h-9 w-9 rounded-lg shrink-0 flex items-center justify-center bg-white/10"
+              aria-hidden
             >
-              {date}
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
             </span>
-          )}
-        </span>
-        <ChevronDown
-          size={14}
-          strokeWidth={1.75}
-          className="shrink-0 text-white/60 transition-transform"
-          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
-          aria-hidden
-        />
-      </button>
-
-      <div
-        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
-        style={{ maxHeight: expanded ? 600 : 0, opacity: expanded ? 1 : 0 }}
+            <span className="flex-1 min-w-0 flex items-center gap-2">
+              <span className="text-sm font-normal leading-[22px] text-white truncate">{title}</span>
+              {date && <Badge className="shrink-0">{date}</Badge>}
+            </span>
+          </>
+        }
       >
         <div className="flex flex-col gap-4 px-4 pb-6">
           <span aria-hidden className="h-px bg-white/12" />
@@ -208,7 +192,7 @@ export function InsightCard({
                       className="mt-2 h-1 w-1 rounded-full shrink-0"
                       style={{ backgroundColor: GREEN_ACCENT }}
                     />
-                    <span className="text-xs leading-[18px] text-white/80">{item}</span>
+                    <span className="text-sm leading-[22px] text-white/80">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -243,7 +227,7 @@ export function InsightCard({
             </div>
           )}
         </div>
-      </div>
+      </Accordion>
     </div>
   );
 }

@@ -1,5 +1,3 @@
-import { useSentimentToneColor } from "@/components/SentimentTag";
-
 export type SessionTag = { label: string; emoji: string; tone: "positive" | "negative" };
 
 export type TranscriptTurn = { from: "you" | "yuna"; text: string };
@@ -17,23 +15,23 @@ export type PastSession = {
   highlights: SessionHighlight[];
 };
 
-// Emotion → readable hue. Mirrors the wrap-up palette so detail pages and
-// the wrap-up screen feel like the same surface. Green + orange-family
-// emotions reuse the SentimentTag palette so they match positive/negative
-// tags across the app.
+// Emotion → readable hue. Mirrors the wrap-up palette so detail pages and the
+// wrap-up screen feel like the same surface. Positive/negative emotions reuse
+// the brand green / alert orange so they read as one language across the app.
 export function useSessionEmotionColors(): Record<string, string> {
-  const toneColor = useSentimentToneColor();
+  const POSITIVE = "var(--secondary-green)";
+  const NEGATIVE = "var(--alert-orange)";
   return {
     Overwhelm: "#F7A7A7",
-    Relief: toneColor("positive"),
-    Resolve: toneColor("negative"),
+    Relief: POSITIVE,
+    Resolve: NEGATIVE,
     Hopefulness: "#A7C7E7",
     "Self-compassion": "#C5B6E0",
-    Gratitude: toneColor("negative"),
+    Gratitude: NEGATIVE,
     Tenderness: "#F2B4D3",
     Curiosity: "#B5DEDB",
     Clarity: "#A7C7E7",
-    Pride: toneColor("negative"),
+    Pride: NEGATIVE,
   };
 }
 

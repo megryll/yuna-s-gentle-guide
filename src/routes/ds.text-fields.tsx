@@ -52,7 +52,6 @@ const SIZE_ROWS: MatrixRow[] = [
     label: "Regular",
     render: (s) => <TextField surface={s} placeholder="Add a note for yourself…" />,
   },
-  { label: "Compact", render: (s) => <TextField surface={s} size="sm" placeholder="Type here…" /> },
   { label: "Large", render: (s) => <TextField surface={s} size="lg" placeholder="Enter your name" /> },
 ];
 
@@ -125,7 +124,7 @@ function DSTextFields() {
         <SurfaceMatrix rows={STATE_ROWS} />
       </Section>
 
-      <Section title="Sizes" subtitle="Regular (default) · Compact (sm) · Large (lg).">
+      <Section title="Sizes" subtitle="Regular (default) · Large (lg).">
         <SurfaceMatrix rows={SIZE_ROWS} />
       </Section>
 
@@ -139,7 +138,7 @@ function DSTextFields() {
       <Section title="Props">
         <PropsBlock>{`<TextField
   surface?:  "dark" | "light"          // default: "dark"
-  size?:     "md" | "sm" | "lg"        // Regular (default) | Compact | Large
+  size?:     "md" | "lg"               // Regular (default) | Large
   error?:    boolean                   // orange alert border + aria-invalid
   active?:   boolean                   // hold the focus border on (e.g. recording)
   leading?:  ReactNode                 // inline indicator (e.g. recording waveform)

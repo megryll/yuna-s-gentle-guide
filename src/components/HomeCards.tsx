@@ -76,7 +76,7 @@ export function HomeCardRow({
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
         className={
-          "relative w-full text-left rounded-2xl px-4 py-3.5 transition-opacity flex items-center gap-4 overflow-hidden " +
+          "relative w-full text-left rounded-2xl px-4 py-5 transition-opacity flex items-center gap-4 overflow-hidden " +
           (pinDark ? "card-fixed-dark " : "") +
           (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
         }
@@ -215,36 +215,36 @@ function GratitudeCard({
   const meta = KIND_META[card.type];
   const [entries, setEntries] = useState<[string, string, string]>(["", "", ""]);
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+    <Card
+      tone={meta.tone}
+      isNew={card.isNew}
+      naturePath={card.naturePath ?? meta.naturePath}
+      solidFill={meta.solidBg}
+    >
       <CardHeader meta={meta} cadence={card.cadence} />
       <div className="flex-1 flex flex-col justify-center">
         <p className="font-display text-xl leading-[1.75] tracking-tight text-foreground">
           {card.prompt}
         </p>
-        <ul className="mt-4 flex flex-col gap-2.5">
+        <div className="mt-4 flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
-            <li key={i} className="flex items-center gap-2.5">
-              <span className="text-uppercase tracking-[0.18em] uppercase text-foreground/55 shrink-0 w-5">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <TextField
-                surface="light"
-                size="sm"
-                containerClassName="flex-1"
-                value={entries[i]}
-                onChange={(e) =>
-                  setEntries((prev) => {
-                    const next = [...prev] as [string, string, string];
-                    next[i] = e.target.value;
-                    return next;
-                  })
-                }
-                placeholder="Type here…"
-                aria-label={`Gratitude ${i + 1}`}
-              />
-            </li>
+            <TextField
+              key={i}
+              surface="light"
+              size="lg"
+              value={entries[i]}
+              onChange={(e) =>
+                setEntries((prev) => {
+                  const next = [...prev] as [string, string, string];
+                  next[i] = e.target.value;
+                  return next;
+                })
+              }
+              placeholder="Type here…"
+              aria-label={`Gratitude ${i + 1}`}
+            />
           ))}
-        </ul>
+        </div>
       </div>
       <CardFooter
         primary={

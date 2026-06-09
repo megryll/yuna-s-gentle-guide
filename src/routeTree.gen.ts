@@ -27,11 +27,10 @@ import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
+import { Route as DsTagsRouteImport } from './routes/ds.tags'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSurfaceRouteImport } from './routes/ds.surface'
-import { Route as DsSuggestionChipRouteImport } from './routes/ds.suggestion-chip'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
-import { Route as DsSentimentTagsRouteImport } from './routes/ds.sentiment-tags'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
@@ -41,8 +40,10 @@ import { Route as DsCheckBadgeRouteImport } from './routes/ds.check-badge'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsCardsRouteImport } from './routes/ds.cards'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
+import { Route as DsBadgeRouteImport } from './routes/ds.badge'
 import { Route as DsAvatarsRouteImport } from './routes/ds.avatars'
 import { Route as DsAppBarRouteImport } from './routes/ds.app-bar'
+import { Route as DsAccordionRouteImport } from './routes/ds.accordion'
 
 const YouRoute = YouRouteImport.update({
   id: '/you',
@@ -134,6 +135,11 @@ const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
   path: '/ds/text-fields',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsTagsRoute = DsTagsRouteImport.update({
+  id: '/ds/tags',
+  path: '/ds/tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsSwitchesRoute = DsSwitchesRouteImport.update({
   id: '/ds/switches',
   path: '/ds/switches',
@@ -144,19 +150,9 @@ const DsSurfaceRoute = DsSurfaceRouteImport.update({
   path: '/ds/surface',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DsSuggestionChipRoute = DsSuggestionChipRouteImport.update({
-  id: '/ds/suggestion-chip',
-  path: '/ds/suggestion-chip',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DsSliderRoute = DsSliderRouteImport.update({
   id: '/ds/slider',
   path: '/ds/slider',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DsSentimentTagsRoute = DsSentimentTagsRouteImport.update({
-  id: '/ds/sentiment-tags',
-  path: '/ds/sentiment-tags',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
@@ -204,6 +200,11 @@ const DsButtonsRoute = DsButtonsRouteImport.update({
   path: '/ds/buttons',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsBadgeRoute = DsBadgeRouteImport.update({
+  id: '/ds/badge',
+  path: '/ds/badge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsAvatarsRoute = DsAvatarsRouteImport.update({
   id: '/ds/avatars',
   path: '/ds/avatars',
@@ -212,6 +213,11 @@ const DsAvatarsRoute = DsAvatarsRouteImport.update({
 const DsAppBarRoute = DsAppBarRouteImport.update({
   id: '/ds/app-bar',
   path: '/ds/app-bar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsAccordionRoute = DsAccordionRouteImport.update({
+  id: '/ds/accordion',
+  path: '/ds/accordion',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -230,8 +236,10 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
+  '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
@@ -241,11 +249,10 @@ export interface FileRoutesByFullPath {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
-  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
-  '/ds/suggestion-chip': typeof DsSuggestionChipRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
+  '/ds/tags': typeof DsTagsRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -266,8 +273,10 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
+  '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
@@ -277,11 +286,10 @@ export interface FileRoutesByTo {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
-  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
-  '/ds/suggestion-chip': typeof DsSuggestionChipRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
+  '/ds/tags': typeof DsTagsRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -303,8 +311,10 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
+  '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
@@ -314,11 +324,10 @@ export interface FileRoutesById {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
-  '/ds/sentiment-tags': typeof DsSentimentTagsRoute
   '/ds/slider': typeof DsSliderRoute
-  '/ds/suggestion-chip': typeof DsSuggestionChipRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
+  '/ds/tags': typeof DsTagsRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
@@ -341,8 +350,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
+    | '/ds/badge'
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
@@ -352,11 +363,10 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/segmented-toggle'
-    | '/ds/sentiment-tags'
     | '/ds/slider'
-    | '/ds/suggestion-chip'
     | '/ds/surface'
     | '/ds/switches'
+    | '/ds/tags'
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
@@ -377,8 +387,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
+    | '/ds/badge'
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
@@ -388,11 +400,10 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/segmented-toggle'
-    | '/ds/sentiment-tags'
     | '/ds/slider'
-    | '/ds/suggestion-chip'
     | '/ds/surface'
     | '/ds/switches'
+    | '/ds/tags'
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
@@ -413,8 +424,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
+    | '/ds/badge'
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
@@ -424,11 +437,10 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/segmented-toggle'
-    | '/ds/sentiment-tags'
     | '/ds/slider'
-    | '/ds/suggestion-chip'
     | '/ds/surface'
     | '/ds/switches'
+    | '/ds/tags'
     | '/ds/text-fields'
     | '/ds/toasts'
     | '/ds/typography'
@@ -450,8 +462,10 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
+  DsAccordionRoute: typeof DsAccordionRoute
   DsAppBarRoute: typeof DsAppBarRoute
   DsAvatarsRoute: typeof DsAvatarsRoute
+  DsBadgeRoute: typeof DsBadgeRoute
   DsButtonsRoute: typeof DsButtonsRoute
   DsCardsRoute: typeof DsCardsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
@@ -461,11 +475,10 @@ export interface RootRouteChildren {
   DsDrawerRoute: typeof DsDrawerRoute
   DsIconsRoute: typeof DsIconsRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
-  DsSentimentTagsRoute: typeof DsSentimentTagsRoute
   DsSliderRoute: typeof DsSliderRoute
-  DsSuggestionChipRoute: typeof DsSuggestionChipRoute
   DsSurfaceRoute: typeof DsSurfaceRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
+  DsTagsRoute: typeof DsTagsRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
   DsToastsRoute: typeof DsToastsRoute
   DsTypographyRoute: typeof DsTypographyRoute
@@ -600,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsTextFieldsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/tags': {
+      id: '/ds/tags'
+      path: '/ds/tags'
+      fullPath: '/ds/tags'
+      preLoaderRoute: typeof DsTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/switches': {
       id: '/ds/switches'
       path: '/ds/switches'
@@ -614,25 +634,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSurfaceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ds/suggestion-chip': {
-      id: '/ds/suggestion-chip'
-      path: '/ds/suggestion-chip'
-      fullPath: '/ds/suggestion-chip'
-      preLoaderRoute: typeof DsSuggestionChipRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/ds/slider': {
       id: '/ds/slider'
       path: '/ds/slider'
       fullPath: '/ds/slider'
       preLoaderRoute: typeof DsSliderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ds/sentiment-tags': {
-      id: '/ds/sentiment-tags'
-      path: '/ds/sentiment-tags'
-      fullPath: '/ds/sentiment-tags'
-      preLoaderRoute: typeof DsSentimentTagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/segmented-toggle': {
@@ -698,6 +704,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsButtonsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/badge': {
+      id: '/ds/badge'
+      path: '/ds/badge'
+      fullPath: '/ds/badge'
+      preLoaderRoute: typeof DsBadgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/avatars': {
       id: '/ds/avatars'
       path: '/ds/avatars'
@@ -710,6 +723,13 @@ declare module '@tanstack/react-router' {
       path: '/ds/app-bar'
       fullPath: '/ds/app-bar'
       preLoaderRoute: typeof DsAppBarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/accordion': {
+      id: '/ds/accordion'
+      path: '/ds/accordion'
+      fullPath: '/ds/accordion'
+      preLoaderRoute: typeof DsAccordionRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -730,8 +750,10 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
+  DsAccordionRoute: DsAccordionRoute,
   DsAppBarRoute: DsAppBarRoute,
   DsAvatarsRoute: DsAvatarsRoute,
+  DsBadgeRoute: DsBadgeRoute,
   DsButtonsRoute: DsButtonsRoute,
   DsCardsRoute: DsCardsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
@@ -741,11 +763,10 @@ const rootRouteChildren: RootRouteChildren = {
   DsDrawerRoute: DsDrawerRoute,
   DsIconsRoute: DsIconsRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
-  DsSentimentTagsRoute: DsSentimentTagsRoute,
   DsSliderRoute: DsSliderRoute,
-  DsSuggestionChipRoute: DsSuggestionChipRoute,
   DsSurfaceRoute: DsSurfaceRoute,
   DsSwitchesRoute: DsSwitchesRoute,
+  DsTagsRoute: DsTagsRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
   DsToastsRoute: DsToastsRoute,
   DsTypographyRoute: DsTypographyRoute,
