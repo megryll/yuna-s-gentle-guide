@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Play, Star } from "lucide-react";
+import { Play, Star } from "lucide-react";
 import { KIND_META, type HomeCard } from "@/lib/home-cards";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -9,9 +9,8 @@ import {
   CardCTA,
   CardFooter,
   CardHeader,
+  CardRow,
   DailyTag,
-  NewBadge,
-  cardSurface,
 } from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
@@ -53,8 +52,6 @@ export function HomeCardRow({
   interactive?: boolean;
 }) {
   const meta = KIND_META[card.type];
-  const title = rowTitle(card);
-  const isQuote = card.type === "affirmation";
   const { avatar } = useYunaIdentity();
   const isGuided = card.type === "guided-session";
 
@@ -62,46 +59,27 @@ export function HomeCardRow({
   // Photo rows always use the dark cluster (black tint + white ink) in both
   // modes, matching the card view; solid rows keep their fixed tone.
   const isLight = isSolid ? meta.tone === "light" : false;
-  const pinDark = !isLight;
-  const photoPath = card.naturePath ?? meta.naturePath;
-  const style = isSolid
-    ? { backgroundColor: meta.solidBg }
-    : cardSurface({ naturePath: photoPath }).style;
 
   return (
-    <div className="relative">
-      {card.isNew && <NewBadge className="-top-3 left-4" />}
-      <button
-        type="button"
-        onClick={interactive ? onClick : undefined}
-        disabled={!interactive}
-        className={
-          "relative w-full text-left rounded-2xl px-4 py-5 transition-opacity flex items-center gap-4 overflow-hidden " +
-          (pinDark ? "card-fixed-dark " : "") +
-          (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
-        }
-        style={style}
-      >
-        <div className="flex-1 min-w-0">
-          <p
-            className={
-              `font-display text-xl leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
-              (isQuote ? "italic" : "")
-            }
-          >
-            {title}
-          </p>
-          <div className="mt-3.5 flex items-center gap-1 flex-wrap">
-            <span className={`text-xs font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
-              {isGuided && avatar && <YunaAvatar variant={avatar} size={15} />}
-              {meta.label}
-            </span>
-            {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
-          </div>
-        </div>
-        <ActionCircle tone={isLight ? "light" : "dark"} />
-      </button>
-    </div>
+    <CardRow
+      title={rowTitle(card)}
+      tone={isLight ? "light" : "dark"}
+      italic={card.type === "affirmation"}
+      isNew={card.isNew}
+      naturePath={isSolid ? undefined : card.naturePath ?? meta.naturePath}
+      solidFill={isSolid ? meta.solidBg ?? undefined : undefined}
+      onClick={onClick}
+      interactive={interactive}
+      meta={
+        <>
+          <span className={`text-xs font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
+            {isGuided && avatar && <YunaAvatar variant={avatar} size={15} />}
+            {meta.label}
+          </span>
+          {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
+        </>
+      }
+    />
   );
 }
 
@@ -439,22 +417,6 @@ function BookCard({
 }
 
 // ─── Card chrome shared bits ─────────────────────────────────────────────────
-// Card / CardHeader / CardFooter / CardCTA / DailyTag now live in the Card
-// primitive (components/Card.tsx). ActionCircle is row-only — kept local.
-
-function ActionCircle({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
-  const isDark = tone === "dark";
-  return (
-    <span
-      aria-hidden
-      className={
-        "shrink-0 h-9 w-9 rounded-full border-[1.5px] inline-flex items-center justify-center " +
-        (isDark
-          ? "border-white/40 text-white"
-          : "border-neutral-900/55 text-neutral-900")
-      }
-    >
-      <ArrowRight size={16} strokeWidth={2.25} />
-    </span>
-  );
-}
+// Card / CardHeader / CardFooter / CardCTA / DailyTag / CardRow (the list-row
+// layout, incl. its ActionCircle) now live in the Card primitive
+// (components/Card.tsx).

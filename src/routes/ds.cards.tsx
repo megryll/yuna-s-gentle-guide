@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
 import { Card, CardCTA, CardFooter, CardHeader } from "@/components/Card";
 import { HomeCardRow } from "@/components/HomeCards";
 import type { HomeCard } from "@/lib/home-cards";
@@ -29,9 +28,6 @@ function DSCards() {
   naturePath: string             // background photo (always dark-washed)
   solidFill?: string             // flat fill instead of photo
   isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
-  compact?:   boolean            // short auto-height row vs the square tile
-  onClick?:   () => void         // makes the card a pressable button
-  style?:     CSSProperties      // merged into the bg style (e.g. anim delay)
 >
   <CardHeader
     meta:     { label, tone }
@@ -51,11 +47,23 @@ function DSCards() {
 
 <CardCTA tone onClick>{label}</CardCTA>   // uppercase-tracked secondary button
 
+<CardRow                            // the list-row layout of the content card
+  title:        string             // top line
+  meta:         ReactNode          // line below the title (eyebrow, date·length…)
+  tone?:        "dark" | "light"   // ink tone; default "dark"
+  italic?:      boolean            // italic title (quotes)
+  isNew?:       boolean
+  naturePath?:  string             // photo fill
+  solidFill?:   string             // flat fill instead of photo
+  onClick?:     () => void
+  interactive?: boolean            // default true; false = static (display-only)
+/>
+
 <HomeCardRow
-  card:         HomeCard          // feed item rendered as a horizontal row
+  card:         HomeCard          // feed item — maps a HomeCard onto <CardRow>
   onClick:      () => void
   interactive?: boolean           // default true; false = static (display-only)
-/>                                 // the list-view layout of the same content card
+/>
 
 // A card's look is FIXED across the app's light/dark toggle. Photo cards always
 // use the dark cluster (black wash + white ink). Solid cards carry a fixed
@@ -102,31 +110,7 @@ const VARIANT_ROWS: MatrixRow[] = [
     render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#2C5C3D" />),
   },
   { label: "List row", render: (s) => withCluster(s, <DemoRow />) },
-  { label: "Compact", render: (s) => withCluster(s, <DemoCompact />) },
 ];
-
-// The compact row variant: a photo Card with the header + footer omitted,
-// leaving a short auto-height row (meta, title, trailing arrow).
-function DemoCompact() {
-  return (
-    <div className="max-w-[340px]">
-      <Card tone="dark" naturePath={NATURE} compact onClick={() => {}} className="gap-3">
-        <p className="text-xs tracking-[0.2em] uppercase text-white/75">
-          MAY 14 · 12 MIN
-        </p>
-        <p className="font-display text-xl leading-tight tracking-tight text-white pr-12">
-          Making space to rest
-        </p>
-        <span
-          aria-hidden
-          className="absolute top-1/2 -translate-y-1/2 right-4 shrink-0 h-9 w-9 rounded-full border border-white/30 text-white inline-flex items-center justify-center"
-        >
-          <ArrowRight size={14} strokeWidth={2} />
-        </span>
-      </Card>
-    </div>
-  );
-}
 
 function DemoRow() {
   return (

@@ -1,5 +1,4 @@
-import { ArrowRight } from "lucide-react";
-import { Card } from "@/components/Card";
+import { CardRow } from "@/components/Card";
 import type { PastSession } from "@/lib/sessions";
 
 const SESSION_NATURE_BGS = [
@@ -10,11 +9,10 @@ const SESSION_NATURE_BGS = [
   "/nature/Background-16.png",
 ];
 
-// A past session is the content Card's compact row variant: the photo-tinted
-// shell with the header (eyebrow + More) and footer (save / share + CTA) left
-// off, leaving just the date·length meta, the title, and a trailing arrow.
-// Like every photo Card it's fixed-dark — white ink on a dark wash in both
-// app modes (no mode-aware veil).
+// A past session is the content card's list-row layout (CardRow): the same
+// photo-tinted row as the Home feed, with the date·length as the meta line
+// below the title. Fixed-dark like every photo card — white ink on a dark wash
+// in both app modes.
 export function PastSessionCard({
   session,
   index = 0,
@@ -27,27 +25,16 @@ export function PastSessionCard({
   const natureBg = SESSION_NATURE_BGS[index % SESSION_NATURE_BGS.length];
 
   return (
-    <Card
-      tone="dark"
+    <CardRow
+      title={session.title}
       naturePath={natureBg}
-      compact
       onClick={onClick}
-      style={{ animationDelay: `${index * 60}ms` }}
-      className="yuna-rise gap-3"
-    >
-      <p className="text-xs tracking-[0.2em] uppercase text-white/75">
-        {session.date} · {session.length}
-      </p>
-      <p className="font-display text-xl leading-tight tracking-tight text-white pr-12">
-        {session.title}
-      </p>
-
-      <span
-        aria-hidden
-        className="absolute top-1/2 -translate-y-1/2 right-4 shrink-0 h-9 w-9 rounded-full border border-white/30 text-white inline-flex items-center justify-center"
-      >
-        <ArrowRight size={14} strokeWidth={2} />
-      </span>
-    </Card>
+      interactive={!!onClick}
+      meta={
+        <span className="text-xs font-medium tracking-[0.08em] uppercase text-white">
+          {session.date} · {session.length}
+        </span>
+      }
+    />
   );
 }

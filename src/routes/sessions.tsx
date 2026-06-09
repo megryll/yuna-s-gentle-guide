@@ -52,7 +52,7 @@ function SessionsReturning() {
 
         <ul className="mt-6 flex flex-col gap-4">
           {PAST_SESSIONS.map((s, i) => (
-            <li key={s.id}>
+            <li key={s.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
               <PastSessionCard session={s} index={i} />
             </li>
           ))}

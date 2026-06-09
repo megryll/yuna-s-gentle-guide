@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Bookmark, MoreHorizontal, Share2 } from "lucide-react";
+import { ArrowRight, Bookmark, MoreHorizontal, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
@@ -26,10 +26,10 @@ import { Badge } from "@/components/Badge";
  *   naturePath: string           — background photo (dark-washed)
  *   solidFill?: string           — flat fill (overrides photo)
  *   isNew?:    boolean           — green "New" flag, top-left
- *   compact?:  boolean           — short auto-height row instead of the
- *                                  square tile (e.g. past-session cards)
- *   onClick?:  () => void        — makes the card a pressable button
- *   style?:    CSSProperties      — merged into the bg style (e.g. anim delay)
+ *
+ * CardRow is the list-row layout of the same content card: a short pressable
+ * row (title + a meta line below + a trailing ActionCircle) sharing the photo /
+ * solid fill model. Used by Home's feed rows and the past-sessions list.
  *
  * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
@@ -70,9 +70,6 @@ export function Card({
   isNew,
   naturePath,
   solidFill,
-  compact,
-  onClick,
-  style: styleProp,
   className,
   children,
 }: {
@@ -80,9 +77,6 @@ export function Card({
   isNew?: boolean;
   naturePath?: string;
   solidFill?: string;
-  compact?: boolean;
-  onClick?: () => void;
-  style?: React.CSSProperties;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -91,40 +85,104 @@ export function Card({
   // Solid cards carry a fixed fill; photo cards get the dark photo wash. Either
   // way the look is mode-independent — a dark-toned card pins its white ink
   // against `.theme-light` via `card-fixed-dark`.
-  const bg: React.CSSProperties = solidFill
+  const style: React.CSSProperties = solidFill
     ? { backgroundColor: solidFill }
     : cardSurface({ naturePath: naturePath ?? "" }).style;
-  const style = { ...bg, ...styleProp };
-
-  // `relative` so absolutely-positioned children (e.g. a compact row's trailing
-  // arrow) anchor to the card itself. The square tile is the default; `compact`
-  // is a short, auto-height row.
-  const shell = cn(
-    "relative flex flex-col overflow-hidden",
-    compact ? "rounded-3xl p-5 pb-4" : "rounded-[2.5rem] px-5 py-7 aspect-square",
-    isDark ? "text-white" : "text-neutral-900",
-    isDark && "card-fixed-dark",
-    className,
-  );
 
   return (
     <div className="relative">
       {isNew && <NewBadge className="-top-2 left-5" />}
-      {onClick ? (
-        <button
-          type="button"
-          onClick={onClick}
-          style={style}
-          className={cn(shell, "w-full text-left active:opacity-90 transition-opacity")}
-        >
-          {children}
-        </button>
-      ) : (
-        <div style={style} className={shell}>
-          {children}
-        </div>
-      )}
+      <div
+        className={cn(
+          "rounded-[2.5rem] px-5 py-7 aspect-square flex flex-col overflow-hidden",
+          isDark ? "text-white" : "text-neutral-900",
+          isDark && "card-fixed-dark",
+          className,
+        )}
+        style={style}
+      >
+        {children}
+      </div>
     </div>
+  );
+}
+
+// List-row layout of the content card — a short, pressable row used by Home's
+// feed and the past-sessions list. Same photo / solid fill model as the tile,
+// laid out horizontally: title on top, a caller-supplied meta line below, and a
+// trailing ActionCircle. `tone` is the ink tone ("dark" = white text on a photo
+// or deep solid; "light" = ink on a pale solid).
+export function CardRow({
+  title,
+  meta,
+  tone = "dark",
+  italic = false,
+  isNew = false,
+  naturePath,
+  solidFill,
+  onClick,
+  interactive = true,
+}: {
+  title: string;
+  meta: React.ReactNode;
+  tone?: "dark" | "light";
+  italic?: boolean;
+  isNew?: boolean;
+  naturePath?: string;
+  solidFill?: string;
+  onClick?: () => void;
+  interactive?: boolean;
+}) {
+  const isLight = tone === "light";
+  const style: React.CSSProperties = solidFill
+    ? { backgroundColor: solidFill }
+    : cardSurface({ naturePath: naturePath ?? "" }).style;
+
+  return (
+    <div className="relative">
+      {isNew && <NewBadge className="-top-3 left-4" />}
+      <button
+        type="button"
+        onClick={interactive ? onClick : undefined}
+        disabled={!interactive}
+        className={
+          "relative w-full text-left rounded-2xl px-4 py-5 transition-opacity flex items-center gap-4 overflow-hidden " +
+          (!isLight ? "card-fixed-dark " : "") +
+          (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
+        }
+        style={style}
+      >
+        <div className="flex-1 min-w-0">
+          <p
+            className={
+              `font-display text-xl leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
+              (italic ? "italic" : "")
+            }
+          >
+            {title}
+          </p>
+          <div className="mt-3.5 flex items-center gap-1 flex-wrap">{meta}</div>
+        </div>
+        <ActionCircle tone={isLight ? "light" : "dark"} />
+      </button>
+    </div>
+  );
+}
+
+function ActionCircle({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
+  const isDark = tone === "dark";
+  return (
+    <span
+      aria-hidden
+      className={
+        "shrink-0 h-9 w-9 rounded-full border-[1.5px] inline-flex items-center justify-center " +
+        (isDark
+          ? "border-white/40 text-white"
+          : "border-neutral-900/55 text-neutral-900")
+      }
+    >
+      <ArrowRight size={16} strokeWidth={2.25} />
+    </span>
   );
 }
 
