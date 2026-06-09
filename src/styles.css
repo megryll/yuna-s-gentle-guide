@@ -192,10 +192,6 @@
   --secondary-green: #66BA24;
   /* Deeper shade for pressed / thumb states. */
   --secondary-green-pressed: #4D9C1A;
-  /* Pale mint — the soft companion to --secondary-green. Dark-mode-only
-     accent (progress-ring stroke, empty-state heading) where the brand
-     green would read too heavy on the dark photo. */
-  --mint: #cdebb5;
   /* Secondary palette — soft, on-brand accent hues beyond the core palette.
      Each family pairs a light tint with a deeper companion. Deliberately muted
      rather than saturated chart primaries so they read calmly on both photo

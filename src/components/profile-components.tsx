@@ -11,10 +11,13 @@ import { useYunaIdentity } from "@/lib/yuna-session";
 
 // Brand greens, both tokenised: GREEN = --primary-green, GREEN_ACCENT =
 // --secondary-green. Alpha tints go through greenMix() rather than a hex-alpha
-// suffix, since a var() can't be concatenated with one.
+// suffix, since a var() can't be concatenated with one. RING_MINT is the brand
+// green lightened toward white for legibility on the dark photo (dark-mode
+// progress ring + empty-state heading; light mode uses the green directly) —
+// a tint of --secondary-green, not a separate color.
 const GREEN = "var(--primary-green)";
 const GREEN_ACCENT = "var(--secondary-green)";
-const RING_MINT = "var(--mint)";
+const RING_MINT = "color-mix(in srgb, var(--secondary-green) 32%, white)";
 const greenMix = (pct: number) =>
   `color-mix(in srgb, var(--secondary-green) ${pct}%, transparent)`;
 
