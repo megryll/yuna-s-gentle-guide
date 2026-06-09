@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
+import { IconMedallion } from "@/components/IconMedallion";
 import { PastSessionCard } from "@/components/PastSessionCard";
 import { PAST_SESSIONS } from "@/lib/sessions";
 import { useUserType } from "@/lib/user-type";
@@ -24,12 +25,9 @@ function SessionsNew() {
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col justify-center px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col items-center text-center">
-          <span
-            className="h-20 w-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center"
-            aria-hidden="true"
-          >
+          <IconMedallion size="xl">
             <MessageCircle size={32} strokeWidth={1.4} className="text-white/70" aria-hidden />
-          </span>
+          </IconMedallion>
           <h1 className="mt-7 font-display text-2xl tracking-tight text-white">
             No past sessions yet
           </h1>

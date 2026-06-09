@@ -188,14 +188,29 @@ function DSIcons() {
                   </IconMedallion>,
                 ),
             },
+            {
+              label: "xl",
+              render: (s) =>
+                onLight(
+                  s,
+                  <IconMedallion size="xl">
+                    <CalendarClock
+                      size={32}
+                      strokeWidth={1.5}
+                      className="text-white"
+                      aria-hidden
+                    />
+                  </IconMedallion>,
+                ),
+            },
           ]}
         />
         <div className="mt-6">
           <PropsBlock>{`<IconMedallion
-  size?:      "md" | "lg"     // 56px | 64px, default "lg"
+  size?:      "md" | "lg" | "xl"   // 56px | 64px (default) | 80px
   label?:     string          // accessible name; omit to keep it decorative (aria-hidden)
   className?: string
-  children:   ReactNode       // a lucide icon (~26) or <YunaAvatar size={…} />
+  children:   ReactNode       // a lucide icon (~26–32) or <YunaAvatar size={…} />
 />`}</PropsBlock>
         </div>
       </Section>

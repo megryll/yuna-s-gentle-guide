@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
+import { IconMedallion } from "@/components/IconMedallion";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 import { getProfileData, type Insight } from "@/lib/profile-data";
@@ -191,9 +192,9 @@ function EmptyHeroGlow() {
           willChange: "transform, opacity",
         }}
       />
-      <span
-        aria-hidden="true"
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-20 w-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center"
+      <IconMedallion
+        size="xl"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       >
         <img
           src="/assets/profile/emerging.png"
@@ -201,7 +202,7 @@ function EmptyHeroGlow() {
           aria-hidden="true"
           style={{ width: 56, height: 56 }}
         />
-      </span>
+      </IconMedallion>
     </div>
   );
 }
