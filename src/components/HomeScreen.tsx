@@ -35,6 +35,12 @@ const RETURNING_GREETINGS: { title: (name: string | null) => string; sub: string
   { title: () => "However today is going,", sub: "we can take it one step at a time." },
 ];
 
+// Headlines drop a trailing period (they read as a greeting, not a sentence),
+// but keep a comma, exclamation, question mark, or ellipsis. Applied at render
+// so the underlying copy stays intact for TTS pacing.
+const stripHeadlinePeriod = (s: string) =>
+  s.endsWith(".") && !s.endsWith("...") ? s.slice(0, -1) : s;
+
 // The home feed is the same for new and returning users — only the greeting
 // and the welcome audio differ by user type. HOME_CARDS[0] is the first
 // check-in card, kept out of the feed (slice(1)) so it doesn't sit beneath the
@@ -117,7 +123,7 @@ export function HomeScreen({
 
           <div className="mt-10 yuna-rise text-center">
             <h1 className="text-2xl leading-snug tracking-tight text-white">
-              {returning ? greeting.title(name) : "Welcome in."}
+              {stripHeadlinePeriod(returning ? greeting.title(name) : "Welcome in.")}
             </h1>
             <p className="mt-2 text-sm text-white/80 max-w-[18rem] mx-auto">
               {returning ? greeting.sub : "I'll be here when you're ready to chat."}
@@ -126,9 +132,6 @@ export function HomeScreen({
 
           <div className="mt-4 flex justify-center yuna-rise">
             <SuggestionChip
-              variant="primary"
-              size="lg"
-              fullWidth={false}
               onClick={() => open(PRIMARY_SUGGESTION.label)}
               leading={
                 <span className="block shrink-0 -my-2 -ml-3">
