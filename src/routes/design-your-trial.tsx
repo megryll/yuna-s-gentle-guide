@@ -13,7 +13,7 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { useDarkBlurImage } from "@/lib/theme-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/design-your-trial")({
   head: () => ({
@@ -49,9 +49,11 @@ const TRIALS: Record<
 
 function DesignYourTrial() {
   const navigate = useNavigate();
-  // Paywall stays on the dark photo regardless of the app's light/dark toggle —
-  // it's a premium, onboarding-style surface (same lock as auth/intro).
-  const darkBg = useDarkBlurImage();
+  // In-app paywall — follows the user's Light/Dark toggle like other in-app
+  // screens (Home, Chat). The photo and ink invert via `PhoneFrame themed`;
+  // DS components drop to `surface="light"` in light mode.
+  const mode = useAppMode();
+  const surface = mode === "dark" ? "dark" : "light";
 
   const [trial, setTrial] = useState<TrialId>("free");
   const [remind, setRemind] = useState(false);
@@ -61,11 +63,11 @@ function DesignYourTrial() {
   const active = TRIALS[trial];
 
   return (
-    <PhoneFrame backgroundImage={darkBg}>
+    <PhoneFrame themed>
       <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white min-h-0 yuna-fade-in">
         <div className="flex justify-end">
           <Button
-            surface="dark"
+            surface={surface}
             variant="secondary"
             size="icon"
             onClick={close}
@@ -88,7 +90,7 @@ function DesignYourTrial() {
           {(Object.keys(TRIALS) as TrialId[]).map((id) => (
             <Button
               key={id}
-              surface="dark"
+              surface={surface}
               variant="card"
               selected={trial === id}
               subtitle={TRIALS[id].length}
@@ -103,7 +105,7 @@ function DesignYourTrial() {
         <div className="mt-6 flex items-center justify-between gap-4">
           <span className="text-base text-white/90">Remind me before my trial ends</span>
           <Switch
-            surface="dark"
+            surface={surface}
             checked={remind}
             onChange={setRemind}
             label="Remind me before my trial ends"
@@ -112,7 +114,7 @@ function DesignYourTrial() {
 
         <div className="mt-auto pt-8 flex flex-col items-center">
           <Button
-            surface="dark"
+            surface={surface}
             variant="link"
             onClick={() => setPlansOpen(true)}
           >
@@ -120,7 +122,7 @@ function DesignYourTrial() {
           </Button>
 
           <Button
-            surface="dark"
+            surface={surface}
             variant="primary"
             fullWidth
             onClick={close}
@@ -158,8 +160,8 @@ function RadioDot({ selected }: { selected: boolean }) {
 }
 
 // ── View all plans ──────────────────────────────────────────────────────────
-// Post-trial plan options, shown in the standard drawer. Locked to the dark
-// surface so it reads as one piece with the paywall behind it.
+// Post-trial plan options, shown in the standard drawer. Follows the app's
+// Light/Dark toggle along with the paywall behind it.
 type PlanId = "yearly" | "monthly";
 
 function AllPlansDrawer({
@@ -169,11 +171,13 @@ function AllPlansDrawer({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const mode = useAppMode();
+  const surface = mode === "dark" ? "dark" : "light";
   const [plan, setPlan] = useState<PlanId>("yearly");
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent mode="dark">
+      <DrawerContent>
         <DrawerHeader className="text-center px-6 pt-3 pb-2">
           <DrawerTitle>Choose a plan for after your free trial</DrawerTitle>
           <DrawerDescription className="text-white/75">
@@ -185,7 +189,7 @@ function AllPlansDrawer({
           <div className="relative">
             <Badge className="absolute -top-3 right-4 z-10">Save 65%</Badge>
             <Button
-              surface="dark"
+              surface={surface}
               variant="card"
               selected={plan === "yearly"}
               subtitle="$69.99 paid annually"
@@ -200,7 +204,7 @@ function AllPlansDrawer({
           </div>
 
           <Button
-            surface="dark"
+            surface={surface}
             variant="card"
             selected={plan === "monthly"}
             subtitle="$22.00 paid monthly"
@@ -212,15 +216,15 @@ function AllPlansDrawer({
         </div>
 
         <DrawerFooter className="flex-row items-center justify-center gap-3 pt-6 pb-8">
-          <Button surface="dark" variant="link" onClick={() => onOpenChange(false)}>
+          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
             Reactivate
           </Button>
           <Dot />
-          <Button surface="dark" variant="link" onClick={() => onOpenChange(false)}>
+          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
             Terms &amp; Conditions
           </Button>
           <Dot />
-          <Button surface="dark" variant="link" onClick={() => onOpenChange(false)}>
+          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
             Privacy Policy
           </Button>
         </DrawerFooter>
