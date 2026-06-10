@@ -19,6 +19,10 @@ type SurfaceProps = {
   /** Hairline border. Defaults to true — keeps the panel defined on Android,
    *  where backdrop blur is dropped. */
   border?: boolean;
+  /** Empty-state treatment: dashed border + fainter fill, for placeholder
+   *  panels that hold space before content exists (e.g. "nothing saved yet").
+   *  Implies a border, so `border` is ignored when set. Defaults to false. */
+  dashed?: boolean;
   /** Frosted backdrop blur. Defaults to true. */
   blur?: boolean;
   className?: string;
@@ -39,6 +43,7 @@ export function Surface({
   surface,
   radius = "2xl",
   border = true,
+  dashed = false,
   blur = true,
   className,
   children,
@@ -47,8 +52,16 @@ export function Surface({
   const isLight = (surface ?? appMode) === "light";
 
   const shell = isLight
-    ? ["bg-[rgba(20,20,22,0.05)]", border && "border border-[rgba(20,20,22,0.15)]"]
-    : ["bg-white/[0.08]", border && "border border-white/15"];
+    ? [
+        dashed ? "bg-[rgba(20,20,22,0.03)]" : "bg-[rgba(20,20,22,0.05)]",
+        dashed
+          ? "border border-dashed border-[rgba(20,20,22,0.18)]"
+          : border && "border border-[rgba(20,20,22,0.15)]",
+      ]
+    : [
+        dashed ? "bg-white/[0.04]" : "bg-white/[0.08]",
+        dashed ? "border border-dashed border-white/25" : border && "border border-white/15",
+      ];
 
   return (
     <Tag className={cn(RADIUS[radius], shell, blur && "backdrop-blur-md", className)}>

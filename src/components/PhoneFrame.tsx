@@ -69,6 +69,7 @@ export function PhoneFrame({
         />
         <div
           ref={setContainer}
+          data-phone-frame=""
           className={
             "relative w-full min-h-screen sm:min-h-[var(--frame-h)] sm:h-[var(--frame-h)] sm:rounded-[2.25rem] sm:hairline overflow-hidden flex flex-col " +
             (bg ? "" : "bg-background") +

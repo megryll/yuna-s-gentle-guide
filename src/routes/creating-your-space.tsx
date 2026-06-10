@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { LeafSpinner } from "@/components/LeafSpinner";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/creating-your-space")({
@@ -21,11 +22,7 @@ function CreatingYourSpace() {
         aria-live="polite"
         aria-label="Creating Your Space"
       >
-        <span
-          className="block h-9 w-9 rounded-full border-2 border-white/25 border-t-white"
-          style={{ animation: "yuna-spin 800ms linear infinite" }}
-          aria-hidden="true"
-        />
+        <LeafSpinner size={64} surface="dark" />
         <p className="text-white/95 text-sm tracking-[0.04em]">
           Creating Your Space
         </p>

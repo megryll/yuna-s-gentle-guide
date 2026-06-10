@@ -18,13 +18,16 @@ import { Route as MeditationRouteImport } from './routes/meditation'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GratitudeRouteImport } from './routes/gratitude'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
 import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AnimationSpecsRouteImport } from './routes/animation-specs'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SkillIdRouteImport } from './routes/skill.$id'
 import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
@@ -45,11 +48,13 @@ import { Route as DsDividerRouteImport } from './routes/ds.divider'
 import { Route as DsColorsRouteImport } from './routes/ds.colors'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsCardsRouteImport } from './routes/ds.cards'
+import { Route as DsCardSuggestionRouteImport } from './routes/ds.card-suggestion'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 import { Route as DsBadgeRouteImport } from './routes/ds.badge'
 import { Route as DsAvatarsRouteImport } from './routes/ds.avatars'
 import { Route as DsAppBarRouteImport } from './routes/ds.app-bar'
 import { Route as DsAccordionRouteImport } from './routes/ds.accordion'
+import { Route as BookIdRouteImport } from './routes/book.$id'
 
 const YouRoute = YouRouteImport.update({
   id: '/you',
@@ -96,6 +101,11 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GratitudeRoute = GratitudeRouteImport.update({
+  id: '/gratitude',
+  path: '/gratitude',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GoalsRoute = GoalsRouteImport.update({
   id: '/goals',
   path: '/goals',
@@ -121,6 +131,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnimationSpecsRoute = AnimationSpecsRouteImport.update({
+  id: '/animation-specs',
+  path: '/animation-specs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AcceptTermsRoute = AcceptTermsRouteImport.update({
   id: '/accept-terms',
   path: '/accept-terms',
@@ -129,6 +144,11 @@ const AcceptTermsRoute = AcceptTermsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillIdRoute = SkillIdRouteImport.update({
+  id: '/skill/$id',
+  path: '/skill/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsContentPreferencesRoute =
@@ -232,6 +252,11 @@ const DsCardsRoute = DsCardsRouteImport.update({
   path: '/ds/cards',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsCardSuggestionRoute = DsCardSuggestionRouteImport.update({
+  id: '/ds/card-suggestion',
+  path: '/ds/card-suggestion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
   id: '/ds/buttons',
   path: '/ds/buttons',
@@ -257,15 +282,22 @@ const DsAccordionRoute = DsAccordionRouteImport.update({
   path: '/ds/accordion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookIdRoute = BookIdRouteImport.update({
+  id: '/book/$id',
+  path: '/book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
   '/goals': typeof GoalsRoute
+  '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -275,11 +307,13 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/colors': typeof DsColorsRoute
@@ -300,15 +334,18 @@ export interface FileRoutesByFullPath {
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/skill/$id': typeof SkillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
   '/goals': typeof GoalsRoute
+  '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -318,11 +355,13 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/colors': typeof DsColorsRoute
@@ -343,16 +382,19 @@ export interface FileRoutesByTo {
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/skill/$id': typeof SkillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
   '/goals': typeof GoalsRoute
+  '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
@@ -362,11 +404,13 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
   '/ds/app-bar': typeof DsAppBarRoute
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
   '/ds/colors': typeof DsColorsRoute
@@ -387,17 +431,20 @@ export interface FileRoutesById {
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
+  '/skill/$id': typeof SkillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/accept-terms'
+    | '/animation-specs'
     | '/auth'
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
     | '/goals'
+    | '/gratitude'
     | '/home'
     | '/intro'
     | '/login'
@@ -407,11 +454,13 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/book/$id'
     | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/colors'
@@ -432,15 +481,18 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/focus-area/$num'
     | '/settings/content-preferences'
+    | '/skill/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/accept-terms'
+    | '/animation-specs'
     | '/auth'
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
     | '/goals'
+    | '/gratitude'
     | '/home'
     | '/intro'
     | '/login'
@@ -450,11 +502,13 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/book/$id'
     | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/colors'
@@ -475,15 +529,18 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/focus-area/$num'
     | '/settings/content-preferences'
+    | '/skill/$id'
   id:
     | '__root__'
     | '/'
     | '/accept-terms'
+    | '/animation-specs'
     | '/auth'
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
     | '/goals'
+    | '/gratitude'
     | '/home'
     | '/intro'
     | '/login'
@@ -493,11 +550,13 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/book/$id'
     | '/ds/accordion'
     | '/ds/app-bar'
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
     | '/ds/colors'
@@ -518,16 +577,19 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/focus-area/$num'
     | '/settings_/content-preferences'
+    | '/skill/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptTermsRoute: typeof AcceptTermsRoute
+  AnimationSpecsRoute: typeof AnimationSpecsRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
   GoalsRoute: typeof GoalsRoute
+  GratitudeRoute: typeof GratitudeRoute
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
   LoginRoute: typeof LoginRoute
@@ -537,11 +599,13 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
+  BookIdRoute: typeof BookIdRoute
   DsAccordionRoute: typeof DsAccordionRoute
   DsAppBarRoute: typeof DsAppBarRoute
   DsAvatarsRoute: typeof DsAvatarsRoute
   DsBadgeRoute: typeof DsBadgeRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  DsCardSuggestionRoute: typeof DsCardSuggestionRoute
   DsCardsRoute: typeof DsCardsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
   DsColorsRoute: typeof DsColorsRoute
@@ -562,6 +626,7 @@ export interface RootRouteChildren {
   DsWaveformRoute: typeof DsWaveformRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
   SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
+  SkillIdRoute: typeof SkillIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -629,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gratitude': {
+      id: '/gratitude'
+      path: '/gratitude'
+      fullPath: '/gratitude'
+      preLoaderRoute: typeof GratitudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/goals': {
       id: '/goals'
       path: '/goals'
@@ -664,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/animation-specs': {
+      id: '/animation-specs'
+      path: '/animation-specs'
+      fullPath: '/animation-specs'
+      preLoaderRoute: typeof AnimationSpecsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accept-terms': {
       id: '/accept-terms'
       path: '/accept-terms'
@@ -676,6 +755,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/skill/$id': {
+      id: '/skill/$id'
+      path: '/skill/$id'
+      fullPath: '/skill/$id'
+      preLoaderRoute: typeof SkillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings_/content-preferences': {
@@ -818,6 +904,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsCardsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/card-suggestion': {
+      id: '/ds/card-suggestion'
+      path: '/ds/card-suggestion'
+      fullPath: '/ds/card-suggestion'
+      preLoaderRoute: typeof DsCardSuggestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/buttons': {
       id: '/ds/buttons'
       path: '/ds/buttons'
@@ -853,17 +946,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsAccordionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/$id': {
+      id: '/book/$id'
+      path: '/book/$id'
+      fullPath: '/book/$id'
+      preLoaderRoute: typeof BookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptTermsRoute: AcceptTermsRoute,
+  AnimationSpecsRoute: AnimationSpecsRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CreatingYourSpaceRoute: CreatingYourSpaceRoute,
   EmployerAccessRoute: EmployerAccessRoute,
   GoalsRoute: GoalsRoute,
+  GratitudeRoute: GratitudeRoute,
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
   LoginRoute: LoginRoute,
@@ -873,11 +975,13 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
+  BookIdRoute: BookIdRoute,
   DsAccordionRoute: DsAccordionRoute,
   DsAppBarRoute: DsAppBarRoute,
   DsAvatarsRoute: DsAvatarsRoute,
   DsBadgeRoute: DsBadgeRoute,
   DsButtonsRoute: DsButtonsRoute,
+  DsCardSuggestionRoute: DsCardSuggestionRoute,
   DsCardsRoute: DsCardsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
   DsColorsRoute: DsColorsRoute,
@@ -898,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsWaveformRoute: DsWaveformRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
   SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,
+  SkillIdRoute: SkillIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

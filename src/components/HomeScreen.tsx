@@ -15,7 +15,8 @@ import { RatingScale } from "@/components/RatingScale";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
 import { HOME_CARDS, KIND_PLURAL, type HomeCard } from "@/lib/home-cards";
 import { CardActionsDrawer } from "@/components/CardActionsDrawer";
-import { Toast } from "@/components/Toast";
+import { Toast, ToastViewport } from "@/components/Toast";
+import { Confetti } from "@/components/Confetti";
 import { Divider } from "@/components/Divider";
 import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
 import { startAmbient } from "@/lib/ambient-audio";
@@ -90,16 +91,30 @@ export function HomeScreen({
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
   const [menuCard, setMenuCard] = useState<HomeCard | null>(null);
 
-  // Top-pinned confirmation toast (currently just the "stop seeing" action).
+  // Top-pinned confirmation toast — a neutral "stop seeing" confirmation, or a
+  // success congratulation when a goal is marked done.
   const surface = useAppMode() === "light" ? "light" : "dark";
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    variant: "neutral" | "success";
+  } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showToast = (message: string) => {
+  const showToast = (message: string, variant: "neutral" | "success" = "neutral") => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast(message);
+    setToast({ message, variant });
     toastTimer.current = setTimeout(() => setToast(null), 2800);
   };
   useEffect(() => () => toastTimer.current && clearTimeout(toastTimer.current), []);
+
+  // Bumped on each goal completion to replay the confetti cascade.
+  const [burstKey, setBurstKey] = useState(0);
+  const completeGoal = (card: HomeCard) => {
+    // Already under "Completed Today" — re-tapping shouldn't re-celebrate.
+    if (completedIds.has(card.id)) return;
+    setCompletedIds((prev) => new Set(prev).add(card.id));
+    setBurstKey((k) => k + 1);
+    showToast("Goal complete. Way to follow through.", "success");
+  };
 
   const toggleComplete = () => {
     if (!menuCard) return;
@@ -156,13 +171,18 @@ export function HomeScreen({
     <PhoneFrame backgroundImage="/background.png" themed>
       <div className="relative flex-1 flex flex-col text-white min-h-0">
         {toast && (
-          <div className="absolute inset-x-0 top-0 z-[60] px-6 pt-14">
+          <ToastViewport>
             <Toast
-              variant="neutral"
+              variant={toast.variant}
               surface={surface}
-              message={toast}
+              message={toast.message}
               onDismiss={() => setToast(null)}
             />
+          </ToastViewport>
+        )}
+        {burstKey > 0 && (
+          <div className="pointer-events-none absolute inset-0 z-[55] overflow-hidden">
+            <Confetti key={burstKey} />
           </div>
         )}
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -213,13 +233,36 @@ export function HomeScreen({
             completedIds={completedIds}
             dismissedIds={dismissedIds}
             onToggleSave={toggleSave}
-            onOpen={(c) => open(openPrompt(c))}
+            onOpen={(c) => {
+              // A goal card's only action is finishing it — "Mark as done"
+              // completes the goal (toast + confetti), it doesn't open a
+              // session. Book recos, skill articles, and gratitude prompts
+              // open their own screens; every other card drops into chat
+              // seeded with the card's prompt.
+              if (c.type === "accountability") {
+                completeGoal(c);
+                return;
+              }
+              if (c.type === "book") {
+                navigate({ to: "/book/$id", params: { id: c.id } });
+                return;
+              }
+              if (c.type === "learn-skill") {
+                navigate({ to: "/skill/$id", params: { id: c.id } });
+                return;
+              }
+              if (c.type === "gratitude") {
+                navigate({ to: "/gratitude" });
+                return;
+              }
+              open(openPrompt(c));
+            }}
             onOpenMenu={setMenuCard}
             showFeedback={returning}
           />
         </div>
 
-        <AppBar surface="dark" />
+        <AppBar surface={surface} />
       </div>
       <FirstSessionDisclaimerGate />
       <SchedulePrioritizeGate />
@@ -313,7 +356,7 @@ function CreatedForYou({
               card={c}
               isSaved={savedIds.has(c.id)}
               completed={completedIds.has(c.id)}
-              onClick={() => {}}
+              onClick={() => onOpen(c)}
               onMenu={() => onOpenMenu(c)}
               onToggleSave={() => onToggleSave(c.id)}
             />
@@ -321,7 +364,7 @@ function CreatedForYou({
             <HomeCardRow
               card={c}
               completed={completedIds.has(c.id)}
-              onClick={() => {}}
+              onClick={() => onOpen(c)}
               onMenu={() => onOpenMenu(c)}
             />
           )}

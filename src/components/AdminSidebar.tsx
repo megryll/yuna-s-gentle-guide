@@ -73,6 +73,9 @@ const PAGES: Entry[] = [
     ],
   },
   { label: "Sessions", to: "/sessions" },
+  { label: "Gratitude List", to: "/gratitude" },
+  { label: "Book Reco", to: "/book/$id", params: { id: "self-compassion-neff" } },
+  { label: "Skill Article", to: "/skill/$id", params: { id: "please-technique" } },
   {
     label: "Settings",
     to: "/settings",
@@ -103,6 +106,7 @@ const DS_GROUPS: DsGroup[] = [
       { label: "Avatars", to: "/ds/avatars" },
       { label: "Badge", to: "/ds/badge" },
       { label: "Buttons", to: "/ds/buttons" },
+      { label: "Card Suggestion", to: "/ds/card-suggestion" },
       { label: "Cards", to: "/ds/cards" },
       { label: "Chat Bubbles", to: "/ds/chat-bubbles" },
       { label: "Divider", to: "/ds/divider" },

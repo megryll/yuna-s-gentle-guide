@@ -62,6 +62,34 @@
   font-style: italic;
   font-display: swap;
 }
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-ExtraBoldItalic.otf") format("opentype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Stara";
+  src: url("/fonts/Stara-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
 
 /*
  * Design system definition.
@@ -276,19 +304,27 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: "Stara", ui-serif, Georgia, "Times New Roman", serif;
+    /* Stara's lightest cut is Medium — pin the baseline so body copy never
+       relies on a 400 that silently snaps up. */
+    font-weight: 500;
     font-feature-settings: "ss01", "kern";
   }
 
+  /* Fraunces (variable) and the system UI font both have a true 400, so they
+     keep the Regular baseline rather than inheriting body's Medium. */
   h1, h2, h3, h4, h5, h6 {
     font-family: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+    font-weight: 400;
   }
 
   .font-display {
     font-family: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+    font-weight: 400;
   }
 
   .font-sans-ui {
     font-family: ui-sans-serif, system-ui, -apple-system, "Inter", sans-serif;
+    font-weight: 400;
   }
 }
 
@@ -355,6 +391,25 @@
   @keyframes yuna-spin {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
+  }
+
+  /* ─── Yuna leaf loaders ─────────────────────────────────────────────────────
+     The brand spinner motif. `yuna-orbit-spin` drives LeafSpinner: three leaves
+     swing around a shared center on a fast→slow→fast loop (1080° in 2.4s).
+     `yuna-leaf-flip` drives YunaStatus: a single leaf flips coin-style (a 2D
+     scaleX so it stays crisp at small sizes), holding a fixed 39° tilt. */
+  @keyframes yuna-orbit-spin {
+    0%   { transform: rotate(0deg);    animation-timing-function: ease-out; }
+    40%  { transform: rotate(432deg);  animation-timing-function: ease-in; }
+    100% { transform: rotate(1080deg); }
+  }
+  @keyframes yuna-leaf-flip {
+    0%   { transform: rotate(39deg) scaleX(1);    }
+    22%  { transform: rotate(39deg) scaleX(0.06); }
+    44%  { transform: rotate(39deg) scaleX(1);    }
+    66%  { transform: rotate(39deg) scaleX(0.06); }
+    88%  { transform: rotate(39deg) scaleX(1);    }
+    100% { transform: rotate(39deg) scaleX(1);    }
   }
 
   /* Haptic edge-pulse. Used in voice mode to symbolize the device buzz
@@ -434,28 +489,29 @@
     98% { transform: translateX(1.5px); }
   }
 
-  /* ─── Goal confetti burst ──────────────────────────────────────────────────
-     A one-shot celebration fired when a goal is created or marked done. Each
-     piece starts at the burst origin (top/left 50% of its overlay) and is
-     flung to a per-piece offset (--cx/--cy) with a spin (--cr), fading as it
-     lands. Colors are decorative, not readable content, so they're fixed hues
-     that pop on either photo bg. Render inside a pointer-events-none overlay. */
+  /* ─── Goal confetti cascade ────────────────────────────────────────────────
+     A one-shot celebration fired when a goal is created or marked done. Pieces
+     start spread across the full width of the overlay's top edge and rain down
+     a per-piece distance (--fall) with sideways drift (--dx) and spin (--cr),
+     fading near the end. A staggered delay + varied duration (set inline) make
+     it cascade rather than drop as one sheet. Colors are decorative, not
+     readable content, so they're fixed hues that pop on either photo bg.
+     Render inside a pointer-events-none, overflow-clipped overlay. */
   .goal-confetti-piece {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 0;
     border-radius: 9999px;
     opacity: 0;
     will-change: transform, opacity;
-    animation: goal-confetti-burst 1100ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+    animation: goal-confetti-fall 1600ms cubic-bezier(0.3, 0.55, 0.45, 1) forwards;
   }
-  @keyframes goal-confetti-burst {
-    0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scale(0.4); }
-    12%  { opacity: 1; }
+  @keyframes goal-confetti-fall {
+    0%   { opacity: 0; transform: translate(0, -24px) rotate(0deg); }
+    8%   { opacity: 1; }
+    85%  { opacity: 1; }
     100% {
       opacity: 0;
-      transform: translate(calc(-50% + var(--cx)), calc(-50% + var(--cy)))
-        rotate(var(--cr)) scale(1);
+      transform: translate(var(--dx), var(--fall)) rotate(var(--cr));
     }
   }
   @media (prefers-reduced-motion: reduce) {

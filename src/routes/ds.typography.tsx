@@ -108,6 +108,8 @@ function DSTypography() {
               <p style={{ fontWeight: 500 }}>500 — Medium · Lorem ipsum</p>
               <p style={{ fontWeight: 600 }}>600 — Semibold · Lorem ipsum</p>
               <p style={{ fontWeight: 700 }}>700 — Bold · Lorem ipsum</p>
+              <p style={{ fontWeight: 800 }}>800 — ExtraBold · Lorem ipsum</p>
+              <p style={{ fontWeight: 900 }}>900 — Black · Lorem ipsum</p>
               <p style={{ fontWeight: 500, fontStyle: "italic" }}>500 italic · Lorem ipsum</p>
               <p style={{ fontWeight: 600, fontStyle: "italic" }}>600 italic · Lorem ipsum</p>
             </div>

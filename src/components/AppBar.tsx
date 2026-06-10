@@ -3,7 +3,7 @@ import { History, House, MessageCircle, Pencil, User } from "lucide-react";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 import { usePlatform } from "@/lib/platform";
-import { useModeImage } from "@/lib/theme-prefs";
+import { darkBlurImage } from "@/lib/theme-prefs";
 
 type Surface = "light" | "dark";
 
@@ -56,7 +56,6 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   const userType = useUserType();
   const startChat = useStartChat();
   const platform = usePlatform();
-  const modeImage = useModeImage();
   // Notification dots only surface for returning users — that's where the
   // "new content since last visit" framing applies.
   const showNotifications = userType === "returning" && pathname === "/home";
@@ -88,54 +87,56 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
     );
   });
 
-  if (isDark) {
-    // The backdrop extends 20% of nav height above the nav top — that's the
-    // portion of the path's bounding box (109.34 tall) that sits above the
-    // bar (91.13 tall). The bar portion lands on the nav exactly; the bulge
-    // protrudes up into the scroll area. Because the path now fills its full
-    // bounding-box width at y=0 (no L-shaped cutouts), the visible bar reads
-    // as a clean rounded rectangle with a bump on top.
-    // Android kills backdrop-blur (`.platform-android`), so the frosted fill
-    // vanishes and the masked shape reads as a flat wash. Paint the same masked
-    // silhouette with the (already-blurred) themed background photo instead —
-    // a faux-frost that keeps the bar + bulge defined without a live backdrop.
-    // A faint black wash holds the white tab labels above the photo.
-    const android = platform === "android";
-    return (
-      <nav aria-label="Main" className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1">
-        <div
-          aria-hidden="true"
-          className={
-            "absolute left-0 right-0 bottom-0 -z-10 " +
-            (android ? "" : "bg-white/10 backdrop-blur-md")
-          }
-          style={{
-            top: "-20%",
-            ...(android
-              ? {
-                  backgroundImage: `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${modeImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center bottom",
-                }
-              : null),
-            maskImage: APPBAR_MASK_URL,
-            WebkitMaskImage: APPBAR_MASK_URL,
-            maskSize: "100% 100%",
-            WebkitMaskSize: "100% 100%",
-            maskRepeat: "no-repeat",
-            WebkitMaskRepeat: "no-repeat",
-          }}
-        />
-        {tabs}
-      </nav>
-    );
-  }
+  // The bulge is structural, not dark-mode-only: the masked SVG silhouette
+  // renders on every surface so the raised Chat circle always has a cradle.
+  // Only the *fill* and tab-label colors change with surface.
+  //
+  // The backdrop extends 20% of nav height above the nav top — the portion of
+  // the path's bounding box (109.34 tall) that sits above the bar (91.13 tall).
+  // The bar portion lands on the nav exactly; the bulge protrudes up into the
+  // scroll area. Because the path fills its full bounding-box width at y=0 (no
+  // L-shaped cutouts), the visible bar reads as a clean rounded rectangle with
+  // a bump on top.
+  //
+  // Android kills backdrop-blur (`.platform-android`), so a live frosted fill
+  // vanishes there. Dark surface paints the blurred dark-cluster photo into the
+  // masked silhouette as a faux-frost, with a faint black wash holding the
+  // white labels. The photo is fixed (not the live mode photo): the app only
+  // ever renders surface="dark" while it's in dark mode — light mode flips the
+  // bar to surface="light" — so the dark photo is always what sits behind it.
+  // Light surface uses `bg-background/*`, whose alpha the Android shim lifts so
+  // the bar stays defined without blur.
+  const android = platform === "android";
+  const fillClass = isDark
+    ? android
+      ? ""
+      : "bg-white/10 backdrop-blur-md"
+    : "bg-background/80 backdrop-blur-md";
+  const fillStyle =
+    isDark && android
+      ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${darkBlurImage()})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center bottom",
+        }
+      : null;
 
   return (
-    <nav
-      aria-label="Main"
-      className="px-2 pt-2 pb-3 grid grid-cols-5 gap-1 border-t border-border bg-background"
-    >
+    <nav aria-label="Main" className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1">
+      <div
+        aria-hidden="true"
+        className={"absolute left-0 right-0 bottom-0 -z-10 " + fillClass}
+        style={{
+          top: "-20%",
+          ...fillStyle,
+          maskImage: APPBAR_MASK_URL,
+          WebkitMaskImage: APPBAR_MASK_URL,
+          maskSize: "100% 100%",
+          WebkitMaskSize: "100% 100%",
+          maskRepeat: "no-repeat",
+          WebkitMaskRepeat: "no-repeat",
+        }}
+      />
       {tabs}
     </nav>
   );
@@ -166,7 +167,7 @@ function Tab({
           type="button"
           onClick={onSelect}
           className="flex flex-col items-center justify-center"
-          style={isDark ? { transform: "translateY(-12px)" } : undefined}
+          style={{ transform: "translateY(-12px)" }}
           aria-current={active ? "page" : undefined}
         >
           <span className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]">
@@ -181,14 +182,14 @@ function Tab({
     // lifts the button so the chat icon sits on the same horizontal line as
     // the other tab icons (their centers land ~16px below link-top; button
     // center is link-center ≈ 28px, so −12px brings them flush) — the upper
-    // half then protrudes into the bulge cradle naturally. Light surface
-    // keeps the button flat inside the bar.
+    // half then protrudes into the bulge cradle naturally. The bulge is present
+    // on every surface, so the lift always applies.
     return (
       <Link
         to={item.to}
         search={item.search}
         className="flex flex-col items-center justify-center"
-        style={isDark ? { transform: "translateY(-12px)" } : undefined}
+        style={{ transform: "translateY(-12px)" }}
         aria-current={active ? "page" : undefined}
       >
         <span className="relative flex items-center justify-center rounded-full bg-white text-foreground shadow-lg h-[60px] w-[60px]">

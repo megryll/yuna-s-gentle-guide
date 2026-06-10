@@ -7,11 +7,12 @@ import {
   Gauge,
   Globe,
   ScanFace,
-  Star,
   Volume2,
   VolumeX,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { LeafSpinner } from "@/components/LeafSpinner";
+import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Switch } from "@/components/Switch";
@@ -257,7 +258,9 @@ function Intro() {
   // draining, so the rest of the queue drops silently.
   const drainingRef = useRef(false);
 
-  const KEYBOARD_OFFSET = 260;
+  // Keyboard height plus a gap so the focused name field clears the keyboard
+  // with a little breathing room instead of sitting flush against it.
+  const KEYBOARD_OFFSET = KEYBOARD_HEIGHT + 20;
 
   // Keep a ref of `muted` for setTimeout-scheduled callbacks (closure freshness)
   useEffect(() => {
@@ -537,11 +540,23 @@ function Intro() {
   // most recent reveal is always in view as the conversation accumulates.
   // Also fires when step 4 reaches its tap phase so the inline voice picker
   // — which renders after the last bubble — scrolls into view.
+  // `inputFocused` is a dep so that when the keyboard opens and the scroll's
+  // paddingBottom grows to KEYBOARD_OFFSET, we re-scroll and lift the name form
+  // to the keyboard's top edge — without this the form stays hidden behind the
+  // keyboard on short devices (iPhone SE).
   useEffect(() => {
     const el = chatScrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [bubbles, typing, stepIdx, phase]);
+    // The paddingBottom transition (200ms) grows the scroll area over time, so
+    // the scrollHeight read above is stale at the start of the transition and
+    // the first scroll lands short. Re-anchor after it settles so the form
+    // clears the keyboard fully. Mirrors the chat screen's keyboard re-anchor.
+    const t = window.setTimeout(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }, 240);
+    return () => window.clearTimeout(t);
+  }, [bubbles, typing, stepIdx, phase, inputFocused]);
 
   // Enter advances the Continue CTA on every step where it's the active
   // action. Step 0 lives in "wait-input" with a name form that handles
@@ -809,7 +824,7 @@ function Intro() {
           aria-live="polite"
           aria-label="Creating Your Space"
         >
-          <Spinner />
+          <LeafSpinner size={64} surface="dark" />
           <p className="text-white/95 text-sm tracking-[0.04em]">
             Creating Your Space
           </p>
@@ -1271,28 +1286,11 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   }
   if (kind === "stats") {
     return (
-      <div className="flex items-center gap-3 text-white">
-        <img
-          src="/app-store-icon.png"
-          alt="App Store"
-          className="h-12 w-12 shrink-0"
-        />
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-2xl leading-none">4.7</span>
-            <span className="text-uppercase tracking-[0.08em] uppercase text-white/75">
-              Out of 5
-            </span>
-          </div>
-          <StarRow count={5} />
-        </div>
-        <div className="ml-auto flex flex-col gap-1.5 items-center">
-          <span className="font-display text-2xl leading-none">60k</span>
-          <span className="text-uppercase tracking-[0.08em] uppercase text-white/75">
-            Happy users
-          </span>
-        </div>
-      </div>
+      <img
+        src="/app-store-rating.png"
+        alt="Rated 5 stars on the App Store"
+        className="w-full h-auto"
+      />
     );
   }
   if (kind === "mood-stats") {
@@ -1454,24 +1452,10 @@ function FaceIdToggle() {
 }
 
 function YunaPushMark() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 36 36"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M23.7609 33.0343L23.7621 33.0354L23.7636 33.0369C23.9788 33.2496 24.1955 33.4638 24.4046 33.6679V33.6778C25.0334 34.2867 24.6011 35.3572 23.7168 35.3572H10.5904C9.70614 35.3572 9.27384 34.2965 9.90265 33.6778C10.3251 33.2653 10.7771 32.8233 11.1897 32.4108C12.1231 31.4876 12.6439 30.2304 12.6439 28.9242L12.6439 24.8024C12.6445 23.2621 12.6451 21.7153 12.0937 20.242C11.5926 18.9063 6.80772 10.6269 3.56541 5.07775C2.91694 3.96793 2.07198 2.97596 1.06981 2.16078C0.834006 1.96435 0.627677 1.79739 0.4803 1.67953C-0.286064 1.06078 -0.099386 -0.00975432 0.78488 6.71089e-05C0.942281 6.71089e-05 2.29529 0.00196462 3.81188 0.00409155C5.74564 0.00680354 7.94537 0.00988853 8.27167 0.00988853C9.32296 0.00988853 10.2957 0.56971 10.8066 1.47328C13.0565 5.36257 19.0794 15.842 20.5237 18.7295C21.2802 20.2224 21.6634 21.8724 21.6634 23.5519V28.9144C21.6634 30.2206 22.1841 31.4778 23.1175 32.401C23.325 32.6034 23.5423 32.8183 23.7609 33.0343Z"
-        fill="white"
-      />
-      <path
-        d="M28.6813 5.87724C28.6318 5.82771 28.5723 5.79799 28.503 5.79799V5.77817C28.4534 5.77817 28.4138 5.79799 28.3741 5.8178C24.0135 8.25989 22.0259 10.5782 20.9193 13.3723C20.7767 13.7325 20.28 13.643 20.1305 13.3723C16.2801 6.39951 24.0203 2.23857 26.2506 1.46871C28.8273 0.57711 32.1401 -0.165857 34.8358 0.0322775C35.6506 0.0921667 36.106 0.939267 35.7521 1.6765C34.7445 3.77522 34.3541 5.85376 33.9978 7.75118C33.1248 12.3997 31.4882 15.3297 26.1536 15.929C25.4724 16.0055 24.7391 16.0453 23.952 16.0453C22.2448 16.0453 22.4118 14.3222 23.3916 12.5627C24.9695 9.72926 28.5127 6.31297 28.6615 6.18435C28.7606 6.07538 28.7408 5.95649 28.6813 5.87724Z"
-        fill="white"
-      />
-    </svg>
-  );
+  // The isolated Yuna brand mark (the leaf glyph from the wordmark), white on
+  // the green push tile. Lives in public/ so the engineer sidebar can offer it
+  // as a download — keep the two in sync.
+  return <img src="/yuna-mark.svg" alt="" aria-hidden className="h-[22px] w-[22px]" />;
 }
 
 // ── Voice picker ─────────────────────────────────────────────────────────────
@@ -1679,32 +1663,6 @@ function SpeedPillIcon() {
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
-
-function StarRow({ count, color = "#7FB6FF" }: { count: number; color?: string }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: count }).map((_, i) => (
-        <Star
-          key={i}
-          size={16}
-          fill={color}
-          strokeWidth={0}
-          aria-hidden="true"
-        />
-      ))}
-    </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <span
-      className="block h-9 w-9 rounded-full border-2 border-white/25 border-t-white"
-      style={{ animation: "yuna-spin 800ms linear infinite" }}
-      aria-hidden="true"
-    />
-  );
-}
 
 function PushPermissionModal({
   onAllow,

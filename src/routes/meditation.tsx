@@ -4,7 +4,7 @@ import { ChevronLeft, Plus, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
-import { Toast } from "@/components/Toast";
+import { Toast, ToastViewport } from "@/components/Toast";
 import { RatingScale } from "@/components/RatingScale";
 import { DictationField } from "@/components/DictationField";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -228,14 +228,14 @@ function MeditationRoute() {
     <PhoneFrame themed>
       <div className="relative flex-1 flex flex-col text-white min-h-0">
         {toast && (
-          <div className="absolute inset-x-0 top-0 z-[60] px-5 pt-14">
+          <ToastViewport>
             <Toast
               variant={toast.variant}
               surface={surface}
               message={toast.message}
               onDismiss={() => setToast(null)}
             />
-          </div>
+          </ToastViewport>
         )}
 
         {step === "create" && (

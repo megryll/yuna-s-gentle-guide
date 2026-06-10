@@ -9,19 +9,16 @@ import {
   Globe,
   Leaf,
   MessageSquare,
-  Moon,
   ScanFace,
   SlidersHorizontal,
   Star,
-  Sun,
   User,
   Users,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { Switch } from "@/components/Switch";
-import { setAppMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { setNatureSoundsOn, useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
@@ -130,16 +127,6 @@ function SettingsRoute() {
         </header>
 
         <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex justify-center pb-2">
-            <SegmentedToggle
-              value={mode}
-              onChange={setAppMode}
-              surface={mode === "dark" ? "dark" : "light"}
-              ariaLabel="Appearance"
-              options={THEME_TOGGLE_OPTIONS}
-            />
-          </div>
-
           <CardGroup>
             {GROUP_ONE.map((row, i) => (
               <SettingsRowItem
@@ -231,18 +218,3 @@ function SettingsRowItem({
     </button>
   );
 }
-
-const THEME_TOGGLE_OPTIONS = [
-  {
-    value: "light" as const,
-    label: "Light",
-    ariaLabel: "Light mode",
-    icon: <Sun size={14} strokeWidth={1.6} aria-hidden />,
-  },
-  {
-    value: "dark" as const,
-    label: "Dark",
-    ariaLabel: "Dark mode",
-    icon: <Moon size={14} strokeWidth={1.6} aria-hidden />,
-  },
-];

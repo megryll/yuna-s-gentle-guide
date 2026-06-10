@@ -97,3 +97,30 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
   },
 );
 Toast.displayName = "Toast";
+
+/**
+ * Pins a Toast to one consistent spot: 28px (`pt-7`) from the top of the phone
+ * frame — a touch above the 56px content gutter so it reads as a transient
+ * overlay — identical across every device size. Render it as a direct child of the screen's
+ * frame-filling body (the top-most `relative flex-1` container inside
+ * PhoneFrame) so `top-0` resolves to the top of the phone.
+ *
+ * The viewport spans the full width but is click-through — only the toast
+ * itself is interactive — so the empty gutter beside/above it never swallows
+ * taps on the content beneath.
+ */
+export function ToastViewport({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn("pointer-events-none absolute inset-x-0 top-0 z-[60] px-5 pt-7", className)}
+    >
+      <div className="pointer-events-auto">{children}</div>
+    </div>
+  );
+}

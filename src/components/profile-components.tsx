@@ -173,7 +173,7 @@ export function InsightCard({
               <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
             </span>
             <span className="flex-1 min-w-0 flex items-center gap-2">
-              <span className="text-sm font-normal leading-[22px] text-white truncate">{title}</span>
+              <span className="text-sm font-medium leading-[22px] text-white truncate">{title}</span>
               {date && <Badge className="shrink-0">{date}</Badge>}
             </span>
           </>

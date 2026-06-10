@@ -24,7 +24,7 @@ function DSAppBar() {
           sits in its cradle) still read in context. */}
       <Section
         title="Variants"
-        subtitle="One frosted, masked bar with a bulge cradle for the lifted Chat circle. Light mode is the same bar under `.theme-light` over the light photo — labels invert to ink, the frosted fill lifts, and the Chat circle becomes an ink pill with a white icon."
+        subtitle={`One frosted, masked bar with a bulge cradle for the lifted Chat circle. \`surface="dark"\` carries white labels over a photo/blur frost; \`surface="light"\` (over the light photo with \`.theme-light\`) carries ink labels over a lifted \`bg-background\` fill, with the Chat circle as an ink pill and a white icon.`}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Stage mode="dark" />
@@ -48,7 +48,7 @@ function DSAppBar() {
             <span className="text-muted-foreground">Notification dot</span>
             <code>bg-secondary-green, returning users on /home only</code>
             <span className="text-muted-foreground">Backdrop</span>
-            <code>bg-white/10 backdrop-blur-md, SVG bulge mask; .theme-light lifts the fill</code>
+            <code>SVG bulge mask · dark: bg-white/10 backdrop-blur (Android: dark photo + wash) · light: bg-background/80 backdrop-blur</code>
           </div>
         </div>
       </Section>
@@ -69,9 +69,10 @@ function DSAppBar() {
 
 // A full-width photo background with the real AppBar pinned to its bottom edge,
 // centered at a realistic phone width so the tabs sit at true spacing instead
-// of being crushed by a mini device frame. The bar always renders surface="dark"
-// — that's the only way the app uses it; light mode is the same bar under
-// `.theme-light` over the light photo, exactly as PhoneFrame produces it.
+// of being crushed by a mini device frame. Each example renders the surface the
+// app actually uses for that mode — dark mode is surface="dark" (frosted bulge,
+// white labels), light mode is surface="light" (lifted ink bar) over the light
+// photo with `.theme-light`, exactly as ScreenChrome/PhoneFrame produce it.
 // Mirrors the live platform toggle so the backdrop blur degrades to its Android
 // fill in context.
 function Stage({ mode }: { mode: "dark" | "light" }) {
@@ -97,7 +98,7 @@ function Stage({ mode }: { mode: "dark" | "light" }) {
       </p>
       <div className="absolute inset-x-0 bottom-0">
         <div className="mx-auto w-full max-w-[390px]">
-          <AppBar surface="dark" />
+          <AppBar surface={light ? "light" : "dark"} />
         </div>
       </div>
     </div>

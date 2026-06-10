@@ -77,7 +77,7 @@ export function ScreenChrome({
           {children}
         </div>
 
-        <AppBar surface={surface} />
+        <AppBar surface={effectiveSurface} />
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />

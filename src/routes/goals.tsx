@@ -147,6 +147,7 @@ function GoalsRoute() {
       ...prev,
     ]);
     setNewGoalId(id);
+    setBurstKey((k) => k + 1);
     go("success");
   };
 
@@ -193,7 +194,6 @@ function GoalsRoute() {
             onFilter={setFilter}
             savedIds={savedIds}
             onToggleSave={toggleSave}
-            burstKey={burstKey}
             onBack={() => navigate({ to: "/tools" })}
             onNew={startFlow}
             onMarkDone={markDone}
@@ -233,7 +233,6 @@ function GoalsRoute() {
           <SuccessView
             photo={photo}
             goal={successGoal}
-            burstKey={burstKey}
             saved={savedIds.has(successGoal.id)}
             onToggleSave={() => toggleSave(successGoal.id)}
             onMarkDone={() => markDone(successGoal.id)}
@@ -251,6 +250,15 @@ function GoalsRoute() {
             createGoal(`till ${formatDate(d)}`);
           }}
         />
+
+        {/* One full-screen cascade for the whole goals flow — anchored to the
+            phone frame (not a step view), so it spans the screen and is never
+            cropped by an inner scroll container or the avatar wrapper. */}
+        {burstKey > 0 && (
+          <div className="pointer-events-none absolute inset-0 z-[60] overflow-hidden">
+            <Confetti key={burstKey} />
+          </div>
+        )}
       </div>
     </PhoneFrame>
   );
@@ -266,7 +274,6 @@ function ListView({
   onFilter,
   savedIds,
   onToggleSave,
-  burstKey,
   onBack,
   onNew,
   onMarkDone,
@@ -278,7 +285,6 @@ function ListView({
   onFilter: (f: Filter) => void;
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
-  burstKey: number;
   onBack: () => void;
   onNew: () => void;
   onMarkDone: (id: string) => void;
@@ -345,12 +351,6 @@ function ListView({
             </p>
           )}
         </section>
-      )}
-
-      {burstKey > 0 && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <Confetti key={burstKey} />
-        </div>
       )}
     </div>
   );
@@ -519,7 +519,6 @@ function SuccessView({
   surface,
   photo,
   goal,
-  burstKey,
   saved,
   onToggleSave,
   onMarkDone,
@@ -528,7 +527,6 @@ function SuccessView({
   surface: "dark" | "light";
   photo: Parameters<typeof YunaAvatar>[0]["variant"];
   goal: Goal;
-  burstKey: number;
   saved: boolean;
   onToggleSave: () => void;
   onMarkDone: () => void;
@@ -537,10 +535,7 @@ function SuccessView({
   return (
     <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex-1 flex flex-col items-center text-center">
-        <div className="relative inline-flex items-center justify-center">
-          <Confetti key={burstKey} />
-          <YunaAvatar variant={photo} size={96} />
-        </div>
+        <YunaAvatar variant={photo} size={96} />
         <h1 className="mt-6 font-display text-3xl leading-tight tracking-tight text-white max-w-[16rem]">
           Great! Your new goal has been created!
         </h1>

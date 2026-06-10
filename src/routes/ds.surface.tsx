@@ -36,6 +36,10 @@ function DSSurface() {
                 </Surface>
               ),
             },
+            {
+              label: "Empty",
+              render: (surface) => <Surface surface={surface} dashed className="h-16" />,
+            },
           ]}
         />
       </Section>
@@ -64,6 +68,7 @@ function DSSurface() {
   surface?: "dark" | "light"       // default: current app mode
   radius?:  "xl" | "2xl"           // default: "2xl"
   border?:  boolean                // hairline border, default: true
+  dashed?:  boolean                // empty-state: dashed border + fainter fill, default: false
   blur?:    boolean                // frosted backdrop blur, default: true
   className?: string               // caller owns padding / flex / gap
 />`}</PropsBlock>

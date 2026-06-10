@@ -56,10 +56,11 @@ function Index() {
         </div>
 
         {/* Conversation fills the space above the sheet: centered on roomy
-            frames, bottom-anchored on a short one (see shortFrame). Either way
-            it never sits behind the sheet, and scrolls only if a small frame
-            still can't fit. */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            frames, bottom-anchored on a short one (see shortFrame). It never
+            sits behind the sheet. Intentionally NOT clipped — the avatar's glow
+            aura bleeds ~80px past its box, and on a short frame the bottom-anchor
+            grows any spillover upward into the empty logo space, never down. */}
+        <div className="flex-1 min-h-0 px-8 flex flex-col">
           <div className={`flex items-end gap-3 pb-4 ${shortFrame ? "mt-auto" : "my-auto"}`}>
             <div
               className="shrink-0"
@@ -116,7 +117,7 @@ function Index() {
             surface="dark"
             variant="card"
             onClick={() => navigate({ to: "/employer-access" })}
-            subtitle="100% free, and private from your employer"
+            subtitle="Free, and private from your employer"
             trailing={<ChevronRight size={20} strokeWidth={1.75} aria-hidden />}
           >
             Sign up through my employer

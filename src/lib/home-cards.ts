@@ -1,3 +1,24 @@
+// A learn-skill article shown on the skill detail screen (/skill/$id):
+// a text-based explainer with an acronym breakdown and nested section images.
+export type SkillArticle = {
+  // Headline name of the skill, e.g. "The PLEASE Skill".
+  name: string;
+  // The acronym itself, shown large in the hero (e.g. "PLEASE").
+  acronym: string;
+  // One-line description under the acronym.
+  summary: string;
+  readingTime: string;
+  // Lead paragraph below the hero.
+  intro: string;
+  // What each letter (or letter-group) of the acronym stands for.
+  breakdown: { letter: string; term: string; detail: string }[];
+  sections: {
+    heading: string;
+    paragraphs: string[];
+    image?: { src: string; caption: string };
+  }[];
+};
+
 export type HomeCard =
   | {
       type: "guided-session";
@@ -50,6 +71,8 @@ export type HomeCard =
       id: string;
       title: string;
       eyebrow: string;
+      // Full article shown on the skill detail screen (/skill/$id).
+      article: SkillArticle;
       naturePath?: string;
       isNew?: boolean;
       isSaved?: boolean;
@@ -70,6 +93,9 @@ export type HomeCard =
       author: string;
       rating: number;
       cover?: string;
+      // Yuna's "why this might be a good book for you" note, shown on the
+      // book detail screen (/book/$id).
+      blurb: string;
       naturePath?: string;
       isNew?: boolean;
       isSaved?: boolean;
@@ -148,8 +174,8 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   book: {
     label: "Book Recommendation",
     tone: "light",
-    action: "check",
-    ctaLabel: "I read this",
+    action: "arrow",
+    ctaLabel: "Read more",
     naturePath: "/nature/Background-3.png",
     solidBg: "#F8F1DC",
   },
@@ -239,6 +265,77 @@ export const HOME_CARDS: HomeCard[] = [
     title: "A skill that could benefit you is 'PLEASE' Technique",
     eyebrow: "Recommended Skill",
     naturePath: "/nature/Background-4.png",
+    article: {
+      name: "The PLEASE Skill",
+      acronym: "PLEASE",
+      summary: "Care for your body so big emotions have less room to take over.",
+      readingTime: "4 min read",
+      intro:
+        "When you're running low on sleep, food, or movement, your feelings get louder and harder to steer. In Dialectical Behavior Therapy this is called being vulnerable to Emotion Mind. PLEASE is a simple checklist for the basics that keep you steady, so the harder moments feel a little more manageable.",
+      breakdown: [
+        {
+          letter: "PL",
+          term: "Treat PhysicaL illness",
+          detail:
+            "Look after your body. Take medication as prescribed, and see a doctor when something feels off. Pain and illness quietly wear down your resilience.",
+        },
+        {
+          letter: "E",
+          term: "Balance Eating",
+          detail:
+            "Eat regularly, and in a way that feels good to you. Too little or too much can tip your mood without you noticing.",
+        },
+        {
+          letter: "A",
+          term: "Avoid mood-altering substances",
+          detail:
+            "Steer clear of non-prescribed drugs, and keep alcohol light. They tend to borrow calm from tomorrow.",
+        },
+        {
+          letter: "S",
+          term: "Balance Sleep",
+          detail:
+            "Aim for the amount of rest that helps you feel like yourself, often seven to nine hours. Keeping a roughly consistent bedtime helps too.",
+        },
+        {
+          letter: "E",
+          term: "Get Exercise",
+          detail:
+            "Move your body most days. Even a short walk counts. Build toward about twenty minutes of something you actually enjoy.",
+        },
+      ],
+      sections: [
+        {
+          heading: "Why the basics matter",
+          paragraphs: [
+            "Emotions don't happen in a vacuum. A skipped lunch, a short night, a week without movement, each one lowers the threshold at which stress tips into overwhelm. Tending to your physical needs won't erase hard feelings, but it widens the gap between a trigger and your reaction.",
+            "Think of it as maintenance, not a cure. The goal isn't to feel good all the time. It's to give yourself a steadier baseline to work from.",
+          ],
+          image: {
+            src: "/nature/Background-13.png",
+            caption: "Small, regular care adds up to a steadier baseline.",
+          },
+        },
+        {
+          heading: "How to start",
+          paragraphs: [
+            "Pick one letter, not all five. Trying to overhaul everything at once usually backfires. Choose the area that feels most off right now, and make it a little easier for a week.",
+            "If sleep is the weak link, set a wind-down time. If it's food, keep a simple snack within reach. Notice how your mood responds, and let that guide what you tend to next.",
+          ],
+          image: {
+            src: "/nature/Background-7.png",
+            caption: "One change at a time is enough.",
+          },
+        },
+        {
+          heading: "When to reach for it",
+          paragraphs: [
+            "PLEASE works best as a daily habit rather than an emergency tool. It's the groundwork you lay on ordinary days so the harder ones have less to grab onto.",
+            "If you've noticed yourself more reactive, more tearful, or quicker to spiral lately, it's worth running through the checklist. Often one of the basics has slipped without you noticing.",
+          ],
+        },
+      ],
+    },
   },
   {
     type: "accountability",
@@ -254,6 +351,8 @@ export const HOME_CARDS: HomeCard[] = [
     author: "Kristin Neff",
     rating: 4.6,
     cover: "/books/self-compassion.jpg",
+    blurb:
+      "This book could meet you where you are on the days the voice in your head turns harsh. Kristin Neff draws on her research to show how treating yourself with the same kindness you'd offer a close friend can steady you through stress and setbacks. It's full of gentle, practical exercises for easing self-judgment, which might help when you're carrying a lot.",
     naturePath: "/nature/Background-19.png",
   },
   {
@@ -301,6 +400,71 @@ export const HOME_CARDS: HomeCard[] = [
     title: "A skill that could quiet rumination is the 'STOP' Method",
     eyebrow: "Recommended Skill",
     naturePath: "/nature/Background-10.png",
+    article: {
+      name: "The STOP Skill",
+      acronym: "STOP",
+      summary: "Put a pause between a strong urge and what you do next.",
+      readingTime: "3 min read",
+      intro:
+        "When emotion runs high, it pushes you to act fast, and fast often means regret. STOP is a distress tolerance skill from Dialectical Behavior Therapy. It buys you a few seconds to step out of the heat and choose your next move on purpose, which is also what makes it useful for breaking a rumination loop.",
+      breakdown: [
+        {
+          letter: "S",
+          term: "Stop",
+          detail:
+            "Freeze. Don't react to the urge right away. You can't undo what you haven't done yet, so give yourself a moment first.",
+        },
+        {
+          letter: "T",
+          term: "Take a step back",
+          detail:
+            "Create some distance, physically or mentally. Take a breath, drop your shoulders, leave the room if you can.",
+        },
+        {
+          letter: "O",
+          term: "Observe",
+          detail:
+            "Notice what's actually happening, inside and around you. What are the facts? What are you feeling, and what is the situation really asking of you?",
+        },
+        {
+          letter: "P",
+          term: "Proceed mindfully",
+          detail:
+            "Act with your goal in mind. Ask what would make this better rather than worse, and choose from there.",
+        },
+      ],
+      sections: [
+        {
+          heading: "The pause is the skill",
+          paragraphs: [
+            "Strong emotions come with a built-in urge to do something immediately: send the text, say the thing, give up, walk out. STOP doesn't ask you to suppress the feeling. It just slows the gap between feeling and acting long enough for your thinking mind to catch up.",
+            "That pause is small, but it's where your choices live. Almost everything you'd later regret happens inside the first few seconds.",
+          ],
+          image: {
+            src: "/nature/Background-15.png",
+            caption: "A few seconds of stillness changes what happens next.",
+          },
+        },
+        {
+          heading: "Using it on rumination",
+          paragraphs: [
+            "Rumination is its own kind of urge, the pull to keep replaying or rehearsing a worry. The same four steps interrupt it. When you catch the loop starting, Stop, Take a step back from the thought, Observe that you're ruminating rather than problem-solving, and Proceed toward something grounding.",
+            "Naming the loop, even just a quiet 'I'm spiraling,' is often enough to loosen its grip.",
+          ],
+          image: {
+            src: "/nature/Background-16.png",
+            caption: "Noticing the loop is the first step out of it.",
+          },
+        },
+        {
+          heading: "Practice before you need it",
+          paragraphs: [
+            "Skills are hardest to remember in the exact moment you need them most. Run through STOP on small frustrations, a slow line, a curt email, so the steps feel familiar when something bigger lands.",
+            "It won't feel natural at first, and that's normal. Like anything, it gets easier with repetition until the pause becomes something you reach for without thinking.",
+          ],
+        },
+      ],
+    },
   },
   {
     type: "accountability",
@@ -330,6 +494,8 @@ export const HOME_CARDS: HomeCard[] = [
     author: "Pema Chödrön",
     rating: 4.7,
     cover: "/books/when-things-fall-apart.jpg",
+    blurb:
+      "This book could be a steadying companion during a hard stretch. Pema Chödrön, a Buddhist teacher, writes about staying present with discomfort instead of running from it, and finding ground when things feel uncertain. Its short, honest chapters are easy to return to, and they might offer some comfort when you're sitting with something difficult.",
     naturePath: "/nature/Background-9.png",
   },
 ];

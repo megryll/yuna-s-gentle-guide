@@ -1,10 +1,12 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { EngineerSidebar } from "@/components/EngineerSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
 import { PlatformToggle } from "@/components/PlatformToggle";
+import { ModeToggle } from "@/components/ModeToggle";
 import { FrameSizeToggle } from "@/components/FrameSizeToggle";
 import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
 import { SoundtrackToggle } from "@/components/SoundtrackToggle";
@@ -108,11 +110,20 @@ function RootComponent() {
     switchSoundtrack();
   }, [soundtrackId]);
 
+  // Standalone doc routes render bare — no admin chrome — so they read as a
+  // clean reference when opened in a new tab.
+  const pathname = useLocation({ select: (l) => l.pathname });
+  if (pathname === "/animation-specs") {
+    return <Outlet />;
+  }
+
   return (
     <>
       <AdminSidebar />
+      <EngineerSidebar />
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <PlatformToggle />
+        <ModeToggle />
         <FrameSizeToggle />
         <UserTypeToggle />
         <SoundtrackToggle />

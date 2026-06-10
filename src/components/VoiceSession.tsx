@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { YunaStatus, type YunaState } from "@/components/YunaStatus";
+import { CardSuggestion } from "@/components/CardSuggestion";
+import {
+  RECO_SAMPLES,
+  setSessionEscalation,
+  setSessionReco,
+  setSessionStatus,
+  useSessionEscalation,
+  useSessionReco,
+  useSessionStatus,
+} from "@/lib/session-dev";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { useAppMode } from "@/lib/theme-prefs";
+import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
@@ -20,6 +31,18 @@ import {
 } from "@/lib/chat-store";
 
 type Phase = "connecting" | "idle" | "listening" | "thinking" | "speaking" | "muted" | "ending";
+
+// The dev status-override (EngineerSidebar) shares these names with Phase for
+// listening/thinking/speaking; reconnecting/slow are status-only (no phase).
+const PHASE_SET = new Set<string>([
+  "connecting",
+  "idle",
+  "listening",
+  "thinking",
+  "speaking",
+  "muted",
+  "ending",
+]);
 
 type InputMode = "hold" | "hands-free";
 
@@ -652,16 +675,32 @@ export function VoiceSession({
     };
   }, []);
 
-  const showPulseRings = phase === "speaking";
+  const appMode = useAppMode();
+  // Dev overrides from the EngineerSidebar's "Yuna states" panel. A forced
+  // status overrides what the pad displays (so a reviewer can hold any state);
+  // listening/thinking/speaking also map onto a real phase and drive the pad
+  // visuals, while reconnecting/slow only swap the status label + leaf.
+  const devStatus = useSessionStatus();
+  const devReco = useSessionReco();
+  const devEscalation = useSessionEscalation();
+  const blurBg = useModeImage();
+  const displayPhase: Phase =
+    devStatus && PHASE_SET.has(devStatus) ? (devStatus as Phase) : phase;
+
+  const showPulseRings = displayPhase === "speaking";
   const phaseLabel =
-    inputMode === "hands-free" ? PHASE_LABEL_HANDSFREE[phase] : PHASE_LABEL_HOLD[phase];
+    inputMode === "hands-free"
+      ? PHASE_LABEL_HANDSFREE[displayPhase]
+      : PHASE_LABEL_HOLD[displayPhase];
 
   return (
     <div className="relative flex-1 flex flex-col items-center px-8 min-h-0 pb-6">
       <div className="flex-1 w-full flex flex-col items-center min-h-0">
         <VoicePad
-          phase={phase}
+          phase={displayPhase}
           phaseLabel={phaseLabel}
+          statusOverride={devStatus}
+          onStatusRetry={() => setSessionStatus(null)}
           avatar={avatar}
           showPulseRings={showPulseRings}
           analyser={voiceAnalyser}
@@ -672,6 +711,34 @@ export function VoiceSession({
           onOpenModeDrawer={() => setModeDrawerOpen(true)}
         />
       </div>
+
+      {devReco && RECO_SAMPLES[devReco] && (
+        <div className="yuna-rise absolute inset-x-0 bottom-6 z-30 px-6">
+          <CardSuggestion
+            mode="voice"
+            kind={devReco}
+            title={RECO_SAMPLES[devReco]!.title}
+            naturePath={RECO_SAMPLES[devReco]!.naturePath}
+            surface={appMode === "light" ? "light" : "dark"}
+            frostedImage={blurBg}
+            onStart={() => setSessionReco(null)}
+            onDismiss={() => setSessionReco(null)}
+          />
+        </div>
+      )}
+
+      {devEscalation && (
+        <div className="yuna-rise absolute inset-x-0 bottom-6 z-30 px-6">
+          <CardSuggestion
+            mode="voice"
+            variant="escalation"
+            tier={devEscalation}
+            surface={appMode === "light" ? "light" : "dark"}
+            frostedImage={blurBg}
+            onFindTherapist={() => setSessionEscalation(null)}
+          />
+        </div>
+      )}
 
       <PrivacyFooter
         onLeaveFeedback={() => {
@@ -696,6 +763,8 @@ export function VoiceSession({
 function VoicePad({
   phase,
   phaseLabel,
+  statusOverride,
+  onStatusRetry,
   avatar,
   showPulseRings,
   analyser,
@@ -707,6 +776,8 @@ function VoicePad({
 }: {
   phase: Phase;
   phaseLabel: string;
+  statusOverride: YunaState | null;
+  onStatusRetry: () => void;
   avatar: ReturnType<typeof useYunaIdentity>["avatar"];
   showPulseRings: boolean;
   analyser: AnalyserNode | null;
@@ -785,11 +856,23 @@ function VoicePad({
         <div
           className={
             "shrink-0 text-center transition-opacity duration-200 " +
-            (inputMode === "hold" && phase === "idle" ? "opacity-0" : "opacity-100")
+            (inputMode === "hold" && phase === "idle" && !statusOverride
+              ? "opacity-0"
+              : "opacity-100")
           }
-          aria-hidden={inputMode === "hold" && phase === "idle"}
+          aria-hidden={inputMode === "hold" && phase === "idle" && !statusOverride}
         >
-          <p className="text-base tracking-tight text-white/85">{phaseLabel}</p>
+          {statusOverride ? (
+            <YunaStatus
+              state={statusOverride}
+              surface="dark"
+              onRetry={onStatusRetry}
+            />
+          ) : phase === "thinking" ? (
+            <YunaStatus state="thinking" surface="dark" label={phaseLabel} />
+          ) : (
+            <p className="text-base tracking-tight text-white/85">{phaseLabel}</p>
+          )}
         </div>
 
         <div className="relative flex items-center justify-center h-40 w-40 shrink-0">

@@ -28,6 +28,17 @@ import { pauseAmbient, startAmbient } from "@/lib/ambient-audio";
 import { getNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
+import { CardSuggestion } from "@/components/CardSuggestion";
+import { YunaStatus } from "@/components/YunaStatus";
+import {
+  RECO_SAMPLES,
+  setSessionEscalation,
+  setSessionReco,
+  setSessionStatus,
+  useSessionEscalation,
+  useSessionReco,
+  useSessionStatus,
+} from "@/lib/session-dev";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
@@ -147,6 +158,17 @@ function Chat() {
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
+  // Dev override (EngineerSidebar "Yuna states"): surface a card recommendation
+  // as Yuna's latest turn for review.
+  const reco = useSessionReco();
+  // Dev override (EngineerSidebar "Yuna states"): surface a crisis/support
+  // escalation as Yuna's latest turn for review.
+  const escalation = useSessionEscalation();
+  // Dev override (EngineerSidebar "Yuna states"): force a conversational
+  // status (thinking / slow / reconnecting / offline) above the input so it
+  // can be reviewed without scripting a real exchange. Voice mode reads the
+  // same store inside VoiceSession.
+  const sessionStatus = useSessionStatus();
   const inVoice = mode === "voice";
   // Initial chat-now landing in voice mode (no revisit flag). This branch
   // defers the mic-permission prompt: Yuna introduces herself, walks the
@@ -892,10 +914,47 @@ function Chat() {
                 return <Bubble key={m.id} msg={m} frostedImage={blurBg} />;
               })}
               {typing && <TypingBubble frostedImage={blurBg} />}
+              {reco && RECO_SAMPLES[reco] && (
+                <div className="yuna-rise w-full flex justify-start">
+                  <CardSuggestion
+                    mode="text"
+                    kind={reco}
+                    title={RECO_SAMPLES[reco]!.title}
+                    naturePath={RECO_SAMPLES[reco]!.naturePath}
+                    surface={appMode === "light" ? "light" : "dark"}
+                    frostedImage={blurBg}
+                    onStart={() => setSessionReco(null)}
+                    onDismiss={() => setSessionReco(null)}
+                  />
+                </div>
+              )}
+              {escalation && (
+                <div className="yuna-rise w-full flex justify-start">
+                  <CardSuggestion
+                    mode="text"
+                    variant="escalation"
+                    tier={escalation}
+                    surface={appMode === "light" ? "light" : "dark"}
+                    frostedImage={blurBg}
+                    onFindTherapist={() => setSessionEscalation(null)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Input + Call Yuna footer */}
             <div>
+              {sessionStatus &&
+                sessionStatus !== "listening" &&
+                sessionStatus !== "speaking" && (
+                  <div className="px-5 pb-1.5 pt-1">
+                    <YunaStatus
+                      state={sessionStatus}
+                      surface={appMode === "light" ? "light" : "dark"}
+                      onRetry={() => setSessionStatus(null)}
+                    />
+                  </div>
+                )}
               {voicePitchActive ? (
                 <div className="px-5 pt-3 pb-6 flex flex-col gap-1.5">
                   <Button surface="dark" variant="primary" fullWidth onClick={openMicForVoice}>

@@ -45,8 +45,8 @@ function AcceptTerms() {
 
   return (
     <PhoneFrame backgroundImage={darkBg}>
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white min-h-0">
-        <div className="flex items-center justify-between">
+      <div className="flex-1 flex flex-col min-h-0 px-8 yuna-fade-in text-white">
+        <div className="flex items-center justify-between pt-14">
           <Button
             surface="dark"
             variant="secondary"
@@ -59,43 +59,45 @@ function AcceptTerms() {
           <span className="h-9 w-9" />
         </div>
 
-        <div className="mt-10 yuna-rise text-center">
-          <h1 className="text-3xl leading-tight tracking-tight text-white">
-            Let's set up your
-            <br />
-            private space
-          </h1>
-          <p className="mt-3 text-sm text-white/75 leading-relaxed max-w-[18rem] mx-auto">
-            Please review carefully and accept before continuing with Yuna
-          </p>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-6">
+          <div className="mt-10 yuna-rise text-center">
+            <h1 className="text-3xl leading-tight tracking-tight text-white">
+              Let's set up your
+              <br />
+              private space
+            </h1>
+            <p className="mt-3 text-sm text-white/75 leading-relaxed max-w-[18rem] mx-auto">
+              Please review carefully and accept before continuing with Yuna
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-2.5">
+            {TERMS.map((text, i) => {
+              if (i < acceptedCount) {
+                return <AcceptedTerm key={i} text={text} />;
+              }
+              if (i === acceptedCount) {
+                return (
+                  <ActiveTerm key={i} text={text} onAgree={acceptCurrent} />
+                );
+              }
+              return null;
+            })}
+          </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2.5">
-          {TERMS.map((text, i) => {
-            if (i < acceptedCount) {
-              return <AcceptedTerm key={i} text={text} />;
-            }
-            if (i === acceptedCount) {
-              return (
-                <ActiveTerm key={i} text={text} onAgree={acceptCurrent} />
-              );
-            }
-            return null;
-          })}
+        <div className="pt-4 pb-10">
+          <Button
+            surface="dark"
+            variant="primary"
+            fullWidth
+            disabled={!allAccepted}
+            onClick={continueOn}
+            aria-disabled={!allAccepted}
+          >
+            Continue
+          </Button>
         </div>
-
-        <div className="flex-1" />
-
-        <Button
-          surface="dark"
-          variant="primary"
-          fullWidth
-          disabled={!allAccepted}
-          onClick={continueOn}
-          aria-disabled={!allAccepted}
-        >
-          Continue
-        </Button>
       </div>
     </PhoneFrame>
   );
