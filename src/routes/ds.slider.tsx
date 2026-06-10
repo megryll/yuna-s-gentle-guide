@@ -30,7 +30,7 @@ function DSSlider() {
     <DSPage title="Slider">
       <Section
         title="Variants"
-        subtitle="Linear is stepped left-to-right for an ordered set like voice pace. Bipolar rests at center and runs -1 → 1, turning green toward the positive end and orange toward the negative."
+        subtitle="Linear is stepped left-to-right for an ordered set like voice pace. Bipolar rests at center and runs -1 → 1, turning green toward the positive end and orange toward the negative — or set tone='neutral' for a monochrome ink fill on balance controls with no good/bad end."
       >
         <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
@@ -50,6 +50,7 @@ function DSSlider() {
   leftLabel?:  string                  // negative-end label, above the rail
   rightLabel?: string                  // positive-end label, above the rail
   touched?:    boolean                 // emphasise the active end once moved
+  tone?:       "sentiment" | "neutral" // green/orange (default) vs ink fill
 />
 
 // Keyboard: arrow keys step the thumb. Tap or drag anywhere on the rail.
@@ -62,7 +63,25 @@ function DSSlider() {
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Linear", render: (s) => <LinearDemo surface={s} /> },
   { label: "Bipolar", render: (s) => <BipolarDemo surface={s} /> },
+  { label: "Bipolar · neutral", render: (s) => <NeutralDemo surface={s} /> },
 ];
+
+function NeutralDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState(0);
+  return (
+    <div className="w-full max-w-sm flex items-center gap-3">
+      <span className="text-uppercase tracking-[0.04em] uppercase text-muted-foreground shrink-0">
+        Music
+      </span>
+      <div className="flex-1">
+        <Slider variant="bipolar" tone="neutral" surface={surface} value={value} onChange={setValue} />
+      </div>
+      <span className="text-uppercase tracking-[0.04em] uppercase text-muted-foreground shrink-0">
+        Voice
+      </span>
+    </div>
+  );
+}
 
 function LinearDemo({ surface }: { surface: "dark" | "light" }) {
   const [idx, setIdx] = useState(2);

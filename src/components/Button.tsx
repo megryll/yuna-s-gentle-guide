@@ -20,8 +20,9 @@ import { cn } from "@/lib/utils";
  *                   like a card's More / bookmark / share. Pair with an icon
  *                   size; pressed flips it to the filled primary look.
  *   - "card"      — full-width rounded-2xl bordered block with a title
- *                   (children), optional `subtitle`, and optional `trailing`
- *                   element (e.g. a chevron). The list-row "card-as-button".
+ *                   (children, text-base semibold — kept to one line),
+ *                   optional `subtitle`, and optional `trailing` element
+ *                   (e.g. a chevron). The list-row "card-as-button".
  *                   Ignores `size` — it's always a full-width block.
  *   - "link"      — inline text link, no border/fill/padding. For footer
  *                   actions (Referral Code, Login, Forgot password).
@@ -179,7 +180,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props}
         >
           <span className="flex-1 min-w-0">
-            <span className="block text-lg font-semibold leading-tight">{children}</span>
+            <span className="block text-base font-semibold leading-tight">{children}</span>
             {subtitle && (
               <span
                 className={cn(

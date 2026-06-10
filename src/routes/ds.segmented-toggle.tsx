@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { MessageSquare, Mic, Sun, Moon, LayoutGrid, List } from "lucide-react";
+import { Mic, MessageCircle } from "lucide-react";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
 import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
@@ -14,53 +14,67 @@ export const Route = createFileRoute("/ds/segmented-toggle")({
   component: DSSegmentedToggle,
 });
 
-// ─── Real call-site option shapes ───────────────────────────────────────────
-// These mirror what chat.tsx and settings.tsx pass — keeping the DS page
-// honest about how the component actually shows up in the app.
+type V = "voice" | "text";
+type Content = "text" | "icon" | "both";
 
-const CHAT_OPTIONS: ReadonlyArray<SegmentedToggleOption<"text" | "voice">> = [
-  { value: "voice", label: "Voice", icon: <Mic size={14} strokeWidth={1.75} /> },
-  { value: "text", label: "Text", icon: <MessageSquare size={14} strokeWidth={1.75} /> },
-] as const;
+// One option pair, rebuilt per content form so the same toggle can show text
+// only, an icon only, or both — the component supports all three at either size.
+function buildOptions(content: Content): ReadonlyArray<SegmentedToggleOption<V>> {
+  return [
+    {
+      value: "voice",
+      label: content === "icon" ? undefined : "Voice",
+      icon: content === "text" ? undefined : <Mic size={14} strokeWidth={1.75} aria-hidden />,
+      ariaLabel: "Voice",
+    },
+    {
+      value: "text",
+      label: content === "icon" ? undefined : "Text",
+      icon: content === "text" ? undefined : <MessageCircle size={14} strokeWidth={1.75} aria-hidden />,
+      ariaLabel: "Text",
+    },
+  ];
+}
 
-const THEME_OPTIONS: ReadonlyArray<SegmentedToggleOption<"light" | "dark">> = [
-  { value: "light", label: "Light", icon: <Sun size={14} strokeWidth={1.75} /> },
-  { value: "dark", label: "Dark", icon: <Moon size={14} strokeWidth={1.75} /> },
-] as const;
+function Demo({
+  surface,
+  size,
+  content,
+}: {
+  surface: "dark" | "light";
+  size: "sm" | "md";
+  content: Content;
+}) {
+  const [value, setValue] = useState<V>("voice");
+  return (
+    <SegmentedToggle
+      size={size}
+      surface={surface}
+      ariaLabel="Conversation mode"
+      value={value}
+      onChange={setValue}
+      options={buildOptions(content)}
+    />
+  );
+}
 
-// Icon-only, no label — the compact size="sm" rail (Home card/list switcher).
-const VIEW_OPTIONS: ReadonlyArray<SegmentedToggleOption<"card" | "list">> = [
-  { value: "card", icon: <LayoutGrid size={13} strokeWidth={1.75} />, ariaLabel: "Card view" },
-  { value: "list", icon: <List size={13} strokeWidth={1.75} />, ariaLabel: "List view" },
-] as const;
+const SIZE_ROWS: MatrixRow[] = [
+  { label: "sm · text", render: (s) => <Demo surface={s} size="sm" content="text" /> },
+  { label: "sm · icon", render: (s) => <Demo surface={s} size="sm" content="icon" /> },
+  { label: "sm · text + icon", render: (s) => <Demo surface={s} size="sm" content="both" /> },
+  { label: "md · text", render: (s) => <Demo surface={s} size="md" content="text" /> },
+  { label: "md · icon", render: (s) => <Demo surface={s} size="md" content="icon" /> },
+  { label: "md · text + icon", render: (s) => <Demo surface={s} size="md" content="both" /> },
+];
 
 function DSSegmentedToggle() {
   return (
     <DSPage title="Segmented toggle">
-      {/* ─── Variants ───────────────────────────────────────────────────── */}
       <Section
-        title="Variants"
-        subtitle="Default and Theme are md with labels; Compact is the size=&quot;sm&quot;, icon-only rail (Home card/list switcher)."
+        title="Sizes"
+        subtitle="Two sizes that differ mainly by height — sm (h-8 rail) and md (h-9 rail). Either size takes segments with text only, an icon only, or both; labelled segments grow with their text while icon-only segments stay square."
       >
-        <SurfaceMatrix rows={VARIANT_ROWS} />
-      </Section>
-
-      {/* ─── Anatomy ────────────────────────────────────────────────────── */}
-      <Section title="Anatomy">
-        <div className="rounded-2xl border border-border p-6 bg-muted/30">
-          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
-            <span className="text-muted-foreground">Rail height</span>
-            <code>md: h-9 (36px) · sm: h-8 (32px)</code>
-            <span className="text-muted-foreground">Segment height</span>
-            <code>md: h-8 px-3 · sm: h-7 (icon-only h-7 w-7)</code>
-            <span className="text-muted-foreground">Active pill</span>
-            <code>bg-[#ffffff] text-[#1D1F25] (dark) · bg-[#1D1F25] text-[#ffffff] (light)</code>
-            <span className="text-muted-foreground">Inactive label</span>
-            <code>text-white (dark) · text-foreground/75 (light)</code>
-            <span className="text-muted-foreground">Label type</span>
-            <code>text-[11px] tracking-[0.16em] uppercase</code>
-          </div>
-        </div>
+        <SurfaceMatrix rows={SIZE_ROWS} />
       </Section>
 
       <Section title="Props">
@@ -70,64 +84,16 @@ function DSSegmentedToggle() {
   onChange: (v: V) => void
   surface:  "dark" | "light"
   ariaLabel: string
-  size?:    "sm" | "md"        // default "md"; "sm" = compact rail
+  size?:    "sm" | "md"        // default "md"; differ mainly by height
 />
 
 type SegmentedToggleOption<V extends string> = {
   value:      V
-  label?:     string           // omit for icon-only (size="sm")
-  icon:       ReactNode
+  label?:     string           // omit for an icon-only segment
+  icon?:      ReactNode         // omit for a text-only segment
   ariaLabel?: string           // required when label is omitted
 }`}</PropsBlock>
       </Section>
     </DSPage>
-  );
-}
-
-// ─── Interactive demos ──────────────────────────────────────────────────────
-
-const VARIANT_ROWS: MatrixRow[] = [
-  { label: "Default", render: (s) => <ChatToggleDemo surface={s} /> },
-  { label: "Theme", render: (s) => <ThemeToggleDemo surface={s} /> },
-  { label: "Compact", render: (s) => <ViewToggleDemo surface={s} /> },
-];
-
-function ChatToggleDemo({ surface }: { surface: "dark" | "light" }) {
-  const [mode, setMode] = useState<"text" | "voice">("text");
-  return (
-    <SegmentedToggle
-      value={mode}
-      onChange={setMode}
-      surface={surface}
-      ariaLabel="Conversation mode"
-      options={CHAT_OPTIONS}
-    />
-  );
-}
-
-function ThemeToggleDemo({ surface }: { surface: "dark" | "light" }) {
-  const [mode, setMode] = useState<"light" | "dark">(surface === "dark" ? "dark" : "light");
-  return (
-    <SegmentedToggle
-      value={mode}
-      onChange={setMode}
-      surface={surface}
-      ariaLabel="Appearance"
-      options={THEME_OPTIONS}
-    />
-  );
-}
-
-function ViewToggleDemo({ surface }: { surface: "dark" | "light" }) {
-  const [view, setView] = useState<"card" | "list">("card");
-  return (
-    <SegmentedToggle
-      size="sm"
-      value={view}
-      onChange={setView}
-      surface={surface}
-      ariaLabel="View mode"
-      options={VIEW_OPTIONS}
-    />
   );
 }

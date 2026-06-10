@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
 import { KeyboardSimulator } from "@/components/KeyboardSimulator";
+import { useFrameSize } from "@/lib/frame-size";
 import { usePlatform } from "@/lib/platform";
 import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
@@ -47,10 +48,16 @@ export function PhoneFrame({
   const bg = themedBg ?? backgroundImage;
   const light = themed && isLightMode(mode);
   const platform = usePlatform();
+  const frame = useFrameSize();
 
   return (
-    <div className="min-h-screen w-full bg-muted/40 flex items-center justify-center sm:p-6">
-      <div className="relative w-full max-w-[420px]">
+    <div
+      className="min-h-screen w-full bg-muted/40 flex items-center justify-center sm:p-6"
+      style={
+        { "--frame-w": `${frame.w}px`, "--frame-h": `${frame.h}px` } as CSSProperties
+      }
+    >
+      <div className="relative w-full max-w-[var(--frame-w)]">
         {/* Outer overlay: sits BEHIND the inner phone (earlier in DOM = lower
             paint order). Children rendered here via the outer context get
             clipped naturally by the phone surface — only what scales past the
@@ -63,7 +70,7 @@ export function PhoneFrame({
         <div
           ref={setContainer}
           className={
-            "relative w-full min-h-screen sm:min-h-[820px] sm:h-[820px] sm:rounded-[2.25rem] sm:hairline overflow-hidden flex flex-col " +
+            "relative w-full min-h-screen sm:min-h-[var(--frame-h)] sm:h-[var(--frame-h)] sm:rounded-[2.25rem] sm:hairline overflow-hidden flex flex-col " +
             (bg ? "" : "bg-background") +
             (light ? " theme-light" : "") +
             (platform === "android" ? " platform-android" : "")

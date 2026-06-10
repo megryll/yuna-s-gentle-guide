@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Mic } from "lucide-react";
 import { TextField, FieldError } from "@/components/TextField";
+import { DictationField } from "@/components/DictationField";
 import { Button } from "@/components/Button";
 import { Waveform } from "@/components/Waveform";
 import { DSPage, PropsBlock, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
@@ -135,6 +136,13 @@ function DSTextFields() {
         <SurfaceMatrix rows={trailingRows} />
       </Section>
 
+      <Section
+        title="Dictation"
+        subtitle="DictationField packages the hold-to-talk pattern: an empty field shows a press-and-hold mic that records (waveform replaces the input) and on release converts speech to text and submits. Type and the button flips to send."
+      >
+        <SurfaceMatrix rows={DICTATION_ROWS} />
+      </Section>
+
       <Section title="Props">
         <PropsBlock>{`<TextField
   surface?:  "dark" | "light"          // default: "dark"
@@ -145,9 +153,36 @@ function DSTextFields() {
   trailing?: ReactNode                 // inline DS Button (icon or labelled)
   containerClassName?: string          // class on the pill wrapper
   ...native input props                // value, onChange, placeholder, …
+/>
+
+<DictationField
+  value:        string                  // controlled text
+  onChange:     (v: string) => void
+  onSubmit:     (text: string) => void  // typed value on send · transcript on release
+  surface?:     "dark" | "light"        // default: "dark"
+  size?:        "md" | "lg"
+  placeholder?: string
+  autoFocus?:   boolean
 />`}</PropsBlock>
       </Section>
     </DSPage>
+  );
+}
+
+const DICTATION_ROWS: MatrixRow[] = [
+  { label: "Dictation", render: (s) => <DictationDemo surface={s} /> },
+];
+
+function DictationDemo({ surface }: { surface: Surface }) {
+  const [text, setText] = useState("");
+  return (
+    <DictationField
+      surface={surface}
+      value={text}
+      onChange={setText}
+      onSubmit={() => setText("")}
+      placeholder="Type a Message…"
+    />
   );
 }
 

@@ -5,6 +5,7 @@ import appCss from "../styles.css?url";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
 import { PlatformToggle } from "@/components/PlatformToggle";
+import { FrameSizeToggle } from "@/components/FrameSizeToggle";
 import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
 import { SoundtrackToggle } from "@/components/SoundtrackToggle";
 // Side-effect import: installs the global Audio() interceptor early so every
@@ -112,6 +113,7 @@ function RootComponent() {
       <AdminSidebar />
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <PlatformToggle />
+        <FrameSizeToggle />
         <UserTypeToggle />
         <SoundtrackToggle />
         <PrototypeMuteToggle />

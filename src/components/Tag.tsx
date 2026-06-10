@@ -33,6 +33,8 @@ type TagProps = {
   icon?: React.ReactNode;
   surface?: AppMode;
   disabled?: boolean;
+  /** Accessible name — needed for icon-only tappable tags (e.g. a "+" add tag). */
+  "aria-label"?: string;
 };
 
 const BASE =
@@ -72,6 +74,7 @@ export function Tag({
   icon,
   surface,
   disabled,
+  "aria-label": ariaLabel,
 }: TagProps) {
   const mode = surface ?? useAppMode();
   const tone = SURFACE[mode];
@@ -97,6 +100,7 @@ export function Tag({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
+      aria-label={ariaLabel}
       className={BASE + " " + INTERACTIVE + " " + (selected ? tone.on : tone.off)}
     >
       {inner}

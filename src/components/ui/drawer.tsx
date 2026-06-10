@@ -7,10 +7,24 @@ import { modeImage, useAppMode, type AppMode } from "@/lib/theme-prefs";
 
 const Drawer = ({
   shouldScaleBackground = false,
+  container,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
-);
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  // Tell vaul the drawer lives inside the phone frame, not <body>. Without this
+  // the Root reports `data-vaul-custom-container=false` and vaul paints a 200%-
+  // tall ::after below the sheet (its overscroll bleed for body-mounted, fixed
+  // sheets) — which, since our DrawerContent carries a background image, renders
+  // as a slab of photo filling the frame under a short sheet. The Portal already
+  // mounts here; the Root has to agree so the bleed is suppressed.
+  const phoneContainer = usePhoneFrameContainer();
+  return (
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      container={container ?? phoneContainer ?? undefined}
+      {...props}
+    />
+  );
+};
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
@@ -50,7 +64,7 @@ const DrawerContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
     mode?: AppMode;
   }
->(({ className, children, mode: modeProp, ...props }, ref) => {
+>(({ className, children, mode: modeProp, style, ...props }, ref) => {
   const inFrame = !!usePhoneFrameContainer();
   const pos = inFrame ? "absolute" : "fixed";
   const appMode = useAppMode();
@@ -64,6 +78,9 @@ const DrawerContent = React.forwardRef<
           backgroundImage: `url(${modeImage(mode)})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+          // Callers may pass layout style (e.g. a keyboard-driven offset); merge
+          // it in rather than letting the spread clobber the background above.
+          ...style,
         }}
         className={cn(
           pos +

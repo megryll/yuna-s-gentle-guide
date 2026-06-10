@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Moon,
   ScanFace,
+  SlidersHorizontal,
   Star,
   Sun,
   User,
@@ -30,6 +31,7 @@ type LinkRow = {
   label: string;
   Icon: IconCmp;
   kind: "link";
+  to?: string;
 };
 
 type ToggleRow = {
@@ -48,6 +50,7 @@ const GROUP_ONE: Row[] = [
   { id: "subscription", label: "Subscription", Icon: Star, kind: "link" },
   { id: "voice", label: "Customize Voice", Icon: Users, kind: "link" },
   { id: "language", label: "Session Language", Icon: Globe, kind: "link" },
+  { id: "content", label: "Content Preferences", Icon: SlidersHorizontal, kind: "link", to: "/settings/content-preferences" },
   { id: "faceid", label: "Face ID", Icon: ScanFace, kind: "toggle", defaultOn: true },
   { id: "push", label: "Push notifications", Icon: Bell, kind: "toggle", defaultOn: true },
 ];
@@ -145,6 +148,7 @@ function SettingsRoute() {
                 isLast={i === GROUP_ONE.length - 1}
                 toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
                 onToggle={() => toggle(row.id)}
+                onNavigate={(to) => navigate({ to })}
               />
             ))}
           </CardGroup>
@@ -157,6 +161,7 @@ function SettingsRoute() {
                 isLast={i === GROUP_TWO.length - 1}
                 toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
                 onToggle={() => toggle(row.id)}
+                onNavigate={(to) => navigate({ to })}
               />
             ))}
           </CardGroup>
@@ -188,11 +193,13 @@ function SettingsRowItem({
   isLast,
   toggleOn,
   onToggle,
+  onNavigate,
 }: {
   row: Row;
   isLast: boolean;
   toggleOn?: boolean;
   onToggle: () => void;
+  onNavigate: (to: string) => void;
 }) {
   const Icon = row.Icon;
   const borderClass = isLast ? "" : "border-b border-border";
@@ -211,7 +218,11 @@ function SettingsRowItem({
   }
 
   return (
-    <button type="button" className={`${baseClass} active:bg-foreground/[0.05] transition-colors`}>
+    <button
+      type="button"
+      onClick={() => row.to && onNavigate(row.to)}
+      className={`${baseClass} active:bg-foreground/[0.05] transition-colors`}
+    >
       <div className="flex items-center gap-4">
         <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />
         <span className="text-base leading-6 font-medium text-foreground">{row.label}</span>

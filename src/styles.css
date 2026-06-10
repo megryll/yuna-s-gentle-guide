@@ -434,6 +434,34 @@
     98% { transform: translateX(1.5px); }
   }
 
+  /* ─── Goal confetti burst ──────────────────────────────────────────────────
+     A one-shot celebration fired when a goal is created or marked done. Each
+     piece starts at the burst origin (top/left 50% of its overlay) and is
+     flung to a per-piece offset (--cx/--cy) with a spin (--cr), fading as it
+     lands. Colors are decorative, not readable content, so they're fixed hues
+     that pop on either photo bg. Render inside a pointer-events-none overlay. */
+  .goal-confetti-piece {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 9999px;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: goal-confetti-burst 1100ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+  @keyframes goal-confetti-burst {
+    0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scale(0.4); }
+    12%  { opacity: 1; }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--cx)), calc(-50% + var(--cy)))
+        rotate(var(--cr)) scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .goal-confetti-piece { animation: none; opacity: 0; }
+  }
+
   /* ─── Light mode inversion (.theme-light) ──────────────────────────────────
      Post-onboarding screens use hardcoded `text-white` and white-alpha
      borders/backgrounds for legibility on the dark photo. In light mode the

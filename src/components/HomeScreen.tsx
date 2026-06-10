@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bookmark, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -11,8 +11,13 @@ import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
+import { RatingScale } from "@/components/RatingScale";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
-import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
+import { HOME_CARDS, KIND_PLURAL, type HomeCard } from "@/lib/home-cards";
+import { CardActionsDrawer } from "@/components/CardActionsDrawer";
+import { Toast } from "@/components/Toast";
+import { Divider } from "@/components/Divider";
+import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
@@ -78,6 +83,51 @@ export function HomeScreen({
       return next;
     });
 
+  // Completed cards drop under the "Completed Today" divider (faded + a check
+  // badge); dismissed cards leave the feed. Both are session-local, like saves.
+  // The 3-dot menu acts on whichever card opened it (menuCard).
+  const [completedIds, setCompletedIds] = useState<Set<string>>(() => new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
+  const [menuCard, setMenuCard] = useState<HomeCard | null>(null);
+
+  // Top-pinned confirmation toast (currently just the "stop seeing" action).
+  const surface = useAppMode() === "light" ? "light" : "dark";
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
+  };
+  useEffect(() => () => toastTimer.current && clearTimeout(toastTimer.current), []);
+
+  const toggleComplete = () => {
+    if (!menuCard) return;
+    const id = menuCard.id;
+    setCompletedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setMenuCard(null);
+  };
+  const dismissCard = () => {
+    if (!menuCard) return;
+    setDismissedIds((prev) => new Set(prev).add(menuCard.id));
+    setMenuCard(null);
+  };
+  const stopSeeing = () => {
+    if (!menuCard) return;
+    setContentPref(menuCard.type, false);
+    showToast(`You'll stop seeing ${KIND_PLURAL[menuCard.type]}.`);
+    setMenuCard(null);
+  };
+  const managePreferences = () => {
+    setMenuCard(null);
+    navigate({ to: "/settings/content-preferences" });
+  };
+
   useWelcomeAudio(showWelcome, voice);
 
   // Catch the case where the user arrives from /chat — chat pauses the
@@ -104,7 +154,17 @@ export function HomeScreen({
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="flex-1 flex flex-col text-white min-h-0">
+      <div className="relative flex-1 flex flex-col text-white min-h-0">
+        {toast && (
+          <div className="absolute inset-x-0 top-0 z-[60] px-6 pt-14">
+            <Toast
+              variant="neutral"
+              surface={surface}
+              message={toast}
+              onDismiss={() => setToast(null)}
+            />
+          </div>
+        )}
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center justify-between -mx-1">
             <Button surface="dark" variant="secondary" size="xs" onClick={() => undefined}>
@@ -150,8 +210,11 @@ export function HomeScreen({
             savedOnly={savedOnly}
             setSavedOnly={setSavedOnly}
             savedIds={savedIds}
+            completedIds={completedIds}
+            dismissedIds={dismissedIds}
             onToggleSave={toggleSave}
             onOpen={(c) => open(openPrompt(c))}
+            onOpenMenu={setMenuCard}
             showFeedback={returning}
           />
         </div>
@@ -160,6 +223,17 @@ export function HomeScreen({
       </div>
       <FirstSessionDisclaimerGate />
       <SchedulePrioritizeGate />
+      <CardActionsDrawer
+        card={menuCard}
+        completed={!!menuCard && completedIds.has(menuCard.id)}
+        onOpenChange={(o) => {
+          if (!o) setMenuCard(null);
+        }}
+        onToggleComplete={toggleComplete}
+        onDismiss={dismissCard}
+        onStopSeeing={stopSeeing}
+        onManagePreferences={managePreferences}
+      />
     </PhoneFrame>
   );
 }
@@ -202,8 +276,11 @@ function CreatedForYou({
   savedOnly,
   setSavedOnly,
   savedIds,
+  completedIds,
+  dismissedIds,
   onToggleSave,
   onOpen,
+  onOpenMenu,
   showFeedback,
 }: {
   cards: HomeCard[];
@@ -212,11 +289,46 @@ function CreatedForYou({
   savedOnly: boolean;
   setSavedOnly: (v: boolean) => void;
   savedIds: Set<string>;
+  completedIds: Set<string>;
+  dismissedIds: Set<string>;
   onToggleSave: (id: string) => void;
   onOpen: (c: HomeCard) => void;
+  onOpenMenu: (c: HomeCard) => void;
   showFeedback: boolean;
 }) {
-  const items = savedOnly ? cards.filter((c) => savedIds.has(c.id)) : cards;
+  const prefs = useContentPrefs();
+  // Drop dismissed cards and any kind the user has turned off in Content
+  // Preferences (or via the card menu's "Stop seeing …").
+  const base = cards.filter((c) => !dismissedIds.has(c.id) && prefs[c.type] !== false);
+  const visible = savedOnly ? base.filter((c) => savedIds.has(c.id)) : base;
+  const incomplete = visible.filter((c) => !completedIds.has(c.id));
+  const done = visible.filter((c) => completedIds.has(c.id));
+
+  const renderFeed = (list: HomeCard[]) => (
+    <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-4")}>
+      {list.map((c, i) => (
+        <li key={c.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
+          {viewMode === "card" ? (
+            <HomeCardItem
+              card={c}
+              isSaved={savedIds.has(c.id)}
+              completed={completedIds.has(c.id)}
+              onClick={() => {}}
+              onMenu={() => onOpenMenu(c)}
+              onToggleSave={() => onToggleSave(c.id)}
+            />
+          ) : (
+            <HomeCardRow
+              card={c}
+              completed={completedIds.has(c.id)}
+              onClick={() => {}}
+              onMenu={() => onOpenMenu(c)}
+            />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div className="mt-12">
@@ -228,7 +340,7 @@ function CreatedForYou({
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {visible.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-4 py-6 text-center yuna-rise">
           <p className="text-sm text-white/80">No saved items yet</p>
           <p className="mt-1 text-xs text-white/60 leading-relaxed">
@@ -236,22 +348,15 @@ function CreatedForYou({
           </p>
         </div>
       ) : (
-        <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-4")}>
-          {items.map((c, i) => (
-            <li key={c.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
-              {viewMode === "card" ? (
-                <HomeCardItem
-                  card={c}
-                  isSaved={savedIds.has(c.id)}
-                  onClick={() => {}}
-                  onToggleSave={() => onToggleSave(c.id)}
-                />
-              ) : (
-                <HomeCardRow card={c} onClick={() => {}} />
-              )}
-            </li>
-          ))}
-        </ul>
+        <>
+          {renderFeed(incomplete)}
+          {done.length > 0 && (
+            <>
+              <Divider surface="dark" label="Completed Today" className="mt-8 mb-3" />
+              {renderFeed(done)}
+            </>
+          )}
+        </>
       )}
 
       {showFeedback && <ExperienceFeedback />}
@@ -259,11 +364,17 @@ function CreatedForYou({
   );
 }
 
-function ExperienceFeedback() {
-  const [picked, setPicked] = useState<number | null>(null);
-  const faces = ["😠", "😞", "😐", "🙂", "😊"] as const;
-  const labels = ["Angry", "Sad", "Neutral", "Good", "Great"] as const;
+const EXPERIENCE_FACES = [
+  { value: "angry", content: "😠", label: "Angry" },
+  { value: "sad", content: "😞", label: "Sad" },
+  { value: "neutral", content: "😐", label: "Neutral" },
+  { value: "good", content: "🙂", label: "Good" },
+  { value: "great", content: "😊", label: "Great" },
+] as const;
 
+function ExperienceFeedback() {
+  const [picked, setPicked] = useState<(typeof EXPERIENCE_FACES)[number]["value"] | null>(null);
+  const surface = useAppMode() === "light" ? "light" : "dark";
   const hasPick = picked !== null;
   return (
     <div className="mt-8 yuna-rise px-1 py-4 text-center text-white">
@@ -273,28 +384,14 @@ function ExperienceFeedback() {
       <p className="mt-2 text-sm leading-relaxed text-white/75">
         {hasPick ? "Your feedback helps us improve!" : "Our team reads every submission"}
       </p>
-      <div className="mt-5 flex items-center justify-between gap-2 max-w-[18rem] mx-auto">
-        {faces.map((emoji, i) => {
-          const active = picked === i;
-          const scaleClass = active ? "scale-150" : hasPick ? "scale-90" : "scale-100";
-          return (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => setPicked(i)}
-              aria-label={labels[i]}
-              aria-pressed={active}
-              className="h-11 w-11 text-[26px] leading-none inline-flex items-center justify-center"
-            >
-              <span
-                aria-hidden
-                className={`inline-block transition-transform duration-200 ease-out ${scaleClass}`}
-              >
-                {emoji}
-              </span>
-            </button>
-          );
-        })}
+      <div className="mt-5">
+        <RatingScale
+          surface={surface}
+          ariaLabel="What was your Yuna experience like today?"
+          value={picked}
+          onChange={setPicked}
+          options={EXPERIENCE_FACES}
+        />
       </div>
     </div>
   );

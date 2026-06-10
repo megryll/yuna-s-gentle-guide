@@ -135,7 +135,7 @@ function ScheduleConfirmToast({ open }: { open: boolean }) {
         (open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")
       }
     >
-      <Toast variant="success" message="You'll receive a notification when it's starting." />
+      <Toast variant="success" message="You scheduled a session." />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Sun, Music } from "lucide-react";
+import { Sun, Music, Plus } from "lucide-react";
 import { Tag } from "@/components/Tag";
 import {
   DSPage,
@@ -32,12 +32,13 @@ function DSTags() {
 
       <Section title="Props">
         <PropsBlock>{`<Tag
-  variant?:   "tappable" | "informational"   // default "tappable"
-  onClick?:   () => void                      // tappable only
-  selected?:  boolean                         // tappable only, default false
-  icon?:      ReactNode                       // optional leading glyph (sized to 14px)
-  surface?:   "dark" | "light"                // default useAppMode()
-  disabled?:  boolean                         // tappable only
+  variant?:     "tappable" | "informational"   // default "tappable"
+  onClick?:     () => void                      // tappable only
+  selected?:    boolean                         // tappable only, default false
+  icon?:        ReactNode                       // optional leading glyph (sized to 14px)
+  surface?:     "dark" | "light"                // default useAppMode()
+  disabled?:    boolean                         // tappable only
+  aria-label?:  string                          // accessible name for icon-only tags
 >
   {label}
 </Tag>`}</PropsBlock>
@@ -85,6 +86,9 @@ const VARIANT_ROWS: MatrixRow[] = [
         </Tag>
         <Tag surface={s} variant="informational" icon={<Music />}>
           Sound therapy
+        </Tag>
+        <Tag surface={s} aria-label="Add" onClick={() => {}}>
+          <Plus />
         </Tag>
       </div>
     ),

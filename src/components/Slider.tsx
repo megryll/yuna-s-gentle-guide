@@ -12,6 +12,8 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
  * variant="bipolar": a center-out rating. The thumb rests at the midpoint and
  *   the fill grows from center — right/green when positive, left/orange when
  *   negative. `value` runs -1 → 1. `leftLabel`/`rightLabel` sit above the rail.
+ *   `tone="neutral"` drops the sentiment colors for a monochrome ink fill —
+ *   for balance/mix controls (e.g. music ↔ voice) where neither end is "good".
  *
  * surface: which background the slider sits on.
  *   - "dark"  — dark or photo backgrounds (white thumb, translucent rail)
@@ -32,6 +34,8 @@ export interface SliderProps {
   rightLabel?: string;
   /** bipolar: emphasise the active end label once the user has moved it. */
   touched?: boolean;
+  /** bipolar: "sentiment" (default, green/orange) or "neutral" (ink fill). */
+  tone?: "sentiment" | "neutral";
 }
 
 const SURFACE = {
@@ -69,6 +73,7 @@ export function Slider({
   leftLabel,
   rightLabel,
   touched,
+  tone = "sentiment",
 }: SliderProps) {
   const s = SURFACE[surface];
 
@@ -90,7 +95,18 @@ export function Slider({
     const fillWidth = Math.abs(value) * 50;
     // Positive reuses the linear rail's green; negative matches the toast
     // alert orange — same tokens, so the language is consistent everywhere.
-    const fillCls = positive ? "bg-secondary-green" : negative ? "bg-alert-orange" : "";
+    // tone="neutral" drops sentiment for a monochrome ink fill (white on dark,
+    // foreground on light) — for mix/balance controls with no good/bad end.
+    const fillCls =
+      tone === "neutral"
+        ? surface === "dark"
+          ? "bg-white"
+          : "bg-foreground"
+        : positive
+          ? "bg-secondary-green"
+          : negative
+            ? "bg-alert-orange"
+            : "";
 
     return (
       <div className="flex flex-col gap-0.5">

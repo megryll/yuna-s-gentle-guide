@@ -68,15 +68,6 @@ function LoginScreen() {
 
           {step === "email" ? (
             <div className="mt-10 flex flex-col gap-3">
-              <Button surface="dark" variant="primary" fullWidth onClick={finish}>
-                <img src="/logos/apple.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
-                Continue with Apple
-              </Button>
-              <Button surface="dark" variant="primary" fullWidth onClick={finish}>
-                <img src="/logos/google.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
-                Continue with Google
-              </Button>
-              <Divider surface="dark" label="or" className="my-2" />
               <form
                 noValidate
                 onSubmit={(e) => {
@@ -107,6 +98,15 @@ function LoginScreen() {
                   Log in with email
                 </Button>
               </form>
+              <Divider surface="dark" label="or" className="my-2" />
+              <Button surface="dark" variant="primary" fullWidth onClick={finish}>
+                <img src="/logos/google.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
+                Continue with Google
+              </Button>
+              <Button surface="dark" variant="primary" fullWidth onClick={finish}>
+                <img src="/logos/apple.svg" alt="" aria-hidden="true" className="h-6 w-6 object-contain" />
+                Continue with Apple
+              </Button>
             </div>
           ) : (
             <form

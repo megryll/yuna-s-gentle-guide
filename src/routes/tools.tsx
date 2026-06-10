@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -10,6 +10,8 @@ type Tool = {
   image: string;
   emoji: string;
   isNew?: boolean;
+  /** Destination route when the tool is wired up; omit for inert tiles. */
+  to?: string;
 };
 
 const TOOLS: Tool[] = [
@@ -26,6 +28,7 @@ const TOOLS: Tool[] = [
     caption: "Personalized meditations and breathing exercises",
     image: "/tools/guided-audio.jpg",
     emoji: "🎧",
+    to: "/meditation",
   },
   {
     id: "gratitude",
@@ -40,6 +43,7 @@ const TOOLS: Tool[] = [
     caption: "A partner to help you reach your goals",
     image: "/tools/goal-setting.jpg",
     emoji: "🚀",
+    to: "/goals",
   },
 ];
 
@@ -49,6 +53,7 @@ export const Route = createFileRoute("/tools")({
 });
 
 function ToolsRoute() {
+  const navigate = useNavigate();
   const mode = useAppMode();
   const isLight = mode === "light";
   // Light mode: lift the photo with a white wash so the title reads dark.
@@ -69,7 +74,24 @@ function ToolsRoute() {
             <li key={t.id}>
               <div
                 style={{ animationDelay: `${i * 60}ms` }}
-                className="yuna-rise relative w-full rounded-3xl overflow-hidden aspect-[16/9]"
+                className={
+                  "yuna-rise relative w-full rounded-3xl overflow-hidden aspect-[16/9] " +
+                  (t.to ? "cursor-pointer active:opacity-90 transition-opacity" : "")
+                }
+                role={t.to ? "button" : undefined}
+                tabIndex={t.to ? 0 : undefined}
+                aria-label={t.to ? t.title : undefined}
+                onClick={t.to ? () => navigate({ to: t.to! }) : undefined}
+                onKeyDown={
+                  t.to
+                    ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigate({ to: t.to! });
+                        }
+                      }
+                    : undefined
+                }
               >
                 <img
                   src={t.image}

@@ -1,26 +1,26 @@
-import { Music } from "lucide-react";
+import { Smartphone } from "lucide-react";
 
-import { SOUNDTRACKS, setSoundtrackId, useSoundtrackId } from "@/lib/soundtrack-prefs";
+import { FRAME_SIZES, setFrameSizeId, useFrameSizeId } from "@/lib/frame-size";
 
-export function SoundtrackToggle() {
-  const current = useSoundtrackId();
+export function FrameSizeToggle() {
+  const current = useFrameSizeId();
 
   return (
     <div
       className="hidden md:flex items-center gap-1 rounded-full border border-border bg-background/80 backdrop-blur-md p-1 shadow-sm"
       role="group"
-      aria-label="Background audio"
+      aria-label="Simulated device size"
     >
       <span className="px-2 text-muted-foreground" aria-hidden="true">
-        <Music size={14} strokeWidth={2} />
+        <Smartphone size={14} strokeWidth={2} />
       </span>
-      {SOUNDTRACKS.map((track) => (
+      {FRAME_SIZES.map((size) => (
         <ToggleButton
-          key={track.id}
-          active={current === track.id}
-          onClick={() => setSoundtrackId(track.id)}
+          key={size.id}
+          active={current === size.id}
+          onClick={() => setFrameSizeId(size.id)}
         >
-          {track.label}
+          {size.label}
         </ToggleButton>
       ))}
     </div>

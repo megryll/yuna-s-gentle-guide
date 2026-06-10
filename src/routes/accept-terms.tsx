@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { CheckBadge } from "@/components/CheckBadge";
+import { Badge } from "@/components/Badge";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/accept-terms")({
@@ -105,7 +105,7 @@ function AcceptedTerm({ text }: { text: string }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm pl-5 pr-3.5 py-3.5 flex items-center gap-3">
       <p className="flex-1 text-base leading-snug text-white/90">{text}</p>
-      <CheckBadge />
+      <Badge icon />
     </div>
   );
 }

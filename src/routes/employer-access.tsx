@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { CheckBadge } from "@/components/CheckBadge";
+import { Badge } from "@/components/Badge";
 import { TextField, FieldError } from "@/components/TextField";
 import { Toast } from "@/components/Toast";
 
@@ -80,7 +80,7 @@ function EmployerAccessScreen() {
   return (
     <PhoneFrame backgroundImage={darkBg}>
       <div
-        className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white yuna-fade-in transition-transform duration-200 ease-out"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col px-8 pt-14 pb-10 text-white yuna-fade-in transition-transform duration-200 ease-out"
         style={
           inputFocused && !unlocked
             ? { transform: `translateY(-${FOCUS_SHIFT}px)` }
@@ -380,7 +380,7 @@ function EmployerTroubleDrawer({
                   key={label}
                   className="flex items-center gap-2.5 text-sm text-white/85"
                 >
-                  <CheckBadge size="sm" />
+                  <Badge icon size="sm" />
                   <span>{label}</span>
                 </li>
               ))}
@@ -539,9 +539,9 @@ function PassFace({ unlocked }: { unlocked: boolean }) {
           </span>
         </div>
 
-        <div className="mt-3.5 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-sm text-white/90">
+        <div className="mt-3.5 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs text-white/90">
           {["Unlimited sessions", "24/7", "Private"].map((label) => (
-            <div key={label} className="flex items-center gap-1.5">
+            <div key={label} className="flex items-center gap-1">
               <Check
                 size={13}
                 strokeWidth={2.5}

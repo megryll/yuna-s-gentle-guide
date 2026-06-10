@@ -2,6 +2,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { History, House, MessageCircle, Pencil, User } from "lucide-react";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
+import { usePlatform } from "@/lib/platform";
+import { useModeImage } from "@/lib/theme-prefs";
 
 type Surface = "light" | "dark";
 
@@ -53,6 +55,8 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
   const { pathname } = useLocation();
   const userType = useUserType();
   const startChat = useStartChat();
+  const platform = usePlatform();
+  const modeImage = useModeImage();
   // Notification dots only surface for returning users — that's where the
   // "new content since last visit" framing applies.
   const showNotifications = userType === "returning" && pathname === "/home";
@@ -91,13 +95,29 @@ export function AppBar({ surface = "light" }: { surface?: Surface } = {}) {
     // protrudes up into the scroll area. Because the path now fills its full
     // bounding-box width at y=0 (no L-shaped cutouts), the visible bar reads
     // as a clean rounded rectangle with a bump on top.
+    // Android kills backdrop-blur (`.platform-android`), so the frosted fill
+    // vanishes and the masked shape reads as a flat wash. Paint the same masked
+    // silhouette with the (already-blurred) themed background photo instead —
+    // a faux-frost that keeps the bar + bulge defined without a live backdrop.
+    // A faint black wash holds the white tab labels above the photo.
+    const android = platform === "android";
     return (
       <nav aria-label="Main" className="relative isolate px-2 pt-2 pb-3 grid grid-cols-5 gap-1">
         <div
           aria-hidden="true"
-          className="absolute left-0 right-0 bottom-0 -z-10 bg-white/10 backdrop-blur-md"
+          className={
+            "absolute left-0 right-0 bottom-0 -z-10 " +
+            (android ? "" : "bg-white/10 backdrop-blur-md")
+          }
           style={{
             top: "-20%",
+            ...(android
+              ? {
+                  backgroundImage: `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${modeImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center bottom",
+                }
+              : null),
             maskImage: APPBAR_MASK_URL,
             WebkitMaskImage: APPBAR_MASK_URL,
             maskSize: "100% 100%",

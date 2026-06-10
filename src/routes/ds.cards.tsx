@@ -22,18 +22,24 @@ function DSCards() {
         <SurfaceMatrix rows={VARIANT_ROWS} />
       </Section>
 
+      <Section title="States">
+        <SurfaceMatrix rows={STATE_ROWS} />
+      </Section>
+
       <Section title="Props">
         <PropsBlock>{`<Card
   tone:       "dark" | "light"   // content tone (dark = white text)
   naturePath: string             // background photo (always dark-washed)
   solidFill?: string             // flat fill instead of photo
   isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
+  completed?: boolean            // fade the tile + show a check Badge top-left
 >
   <CardHeader
     meta:     { label, tone }
     cadence?: "Daily"            // appends a "• Daily" tag
     eyebrow?: string             // overrides meta.label
     leading?: ReactNode          // leading glyph (e.g. an avatar)
+    onMore?:  () => void         // wires the top-right More (3-dot) button
   />
   …body (caller-owned, centered)…
   <CardFooter
@@ -53,15 +59,21 @@ function DSCards() {
   tone?:        "dark" | "light"   // ink tone; default "dark"
   italic?:      boolean            // italic title (quotes)
   isNew?:       boolean
+  completed?:   boolean            // fade the row + show a check Badge top-left
   naturePath?:  string             // photo fill
   solidFill?:   string             // flat fill instead of photo
   onClick?:     () => void
+  onMenu?:      () => void         // top-right 3-dot button; drops the arrow to
+                                   //   the bottom-right. Omit = arrow centered
+                                   //   (the past-sessions list keeps this).
   interactive?: boolean            // default true; false = static (display-only)
 />
 
 <HomeCardRow
   card:         HomeCard          // feed item — maps a HomeCard onto <CardRow>
+  completed?:   boolean
   onClick:      () => void
+  onMenu?:      () => void        // forwards to CardRow's 3-dot menu button
   interactive?: boolean           // default true; false = static (display-only)
 />
 
@@ -110,6 +122,30 @@ const VARIANT_ROWS: MatrixRow[] = [
     render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#2C5C3D" />),
   },
   { label: "List row", render: (s) => withCluster(s, <DemoRow />) },
+  {
+    label: "List row + menu",
+    render: (s) =>
+      withCluster(
+        s,
+        <div className="max-w-[340px]">
+          <HomeCardRow card={ROW_PHOTO} onClick={() => {}} onMenu={() => {}} interactive={false} />
+        </div>,
+      ),
+  },
+];
+
+const STATE_ROWS: MatrixRow[] = [
+  { label: "Completed (tile)", render: (s) => withCluster(s, <DemoCard completed />) },
+  {
+    label: "Completed (row)",
+    render: (s) =>
+      withCluster(
+        s,
+        <div className="max-w-[340px]">
+          <HomeCardRow card={ROW_PHOTO} completed onClick={() => {}} onMenu={() => {}} interactive={false} />
+        </div>,
+      ),
+  },
 ];
 
 function DemoRow() {
@@ -121,11 +157,11 @@ function DemoRow() {
   );
 }
 
-function DemoCard() {
+function DemoCard({ completed = false }: { completed?: boolean } = {}) {
   const [saved, setSaved] = useState(false);
   return (
     <div className="max-w-[300px]">
-      <Card tone="dark" naturePath={NATURE}>
+      <Card tone="dark" completed={completed} naturePath={NATURE}>
         <CardHeader meta={{ label: "Meditation", tone: "dark" }} cadence="Daily" />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">

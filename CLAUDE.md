@@ -8,12 +8,19 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
 
 2. **Reference, don't reproduce.** Use DS components with props rather than copy-pasting their Tailwind classes into a new `<button>`/`<input>`/etc. This is what makes global edits possible later. If you find yourself writing `rounded-full px-6 py-3.5 bg-foreground text-background` by hand, you should be using `<Button variant="primary" />` instead.
 
+   **This includes the small structural primitives, not just buttons and inputs.** Before hand-rolling any visual element with raw markup, check whether a DS component already covers it and use it:
+   - A labeled or plain separator → `<Divider label="…" surface=… />`, never a hand-built `flex items-center gap-3` + `h-px` + label. (A "Completed Today" / "or" style centered-label rule is exactly `<Divider label>`.)
+   - A status pill or completion check → `<Badge>` (text) / `<Badge icon>` (icon-only), never a hand-built rounded-full chip.
+   - The same goes for tags, toggles, avatars, chat bubbles, etc. If you're about to write the classes a DS component already encapsulates, stop and use the component.
+
 3. **Source-of-truth workflow for DS changes.** When the user asks for a DS-level change (e.g., "change primary button font", "add a destructive variant", "make secondary buttons larger"):
    1. Update the source component (e.g. `src/components/Button.tsx`).
    2. Update the matching DS page (e.g. `src/routes/ds.buttons.tsx`) — variants, sizes, states, the Props reference block, and JSDoc all reflect the new state.
    3. Then propagate to call sites — and do it via the prop, not by editing each file's classes.
 
    Never propagate before updating the source. Never let the DS page drift from reality.
+
+   **DS-page parity is mandatory and part of the same change — not a follow-up.** Every variant, size, and state a component supports must be rendered on its `/ds/*` page. When you add or change one (a new prop, a new variant like a list row's 3-dot-menu layout, a new state like "completed"), you MUST add a row/example for it on the DS page in the *same* edit — add it to the right section (`Variants` / `Sizes` / `States`) and to the Props block. Classify it correctly: a *variant* is a distinct form the component takes (with-menu vs. plain row); a *state* is a condition the same form can be in (completed, disabled, pressed). Shipping a component capability that isn't visible on its DS page is an incomplete change. If a capability has a meaningfully different layout in another form of the component (e.g. the list-row vs. tile form of a card), show that form too.
 
 4. **Padding conventions.** These are the agreed values — don't pick new ones without justification:
    - **Photo-bg hero screens, short / no-scroll** (Welcome, Auth, Intro): `px-8 pt-14 pb-10` — every section (header, scroll area, footer) shares the same `px-8` so the back arrow + CTAs sit on a single vertical edge.

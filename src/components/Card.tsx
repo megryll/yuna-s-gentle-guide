@@ -22,16 +22,21 @@ import { Badge } from "@/components/Badge";
  * shim via the `card-fixed-dark` class (the shim would otherwise invert it).
  *
  * Card props:
- *   tone:      "dark" | "light"  — content tone (dark = white text)
- *   naturePath: string           — background photo (dark-washed)
- *   solidFill?: string           — flat fill (overrides photo)
- *   isNew?:    boolean           — green "New" flag, top-left
+ *   tone:       "dark" | "light"  — content tone (dark = white text)
+ *   naturePath: string            — background photo (dark-washed)
+ *   solidFill?: string            — flat fill (overrides photo)
+ *   isNew?:     boolean           — green "New" flag, top-left
+ *   completed?: boolean           — fade the tile + show a check Badge top-left
  *
  * CardRow is the list-row layout of the same content card: a short pressable
  * row (title + a meta line below + a trailing ActionCircle) sharing the photo /
  * solid fill model. Used by Home's feed rows and the past-sessions list.
+ *   onMenu?:    () => void        — show a top-right 3-dot menu button and drop
+ *                                   the ActionCircle to the bottom-right corner;
+ *                                   omit it to keep the arrow centered.
+ *   completed?: boolean           — fade the row + show a check Badge top-left
  *
- * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?
+ * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?, onMore?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
  * CardCTA props:    tone, onClick, children
  */
@@ -68,6 +73,7 @@ export function NewBadge({ className }: { className?: string }) {
 export function Card({
   tone,
   isNew,
+  completed,
   naturePath,
   solidFill,
   className,
@@ -75,6 +81,7 @@ export function Card({
 }: {
   tone: "dark" | "light";
   isNew?: boolean;
+  completed?: boolean;
   naturePath?: string;
   solidFill?: string;
   className?: string;
@@ -91,17 +98,27 @@ export function Card({
 
   return (
     <div className="relative">
-      {isNew && <NewBadge className="-top-2 left-5" />}
+      {/* Completed cards trade the "New" flag for a check badge in the same
+          top-left corner slot and fade the tile. The badge sits outside the
+          faded tile so it stays crisp. */}
+      {isNew && !completed && <NewBadge className="-top-2 left-5" />}
+      {completed && <Badge icon size="sm" label="Completed" className="absolute -top-2 left-5 z-10" />}
+      {/* Grid overlay: a square spacer sets the minimum (the tile is never
+          shorter than it is wide, at any device size), while the content layer
+          stacks in the same cell and grows the row taller when its content
+          exceeds that square — so nothing clips on a narrower frame. */}
       <div
         className={cn(
-          "rounded-[2.5rem] px-5 py-7 aspect-square flex flex-col overflow-hidden",
+          "grid grid-cols-1 rounded-[2.5rem] overflow-hidden",
           isDark ? "text-white" : "text-neutral-900",
           isDark && "card-fixed-dark",
+          completed && "opacity-60",
           className,
         )}
         style={style}
       >
-        {children}
+        <span aria-hidden className="[grid-area:1/1] aspect-square" />
+        <div className="[grid-area:1/1] min-w-0 px-5 py-7 flex flex-col">{children}</div>
       </div>
     </div>
   );
@@ -118,9 +135,11 @@ export function CardRow({
   tone = "dark",
   italic = false,
   isNew = false,
+  completed = false,
   naturePath,
   solidFill,
   onClick,
+  onMenu,
   interactive = true,
 }: {
   title: string;
@@ -128,43 +147,83 @@ export function CardRow({
   tone?: "dark" | "light";
   italic?: boolean;
   isNew?: boolean;
+  completed?: boolean;
   naturePath?: string;
   solidFill?: string;
   onClick?: () => void;
+  // When set, a 3-dot menu button is pinned to the top-right and the trailing
+  // ActionCircle drops to the bottom-right corner. Without it the ActionCircle
+  // stays vertically centered (the past-sessions list keeps this layout).
+  onMenu?: () => void;
   interactive?: boolean;
 }) {
   const isLight = tone === "light";
+  const hasMenu = !!onMenu;
   const style: React.CSSProperties = solidFill
     ? { backgroundColor: solidFill }
     : cardSurface({ naturePath: naturePath ?? "" }).style;
 
   return (
-    <div className="relative">
-      {isNew && <NewBadge className="-top-3 left-4" />}
+    // Dark-tone rows pin white ink against `.theme-light` at the wrapper so the
+    // arrow + menu (siblings of the inner button) stay white in light app mode.
+    <div className={cn("relative", !isLight && "card-fixed-dark")}>
+      {isNew && !completed && <NewBadge className="-top-3 left-4" />}
+      {completed && <Badge icon size="sm" label="Completed" className="absolute -top-2 left-4 z-10" />}
       <button
         type="button"
         onClick={interactive ? onClick : undefined}
         disabled={!interactive}
-        className={
-          "relative w-full text-left rounded-2xl px-4 py-5 transition-opacity flex items-center gap-4 overflow-hidden " +
-          (!isLight ? "card-fixed-dark " : "") +
-          (interactive ? "active:opacity-90" : "disabled:opacity-100 cursor-default")
-        }
+        className={cn(
+          "relative w-full text-left rounded-2xl px-4 py-5 transition-opacity flex gap-4 overflow-hidden",
+          hasMenu ? "items-stretch min-h-[96px] pr-14" : "items-center",
+          !isLight && "card-fixed-dark",
+          completed && "opacity-60",
+          interactive && "active:opacity-90",
+          !interactive && "cursor-default",
+          // Pin disabled (display-only) rows to full opacity — unless completed,
+          // whose opacity-60 fade must survive (the :disabled variant otherwise
+          // outweighs it on specificity).
+          !interactive && !completed && "disabled:opacity-100",
+        )}
         style={style}
       >
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
           <p
-            className={
-              `font-display text-xl leading-snug tracking-tight ${isLight ? "text-foreground" : "text-white"} ` +
-              (italic ? "italic" : "")
-            }
+            className={cn(
+              "font-display text-xl leading-snug tracking-tight",
+              isLight ? "text-foreground" : "text-white",
+              italic && "italic",
+            )}
           >
             {title}
           </p>
           <div className="mt-3.5 flex items-center gap-1 flex-wrap">{meta}</div>
         </div>
-        <ActionCircle tone={isLight ? "light" : "dark"} />
+        {!hasMenu && <ActionCircle tone={isLight ? "light" : "dark"} />}
       </button>
+
+      {/* Menu + trailing arrow are siblings of the row button (not nested in
+          it — that would be invalid markup) and sit on top of its corners. */}
+      {hasMenu && (
+        <>
+          <span aria-hidden className="absolute bottom-4 right-4 pointer-events-none">
+            <ActionCircle tone={isLight ? "light" : "dark"} />
+          </span>
+          <Button
+            surface={isLight ? "light" : "dark"}
+            variant="plain"
+            size="icon-sm"
+            aria-label="More options"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenu();
+            }}
+            className="absolute top-2 right-2 z-10"
+          >
+            <MoreHorizontal strokeWidth={2} aria-hidden />
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -191,11 +250,13 @@ export function CardHeader({
   cadence,
   eyebrow,
   leading,
+  onMore,
 }: {
   meta: CardChromeMeta;
   cadence?: "Daily";
   eyebrow?: string;
   leading?: React.ReactNode;
+  onMore?: () => void;
 }) {
   const isDark = meta.tone === "dark";
   const eyebrowColor = isDark ? "text-white" : "text-neutral-900";
@@ -218,8 +279,11 @@ export function CardHeader({
         surface={isDark ? "dark" : "light"}
         variant="plain"
         size="icon-sm"
-        aria-label="More"
-        onClick={(e) => e.stopPropagation()}
+        aria-label="More options"
+        onClick={(e) => {
+          e.stopPropagation();
+          onMore?.();
+        }}
         className="shrink-0 -mt-1 -mr-1"
       >
         <MoreHorizontal strokeWidth={2} aria-hidden />

@@ -155,6 +155,41 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
 };
 
+// Plural, human-facing name for a card kind. Used by the 3-dot menu's
+// "Stop seeing …" action and by the Content Preferences settings screen.
+export const KIND_PLURAL: Record<CardKind, string> = {
+  "guided-session": "Guided Sessions",
+  meditation: "Personalised Meditations",
+  gratitude: "Gratitude Journal Prompts",
+  "self-discovery": "Questionnaires",
+  affirmation: "Affirmations",
+  "learn-skill": "Recommended Skills",
+  accountability: "Goals",
+  book: "Book Recommendations",
+};
+
+// Which optional 3-dot menu actions apply per card kind. "Why am I seeing
+// this?" is always offered, so it isn't tracked here. `complete` cards can be
+// marked done (and moved under the Completed Today divider); `dismiss` cards
+// can be removed from the feed; `stopSeeing` cards offer the per-kind
+// "Stop seeing …" toggle (Goals are managed only from Content Preferences).
+export type CardMenuActions = {
+  complete: boolean;
+  dismiss: boolean;
+  stopSeeing: boolean;
+};
+
+export const KIND_MENU: Record<CardKind, CardMenuActions> = {
+  "guided-session": { complete: true, dismiss: true, stopSeeing: true },
+  meditation: { complete: false, dismiss: true, stopSeeing: true },
+  gratitude: { complete: false, dismiss: false, stopSeeing: true },
+  "self-discovery": { complete: false, dismiss: true, stopSeeing: true },
+  affirmation: { complete: true, dismiss: true, stopSeeing: true },
+  "learn-skill": { complete: true, dismiss: true, stopSeeing: true },
+  accountability: { complete: true, dismiss: true, stopSeeing: false },
+  book: { complete: true, dismiss: true, stopSeeing: true },
+};
+
 export const HOME_CARDS: HomeCard[] = [
   {
     type: "self-discovery",

@@ -2,23 +2,29 @@ import type { ReactNode } from "react";
 
 /**
  * Two-segment pill toggle used across the app — chat's Text/Voice switch,
- * the settings appearance toggle, and Home's icon-only card/list switcher.
- * One component so future visual tweaks affect every surface.
+ * the settings appearance toggle, Home's card/list switcher, and the Goals
+ * Active/Completed filter. One component so future visual tweaks affect
+ * every surface.
  *
  * Pass `surface="dark"` when the toggle sits on the dark photo cluster,
  * `surface="light"` for the pale light photo. The active segment uses
  * arbitrary color values so it stays high-contrast even when a parent
  * applies `.overlay-on-dark` token swaps (e.g. settings dark mode).
  *
- * `size="md"` (default) is the labeled pill (h-9 rail, h-8 px-3 segments).
- * `size="sm"` is the compact rail (h-8) for icon-only switchers — omit
- * `label` on the options and the segments collapse to square h-7 buttons.
+ * Two sizes, differing mainly by height:
+ *   `size="md"` (default) — h-9 rail, h-8 segments.
+ *   `size="sm"`           — compact h-8 rail, h-7 segments.
+ * Either size takes segments with text only, an icon only, or both — set
+ * `label` and/or `icon` per option (icon-only segments need `ariaLabel`).
+ * Labelled segments grow with their text; icon-only segments stay square.
  */
 
 export type SegmentedToggleOption<V extends string> = {
   value: V;
+  /** Text label; omit for an icon-only segment (then `ariaLabel` is required). */
   label?: string;
-  icon: ReactNode;
+  /** Leading glyph; omit for a text-only segment. */
+  icon?: ReactNode;
   ariaLabel?: string;
 };
 

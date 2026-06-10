@@ -14,15 +14,18 @@ import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
+import { Route as MeditationRouteImport } from './routes/meditation'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
 import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
@@ -31,13 +34,15 @@ import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsTagsRouteImport } from './routes/ds.tags'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSurfaceRouteImport } from './routes/ds.surface'
+import { Route as DsSpacingRouteImport } from './routes/ds.spacing'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
+import { Route as DsRatingScaleRouteImport } from './routes/ds.rating-scale'
+import { Route as DsRadialProgressRouteImport } from './routes/ds.radial-progress'
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
 import { Route as DsDividerRouteImport } from './routes/ds.divider'
 import { Route as DsColorsRouteImport } from './routes/ds.colors'
-import { Route as DsCheckBadgeRouteImport } from './routes/ds.check-badge'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsCardsRouteImport } from './routes/ds.cards'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
@@ -71,6 +76,11 @@ const SessionsRoute = SessionsRouteImport.update({
   path: '/sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeditationRoute = MeditationRouteImport.update({
+  id: '/meditation',
+  path: '/meditation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -84,6 +94,11 @@ const IntroRoute = IntroRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerAccessRoute = EmployerAccessRouteImport.update({
@@ -116,6 +131,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsContentPreferencesRoute =
+  SettingsContentPreferencesRouteImport.update({
+    id: '/settings_/content-preferences',
+    path: '/settings/content-preferences',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
   id: '/focus-area/$num',
   path: '/focus-area/$num',
@@ -156,6 +177,11 @@ const DsSurfaceRoute = DsSurfaceRouteImport.update({
   path: '/ds/surface',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsSpacingRoute = DsSpacingRouteImport.update({
+  id: '/ds/spacing',
+  path: '/ds/spacing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsSliderRoute = DsSliderRouteImport.update({
   id: '/ds/slider',
   path: '/ds/slider',
@@ -164,6 +190,16 @@ const DsSliderRoute = DsSliderRouteImport.update({
 const DsSegmentedToggleRoute = DsSegmentedToggleRouteImport.update({
   id: '/ds/segmented-toggle',
   path: '/ds/segmented-toggle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsRatingScaleRoute = DsRatingScaleRouteImport.update({
+  id: '/ds/rating-scale',
+  path: '/ds/rating-scale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsRadialProgressRoute = DsRadialProgressRouteImport.update({
+  id: '/ds/radial-progress',
+  path: '/ds/radial-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsIconsRoute = DsIconsRouteImport.update({
@@ -184,11 +220,6 @@ const DsDividerRoute = DsDividerRouteImport.update({
 const DsColorsRoute = DsColorsRouteImport.update({
   id: '/ds/colors',
   path: '/ds/colors',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DsCheckBadgeRoute = DsCheckBadgeRouteImport.update({
-  id: '/ds/check-badge',
-  path: '/ds/check-badge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsChatBubblesRoute = DsChatBubblesRouteImport.update({
@@ -234,9 +265,11 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/goals': typeof GoalsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
+  '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -249,13 +282,15 @@ export interface FileRoutesByFullPath {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
-  '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/radial-progress': typeof DsRadialProgressRoute
+  '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
+  '/ds/spacing': typeof DsSpacingRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
@@ -264,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/settings/content-preferences': typeof SettingsContentPreferencesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -272,9 +308,11 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/goals': typeof GoalsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
+  '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -287,13 +325,15 @@ export interface FileRoutesByTo {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
-  '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/radial-progress': typeof DsRadialProgressRoute
+  '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
+  '/ds/spacing': typeof DsSpacingRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
@@ -302,6 +342,7 @@ export interface FileRoutesByTo {
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/settings/content-preferences': typeof SettingsContentPreferencesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -311,9 +352,11 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/goals': typeof GoalsRoute
   '/home': typeof HomeRoute
   '/intro': typeof IntroRoute
   '/login': typeof LoginRoute
+  '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/tools': typeof ToolsRoute
@@ -326,13 +369,15 @@ export interface FileRoutesById {
   '/ds/buttons': typeof DsButtonsRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
-  '/ds/check-badge': typeof DsCheckBadgeRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/radial-progress': typeof DsRadialProgressRoute
+  '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
+  '/ds/spacing': typeof DsSpacingRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
@@ -341,6 +386,7 @@ export interface FileRoutesById {
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,9 +397,11 @@ export interface FileRouteTypes {
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
+    | '/goals'
     | '/home'
     | '/intro'
     | '/login'
+    | '/meditation'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -366,13 +414,15 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
-    | '/ds/check-badge'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/radial-progress'
+    | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
+    | '/ds/spacing'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
@@ -381,6 +431,7 @@ export interface FileRouteTypes {
     | '/ds/typography'
     | '/ds/waveform'
     | '/focus-area/$num'
+    | '/settings/content-preferences'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -389,9 +440,11 @@ export interface FileRouteTypes {
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
+    | '/goals'
     | '/home'
     | '/intro'
     | '/login'
+    | '/meditation'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -404,13 +457,15 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
-    | '/ds/check-badge'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/radial-progress'
+    | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
+    | '/ds/spacing'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
@@ -419,6 +474,7 @@ export interface FileRouteTypes {
     | '/ds/typography'
     | '/ds/waveform'
     | '/focus-area/$num'
+    | '/settings/content-preferences'
   id:
     | '__root__'
     | '/'
@@ -427,9 +483,11 @@ export interface FileRouteTypes {
     | '/chat'
     | '/creating-your-space'
     | '/employer-access'
+    | '/goals'
     | '/home'
     | '/intro'
     | '/login'
+    | '/meditation'
     | '/sessions'
     | '/settings'
     | '/tools'
@@ -442,13 +500,15 @@ export interface FileRouteTypes {
     | '/ds/buttons'
     | '/ds/cards'
     | '/ds/chat-bubbles'
-    | '/ds/check-badge'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/radial-progress'
+    | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
+    | '/ds/spacing'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
@@ -457,6 +517,7 @@ export interface FileRouteTypes {
     | '/ds/typography'
     | '/ds/waveform'
     | '/focus-area/$num'
+    | '/settings_/content-preferences'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -466,9 +527,11 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
+  GoalsRoute: typeof GoalsRoute
   HomeRoute: typeof HomeRoute
   IntroRoute: typeof IntroRoute
   LoginRoute: typeof LoginRoute
+  MeditationRoute: typeof MeditationRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
   ToolsRoute: typeof ToolsRoute
@@ -481,13 +544,15 @@ export interface RootRouteChildren {
   DsButtonsRoute: typeof DsButtonsRoute
   DsCardsRoute: typeof DsCardsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
-  DsCheckBadgeRoute: typeof DsCheckBadgeRoute
   DsColorsRoute: typeof DsColorsRoute
   DsDividerRoute: typeof DsDividerRoute
   DsDrawerRoute: typeof DsDrawerRoute
   DsIconsRoute: typeof DsIconsRoute
+  DsRadialProgressRoute: typeof DsRadialProgressRoute
+  DsRatingScaleRoute: typeof DsRatingScaleRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSliderRoute: typeof DsSliderRoute
+  DsSpacingRoute: typeof DsSpacingRoute
   DsSurfaceRoute: typeof DsSurfaceRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
   DsTagsRoute: typeof DsTagsRoute
@@ -496,6 +561,7 @@ export interface RootRouteChildren {
   DsTypographyRoute: typeof DsTypographyRoute
   DsWaveformRoute: typeof DsWaveformRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
+  SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -535,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meditation': {
+      id: '/meditation'
+      path: '/meditation'
+      fullPath: '/meditation'
+      preLoaderRoute: typeof MeditationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -554,6 +627,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer-access': {
@@ -596,6 +676,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/content-preferences': {
+      id: '/settings_/content-preferences'
+      path: '/settings/content-preferences'
+      fullPath: '/settings/content-preferences'
+      preLoaderRoute: typeof SettingsContentPreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/focus-area/$num': {
@@ -654,6 +741,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsSurfaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/spacing': {
+      id: '/ds/spacing'
+      path: '/ds/spacing'
+      fullPath: '/ds/spacing'
+      preLoaderRoute: typeof DsSpacingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/slider': {
       id: '/ds/slider'
       path: '/ds/slider'
@@ -666,6 +760,20 @@ declare module '@tanstack/react-router' {
       path: '/ds/segmented-toggle'
       fullPath: '/ds/segmented-toggle'
       preLoaderRoute: typeof DsSegmentedToggleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/rating-scale': {
+      id: '/ds/rating-scale'
+      path: '/ds/rating-scale'
+      fullPath: '/ds/rating-scale'
+      preLoaderRoute: typeof DsRatingScaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/radial-progress': {
+      id: '/ds/radial-progress'
+      path: '/ds/radial-progress'
+      fullPath: '/ds/radial-progress'
+      preLoaderRoute: typeof DsRadialProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/icons': {
@@ -694,13 +802,6 @@ declare module '@tanstack/react-router' {
       path: '/ds/colors'
       fullPath: '/ds/colors'
       preLoaderRoute: typeof DsColorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ds/check-badge': {
-      id: '/ds/check-badge'
-      path: '/ds/check-badge'
-      fullPath: '/ds/check-badge'
-      preLoaderRoute: typeof DsCheckBadgeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/chat-bubbles': {
@@ -762,9 +863,11 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CreatingYourSpaceRoute: CreatingYourSpaceRoute,
   EmployerAccessRoute: EmployerAccessRoute,
+  GoalsRoute: GoalsRoute,
   HomeRoute: HomeRoute,
   IntroRoute: IntroRoute,
   LoginRoute: LoginRoute,
+  MeditationRoute: MeditationRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
   ToolsRoute: ToolsRoute,
@@ -777,13 +880,15 @@ const rootRouteChildren: RootRouteChildren = {
   DsButtonsRoute: DsButtonsRoute,
   DsCardsRoute: DsCardsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
-  DsCheckBadgeRoute: DsCheckBadgeRoute,
   DsColorsRoute: DsColorsRoute,
   DsDividerRoute: DsDividerRoute,
   DsDrawerRoute: DsDrawerRoute,
   DsIconsRoute: DsIconsRoute,
+  DsRadialProgressRoute: DsRadialProgressRoute,
+  DsRatingScaleRoute: DsRatingScaleRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSliderRoute: DsSliderRoute,
+  DsSpacingRoute: DsSpacingRoute,
   DsSurfaceRoute: DsSurfaceRoute,
   DsSwitchesRoute: DsSwitchesRoute,
   DsTagsRoute: DsTagsRoute,
@@ -792,6 +897,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsTypographyRoute: DsTypographyRoute,
   DsWaveformRoute: DsWaveformRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
+  SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

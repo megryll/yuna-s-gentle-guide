@@ -8,6 +8,7 @@ import { ChatBubble } from "@/components/ChatBubble";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useDarkBlurImage, useWelcomeImage } from "@/lib/theme-prefs";
 import { usePlatform } from "@/lib/platform";
+import { useFrameSize } from "@/lib/frame-size";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +25,11 @@ function Index() {
   const welcomeBg = useWelcomeImage();
   const blurBg = useDarkBlurImage();
   const platform = usePlatform();
+  // Center the conversation in the space above the sheet on roomy frames; on a
+  // short frame (SE) bottom-anchor it instead so it doesn't float far above the
+  // sheet. Keyed on frame height since the device toggle changes height, not the
+  // browser viewport — so a CSS breakpoint can't see it.
+  const shortFrame = useFrameSize().h < 750;
   // Android can't render backdrop-filter, so the frosted bottom sheet over the
   // un-blurred forest photo looks harsh. Paint the pre-blurred photo into its
   // background instead — fixed attachment so the patch aligns with what's
@@ -44,63 +50,67 @@ function Index() {
   return (
     <PhoneFrame backgroundImage={welcomeBg}>
       {loaded && (
-      <>
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-44 text-white">
-        <div className="yuna-fade-in">
+      <div className="flex-1 flex flex-col min-h-0 text-white">
+        <div className="yuna-fade-in shrink-0 px-8 pt-14 pb-2">
           <img src="/yuna-logo.svg" alt="Yuna" className="h-5 w-auto" />
         </div>
 
-        <div className="flex-1 flex flex-col justify-center">
-        <div className="flex items-end gap-3">
-          <div
-            className="shrink-0"
-            style={{
-              animation:
-                "welcome-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
-            }}
-          >
-            <YunaAvatar glow size={56} />
-          </div>
-          <div className="flex-1 min-w-0 flex flex-col gap-3">
-            <ChatBubble
-              from="yuna"
-              size="lg"
-              tail={false}
-              frostedImage={blurBg}
+        {/* Conversation fills the space above the sheet: centered on roomy
+            frames, bottom-anchored on a short one (see shortFrame). Either way
+            it never sits behind the sheet, and scrolls only if a small frame
+            still can't fit. */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className={`flex items-end gap-3 pb-4 ${shortFrame ? "mt-auto" : "my-auto"}`}>
+            <div
+              className="shrink-0"
               style={{
                 animation:
-                  "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 120ms both",
+                  "welcome-rise 700ms cubic-bezier(0.2,0.8,0.2,1) 0ms both",
               }}
             >
-              Hi, I'm Yuna.
-              <br />
-              <br />
-              Here to listen, reflect, and grow with you.
-            </ChatBubble>
-            <ChatBubble
-              from="yuna"
-              size="lg"
-              frostedImage={blurBg}
-              style={{
-                animation:
-                  "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 220ms both",
-              }}
-            >
-              How would you like to get started?
-            </ChatBubble>
+              <YunaAvatar glow size={56} />
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col gap-3">
+              <ChatBubble
+                from="yuna"
+                size="lg"
+                tail={false}
+                frostedImage={blurBg}
+                style={{
+                  animation:
+                    "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 120ms both",
+                }}
+              >
+                Hi, I'm Yuna.
+                <br />
+                <br />
+                Here to listen, reflect, and grow with you.
+              </ChatBubble>
+              <ChatBubble
+                from="yuna"
+                size="lg"
+                frostedImage={blurBg}
+                style={{
+                  animation:
+                    "welcome-rise 800ms cubic-bezier(0.2,0.8,0.2,1) 220ms both",
+                }}
+              >
+                How would you like to get started?
+              </ChatBubble>
+            </div>
           </div>
         </div>
-        </div>
 
-      </div>
-
-      <div
-        className="absolute left-0 right-0 bottom-[-72px] rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col gap-5"
-        style={{
-          animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both",
-          ...sheetStyle,
-        }}
-      >
+        {/* Pinned to the bottom in flow — its height is reserved automatically,
+            so the conversation never sits behind it. The -mb peeks the sheet's
+            base past the frame's rounded corner, matching the old absolute look. */}
+        <div
+          className="shrink-0 -mb-[72px] overflow-hidden rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col gap-5"
+          style={{
+            animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both",
+            ...sheetStyle,
+          }}
+        >
         <div className="flex flex-col gap-3">
           <Button
             surface="dark"
@@ -133,7 +143,7 @@ function Index() {
           </Button>
         </div>
       </div>
-      </>
+      </div>
       )}
     </PhoneFrame>
   );

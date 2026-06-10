@@ -17,7 +17,9 @@ import { useYunaIdentity } from "@/lib/yuna-session";
 type ItemProps = {
   card: HomeCard;
   isSaved: boolean;
+  completed: boolean;
   onClick: () => void;
+  onMenu: () => void;
   onToggleSave: () => void;
 };
 
@@ -44,11 +46,15 @@ export function HomeCardItem(props: ItemProps) {
 
 export function HomeCardRow({
   card,
+  completed = false,
   onClick,
+  onMenu,
   interactive = true,
 }: {
   card: HomeCard;
+  completed?: boolean;
   onClick: () => void;
+  onMenu?: () => void;
   interactive?: boolean;
 }) {
   const meta = KIND_META[card.type];
@@ -66,9 +72,11 @@ export function HomeCardRow({
       tone={isLight ? "light" : "dark"}
       italic={card.type === "affirmation"}
       isNew={card.isNew}
+      completed={completed}
       naturePath={isSolid ? undefined : card.naturePath ?? meta.naturePath}
       solidFill={isSolid ? meta.solidBg ?? undefined : undefined}
       onClick={onClick}
+      onMenu={onMenu}
       interactive={interactive}
       meta={
         <>
@@ -114,15 +122,18 @@ function hasCadence(card: HomeCard): boolean {
 function GuidedSessionCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "guided-session" }> }) {
   const meta = KIND_META[card.type];
   const { avatar } = useYunaIdentity();
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
       <CardHeader
         meta={meta}
+        onMore={onMenu}
         leading={
           avatar ? (
             <YunaAvatar variant={avatar} size={24} className="ring-1 ring-white" />
@@ -159,13 +170,15 @@ function GuidedSessionCard({
 function MeditationCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "meditation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} cadence={card.cadence} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} cadence={card.cadence} onMore={onMenu} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           {card.title}
@@ -187,7 +200,9 @@ function MeditationCard({
 function GratitudeCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "gratitude" }> }) {
   const meta = KIND_META[card.type];
@@ -196,10 +211,11 @@ function GratitudeCard({
     <Card
       tone={meta.tone}
       isNew={card.isNew}
+      completed={completed}
       naturePath={card.naturePath ?? meta.naturePath}
       solidFill={meta.solidBg}
     >
-      <CardHeader meta={meta} cadence={card.cadence} />
+      <CardHeader meta={meta} cadence={card.cadence} onMore={onMenu} />
       <div className="flex-1 flex flex-col justify-center">
         <p className="font-display text-xl leading-[1.75] tracking-tight text-foreground">
           {card.prompt}
@@ -241,13 +257,15 @@ function GratitudeCard({
 function SelfDiscoveryCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "self-discovery" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} onMore={onMenu} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
         <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white">
           {card.title}
@@ -273,13 +291,15 @@ function SelfDiscoveryCard({
 function AffirmationCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "affirmation" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} cadence={card.cadence} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} cadence={card.cadence} onMore={onMenu} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           “{card.quote}”
@@ -307,13 +327,15 @@ function AffirmationCard({
 function LearnSkillCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "learn-skill" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} eyebrow={card.eyebrow} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} eyebrow={card.eyebrow} onMore={onMenu} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           {card.title}
@@ -335,13 +357,15 @@ function LearnSkillCard({
 function AccountabilityCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "accountability" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} eyebrow={card.eyebrow} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} eyebrow={card.eyebrow} onMore={onMenu} />
       <div className="flex-1 flex items-center justify-center px-6 pt-9">
         <p className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
           “{card.goal}”
@@ -363,13 +387,15 @@ function AccountabilityCard({
 function BookCard({
   card,
   isSaved,
+  completed,
   onClick,
+  onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "book" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
-      <CardHeader meta={meta} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+      <CardHeader meta={meta} onMore={onMenu} />
       <div className="flex-1 flex items-center gap-4">
         {card.cover ? (
           <img

@@ -163,7 +163,6 @@ function YouEmptyState() {
             heading="Beliefs & Behaviors"
             body="Patterns I'll start to notice as we talk"
           />
-          <PreviewRow heading="Basics" body="The context I'll hold in mind for you" />
         </div>
 
         <div className="mt-10 flex justify-center">
