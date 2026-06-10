@@ -48,7 +48,7 @@ function SessionLanguageRoute() {
           (mode === "dark" ? "overlay-on-dark" : "")
         }
       >
-        <PageHeader title="Session Language" tone="ink" onBack={() => navigate({ to: "/settings" })} />
+        <PageHeader title="Session Language" tone="ink" layout="inline" onBack={() => navigate({ to: "/settings" })} />
 
         <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 flex flex-col gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <p className="text-sm leading-relaxed text-foreground/75">

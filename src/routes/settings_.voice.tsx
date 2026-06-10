@@ -64,7 +64,7 @@ function CustomizeVoiceRoute() {
           (mode === "dark" ? "overlay-on-dark" : "")
         }
       >
-        <PageHeader title="Customize Voice" tone="ink" onBack={back} />
+        <PageHeader title="Customize Voice" tone="ink" layout="inline" onBack={back} />
 
         <div className="flex-1 overflow-y-auto pt-4 pb-10 flex flex-col gap-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <section className="flex flex-col gap-3">

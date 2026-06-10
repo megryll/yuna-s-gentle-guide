@@ -56,7 +56,7 @@ function install() {
     // eslint-disable-next-line new-cap
     const el = new Orig(...args);
     tracked.add(el);
-    el.muted = cached;
+    el.muted = effectiveMute();
     el.addEventListener(
       "ended",
       () => {
@@ -69,9 +69,38 @@ function install() {
   Wrapped.prototype = Orig.prototype;
   window.Audio = Wrapped;
 
+  // Web Audio (synthesized bubble pops, dictation chirps, etc.) doesn't go
+  // through `new Audio()`, so the wrapper above can't reach it. In a forced
+  // (`?chrome=off`) document we instead neutralise AudioContext itself: every
+  // context is born suspended with a no-op `resume`, so its clock never
+  // advances and nothing scheduled against `destination` is ever audible. Only
+  // in forced docs — the real app must keep its sounds.
+  if (forced) {
+    const win = window as unknown as {
+      AudioContext?: typeof AudioContext;
+      webkitAudioContext?: typeof AudioContext;
+    };
+    const OrigCtx = win.AudioContext || win.webkitAudioContext;
+    if (OrigCtx) {
+      const PatchedCtx = function (...args: ConstructorParameters<typeof AudioContext>) {
+        const ctx = new OrigCtx(...args);
+        try {
+          ctx.suspend();
+        } catch {
+          // older engines may reject suspend on a fresh context — ignore
+        }
+        ctx.resume = () => Promise.resolve();
+        return ctx;
+      } as unknown as typeof AudioContext;
+      PatchedCtx.prototype = OrigCtx.prototype;
+      win.AudioContext = PatchedCtx;
+      if (win.webkitAudioContext) win.webkitAudioContext = PatchedCtx;
+    }
+  }
+
   window.addEventListener("storage", (e) => {
     if (e.key !== KEY) return;
-    cached = getPrototypeMute();
+    cached = window.localStorage.getItem(KEY) === "1";
     applyToAll();
     listeners.forEach((cb) => cb());
   });
@@ -85,7 +114,7 @@ const subscribe = (cb: () => void) => {
     listeners.delete(cb);
   };
 };
-const getSnapshot = () => cached;
+const getSnapshot = () => effectiveMute();
 const getServerSnapshot = () => false;
 
 export function usePrototypeMute(): boolean {

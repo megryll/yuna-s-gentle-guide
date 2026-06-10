@@ -64,6 +64,7 @@ function ContentPreferencesRoute() {
         <PageHeader
           title="Content Preferences"
           tone="ink"
+          layout="inline"
           onBack={() => navigate({ to: "/settings" })}
         />
 

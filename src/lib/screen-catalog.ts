@@ -21,9 +21,24 @@ export type ScreenEntry = ScreenLeaf & {
 export const PAGES: ScreenEntry[] = [
   { label: "Splash", to: "/splash" },
   { label: "Welcome", to: "/" },
-  { label: "Log in", to: "/login" },
+  {
+    label: "Log in",
+    to: "/login",
+    children: [
+      { label: "Email", to: "/login" },
+      { label: "Password", to: "/login", search: { step: "password" } },
+      { label: "Reset password", to: "/login", search: { step: "reset" } },
+    ],
+  },
   { label: "Employer access", to: "/employer-access" },
-  { label: "Create account", to: "/auth" },
+  {
+    label: "Create account",
+    to: "/auth",
+    children: [
+      { label: "Email", to: "/auth" },
+      { label: "Password", to: "/auth", search: { step: "password" } },
+    ],
+  },
   { label: "Accept terms", to: "/accept-terms" },
   {
     label: "Intro",
@@ -45,7 +60,15 @@ export const PAGES: ScreenEntry[] = [
   },
   { label: "Home", to: "/home" },
   { label: "Design Your Trial", to: "/design-your-trial" },
-  { label: "Session", to: "/chat" },
+  {
+    label: "Session",
+    to: "/chat",
+    children: [
+      { label: "Text", to: "/chat" },
+      { label: "Voice", to: "/chat", search: { mode: "voice" } },
+      { label: "Personalize Yuna", to: "/chat", search: { personalize: 1 } },
+    ],
+  },
   { label: "Wrap-up", to: "/wrap-up" },
   {
     label: "Profile",
@@ -60,7 +83,13 @@ export const PAGES: ScreenEntry[] = [
     label: "Therapist Recommendations",
     to: "/therapist-recommendations",
     children: [
-      { label: "Preferences Survey", to: "/therapist-preferences" },
+      { label: "Survey · Location", to: "/therapist-preferences", search: { step: 0 } },
+      { label: "Survey · Format", to: "/therapist-preferences", search: { step: 1 } },
+      { label: "Survey · Gender", to: "/therapist-preferences", search: { step: 2 } },
+      { label: "Survey · Specialties", to: "/therapist-preferences", search: { step: 3 } },
+      { label: "Survey · Approaches", to: "/therapist-preferences", search: { step: 4 } },
+      { label: "Survey · Identity", to: "/therapist-preferences", search: { step: 5 } },
+      { label: "Survey · Insurance", to: "/therapist-preferences", search: { step: 6 } },
       { label: "Therapist Profile", to: "/therapist-profile/$id", params: { id: "kerstin" } },
       { label: "Schedule Call", to: "/therapist-schedule/$id", params: { id: "kerstin" } },
     ],
@@ -136,7 +165,11 @@ export type ResolvedScreen = {
   search?: Record<string, unknown>;
   params?: Record<string, string>;
 };
-export type ScreenSection = { title: string; screens: ResolvedScreen[] };
+// One region of the board — a flat, ordered list of screens rendered as a
+// single grid. Split at Home so onboarding screens read first, then the in-app
+// screens, each in sidebar order. A flow's parent thumbnail leads its variant
+// thumbnails in sequence, so adjacency conveys the grouping without headers.
+export type ScreenRegion = { title: string; screens: ResolvedScreen[] };
 
 function toResolved(label: string, leaf: ScreenLeaf): ResolvedScreen {
   return {
@@ -148,31 +181,34 @@ function toResolved(label: string, leaf: ScreenLeaf): ResolvedScreen {
   };
 }
 
-// Flatten the catalog into board sections: every childless top-level page sits
-// under "Screens"; each flow (entry with children) becomes its own titled
-// section listing the parent plus its variants, deduped by resolved URL so a
-// child that lands on the same screen as its parent doesn't double up.
-export function getScreenSections(): ScreenSection[] {
-  const standalone: ResolvedScreen[] = [];
-  const flows: ScreenSection[] = [];
-
-  for (const entry of PAGES) {
-    if (!entry.children) {
-      standalone.push(toResolved(entry.label, entry));
-      continue;
-    }
-    const screens: ResolvedScreen[] = [];
-    const seen = new Set<string>();
-    const push = (label: string, leaf: ScreenLeaf) => {
-      const resolved = toResolved(label, leaf);
-      if (seen.has(resolved.url)) return;
-      seen.add(resolved.url);
-      screens.push(resolved);
-    };
+// Flatten a run of catalog entries into ordered screens: each entry's parent
+// followed by its children, deduped by resolved URL so a child that lands on
+// the same screen as its parent (e.g. Goals' "Empty / list", Session's "Text")
+// doesn't double up.
+function flattenEntries(entries: ScreenEntry[]): ResolvedScreen[] {
+  const out: ResolvedScreen[] = [];
+  const seen = new Set<string>();
+  const push = (label: string, leaf: ScreenLeaf) => {
+    const resolved = toResolved(label, leaf);
+    if (seen.has(resolved.url)) return;
+    seen.add(resolved.url);
+    out.push(resolved);
+  };
+  for (const entry of entries) {
     push(entry.label, entry);
-    for (const child of entry.children) push(child.label, child);
-    flows.push({ title: entry.label, screens });
+    for (const child of entry.children ?? []) push(child.label, child);
   }
+  return out;
+}
 
-  return [{ title: "Screens", screens: standalone }, ...flows];
+// Two regions split at Home: onboarding screens first, then Home and the in-app
+// screens — each a flat list in sidebar order.
+export function getScreenRegions(): ScreenRegion[] {
+  const homeIndex = PAGES.findIndex((e) => e.to === "/home");
+  const split = homeIndex === -1 ? PAGES.length : homeIndex;
+
+  return [
+    { title: "Onboarding", screens: flattenEntries(PAGES.slice(0, split)) },
+    { title: "App", screens: flattenEntries(PAGES.slice(split)) },
+  ].filter((r) => r.screens.length > 0);
 }

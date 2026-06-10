@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 import {
   Bell,
@@ -22,6 +22,7 @@ import { Toast, ToastViewport } from "@/components/Toast";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { setNatureSoundsOn, useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { consumeSettingsSaved } from "@/lib/settings-saved-toast";
+import { useTransientToast } from "@/lib/use-transient-toast";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -81,17 +82,11 @@ function SettingsRoute() {
 
   // Confirm a change made on a sub-page (Account, Subscription, Language,
   // Voice) the moment the user lands back here.
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { message: toast, show, dismiss } = useTransientToast();
   useEffect(() => {
     const message = consumeSettingsSaved();
-    if (!message) return;
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(null), 2800);
-    return () => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-    };
-  }, []);
+    if (message) show(message);
+  }, [show]);
 
   const readToggle = (id: string) =>
     id === "natureSounds" ? natureSoundsOn : !!toggles[id];
@@ -128,7 +123,7 @@ function SettingsRoute() {
               surface="light"
               variant="success"
               message={toast}
-              onDismiss={() => setToast(null)}
+              onDismiss={dismiss}
               className="yuna-fade-in"
             />
           </ToastViewport>

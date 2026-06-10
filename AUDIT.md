@@ -4,12 +4,13 @@
 > - ✅ **Bugs (#1, #2)** — `sessions_.$id` + `SessionReflection` Share + `SchedulePrioritizeDrawer` now derive `surface` from `useAppMode()` (SchedulePrioritizeDrawer also adopts `<Surface>`).
 > - ✅ **Normalizations (#11–13)** — eyebrow `text-[11px]`→`text-uppercase` token across therapist screens + rename label; `pb-16→pb-6`, `pt-6/pt-5/pt-2→pt-4`; `text-[2rem]`/`text-4xl`→`text-3xl`; drawer header `pt-3 pb-2`; emotion colors now `var(--rose/--pink/--aqua/--blue/--purple-soft)` (new tokens added to `styles.css`).
 > - ✅ **DS parity & reuse (#7–10)** — MultipleChoice `indicator="check"` demo added; Badge reuse in therapist-profile bullets; new **TextArea** primitive (`field`+`display`, ds.text-area, migrated email + rename) and **Checkbox** primitive (ds.checkbox, replaced `UnderstandCheck` ×2); both registered in the sidebar.
-> - ⏳ **Systemic refactors (#3, #4, #5, #6) — NOT STARTED.** Resume here:
->   - **#3 PageHeader**: add a `trailing` slot (+ optional center override) so therapist/sessions headers can adopt it; add `/ds/page-header` page + sidebar entry; migrate the 5+ hand-rolled headers.
->   - **#4 Toast**: collapse `lib/session-toast.ts` + `lib/settings-saved-toast.ts` + `lib/schedule-prompt.ts` into one `createOneShot` factory; add a `useTransientToast()` hook (one default duration); migrate the 5 screens.
->   - **#5 surface default**: document the house rule (photo-cluster primitives default `dark`; Switch/Button default `light`) and give SegmentedToggle/RatingScale a default instead of requiring `surface`.
->   - **#6 CTA verb**: standardize "Continue" (hero/onboarding) vs "Next" (survey pagination); `intro` currently mixes both.
-> - Build gate: `npm run build`. Uncommitted — consider committing batches 1–4 before resuming.
+> - ✅ **Systemic refactors (#3, #4, #5, #6) — batch 5, DONE.** Build green.
+>   - **#3 PageHeader**: extended with `center` + `trailing` slots, optional `title`, `backDisabled`; now a symmetric `grid-cols-[1fr_auto_1fr]` so the centered slot stays screen-centered regardless of trailing/padding. Added `/ds/page-header` + sidebar entry. Migrated 5 headers: therapist-recommendations, therapist-preferences (close + `backDisabled`, progress row now a sibling), therapist-profile, therapist-schedule (both branches — confirmed branch also fixed the flagged `pt-14 pb-10`-on-scroll-wrapper spacing bug), sessions_.$id (eyebrow `center`, padding zeroed for the nested cluster).
+>     - **Flagged, not migrated:** `goals.tsx` has two back-only headers inside `px-8 pt-14 pb-10` scroll *shells* (a separate reusable wrapper pattern) — forcing PageHeader there double-pads and adds little value. Propose migrating only if the shell is reworked. (The audit's note that goals already uses PageHeader at `:298` was stale — it doesn't.)
+>   - **#4 Toast**: added `lib/one-shot.ts` (`createOneShot` factory) — `session-toast.ts` + `settings-saved-toast.ts` now use it. Added `lib/use-transient-toast.ts` (`useTransientToast`, one `TOAST_DURATION_MS = 3500`); migrated therapist-recommendations, sessions, settings, therapist-profile (durations were 3500/2800/4000 → one). **Left as-is:** `schedule-prompt.ts` is a *reactive* store (`useSyncExternalStore` + topic), not the request/consume shape — the audit overstated "byte-identical." `SchedulePrioritizeDrawer:119`'s timer resets a `confirmed` flag, not a string toast.
+>   - **#5 surface default**: documented the house rule in `CLAUDE.md` Theming; SegmentedToggle + RatingScale now default `surface="dark"` (were required).
+>   - **#6 CTA verb**: `intro` now uses "Continue" throughout (the lone non-pagination "Next" steps were the violation); voice step keeps "Choose this voice".
+> - Build gate: `npm run build` (green). NOTE: this batch is uncommitted in the working tree alongside unrelated `/gallery` board work — separate them when committing.
 
 
 Scope: the ~15 screens and DS components added/changed on 2026-06-10 (therapist

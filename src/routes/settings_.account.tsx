@@ -51,6 +51,7 @@ function AccountSettingsRoute() {
         <PageHeader
           title="Account Settings"
           tone="ink"
+          layout="inline"
           onBack={() => navigate({ to: "/settings" })}
         />
 

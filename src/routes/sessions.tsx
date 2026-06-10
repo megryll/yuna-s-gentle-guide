@@ -8,6 +8,7 @@ import { PastSessionCard } from "@/components/PastSessionCard";
 import { Toast, ToastViewport } from "@/components/Toast";
 import { useSessions } from "@/lib/sessions";
 import { consumeSessionToast } from "@/lib/session-toast";
+import { useTransientToast } from "@/lib/use-transient-toast";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 
@@ -50,19 +51,14 @@ function SessionsNew() {
 function SessionsReturning() {
   const navigate = useNavigate();
   const sessions = useSessions();
-  const [toast, setToast] = useState<string | null>(null);
+  const { message: toast, show, dismiss } = useTransientToast();
 
   // Pick up a one-shot confirmation handed off from a detail screen (e.g. after
-  // deleting a conversation), then auto-dismiss it.
+  // deleting a conversation); the hook auto-dismisses it.
   useEffect(() => {
     const message = consumeSessionToast();
-    if (message) setToast(message);
-  }, []);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
+    if (message) show(message);
+  }, [show]);
 
   return (
     <ScreenChrome hideHeader surface="dark">
@@ -72,7 +68,7 @@ function SessionsReturning() {
             surface="dark"
             variant="success"
             message={toast}
-            onDismiss={() => setToast(null)}
+            onDismiss={dismiss}
           />
         )}
       </ToastViewport>

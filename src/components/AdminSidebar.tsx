@@ -39,6 +39,7 @@ const DS_GROUPS: DsGroup[] = [
       { label: "Drawer", to: "/ds/drawer" },
       { label: "Icons", to: "/ds/icons" },
       { label: "Multiple Choice", to: "/ds/multiple-choice" },
+      { label: "Page Header", to: "/ds/page-header" },
       { label: "Progress Bar", to: "/ds/progress-bar" },
       { label: "Radial Progress", to: "/ds/radial-progress" },
       { label: "Rating Scale", to: "/ds/rating-scale" },

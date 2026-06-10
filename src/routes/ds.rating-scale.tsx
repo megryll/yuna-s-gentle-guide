@@ -95,7 +95,7 @@ function DSRatingScale() {
   value:      V | null                 // selected option value, or null
   options:    RatingScaleOption<V>[]   // { value, content, label } each
   onChange:   (v: V) => void
-  surface:    "dark" | "light"         // glyph/text ink
+  surface?:   "dark" | "light"         // glyph/text ink; default "dark"
   ariaLabel:  string                   // names the radiogroup
   size?:      "md" | "lg"              // emoji/number/word size — default "lg"
 />

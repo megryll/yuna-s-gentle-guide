@@ -7,7 +7,8 @@ import type { ReactNode } from "react";
  * every surface.
  *
  * Pass `surface="dark"` when the toggle sits on the dark photo cluster,
- * `surface="light"` for the pale light photo. The active segment uses
+ * `surface="light"` for the pale light photo. Defaults to `"dark"` (the
+ * photo-cluster house default). The active segment uses
  * arbitrary color values so it stays high-contrast even when a parent
  * applies `.overlay-on-dark` token swaps (e.g. settings dark mode).
  *
@@ -32,14 +33,14 @@ export function SegmentedToggle<V extends string>({
   value,
   options,
   onChange,
-  surface,
+  surface = "dark",
   ariaLabel,
   size = "md",
 }: {
   value: V;
   options: ReadonlyArray<SegmentedToggleOption<V>>;
   onChange: (v: V) => void;
-  surface: "dark" | "light";
+  surface?: "dark" | "light";
   ariaLabel: string;
   size?: "sm" | "md";
 }) {

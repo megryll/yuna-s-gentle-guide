@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Bookmark, SlidersHorizontal, Clock, Sprout } from "lucide-react";
+import { Bookmark, SlidersHorizontal, Clock, Sprout } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
+import { PageHeader } from "@/components/PageHeader";
 import { Toast, ToastViewport } from "@/components/Toast";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { TherapistCard, TherapistPhoto, frostedPanel } from "@/components/TherapistCard";
@@ -15,6 +16,7 @@ import {
 } from "@/components/TherapistFiltersDrawer";
 import { useAppMode } from "@/lib/theme-prefs";
 import { useFrameSize } from "@/lib/frame-size";
+import { useTransientToast } from "@/lib/use-transient-toast";
 import {
   usePreferencesApplied,
   useSavedIds,
@@ -52,8 +54,7 @@ function RecommendationsRoute() {
   const [showSaved, setShowSaved] = useState(false);
   const [filters, setFilters] = useState<TherapistFilters>(EMPTY_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { message: toast, show: flashToast, dismiss } = useTransientToast();
 
   // The admin "New" / "Returning" toggle drives the screen's starting state:
   // flipping to "New" resets to the pre-survey teaser (no saved, prefs cleared),
@@ -82,12 +83,6 @@ function RecommendationsRoute() {
   );
   const activeCount = countFilters(filters);
 
-  const flashToast = (msg: string) => {
-    setToast(msg);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3500);
-  };
-
   const openProfile = (id: string) =>
     navigate({ to: "/therapist-profile/$id", params: { id } });
 
@@ -95,38 +90,33 @@ function RecommendationsRoute() {
     <PhoneFrame themed>
       <div className="flex-1 flex flex-col min-h-0">
         {/* Top bar */}
-        <header className="shrink-0 px-6 pt-14 flex items-center justify-between gap-2">
-          <Button
-            surface={surface}
-            variant="secondary"
-            size="icon"
-            aria-label="Back"
-            onClick={() => navigate({ to: "/tools" })}
-          >
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Button
-              surface={surface}
-              variant={showSaved ? "primary" : "secondary"}
-              size="icon"
-              aria-label="Saved therapists"
-              aria-pressed={showSaved}
-              onClick={() => setShowSaved((v) => !v)}
-            >
-              <Bookmark strokeWidth={1.75} fill={savedIds.length && showSaved ? "currentColor" : "none"} />
-            </Button>
-            <Button
-              surface={surface}
-              variant={activeCount ? "primary" : "secondary"}
-              size="sm"
-              onClick={() => setFiltersOpen(true)}
-            >
-              <SlidersHorizontal size={14} strokeWidth={2} aria-hidden className="mr-1" />
-              Preferences{activeCount ? ` · ${activeCount}` : ""}
-            </Button>
-          </div>
-        </header>
+        <PageHeader
+          surface={surface}
+          onBack={() => navigate({ to: "/tools" })}
+          trailing={
+            <>
+              <Button
+                surface={surface}
+                variant={showSaved ? "primary" : "secondary"}
+                size="icon"
+                aria-label="Saved therapists"
+                aria-pressed={showSaved}
+                onClick={() => setShowSaved((v) => !v)}
+              >
+                <Bookmark strokeWidth={1.75} fill={savedIds.length && showSaved ? "currentColor" : "none"} />
+              </Button>
+              <Button
+                surface={surface}
+                variant={activeCount ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setFiltersOpen(true)}
+              >
+                <SlidersHorizontal size={14} strokeWidth={2} aria-hidden className="mr-1" />
+                Preferences{activeCount ? ` · ${activeCount}` : ""}
+              </Button>
+            </>
+          }
+        />
 
         {/* Body */}
         {showSaved ? (
@@ -162,7 +152,7 @@ function RecommendationsRoute() {
               surface={surface}
               variant="success"
               message={toast}
-              onDismiss={() => setToast(null)}
+              onDismiss={dismiss}
               className="yuna-fade-in"
             />
           </ToastViewport>

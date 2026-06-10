@@ -59,6 +59,7 @@ import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-tog
 import { Route as DsRatingScaleRouteImport } from './routes/ds.rating-scale'
 import { Route as DsRadialProgressRouteImport } from './routes/ds.radial-progress'
 import { Route as DsProgressBarRouteImport } from './routes/ds.progress-bar'
+import { Route as DsPageHeaderRouteImport } from './routes/ds.page-header'
 import { Route as DsMultipleChoiceRouteImport } from './routes/ds.multiple-choice'
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
@@ -328,6 +329,11 @@ const DsProgressBarRoute = DsProgressBarRouteImport.update({
   path: '/ds/progress-bar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsPageHeaderRoute = DsPageHeaderRouteImport.update({
+  id: '/ds/page-header',
+  path: '/ds/page-header',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsMultipleChoiceRoute = DsMultipleChoiceRouteImport.update({
   id: '/ds/multiple-choice',
   path: '/ds/multiple-choice',
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/page-header': typeof DsPageHeaderRoute
   '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
@@ -517,6 +524,7 @@ export interface FileRoutesByTo {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/page-header': typeof DsPageHeaderRoute
   '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
@@ -586,6 +594,7 @@ export interface FileRoutesById {
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/page-header': typeof DsPageHeaderRoute
   '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
@@ -656,6 +665,7 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/multiple-choice'
+    | '/ds/page-header'
     | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
@@ -724,6 +734,7 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/multiple-choice'
+    | '/ds/page-header'
     | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
@@ -792,6 +803,7 @@ export interface FileRouteTypes {
     | '/ds/drawer'
     | '/ds/icons'
     | '/ds/multiple-choice'
+    | '/ds/page-header'
     | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
@@ -861,6 +873,7 @@ export interface RootRouteChildren {
   DsDrawerRoute: typeof DsDrawerRoute
   DsIconsRoute: typeof DsIconsRoute
   DsMultipleChoiceRoute: typeof DsMultipleChoiceRoute
+  DsPageHeaderRoute: typeof DsPageHeaderRoute
   DsProgressBarRoute: typeof DsProgressBarRoute
   DsRadialProgressRoute: typeof DsRadialProgressRoute
   DsRatingScaleRoute: typeof DsRatingScaleRoute
@@ -1242,6 +1255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsProgressBarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/page-header': {
+      id: '/ds/page-header'
+      path: '/ds/page-header'
+      fullPath: '/ds/page-header'
+      preLoaderRoute: typeof DsPageHeaderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/multiple-choice': {
       id: '/ds/multiple-choice'
       path: '/ds/multiple-choice'
@@ -1397,6 +1417,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsDrawerRoute: DsDrawerRoute,
   DsIconsRoute: DsIconsRoute,
   DsMultipleChoiceRoute: DsMultipleChoiceRoute,
+  DsPageHeaderRoute: DsPageHeaderRoute,
   DsProgressBarRoute: DsProgressBarRoute,
   DsRadialProgressRoute: DsRadialProgressRoute,
   DsRatingScaleRoute: DsRatingScaleRoute,

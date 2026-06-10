@@ -12,7 +12,15 @@ import { useDarkBlurImage } from "@/lib/theme-prefs";
 // rejecting valid-but-unusual addresses.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type Step = "email" | "password" | "reset";
+
 export const Route = createFileRoute("/login")({
+  // `step` seeds the initial view so each state is deep-linkable (used by the
+  // /gallery board to thumbnail password + reset, not just the email entry).
+  validateSearch: (search: Record<string, unknown>): { step?: Step } => {
+    const s = search.step;
+    return s === "password" || s === "reset" ? { step: s } : {};
+  },
   head: () => ({
     meta: [
       { title: "Log in — Yuna" },
@@ -22,12 +30,11 @@ export const Route = createFileRoute("/login")({
   component: LoginScreen,
 });
 
-type Step = "email" | "password" | "reset";
-
 function LoginScreen() {
   const navigate = useNavigate();
   const darkBg = useDarkBlurImage();
-  const [step, setStep] = useState<Step>("email");
+  const { step: initialStep } = Route.useSearch();
+  const [step, setStep] = useState<Step>(initialStep ?? "email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");

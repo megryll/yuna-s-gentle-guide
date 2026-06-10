@@ -11,7 +11,14 @@ import { Divider } from "@/components/Divider";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
+type Step = "email" | "password";
+
 export const Route = createFileRoute("/auth")({
+  // `step` seeds the initial view so the password state is deep-linkable for
+  // the /gallery board, not just the email entry.
+  validateSearch: (search: Record<string, unknown>): { step?: Step } => {
+    return search.step === "password" ? { step: "password" } : {};
+  },
   head: () => ({
     meta: [
       { title: "Create account — Yuna" },
@@ -21,12 +28,11 @@ export const Route = createFileRoute("/auth")({
   component: AuthScreen,
 });
 
-type Step = "email" | "password";
-
 function AuthScreen() {
   const navigate = useNavigate();
   const darkBg = useDarkBlurImage();
-  const [step, setStep] = useState<Step>("email");
+  const { step: initialStep } = Route.useSearch();
+  const [step, setStep] = useState<Step>(initialStep ?? "email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Check, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
+import { Check, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { Badge } from "@/components/Badge";
 import { StepDots } from "@/components/StepDots";
+import { PageHeader } from "@/components/PageHeader";
 import { MultipleChoice } from "@/components/MultipleChoice";
 import { CalendarPicker } from "@/components/CalendarPicker";
 import { frostedPanel, TherapistPhoto } from "@/components/TherapistCard";
@@ -52,11 +53,9 @@ function ScheduleRoute() {
   if (confirmed) {
     return (
       <PhoneFrame themed>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-14 pb-10 text-white flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={() => navigate({ to: "/tools" })}>
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-
+        <div className="flex-1 flex flex-col min-h-0">
+          <PageHeader surface={surface} onBack={() => navigate({ to: "/tools" })} />
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 text-white flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex flex-col items-center text-center mt-8 yuna-fade-in">
             <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary-green">
               <Check size={34} strokeWidth={2.5} className="text-white" aria-hidden />
@@ -93,6 +92,7 @@ function ScheduleRoute() {
               Reschedule
             </Button>
           </div>
+          </div>
         </div>
       </PhoneFrame>
     );
@@ -103,17 +103,11 @@ function ScheduleRoute() {
   return (
     <PhoneFrame themed>
       <div className="flex-1 flex flex-col min-h-0">
-        <header className="shrink-0 px-6 pt-14 grid grid-cols-3 items-center">
-          <div className="justify-self-start">
-            <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={() => navigate({ to: "/therapist-profile/$id", params: { id: therapist.id } })}>
-              <ChevronLeft strokeWidth={1.5} />
-            </Button>
-          </div>
-          <div className="justify-self-center">
-            <StepDots surface={surface} count={3} current={step} aria-label={`Step ${step + 1} of 3`} />
-          </div>
-          <div />
-        </header>
+        <PageHeader
+          surface={surface}
+          onBack={() => navigate({ to: "/therapist-profile/$id", params: { id: therapist.id } })}
+          center={<StepDots surface={surface} count={3} current={step} aria-label={`Step ${step + 1} of 3`} />}
+        />
 
         <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-4 flex flex-col gap-6 yuna-fade-in [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="text-center">

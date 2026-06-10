@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
  * for emoji and glyphs alike.
  *
  * surface: which background the scale sits on — sets the glyph/text ink.
+ *   Defaults to "dark" (the photo-cluster house default).
  *   - "dark"  — dark or photo backgrounds (white ink)
  *   - "light" — light backgrounds (foreground ink)
  *
@@ -27,14 +28,14 @@ export function RatingScale<V extends string>({
   value,
   options,
   onChange,
-  surface,
+  surface = "dark",
   ariaLabel,
   size = "lg",
 }: {
   value: V | null;
   options: ReadonlyArray<RatingScaleOption<V>>;
   onChange: (v: V) => void;
-  surface: "dark" | "light";
+  surface?: "dark" | "light";
   ariaLabel: string;
   size?: "md" | "lg";
 }) {

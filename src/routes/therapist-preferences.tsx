@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, X, Search, MapPin, Check } from "lucide-react";
+import { X, Search, MapPin, Check } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
 import { ProgressBar } from "@/components/ProgressBar";
+import { PageHeader } from "@/components/PageHeader";
 import { MultipleChoice } from "@/components/MultipleChoice";
 import { LeafSpinner } from "@/components/LeafSpinner";
 import { IconMedallion } from "@/components/IconMedallion";
@@ -82,18 +83,11 @@ function PreferencesRoute() {
   return (
     <PhoneFrame themed>
       <div className="flex-1 flex flex-col min-h-0">
-        <header className="shrink-0 px-6 pt-14">
-          <div className="flex items-center justify-between">
-            <Button
-              surface={surface}
-              variant="secondary"
-              size="icon"
-              aria-label="Back"
-              disabled={step === 0}
-              onClick={onBack}
-            >
-              <ChevronLeft strokeWidth={1.5} />
-            </Button>
+        <PageHeader
+          surface={surface}
+          onBack={onBack}
+          backDisabled={step === 0}
+          trailing={
             <Button
               surface={surface}
               variant="secondary"
@@ -103,19 +97,18 @@ function PreferencesRoute() {
             >
               <X strokeWidth={1.5} />
             </Button>
-          </div>
-
-          <div className="mt-6 flex items-center gap-3">
-            <ProgressBar
-              surface={surface}
-              value={(step + 1) / total}
-              aria-label={`Question ${step + 1} of ${total}`}
-            />
-            <span className="shrink-0 text-xs tabular-nums text-white/75">
-              {step + 1} of {total}
-            </span>
-          </div>
-        </header>
+          }
+        />
+        <div className="shrink-0 px-6 mt-4 flex items-center gap-3">
+          <ProgressBar
+            surface={surface}
+            value={(step + 1) / total}
+            aria-label={`Question ${step + 1} of ${total}`}
+          />
+          <span className="shrink-0 text-xs tabular-nums text-white/75">
+            {step + 1} of {total}
+          </span>
+        </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden yuna-fade-in">
           <h1 className="font-display text-3xl leading-tight tracking-tight text-white">{question.title}</h1>

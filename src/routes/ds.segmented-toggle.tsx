@@ -82,7 +82,7 @@ function DSSegmentedToggle() {
   value:    V
   options:  ReadonlyArray<SegmentedToggleOption<V>>
   onChange: (v: V) => void
-  surface:  "dark" | "light"
+  surface?: "dark" | "light"   // default "dark" (photo-cluster house default)
   ariaLabel: string
   size?:    "sm" | "md"        // default "md"; differ mainly by height
 />

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Bookmark, MapPin, Clock, Video, Globe, Phone } from "lucide-react";
+import { Bookmark, MapPin, Clock, Video, Globe, Phone } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
+import { PageHeader } from "@/components/PageHeader";
 import { Tag } from "@/components/Tag";
 import { Divider } from "@/components/Divider";
 import { Toast, ToastViewport } from "@/components/Toast";
@@ -20,6 +21,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { useAppMode } from "@/lib/theme-prefs";
+import { useTransientToast } from "@/lib/use-transient-toast";
 import { useSavedIds, toggleSaved } from "@/lib/therapist-prefs";
 import { getTherapist, matchedTherapists, type Therapist } from "@/lib/therapist-data";
 
@@ -37,7 +39,8 @@ function ProfileRoute() {
   const therapist = getTherapist(id) ?? matchedTherapists()[0];
 
   const [emailOpen, setEmailOpen] = useState(false);
-  const [sentToast, setSentToast] = useState(false);
+  const { message: sentToast, show: showSentToast, dismiss: dismissSentToast } =
+    useTransientToast();
 
   const saved = savedIds.includes(therapist.id);
   const firstName = therapist.name.replace(/^Dr\.\s+/, "").split(" ")[0];
@@ -52,21 +55,22 @@ function ProfileRoute() {
     <PhoneFrame themed>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Hero */}
-        <div className="px-6 pt-14 pb-2 flex items-center justify-between">
-          <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={() => navigate({ to: "/therapist-recommendations" })}>
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-          <Button
-            surface={surface}
-            variant="plain"
-            size="icon"
-            aria-pressed={saved}
-            aria-label={saved ? "Remove bookmark" : "Save therapist"}
-            onClick={() => toggleSaved(therapist.id)}
-          >
-            <Bookmark strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />
-          </Button>
-        </div>
+        <PageHeader
+          surface={surface}
+          onBack={() => navigate({ to: "/therapist-recommendations" })}
+          trailing={
+            <Button
+              surface={surface}
+              variant="plain"
+              size="icon"
+              aria-pressed={saved}
+              aria-label={saved ? "Remove bookmark" : "Save therapist"}
+              onClick={() => toggleSaved(therapist.id)}
+            >
+              <Bookmark strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />
+            </Button>
+          }
+        />
 
         <div className="flex flex-col items-center text-center px-8 pb-4">
           <TherapistPhoto src={therapist.photo} size={128} />
@@ -182,7 +186,7 @@ function ProfileRoute() {
             surface={surface}
             variant="success"
             message="Your message has been sent."
-            onDismiss={() => setSentToast(false)}
+            onDismiss={dismissSentToast}
             className="yuna-fade-in"
           />
         </ToastViewport>
@@ -195,8 +199,7 @@ function ProfileRoute() {
         firstName={firstName}
         onSent={() => {
           setEmailOpen(false);
-          setSentToast(true);
-          setTimeout(() => setSentToast(false), 4000);
+          showSentToast("Your message has been sent.");
         }}
       />
     </PhoneFrame>

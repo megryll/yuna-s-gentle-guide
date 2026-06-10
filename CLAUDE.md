@@ -71,7 +71,7 @@ Every pixel is decided by three independent axes. Thread them through **props an
 - `surface="dark"` — photo-bg cluster (Welcome, Auth, Intro; Home/You/Progress while in dark mode).
 - `surface="light"` — light app-tab cluster.
 
-DS components take `surface` — pass it, don't restyle. When unset it defaults per the component (`Button` defaults to `light`).
+DS components take `surface` — pass it, don't restyle. **House default rule:** photo-cluster primitives (MultipleChoice, StepDots, CalendarPicker, ProgressBar, TherapistCard, YunaExplains, SegmentedToggle, RatingScale, …) default `surface="dark"`; light form controls (`Button`, `Switch`) default `surface="light"`. No DS component should *require* `surface` — give it the default for its cluster.
 
 **2. App mode — the user's Light/Dark toggle** (`useAppMode()` → `"dark" | "light"`). Drives the photo and inverts ink:
 - `PhoneFrame themed` swaps the photo (`/dark4-blur.png` ↔ `/light-blur-bg.png`) and adds `.theme-light` in light mode. `.theme-light` remaps every `text-white/*` → ink and `border-white/*` → dark — so **a dark-cluster screen authored with `text-white/85` reads correctly in light mode automatically. Author once, in white-on-dark vocabulary.**

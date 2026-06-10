@@ -108,6 +108,11 @@ function RootComponent() {
       (l.search as Record<string, unknown>)?.chrome === "off",
   });
 
+  // The /gallery board is itself a wide admin surface, so the right-hand
+  // engineer panel (per-screen notes / inspector) has nothing to act on and
+  // just crowds the board — hide it there. The left page index stays.
+  const onGallery = useLocation({ select: (l) => l.pathname === "/gallery" });
+
   // Global forest-ambient controller. Runs once for the app's lifetime so the
   // bed plays across every screen unless the user flips Nature Sounds off in
   // Settings. Routes that manage their own ambient (intro, chat) still pause
@@ -136,7 +141,7 @@ function RootComponent() {
   return (
     <>
       <AdminSidebar />
-      <EngineerSidebar />
+      {!onGallery && <EngineerSidebar />}
       <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
         <PlatformToggle />
         <ModeToggle />

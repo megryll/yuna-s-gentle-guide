@@ -29,20 +29,6 @@ function FieldDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
-function DisplayDemo({ surface }: { surface: "dark" | "light" }) {
-  const [value, setValue] = useState("Tuesday's check-in");
-  return (
-    <TextArea
-      surface={surface}
-      variant="display"
-      rows={2}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      placeholder="Conversation name"
-    />
-  );
-}
-
 function ErrorDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState("");
   return (
@@ -97,7 +83,6 @@ function DSTextArea() {
 
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Field", render: (s) => <FieldDemo surface={s} /> },
-  { label: "Display", render: (s) => <DisplayDemo surface={s} /> },
 ];
 
 const STATE_ROWS: MatrixRow[] = [

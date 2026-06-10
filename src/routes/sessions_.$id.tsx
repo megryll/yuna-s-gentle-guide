@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { PageHeader } from "@/components/PageHeader";
 import { TextArea } from "@/components/TextArea";
 import { Surface } from "@/components/Surface";
 import {
@@ -100,22 +101,16 @@ function SessionDetailRoute() {
               eat viewport per the photo-bg-scrolling padding rule. */}
           <div className="flex flex-col gap-6 pt-14">
             {/* ── Header: back arrow, date·length eyebrow, options menu ────── */}
-            <div className="relative flex items-center justify-center">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2">
-                <Button
-                  surface={surface}
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => navigate({ to: "/sessions" })}
-                  aria-label="Back to past sessions"
-                >
-                  <ChevronLeft strokeWidth={1.6} aria-hidden />
-                </Button>
-              </div>
-              <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
-                {session.date} · {session.length}
-              </p>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <PageHeader
+              surface={surface}
+              className="px-0 pt-0 pb-0"
+              onBack={() => navigate({ to: "/sessions" })}
+              center={
+                <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
+                  {session.date} · {session.length}
+                </p>
+              }
+              trailing={
                 <Button
                   surface={surface}
                   variant="secondary"
@@ -125,8 +120,8 @@ function SessionDetailRoute() {
                 >
                   <MoreHorizontal strokeWidth={1.8} aria-hidden />
                 </Button>
-              </div>
-            </div>
+              }
+            />
 
             {/* ── Title + Continue ────────────────────────────────────────── */}
             <h1 className="mt-4 font-display text-3xl leading-tight tracking-tight text-white text-center">

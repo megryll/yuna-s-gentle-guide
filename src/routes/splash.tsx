@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bookmark, Share } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -19,14 +19,21 @@ function Splash() {
   const blurBg = useDarkBlurImage();
   const [progress, setProgress] = useState(0);
 
+  // In the /gallery board (loaded with ?chrome=off) the splash thumbnail must
+  // stay put — skip the progress fill and the auto-advance to /home.
+  const chromeOff = useLocation({
+    select: (l) => (l.search as Record<string, unknown>)?.chrome === "off",
+  });
+
   useEffect(() => {
+    if (chromeOff) return;
     const raf = requestAnimationFrame(() => setProgress(100));
     const advance = setTimeout(() => navigate({ to: "/home" }), AUTO_ADVANCE_MS);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(advance);
     };
-  }, [navigate]);
+  }, [navigate, chromeOff]);
 
   return (
     <PhoneFrame backgroundImage={blurBg}>

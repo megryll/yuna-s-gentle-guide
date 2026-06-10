@@ -52,11 +52,22 @@ export const Route = createFileRoute("/chat")({
     revisit?: string;
     mode?: "text" | "voice";
     guided?: string;
+    personalize?: boolean;
   } => ({
     q: (s.q as string | undefined) ?? "",
     revisit: s.revisit as string | undefined,
     mode: s.mode === "voice" ? "voice" : "text",
     guided: s.guided as string | undefined,
+    // Deep-link the Personalize Yuna drawer open (used by the /gallery board).
+    // The search parser coerces `personalize=1` to the number 1, so accept the
+    // numeric, boolean, and string forms.
+    personalize:
+      s.personalize === true ||
+      s.personalize === 1 ||
+      s.personalize === "1" ||
+      s.personalize === "true"
+        ? true
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -157,7 +168,7 @@ function isReminisceEntry(initial: string): boolean {
 }
 
 function Chat() {
-  const { q, revisit, mode, guided } = Route.useSearch();
+  const { q, revisit, mode, guided, personalize } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
@@ -196,7 +207,7 @@ function Chat() {
   const { avatar, name: yunaUserName } = useYunaIdentity();
   const userType = useUserType();
   const [speakerOn, setSpeakerOn] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(personalize ?? false);
   const [inputFocused, setInputFocused] = useState(false);
   const [voicePitchActive, setVoicePitchActive] = useState(false);
   // True when the current chat session began via "Chat Now". Suggestion-chip

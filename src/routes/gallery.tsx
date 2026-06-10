@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { useFrameSize } from "@/lib/frame-size";
-import { getScreenSections, type ResolvedScreen } from "@/lib/screen-catalog";
+import { getScreenRegions, type ResolvedScreen } from "@/lib/screen-catalog";
 
 // Board view of the whole prototype: every catalogued screen rendered live as a
 // scaled-down iframe (loaded with ?chrome=off so it's frame-only and silent).
@@ -23,7 +23,7 @@ function withChromeOff(url: string): string {
 }
 
 function Gallery() {
-  const sections = getScreenSections();
+  const regions = getScreenRegions();
 
   return (
     <main className="min-h-screen bg-background md:pl-44">
@@ -36,20 +36,21 @@ function Gallery() {
           </p>
         </header>
 
-        {sections.map((section) =>
-          section.screens.length === 0 ? null : (
-            <section key={section.title} className="mb-12">
-              <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                {section.title}
-              </h2>
-              <div className="flex flex-wrap gap-x-6 gap-y-8">
-                {section.screens.map((screen) => (
-                  <Thumb key={screen.url} screen={screen} />
-                ))}
-              </div>
-            </section>
-          ),
-        )}
+        {regions.map((region) => (
+          <section key={region.title} className="mb-12">
+            <h2 className="mb-5 text-xs font-semibold uppercase tracking-[0.3em] text-foreground">
+              {region.title}
+            </h2>
+            <div
+              className="grid justify-start gap-x-5 gap-y-7"
+              style={{ gridTemplateColumns: `repeat(6, ${THUMB_WIDTH}px)` }}
+            >
+              {region.screens.map((screen) => (
+                <Thumb key={screen.url} screen={screen} />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </main>
   );

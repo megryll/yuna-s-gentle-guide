@@ -179,10 +179,11 @@ const initialRevealsForStep = (
 };
 
 const ctaLabelForStep = (stepIdx: number): string => {
-  if (stepIdx === 0) return "Continue";
+  // Onboarding uses "Continue" throughout — "Next" is reserved for explicit
+  // survey pagination, which this conversational intro isn't. The voice pick
+  // keeps its own action label.
   if (stepIdx === 4) return "Choose this voice";
-  if (stepIdx === TOTAL_STEPS - 1) return "Continue";
-  return "Next";
+  return "Continue";
 };
 
 let bubbleIdSeq = 0;
