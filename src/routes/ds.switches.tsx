@@ -31,6 +31,7 @@ function DSSwitches() {
         <PropsBlock>{`<Switch
   checked:  boolean
   onChange: (next: boolean) => void
+  surface?: "dark" | "light"      // off-track tint; default "light"
   label?:   string                // sets aria-label
   disabled?: boolean
   ...native button props (Switch renders <button role="switch" />)
@@ -43,29 +44,32 @@ function DSSwitches() {
 // ─── Interactive demos ──────────────────────────────────────────────────────
 
 const VARIANT_ROWS: MatrixRow[] = [
-  { label: "Standalone", render: () => <StateSwitch initial label="Daily reminders" /> },
+  { label: "Standalone", render: (s) => <StateSwitch initial surface={s} label="Daily reminders" /> },
   { label: "With label", render: (s) => <SwitchWithLabel surface={s} /> },
   { label: "Settings row", render: (s) => <SwitchRow surface={s} /> },
 ];
 
 const STATE_ROWS: MatrixRow[] = [
-  { label: "On", render: () => <StateSwitch initial label="On example" /> },
-  { label: "Off", render: () => <StateSwitch initial={false} label="Off example" /> },
-  { label: "Disabled", render: () => <StateSwitch initial disabled label="Disabled example" /> },
+  { label: "On", render: (s) => <StateSwitch initial surface={s} label="On example" /> },
+  { label: "Off", render: (s) => <StateSwitch initial={false} surface={s} label="Off example" /> },
+  { label: "Disabled", render: (s) => <StateSwitch initial disabled surface={s} label="Disabled example" /> },
 ];
 
 function StateSwitch({
   initial,
   disabled,
+  surface,
   label,
 }: {
   initial: boolean;
   disabled?: boolean;
+  surface: "dark" | "light";
   label: string;
 }) {
   const [on, setOn] = useState(initial);
   return (
     <Switch
+      surface={surface}
       checked={disabled ? initial : on}
       onChange={disabled ? () => {} : setOn}
       disabled={disabled}
@@ -80,7 +84,7 @@ function SwitchWithLabel({ surface }: { surface: "dark" | "light" }) {
     surface === "dark" ? "text-white" : "text-foreground";
   return (
     <label className="inline-flex items-center gap-3 cursor-pointer">
-      <Switch checked={on} onChange={setOn} label="Daily reminders" />
+      <Switch surface={surface} checked={on} onChange={setOn} label="Daily reminders" />
       <span className={`text-[15px] ${labelClass}`}>Daily reminders</span>
     </label>
   );
@@ -102,14 +106,14 @@ function SwitchRow({ surface }: { surface: "dark" | "light" }) {
           <span className={`text-[15px] ${labelClass}`}>Daily reminders</span>
           <span className={`text-xs mt-0.5 ${subClass}`}>9:00 AM</span>
         </div>
-        <Switch checked={a} onChange={setA} label="Daily reminders" />
+        <Switch surface={surface} checked={a} onChange={setA} label="Daily reminders" />
       </div>
       <div className="flex items-center justify-between py-3">
         <div className="flex flex-col">
           <span className={`text-[15px] ${labelClass}`}>Voice replies</span>
           <span className={`text-xs mt-0.5 ${subClass}`}>Yuna speaks back</span>
         </div>
-        <Switch checked={b} onChange={setB} label="Voice replies" />
+        <Switch surface={surface} checked={b} onChange={setB} label="Voice replies" />
       </div>
     </div>
   );

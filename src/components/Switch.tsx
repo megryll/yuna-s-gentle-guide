@@ -4,20 +4,26 @@ import { cn } from "@/lib/utils";
 /**
  * Switch — iOS-style toggle.
  *
- * On-state uses the `--secondary-green` token. Off-state uses a translucent
- * foreground fill so it adapts to light/dark surfaces. Thumb is a small
- * white circle that slides between ends. Pass `disabled` to dim the control
- * and block toggling.
+ * On-state uses the `--secondary-green` token. Thumb is a small white circle
+ * that slides between ends. Pass `disabled` to dim the control and block
+ * toggling.
+ *
+ * surface: which background the off-state track sits on.
+ *   - "light" (default) — ink-alpha track (`bg-foreground/20`), reads on light.
+ *   - "dark" — white-alpha track (`bg-white/25`); the ink track is invisible on
+ *     a dark photo, so dark-cluster screens must pass this.
  */
 export interface SwitchProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> {
   checked: boolean;
   onChange: (next: boolean) => void;
   label?: string;
+  surface?: "dark" | "light";
 }
 
 export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ checked, onChange, label, disabled, className, ...props }, ref) => {
+  ({ checked, onChange, label, surface = "light", disabled, className, ...props }, ref) => {
+    const offTrack = surface === "dark" ? "bg-white/25" : "bg-foreground/20";
     return (
       <button
         ref={ref}
@@ -31,7 +37,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
           "disabled:cursor-not-allowed disabled:opacity-40",
-          checked ? "bg-secondary-green" : "bg-foreground/20",
+          checked ? "bg-secondary-green" : offTrack,
           className,
         )}
         {...props}

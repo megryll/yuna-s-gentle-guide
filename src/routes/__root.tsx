@@ -40,6 +40,13 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
+  // `chrome=off` is a global search flag, preserved on every route via the
+  // root's validateSearch (leaf routes only return their own keys, so without
+  // this the flag would be stripped and the URL rewritten). The /gallery board
+  // appends it to each iframe src to suppress admin chrome + ambient audio.
+  validateSearch: (search: Record<string, unknown>) => ({
+    chrome: search.chrome === "off" ? ("off" as const) : undefined,
+  }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -91,6 +98,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Bare render: no admin chrome and no ambient audio. Used by standalone doc
+  // routes (animation-specs) and by any screen loaded with `?chrome=off` —
+  // which is how the /gallery board embeds every screen as a live iframe
+  // without 60 sidebars and 60 forest beds layering on top of each other.
+  const bare = useLocation({
+    select: (l) =>
+      l.pathname === "/animation-specs" ||
+      (l.search as Record<string, unknown>)?.chrome === "off",
+  });
+
   // Global forest-ambient controller. Runs once for the app's lifetime so the
   // bed plays across every screen unless the user flips Nature Sounds off in
   // Settings. Routes that manage their own ambient (intro, chat) still pause
@@ -98,22 +115,21 @@ function RootComponent() {
   // anywhere else picks it up again.
   const natureSoundsOn = useNatureSoundsOn();
   useEffect(() => {
+    if (bare) return;
     if (natureSoundsOn) startAmbient();
     else stopAmbient(400);
-  }, [natureSoundsOn]);
+  }, [natureSoundsOn, bare]);
 
   // Swap the bed when the admin picks a different soundtrack. No-op on first
   // mount (the element doesn't exist yet — startAmbient above seeds it with
   // the selected track); only a live change restarts on the new source.
   const soundtrackId = useSoundtrackId();
   useEffect(() => {
+    if (bare) return;
     switchSoundtrack();
-  }, [soundtrackId]);
+  }, [soundtrackId, bare]);
 
-  // Standalone doc routes render bare — no admin chrome — so they read as a
-  // clean reference when opened in a new tab.
-  const pathname = useLocation({ select: (l) => l.pathname });
-  if (pathname === "/animation-specs") {
+  if (bare) {
     return <Outlet />;
   }
 

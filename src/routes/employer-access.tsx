@@ -207,7 +207,7 @@ function RequestToast({ open }: { open: boolean }) {
   return (
     <div
       className={
-        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-xs " +
+        "pointer-events-none absolute inset-x-0 top-0 z-[60] px-5 pt-7 " +
         "transition-all duration-300 ease-out " +
         (open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")
       }

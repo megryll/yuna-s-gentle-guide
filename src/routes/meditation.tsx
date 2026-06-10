@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Plus, ThumbsUp, ThumbsDown, Check } from "lucide-react";
+import { Plus, ThumbsUp, ThumbsDown, Check, ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
@@ -19,6 +19,7 @@ import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { VOICES, DEFAULT_VOICE } from "@/lib/voices";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
+import { useFrameSize } from "@/lib/frame-size";
 
 type Step = "create" | "crafting" | "player" | "complete";
 const STEPS: Step[] = ["create", "crafting", "player", "complete"];
@@ -341,23 +342,31 @@ function CreateView({
   onStart: () => void;
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
+  const isSE = useFrameSize().id === "se";
   return (
-    <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <header className="relative flex items-center justify-center shrink-0">
-        <div className="absolute left-0">
-          <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={onBack}>
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-        </div>
-        <h1 className="font-display text-2xl tracking-tight text-white">Create A Meditation</h1>
+    <div className="flex-1 flex flex-col pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <header className="shrink-0 px-8 pt-14 flex items-center">
+        <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={onBack}>
+          <ChevronLeft strokeWidth={1.5} />
+        </Button>
       </header>
+      <h1
+        className={`shrink-0 px-8 font-display text-3xl tracking-tight text-white text-center ${
+          isSE ? "pt-4" : "pt-6"
+        }`}
+      >
+        Guided Audio
+      </h1>
+      <p className="shrink-0 px-8 mt-1.5 text-sm leading-snug text-white/85 text-center">
+        Personalized meditations and breathing exercises
+      </p>
 
-      <div className="mt-8 flex flex-col items-center text-center">
+      <div className="mt-8 px-8 flex flex-col items-center text-center">
         <p className="text-sm text-white/85">How long do you have?</p>
         <DurationDial value={minutes} min={MIN_MINUTES} max={MAX_MINUTES} onChange={onMinutes} />
       </div>
 
-      <div className="mt-6 flex flex-col items-center text-center">
+      <div className="mt-6 px-8 flex flex-col items-center text-center">
         <p className="text-sm text-white/85">Tell me what we should focus on</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           {presets.map((p) => (
@@ -376,7 +385,7 @@ function CreateView({
         </div>
       </div>
 
-      <div className="mt-auto pt-8">
+      <div className="mt-auto px-8 pt-8">
         <Button surface={surface} variant="primary" fullWidth onClick={onStart}>
           Start meditation
         </Button>

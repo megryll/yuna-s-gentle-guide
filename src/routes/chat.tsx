@@ -36,6 +36,7 @@ import {
   setSessionReco,
   setSessionStatus,
   useSessionEscalation,
+  useSessionGuided,
   useSessionReco,
   useSessionStatus,
 } from "@/lib/session-dev";
@@ -50,10 +51,12 @@ export const Route = createFileRoute("/chat")({
     q?: string;
     revisit?: string;
     mode?: "text" | "voice";
+    guided?: string;
   } => ({
     q: (s.q as string | undefined) ?? "",
     revisit: s.revisit as string | undefined,
     mode: s.mode === "voice" ? "voice" : "text",
+    guided: s.guided as string | undefined,
   }),
   head: () => ({
     meta: [
@@ -154,7 +157,7 @@ function isReminisceEntry(initial: string): boolean {
 }
 
 function Chat() {
-  const { q, revisit, mode } = Route.useSearch();
+  const { q, revisit, mode, guided } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
@@ -169,6 +172,12 @@ function Chat() {
   // can be reviewed without scripting a real exchange. Voice mode reads the
   // same store inside VoiceSession.
   const sessionStatus = useSessionStatus();
+  // Guided session: a distinctive header banner reminding the user which
+  // guided session they're in. Driven either by the Home card they tapped
+  // (the `guided` search param carries its title) or the EngineerSidebar
+  // "Guided Session" dev chip (sample title). The search param wins.
+  const devGuided = useSessionGuided();
+  const guidedTitle = guided || devGuided;
   const inVoice = mode === "voice";
   // Initial chat-now landing in voice mode (no revisit flag). This branch
   // defers the mic-permission prompt: Yuna introduces herself, walks the
@@ -828,8 +837,34 @@ function Chat() {
         className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white transition-[padding-bottom] duration-200 ease-out"
         style={inputFocused || keyboardLatched ? { paddingBottom: KEYBOARD_HEIGHT } : undefined}
       >
+        {/* Guided-session header strip — a full-width band at the very top
+            that pushes the rest of the screen down, reminding the user which
+            guided session they're in. Shown in both text and voice modes.
+            Frosted white-alpha medallion authored in white-on-dark so
+            .theme-light / .platform-android shims adapt it across modes. */}
+        {guidedTitle && (
+          <div className="shrink-0 flex items-center gap-3 px-5 pt-14 pb-3 border-b border-white/10">
+            <IconMedallion size="sm">
+              <MessageCircle size={15} strokeWidth={1.9} className="text-white" aria-hidden />
+            </IconMedallion>
+            <div className="min-w-0">
+              <span className="block text-[10px] uppercase tracking-[0.18em] text-white/75">
+                Guided
+              </span>
+              <p className="font-display text-[15px] leading-snug text-white line-clamp-2">
+                {guidedTitle}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="relative grid grid-cols-3 items-center px-5 pt-14 pb-2 shrink-0">
+        <div
+          className={
+            "relative grid grid-cols-3 items-center px-5 pb-2 shrink-0 " +
+            (guidedTitle ? "pt-3" : "pt-14")
+          }
+        >
           <div className="justify-self-start">
             <Button
               surface="dark"
@@ -867,7 +902,7 @@ function Chat() {
         </div>
 
         {!inVoice && (
-          <div className="absolute left-5 top-[112px] z-10">
+          <div className={"absolute left-5 z-10 " + (guidedTitle ? "top-[180px]" : "top-[112px]")}>
             <IconMedallion>
               {avatar ? (
                 <YunaAvatar variant={avatar} size={64} />
@@ -906,7 +941,10 @@ function Chat() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 pt-20 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className={
+                "flex-1 overflow-y-auto px-5 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden " +
+                (guidedTitle ? "pt-24" : "pt-20")
+              }
             >
               {messages.map((m) => {
                 if (m.kind === "voice-pitch")

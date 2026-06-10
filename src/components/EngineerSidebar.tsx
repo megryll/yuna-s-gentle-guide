@@ -21,10 +21,13 @@ import { cn } from "@/lib/utils";
 import type { YunaState } from "@/components/YunaStatus";
 import type { CardKind } from "@/lib/home-cards";
 import {
+  GUIDED_SAMPLE_TITLE,
   setSessionEscalation,
+  setSessionGuided,
   setSessionReco,
   setSessionStatus,
   useSessionEscalation,
+  useSessionGuided,
   useSessionReco,
   useSessionStatus,
 } from "@/lib/session-dev";
@@ -526,10 +529,16 @@ const RECO_STATES: { kind: CardKind; label: string }[] = [
   { kind: "self-discovery", label: "Questionnaire Reco" },
 ];
 
+// Statuses that only exist in a voice session — disabled in text mode.
+const VOICE_ONLY_STATES: YunaState[] = ["listening", "speaking"];
+
 function YunaStatesSection() {
   const status = useSessionStatus();
   const reco = useSessionReco();
   const escalation = useSessionEscalation();
+  const guided = useSessionGuided();
+  const location = useLocation();
+  const inVoice = (location.search as { mode?: string })?.mode === "voice";
 
   // Picking any chip clears the other two states so one is active at a time.
   const clearOthers = () => {
@@ -539,15 +548,18 @@ function YunaStatesSection() {
   };
 
   return (
-    <Section title="Yuna states" defaultOpen={false}>
+    <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
         {STATUS_STATES.map((s) => {
           const active = status === s;
+          const disabled = !inVoice && VOICE_ONLY_STATES.includes(s);
           return (
             <Chip
               key={s}
               active={active}
               label={s}
+              disabled={disabled}
+              disabledReason="Only in voice mode"
               onClick={() => {
                 clearOthers();
                 if (!active) setSessionStatus(s);
@@ -578,6 +590,13 @@ function YunaStatesSection() {
             if (!wasActive) setSessionEscalation("self-harm");
           }}
         />
+        {/* Session type — independent of the transient status/reco chips above:
+            a guided session can still be listening, thinking, etc. */}
+        <Chip
+          active={!!guided}
+          label="Guided Session"
+          onClick={() => setSessionGuided(guided ? null : GUIDED_SAMPLE_TITLE)}
+        />
       </div>
     </Section>
   );
@@ -587,11 +606,39 @@ function Chip({
   active,
   label,
   onClick,
+  disabled = false,
+  disabledReason,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
+  const [showTip, setShowTip] = useState(false);
+
+  if (disabled) {
+    return (
+      <span className="relative inline-block">
+        <button
+          type="button"
+          aria-disabled
+          onClick={() => setShowTip((v) => !v)}
+          onMouseEnter={() => setShowTip(true)}
+          onMouseLeave={() => setShowTip(false)}
+          className="cursor-not-allowed rounded-full border border-border px-2.5 py-1 text-[10.5px] capitalize text-muted-foreground/40"
+        >
+          {label}
+        </button>
+        {showTip && disabledReason && (
+          <span className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-[10px] normal-case text-background shadow-md">
+            {disabledReason}
+          </span>
+        )}
+      </span>
+    );
+  }
+
   return (
     <button
       type="button"

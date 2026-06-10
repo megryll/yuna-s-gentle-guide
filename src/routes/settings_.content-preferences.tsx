@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ComponentType, SVGProps } from "react";
 import {
   BookOpen,
-  ChevronLeft,
   ClipboardList,
   Flower2,
   Lightbulb,
@@ -12,7 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { Button } from "@/components/Button";
+import { PageHeader } from "@/components/PageHeader";
 import { Switch } from "@/components/Switch";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { KIND_META, KIND_PLURAL, type CardKind } from "@/lib/home-cards";
@@ -62,22 +61,13 @@ function ContentPreferencesRoute() {
           (mode === "dark" ? "overlay-on-dark" : "")
         }
       >
-        <header className="flex items-center gap-4 px-6 pt-14 pb-6 shrink-0">
-          <Button
-            surface="light"
-            variant="secondary"
-            size="icon"
-            onClick={() => navigate({ to: "/settings" })}
-            aria-label="Back"
-          >
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-          <h1 className="font-display text-2xl leading-8 tracking-tight text-foreground">
-            Content Preferences
-          </h1>
-        </header>
+        <PageHeader
+          title="Content Preferences"
+          tone="ink"
+          onBack={() => navigate({ to: "/settings" })}
+        />
 
-        <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 flex flex-col gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <p className="text-sm leading-relaxed text-foreground/75">
             Choose what Yuna includes in your feed. Turn off anything you'd
             rather not see.

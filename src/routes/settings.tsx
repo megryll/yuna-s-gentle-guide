@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 import {
   Bell,
@@ -18,8 +18,10 @@ import {
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
+import { Toast, ToastViewport } from "@/components/Toast";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { setNatureSoundsOn, useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
+import { consumeSettingsSaved } from "@/lib/settings-saved-toast";
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -43,10 +45,10 @@ type Row = LinkRow | ToggleRow;
 
 const GROUP_ONE: Row[] = [
   { id: "natureSounds", label: "Background sounds", Icon: Leaf, kind: "toggle", defaultOn: true },
-  { id: "account", label: "Account Settings", Icon: User, kind: "link" },
-  { id: "subscription", label: "Subscription", Icon: Star, kind: "link" },
-  { id: "voice", label: "Customize Voice", Icon: Users, kind: "link" },
-  { id: "language", label: "Session Language", Icon: Globe, kind: "link" },
+  { id: "account", label: "Account Settings", Icon: User, kind: "link", to: "/settings/account" },
+  { id: "subscription", label: "Subscription", Icon: Star, kind: "link", to: "/settings/subscription" },
+  { id: "voice", label: "Customize Voice", Icon: Users, kind: "link", to: "/settings/voice" },
+  { id: "language", label: "Session Language", Icon: Globe, kind: "link", to: "/settings/language" },
   { id: "content", label: "Content Preferences", Icon: SlidersHorizontal, kind: "link", to: "/settings/content-preferences" },
   { id: "faceid", label: "Face ID", Icon: ScanFace, kind: "toggle", defaultOn: true },
   { id: "push", label: "Push notifications", Icon: Bell, kind: "toggle", defaultOn: true },
@@ -77,6 +79,20 @@ function SettingsRoute() {
     ),
   );
 
+  // Confirm a change made on a sub-page (Account, Subscription, Language,
+  // Voice) the moment the user lands back here.
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const message = consumeSettingsSaved();
+    if (!message) return;
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
   const readToggle = (id: string) =>
     id === "natureSounds" ? natureSoundsOn : !!toggles[id];
 
@@ -106,6 +122,18 @@ function SettingsRoute() {
           (mode === "dark" ? "overlay-on-dark" : "")
         }
       >
+        {toast && (
+          <ToastViewport>
+            <Toast
+              surface="light"
+              variant="success"
+              message={toast}
+              onDismiss={() => setToast(null)}
+              className="yuna-fade-in"
+            />
+          </ToastViewport>
+        )}
+
         <header className="flex items-center justify-between px-6 pt-14 pb-6 shrink-0">
           <div className="flex items-center gap-4">
             <Button

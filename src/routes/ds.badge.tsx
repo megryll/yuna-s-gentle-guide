@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@/components/Badge";
-import { DSPage, PropsBlock, Section, SurfaceMatrix } from "@/ds-docs/surface";
+import { DSPage, PropsBlock, Section, SurfaceMatrix, SurfacePair } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/badge")({
   head: () => ({
@@ -33,6 +33,46 @@ function DSBadge() {
             { label: "sm", render: () => <Badge icon size="sm" label="Complete" /> },
             { label: "md", render: () => <Badge icon size="md" label="Complete" /> },
           ]}
+        />
+      </Section>
+
+      <Section
+        title="Placement"
+        subtitle="The pill is position-agnostic — only the className changes. Pin it to a card corner with absolute positioning (top-left, as the card 'New' flag, or top-right, as the Save 65% plan flag), or set it inline beside a title with shrink-0."
+      >
+        <SurfacePair
+          align="start"
+          renderRow={(surface) => {
+            const tile =
+              surface === "dark" ? "bg-white/10 border-white/15" : "bg-black/[0.05] border-black/10";
+            const glyph = surface === "dark" ? "bg-white/10" : "bg-black/[0.05]";
+            const ink = surface === "dark" ? "text-white" : "text-foreground";
+            return (
+              <div className="flex flex-col gap-8">
+                {/* On a card — corner flag, top-left (the card 'New' flag) */}
+                <div className="relative w-[200px]">
+                  <Badge className="absolute z-10 -top-3 left-4">New</Badge>
+                  <div className={"rounded-2xl border h-24 " + tile} />
+                </div>
+                {/* On a card — corner flag, top-right (the plan card uses) */}
+                <div className="relative w-[200px]">
+                  <Badge className="absolute z-10 -top-3 right-4">Save 65%</Badge>
+                  <div className={"rounded-2xl border h-24 " + tile} />
+                </div>
+                {/* Inline — beside a title */}
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={"h-9 w-9 rounded-lg shrink-0 flex items-center justify-center " + glyph}
+                  >
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>🌱</span>
+                  </span>
+                  <span className={"text-sm " + ink}>A gentle breakthrough</span>
+                  <Badge className="shrink-0">Nov 2025</Badge>
+                </div>
+              </div>
+            );
+          }}
         />
       </Section>
 

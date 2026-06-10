@@ -1446,7 +1446,7 @@ function FaceIdToggle() {
       <span className="flex-1 min-w-0 text-base font-semibold leading-snug">
         Face ID
       </span>
-      <Switch checked={on} onChange={request} label="Enable Face ID" />
+      <Switch surface="dark" checked={on} onChange={request} label="Enable Face ID" />
     </div>
   );
 }

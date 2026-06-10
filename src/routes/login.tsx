@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField, FieldError } from "@/components/TextField";
 import { Divider } from "@/components/Divider";
+import { Toast, ToastViewport } from "@/components/Toast";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 // Basic shape check — enough to catch typos like a missing "@" without
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/login")({
   component: LoginScreen,
 });
 
-type Step = "email" | "password";
+type Step = "email" | "password" | "reset";
 
 function LoginScreen() {
   const navigate = useNavigate();
@@ -32,9 +33,30 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // Top-pinned confirmation after a password-reset email is "sent".
+  const [toast, setToast] = useState<{ title: string; message: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showResetSent = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({
+      title: "Password reset email sent",
+      message: "Please follow the instructions sent in the email",
+    });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  };
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    [],
+  );
+
   const finish = () => navigate({ to: "/home" });
   const goBack = () => {
-    if (step === "password") {
+    if (step === "reset") {
+      setEmailError("");
+      setStep("password");
+    } else if (step === "password") {
       setPasswordError("");
       setStep("email");
     } else navigate({ to: "/" });
@@ -42,7 +64,17 @@ function LoginScreen() {
 
   return (
     <PhoneFrame backgroundImage={darkBg}>
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white">
+      <div className="relative flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white">
+        {toast && (
+          <ToastViewport>
+            <Toast
+              variant="success"
+              title={toast.title}
+              message={toast.message}
+              onDismiss={() => setToast(null)}
+            />
+          </ToastViewport>
+        )}
         <div className="flex items-center justify-between">
           <Button
             surface="dark"
@@ -59,10 +91,19 @@ function LoginScreen() {
         <div key={step} className="yuna-fade-in flex flex-col">
           <div className="mt-14 yuna-rise">
             <h1 className="text-3xl leading-tight tracking-tight text-white">
-              {step === "email" ? "Welcome back." : "Enter your password."}
+              {step === "email"
+                ? "Welcome back."
+                : step === "reset"
+                  ? "Reset your password."
+                  : "Enter your password."}
             </h1>
             {step === "password" && email && (
               <p className="mt-3 text-sm text-white/75">{email}</p>
+            )}
+            {step === "reset" && (
+              <p className="mt-3 text-sm text-white/75 max-w-[20rem]">
+                We'll send reset instructions to this email.
+              </p>
             )}
           </div>
 
@@ -108,6 +149,39 @@ function LoginScreen() {
                 Continue with Apple
               </Button>
             </div>
+          ) : step === "reset" ? (
+            <form
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!EMAIL_RE.test(email.trim())) {
+                  setEmailError("That doesn't look like a valid email.");
+                  return;
+                }
+                setStep("password");
+                showResetSent();
+              }}
+              className="mt-10 flex flex-col gap-3"
+            >
+              <div className="flex flex-col gap-2">
+                <TextField
+                  surface="dark"
+                  type="email"
+                  autoFocus
+                  error={!!emailError}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
+                  placeholder="your@email.com"
+                />
+                {emailError && <FieldError>{emailError}</FieldError>}
+              </div>
+              <Button surface="dark" variant="primary" fullWidth type="submit">
+                Reset Password
+              </Button>
+            </form>
           ) : (
             <form
               noValidate
@@ -143,6 +217,11 @@ function LoginScreen() {
                 surface="dark"
                 variant="link"
                 type="button"
+                onClick={() => {
+                  setPasswordError("");
+                  setEmailError("");
+                  setStep("reset");
+                }}
                 className="self-center mt-1"
               >
                 Forgot password?

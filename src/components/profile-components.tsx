@@ -6,9 +6,7 @@ import { Accordion } from "@/components/Accordion";
 import { Badge } from "@/components/Badge";
 import type { Insight } from "@/lib/profile-data";
 import { useAppMode } from "@/lib/theme-prefs";
-import { YunaAvatar } from "@/components/YunaAvatar";
-import { DEFAULT_VOICE } from "@/lib/voices";
-import { useYunaIdentity } from "@/lib/yuna-session";
+import { YunaExplains } from "@/components/YunaExplains";
 
 // Brand greens, both tokenised: GREEN = --primary-green, GREEN_ACCENT =
 // --secondary-green. Alpha tints go through greenMix() rather than a hex-alpha
@@ -153,7 +151,6 @@ export function InsightCard({
   const mode = useAppMode();
   const isLight = mode === "light";
   const cardBg = isLight ? "bg-white/[0.55]" : "bg-white/[0.06]";
-  const { avatar } = useYunaIdentity();
 
   return (
     <div
@@ -204,27 +201,7 @@ export function InsightCard({
           )}
 
           {yunaQuote && (
-            <div
-              className="rounded-2xl flex gap-2.5 items-start"
-              style={{
-                background: greenMix(10),
-                borderLeft: `3px solid ${GREEN_ACCENT}`,
-                padding: "16px 16px 16px 19px",
-              }}
-            >
-              <span
-                aria-hidden
-                className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10 shrink-0"
-              >
-                <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={40} />
-              </span>
-              <p
-                className="font-display italic m-0 text-white/95"
-                style={{ fontSize: 14, lineHeight: "22px", fontVariationSettings: "'SOFT' 0, 'WONK' 1" }}
-              >
-                {yunaQuote}
-              </p>
-            </div>
+            <YunaExplains surface={isLight ? "light" : "dark"}>{yunaQuote}</YunaExplains>
           )}
         </div>
       </Accordion>

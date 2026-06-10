@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as YouRouteImport } from './routes/you'
 import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as TherapistRecommendationsRouteImport } from './routes/therapist-recommendations'
+import { Route as TherapistPreferencesRouteImport } from './routes/therapist-preferences'
+import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as MeditationRouteImport } from './routes/meditation'
@@ -20,35 +23,52 @@ import { Route as IntroRouteImport } from './routes/intro'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as GratitudeRouteImport } from './routes/gratitude'
 import { Route as GoalsRouteImport } from './routes/goals'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
+import { Route as DesignYourTrialRouteImport } from './routes/design-your-trial'
 import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimationSpecsRouteImport } from './routes/animation-specs'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TherapistScheduleIdRouteImport } from './routes/therapist-schedule.$id'
+import { Route as TherapistProfileIdRouteImport } from './routes/therapist-profile.$id'
 import { Route as SkillIdRouteImport } from './routes/skill.$id'
+import { Route as SettingsVoiceRouteImport } from './routes/settings_.voice'
+import { Route as SettingsSubscriptionRouteImport } from './routes/settings_.subscription'
+import { Route as SettingsLanguageRouteImport } from './routes/settings_.language'
 import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
+import { Route as SettingsAccountRouteImport } from './routes/settings_.account'
+import { Route as SessionsIdRouteImport } from './routes/sessions_.$id'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
+import { Route as DsYunaExplainsRouteImport } from './routes/ds.yuna-explains'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
+import { Route as DsTherapistCardRouteImport } from './routes/ds.therapist-card'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
+import { Route as DsTextAreaRouteImport } from './routes/ds.text-area'
 import { Route as DsTagsRouteImport } from './routes/ds.tags'
 import { Route as DsSwitchesRouteImport } from './routes/ds.switches'
 import { Route as DsSurfaceRouteImport } from './routes/ds.surface'
+import { Route as DsStepDotsRouteImport } from './routes/ds.step-dots'
 import { Route as DsSpacingRouteImport } from './routes/ds.spacing'
 import { Route as DsSliderRouteImport } from './routes/ds.slider'
 import { Route as DsSegmentedToggleRouteImport } from './routes/ds.segmented-toggle'
 import { Route as DsRatingScaleRouteImport } from './routes/ds.rating-scale'
 import { Route as DsRadialProgressRouteImport } from './routes/ds.radial-progress'
+import { Route as DsProgressBarRouteImport } from './routes/ds.progress-bar'
+import { Route as DsMultipleChoiceRouteImport } from './routes/ds.multiple-choice'
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
 import { Route as DsDividerRouteImport } from './routes/ds.divider'
 import { Route as DsColorsRouteImport } from './routes/ds.colors'
+import { Route as DsCheckboxRouteImport } from './routes/ds.checkbox'
 import { Route as DsChatBubblesRouteImport } from './routes/ds.chat-bubbles'
 import { Route as DsCardsRouteImport } from './routes/ds.cards'
 import { Route as DsCardSuggestionRouteImport } from './routes/ds.card-suggestion'
+import { Route as DsCalendarRouteImport } from './routes/ds.calendar'
 import { Route as DsButtonsRouteImport } from './routes/ds.buttons'
 import { Route as DsBadgeRouteImport } from './routes/ds.badge'
 import { Route as DsAvatarsRouteImport } from './routes/ds.avatars'
@@ -69,6 +89,22 @@ const WrapUpRoute = WrapUpRouteImport.update({
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TherapistRecommendationsRoute =
+  TherapistRecommendationsRouteImport.update({
+    id: '/therapist-recommendations',
+    path: '/therapist-recommendations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TherapistPreferencesRoute = TherapistPreferencesRouteImport.update({
+  id: '/therapist-preferences',
+  path: '/therapist-preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplashRoute = SplashRouteImport.update({
+  id: '/splash',
+  path: '/splash',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -111,9 +147,19 @@ const GoalsRoute = GoalsRouteImport.update({
   path: '/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployerAccessRoute = EmployerAccessRouteImport.update({
   id: '/employer-access',
   path: '/employer-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignYourTrialRoute = DesignYourTrialRouteImport.update({
+  id: '/design-your-trial',
+  path: '/design-your-trial',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreatingYourSpaceRoute = CreatingYourSpaceRouteImport.update({
@@ -146,9 +192,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TherapistScheduleIdRoute = TherapistScheduleIdRouteImport.update({
+  id: '/therapist-schedule/$id',
+  path: '/therapist-schedule/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TherapistProfileIdRoute = TherapistProfileIdRouteImport.update({
+  id: '/therapist-profile/$id',
+  path: '/therapist-profile/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SkillIdRoute = SkillIdRouteImport.update({
   id: '/skill/$id',
   path: '/skill/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsVoiceRoute = SettingsVoiceRouteImport.update({
+  id: '/settings_/voice',
+  path: '/settings/voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsSubscriptionRoute = SettingsSubscriptionRouteImport.update({
+  id: '/settings_/subscription',
+  path: '/settings/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
+  id: '/settings_/language',
+  path: '/settings/language',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsContentPreferencesRoute =
@@ -157,9 +228,24 @@ const SettingsContentPreferencesRoute =
     path: '/settings/content-preferences',
     getParentRoute: () => rootRouteImport,
   } as any)
+const SettingsAccountRoute = SettingsAccountRouteImport.update({
+  id: '/settings_/account',
+  path: '/settings/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SessionsIdRoute = SessionsIdRouteImport.update({
+  id: '/sessions_/$id',
+  path: '/sessions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
   id: '/focus-area/$num',
   path: '/focus-area/$num',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsYunaExplainsRoute = DsYunaExplainsRouteImport.update({
+  id: '/ds/yuna-explains',
+  path: '/ds/yuna-explains',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsWaveformRoute = DsWaveformRouteImport.update({
@@ -177,9 +263,19 @@ const DsToastsRoute = DsToastsRouteImport.update({
   path: '/ds/toasts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsTherapistCardRoute = DsTherapistCardRouteImport.update({
+  id: '/ds/therapist-card',
+  path: '/ds/therapist-card',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
   id: '/ds/text-fields',
   path: '/ds/text-fields',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsTextAreaRoute = DsTextAreaRouteImport.update({
+  id: '/ds/text-area',
+  path: '/ds/text-area',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsTagsRoute = DsTagsRouteImport.update({
@@ -195,6 +291,11 @@ const DsSwitchesRoute = DsSwitchesRouteImport.update({
 const DsSurfaceRoute = DsSurfaceRouteImport.update({
   id: '/ds/surface',
   path: '/ds/surface',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsStepDotsRoute = DsStepDotsRouteImport.update({
+  id: '/ds/step-dots',
+  path: '/ds/step-dots',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsSpacingRoute = DsSpacingRouteImport.update({
@@ -222,6 +323,16 @@ const DsRadialProgressRoute = DsRadialProgressRouteImport.update({
   path: '/ds/radial-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsProgressBarRoute = DsProgressBarRouteImport.update({
+  id: '/ds/progress-bar',
+  path: '/ds/progress-bar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsMultipleChoiceRoute = DsMultipleChoiceRouteImport.update({
+  id: '/ds/multiple-choice',
+  path: '/ds/multiple-choice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsIconsRoute = DsIconsRouteImport.update({
   id: '/ds/icons',
   path: '/ds/icons',
@@ -242,6 +353,11 @@ const DsColorsRoute = DsColorsRouteImport.update({
   path: '/ds/colors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsCheckboxRoute = DsCheckboxRouteImport.update({
+  id: '/ds/checkbox',
+  path: '/ds/checkbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsChatBubblesRoute = DsChatBubblesRouteImport.update({
   id: '/ds/chat-bubbles',
   path: '/ds/chat-bubbles',
@@ -255,6 +371,11 @@ const DsCardsRoute = DsCardsRouteImport.update({
 const DsCardSuggestionRoute = DsCardSuggestionRouteImport.update({
   id: '/ds/card-suggestion',
   path: '/ds/card-suggestion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsCalendarRoute = DsCalendarRouteImport.update({
+  id: '/ds/calendar',
+  path: '/ds/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsButtonsRoute = DsButtonsRouteImport.update({
@@ -295,7 +416,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
+  '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/gallery': typeof GalleryRoute
   '/goals': typeof GoalsRoute
   '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
@@ -304,6 +427,9 @@ export interface FileRoutesByFullPath {
   '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
+  '/therapist-preferences': typeof TherapistPreferencesRoute
+  '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
@@ -313,28 +439,43 @@ export interface FileRoutesByFullPath {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/calendar': typeof DsCalendarRoute
   '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/checkbox': typeof DsCheckboxRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/spacing': typeof DsSpacingRoute
+  '/ds/step-dots': typeof DsStepDotsRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
+  '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
+  '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions/$id': typeof SessionsIdRoute
+  '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings/language': typeof SettingsLanguageRoute
+  '/settings/subscription': typeof SettingsSubscriptionRoute
+  '/settings/voice': typeof SettingsVoiceRoute
   '/skill/$id': typeof SkillIdRoute
+  '/therapist-profile/$id': typeof TherapistProfileIdRoute
+  '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -343,7 +484,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
+  '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/gallery': typeof GalleryRoute
   '/goals': typeof GoalsRoute
   '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
@@ -352,6 +495,9 @@ export interface FileRoutesByTo {
   '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
+  '/therapist-preferences': typeof TherapistPreferencesRoute
+  '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
@@ -361,28 +507,43 @@ export interface FileRoutesByTo {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/calendar': typeof DsCalendarRoute
   '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/checkbox': typeof DsCheckboxRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/spacing': typeof DsSpacingRoute
+  '/ds/step-dots': typeof DsStepDotsRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
+  '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
+  '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions/$id': typeof SessionsIdRoute
+  '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings/language': typeof SettingsLanguageRoute
+  '/settings/subscription': typeof SettingsSubscriptionRoute
+  '/settings/voice': typeof SettingsVoiceRoute
   '/skill/$id': typeof SkillIdRoute
+  '/therapist-profile/$id': typeof TherapistProfileIdRoute
+  '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -392,7 +553,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
+  '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
+  '/gallery': typeof GalleryRoute
   '/goals': typeof GoalsRoute
   '/gratitude': typeof GratitudeRoute
   '/home': typeof HomeRoute
@@ -401,6 +564,9 @@ export interface FileRoutesById {
   '/meditation': typeof MeditationRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
+  '/therapist-preferences': typeof TherapistPreferencesRoute
+  '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
@@ -410,28 +576,43 @@ export interface FileRoutesById {
   '/ds/avatars': typeof DsAvatarsRoute
   '/ds/badge': typeof DsBadgeRoute
   '/ds/buttons': typeof DsButtonsRoute
+  '/ds/calendar': typeof DsCalendarRoute
   '/ds/card-suggestion': typeof DsCardSuggestionRoute
   '/ds/cards': typeof DsCardsRoute
   '/ds/chat-bubbles': typeof DsChatBubblesRoute
+  '/ds/checkbox': typeof DsCheckboxRoute
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
   '/ds/icons': typeof DsIconsRoute
+  '/ds/multiple-choice': typeof DsMultipleChoiceRoute
+  '/ds/progress-bar': typeof DsProgressBarRoute
   '/ds/radial-progress': typeof DsRadialProgressRoute
   '/ds/rating-scale': typeof DsRatingScaleRoute
   '/ds/segmented-toggle': typeof DsSegmentedToggleRoute
   '/ds/slider': typeof DsSliderRoute
   '/ds/spacing': typeof DsSpacingRoute
+  '/ds/step-dots': typeof DsStepDotsRoute
   '/ds/surface': typeof DsSurfaceRoute
   '/ds/switches': typeof DsSwitchesRoute
   '/ds/tags': typeof DsTagsRoute
+  '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
+  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
+  '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/sessions_/$id': typeof SessionsIdRoute
+  '/settings_/account': typeof SettingsAccountRoute
   '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings_/language': typeof SettingsLanguageRoute
+  '/settings_/subscription': typeof SettingsSubscriptionRoute
+  '/settings_/voice': typeof SettingsVoiceRoute
   '/skill/$id': typeof SkillIdRoute
+  '/therapist-profile/$id': typeof TherapistProfileIdRoute
+  '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -442,7 +623,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
+    | '/design-your-trial'
     | '/employer-access'
+    | '/gallery'
     | '/goals'
     | '/gratitude'
     | '/home'
@@ -451,6 +634,9 @@ export interface FileRouteTypes {
     | '/meditation'
     | '/sessions'
     | '/settings'
+    | '/splash'
+    | '/therapist-preferences'
+    | '/therapist-recommendations'
     | '/tools'
     | '/wrap-up'
     | '/you'
@@ -460,28 +646,43 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/calendar'
     | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
+    | '/ds/checkbox'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/multiple-choice'
+    | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
     | '/ds/spacing'
+    | '/ds/step-dots'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
+    | '/ds/text-area'
     | '/ds/text-fields'
+    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
+    | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/sessions/$id'
+    | '/settings/account'
     | '/settings/content-preferences'
+    | '/settings/language'
+    | '/settings/subscription'
+    | '/settings/voice'
     | '/skill/$id'
+    | '/therapist-profile/$id'
+    | '/therapist-schedule/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -490,7 +691,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
+    | '/design-your-trial'
     | '/employer-access'
+    | '/gallery'
     | '/goals'
     | '/gratitude'
     | '/home'
@@ -499,6 +702,9 @@ export interface FileRouteTypes {
     | '/meditation'
     | '/sessions'
     | '/settings'
+    | '/splash'
+    | '/therapist-preferences'
+    | '/therapist-recommendations'
     | '/tools'
     | '/wrap-up'
     | '/you'
@@ -508,28 +714,43 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/calendar'
     | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
+    | '/ds/checkbox'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/multiple-choice'
+    | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
     | '/ds/spacing'
+    | '/ds/step-dots'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
+    | '/ds/text-area'
     | '/ds/text-fields'
+    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
+    | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/sessions/$id'
+    | '/settings/account'
     | '/settings/content-preferences'
+    | '/settings/language'
+    | '/settings/subscription'
+    | '/settings/voice'
     | '/skill/$id'
+    | '/therapist-profile/$id'
+    | '/therapist-schedule/$id'
   id:
     | '__root__'
     | '/'
@@ -538,7 +759,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/creating-your-space'
+    | '/design-your-trial'
     | '/employer-access'
+    | '/gallery'
     | '/goals'
     | '/gratitude'
     | '/home'
@@ -547,6 +770,9 @@ export interface FileRouteTypes {
     | '/meditation'
     | '/sessions'
     | '/settings'
+    | '/splash'
+    | '/therapist-preferences'
+    | '/therapist-recommendations'
     | '/tools'
     | '/wrap-up'
     | '/you'
@@ -556,28 +782,43 @@ export interface FileRouteTypes {
     | '/ds/avatars'
     | '/ds/badge'
     | '/ds/buttons'
+    | '/ds/calendar'
     | '/ds/card-suggestion'
     | '/ds/cards'
     | '/ds/chat-bubbles'
+    | '/ds/checkbox'
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
     | '/ds/icons'
+    | '/ds/multiple-choice'
+    | '/ds/progress-bar'
     | '/ds/radial-progress'
     | '/ds/rating-scale'
     | '/ds/segmented-toggle'
     | '/ds/slider'
     | '/ds/spacing'
+    | '/ds/step-dots'
     | '/ds/surface'
     | '/ds/switches'
     | '/ds/tags'
+    | '/ds/text-area'
     | '/ds/text-fields'
+    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
+    | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/sessions_/$id'
+    | '/settings_/account'
     | '/settings_/content-preferences'
+    | '/settings_/language'
+    | '/settings_/subscription'
+    | '/settings_/voice'
     | '/skill/$id'
+    | '/therapist-profile/$id'
+    | '/therapist-schedule/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -587,7 +828,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
+  DesignYourTrialRoute: typeof DesignYourTrialRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
+  GalleryRoute: typeof GalleryRoute
   GoalsRoute: typeof GoalsRoute
   GratitudeRoute: typeof GratitudeRoute
   HomeRoute: typeof HomeRoute
@@ -596,6 +839,9 @@ export interface RootRouteChildren {
   MeditationRoute: typeof MeditationRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
+  SplashRoute: typeof SplashRoute
+  TherapistPreferencesRoute: typeof TherapistPreferencesRoute
+  TherapistRecommendationsRoute: typeof TherapistRecommendationsRoute
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
@@ -605,28 +851,43 @@ export interface RootRouteChildren {
   DsAvatarsRoute: typeof DsAvatarsRoute
   DsBadgeRoute: typeof DsBadgeRoute
   DsButtonsRoute: typeof DsButtonsRoute
+  DsCalendarRoute: typeof DsCalendarRoute
   DsCardSuggestionRoute: typeof DsCardSuggestionRoute
   DsCardsRoute: typeof DsCardsRoute
   DsChatBubblesRoute: typeof DsChatBubblesRoute
+  DsCheckboxRoute: typeof DsCheckboxRoute
   DsColorsRoute: typeof DsColorsRoute
   DsDividerRoute: typeof DsDividerRoute
   DsDrawerRoute: typeof DsDrawerRoute
   DsIconsRoute: typeof DsIconsRoute
+  DsMultipleChoiceRoute: typeof DsMultipleChoiceRoute
+  DsProgressBarRoute: typeof DsProgressBarRoute
   DsRadialProgressRoute: typeof DsRadialProgressRoute
   DsRatingScaleRoute: typeof DsRatingScaleRoute
   DsSegmentedToggleRoute: typeof DsSegmentedToggleRoute
   DsSliderRoute: typeof DsSliderRoute
   DsSpacingRoute: typeof DsSpacingRoute
+  DsStepDotsRoute: typeof DsStepDotsRoute
   DsSurfaceRoute: typeof DsSurfaceRoute
   DsSwitchesRoute: typeof DsSwitchesRoute
   DsTagsRoute: typeof DsTagsRoute
+  DsTextAreaRoute: typeof DsTextAreaRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
+  DsTherapistCardRoute: typeof DsTherapistCardRoute
   DsToastsRoute: typeof DsToastsRoute
   DsTypographyRoute: typeof DsTypographyRoute
   DsWaveformRoute: typeof DsWaveformRoute
+  DsYunaExplainsRoute: typeof DsYunaExplainsRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
+  SessionsIdRoute: typeof SessionsIdRoute
+  SettingsAccountRoute: typeof SettingsAccountRoute
   SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
+  SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsSubscriptionRoute: typeof SettingsSubscriptionRoute
+  SettingsVoiceRoute: typeof SettingsVoiceRoute
   SkillIdRoute: typeof SkillIdRoute
+  TherapistProfileIdRoute: typeof TherapistProfileIdRoute
+  TherapistScheduleIdRoute: typeof TherapistScheduleIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -650,6 +911,27 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/tools'
       preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/therapist-recommendations': {
+      id: '/therapist-recommendations'
+      path: '/therapist-recommendations'
+      fullPath: '/therapist-recommendations'
+      preLoaderRoute: typeof TherapistRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/therapist-preferences': {
+      id: '/therapist-preferences'
+      path: '/therapist-preferences'
+      fullPath: '/therapist-preferences'
+      preLoaderRoute: typeof TherapistPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/splash': {
+      id: '/splash'
+      path: '/splash'
+      fullPath: '/splash'
+      preLoaderRoute: typeof SplashRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -708,11 +990,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employer-access': {
       id: '/employer-access'
       path: '/employer-access'
       fullPath: '/employer-access'
       preLoaderRoute: typeof EmployerAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-your-trial': {
+      id: '/design-your-trial'
+      path: '/design-your-trial'
+      fullPath: '/design-your-trial'
+      preLoaderRoute: typeof DesignYourTrialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/creating-your-space': {
@@ -757,11 +1053,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/therapist-schedule/$id': {
+      id: '/therapist-schedule/$id'
+      path: '/therapist-schedule/$id'
+      fullPath: '/therapist-schedule/$id'
+      preLoaderRoute: typeof TherapistScheduleIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/therapist-profile/$id': {
+      id: '/therapist-profile/$id'
+      path: '/therapist-profile/$id'
+      fullPath: '/therapist-profile/$id'
+      preLoaderRoute: typeof TherapistProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/skill/$id': {
       id: '/skill/$id'
       path: '/skill/$id'
       fullPath: '/skill/$id'
       preLoaderRoute: typeof SkillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/voice': {
+      id: '/settings_/voice'
+      path: '/settings/voice'
+      fullPath: '/settings/voice'
+      preLoaderRoute: typeof SettingsVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/subscription': {
+      id: '/settings_/subscription'
+      path: '/settings/subscription'
+      fullPath: '/settings/subscription'
+      preLoaderRoute: typeof SettingsSubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/language': {
+      id: '/settings_/language'
+      path: '/settings/language'
+      fullPath: '/settings/language'
+      preLoaderRoute: typeof SettingsLanguageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings_/content-preferences': {
@@ -771,11 +1102,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsContentPreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings_/account': {
+      id: '/settings_/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof SettingsAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sessions_/$id': {
+      id: '/sessions_/$id'
+      path: '/sessions/$id'
+      fullPath: '/sessions/$id'
+      preLoaderRoute: typeof SessionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/focus-area/$num': {
       id: '/focus-area/$num'
       path: '/focus-area/$num'
       fullPath: '/focus-area/$num'
       preLoaderRoute: typeof FocusAreaNumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/yuna-explains': {
+      id: '/ds/yuna-explains'
+      path: '/ds/yuna-explains'
+      fullPath: '/ds/yuna-explains'
+      preLoaderRoute: typeof DsYunaExplainsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/waveform': {
@@ -799,11 +1151,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsToastsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/therapist-card': {
+      id: '/ds/therapist-card'
+      path: '/ds/therapist-card'
+      fullPath: '/ds/therapist-card'
+      preLoaderRoute: typeof DsTherapistCardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/text-fields': {
       id: '/ds/text-fields'
       path: '/ds/text-fields'
       fullPath: '/ds/text-fields'
       preLoaderRoute: typeof DsTextFieldsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/text-area': {
+      id: '/ds/text-area'
+      path: '/ds/text-area'
+      fullPath: '/ds/text-area'
+      preLoaderRoute: typeof DsTextAreaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/tags': {
@@ -825,6 +1191,13 @@ declare module '@tanstack/react-router' {
       path: '/ds/surface'
       fullPath: '/ds/surface'
       preLoaderRoute: typeof DsSurfaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/step-dots': {
+      id: '/ds/step-dots'
+      path: '/ds/step-dots'
+      fullPath: '/ds/step-dots'
+      preLoaderRoute: typeof DsStepDotsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/spacing': {
@@ -862,6 +1235,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsRadialProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/progress-bar': {
+      id: '/ds/progress-bar'
+      path: '/ds/progress-bar'
+      fullPath: '/ds/progress-bar'
+      preLoaderRoute: typeof DsProgressBarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/multiple-choice': {
+      id: '/ds/multiple-choice'
+      path: '/ds/multiple-choice'
+      fullPath: '/ds/multiple-choice'
+      preLoaderRoute: typeof DsMultipleChoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/icons': {
       id: '/ds/icons'
       path: '/ds/icons'
@@ -890,6 +1277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsColorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/checkbox': {
+      id: '/ds/checkbox'
+      path: '/ds/checkbox'
+      fullPath: '/ds/checkbox'
+      preLoaderRoute: typeof DsCheckboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/chat-bubbles': {
       id: '/ds/chat-bubbles'
       path: '/ds/chat-bubbles'
@@ -909,6 +1303,13 @@ declare module '@tanstack/react-router' {
       path: '/ds/card-suggestion'
       fullPath: '/ds/card-suggestion'
       preLoaderRoute: typeof DsCardSuggestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/calendar': {
+      id: '/ds/calendar'
+      path: '/ds/calendar'
+      fullPath: '/ds/calendar'
+      preLoaderRoute: typeof DsCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/buttons': {
@@ -963,7 +1364,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CreatingYourSpaceRoute: CreatingYourSpaceRoute,
+  DesignYourTrialRoute: DesignYourTrialRoute,
   EmployerAccessRoute: EmployerAccessRoute,
+  GalleryRoute: GalleryRoute,
   GoalsRoute: GoalsRoute,
   GratitudeRoute: GratitudeRoute,
   HomeRoute: HomeRoute,
@@ -972,6 +1375,9 @@ const rootRouteChildren: RootRouteChildren = {
   MeditationRoute: MeditationRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
+  SplashRoute: SplashRoute,
+  TherapistPreferencesRoute: TherapistPreferencesRoute,
+  TherapistRecommendationsRoute: TherapistRecommendationsRoute,
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
@@ -981,28 +1387,43 @@ const rootRouteChildren: RootRouteChildren = {
   DsAvatarsRoute: DsAvatarsRoute,
   DsBadgeRoute: DsBadgeRoute,
   DsButtonsRoute: DsButtonsRoute,
+  DsCalendarRoute: DsCalendarRoute,
   DsCardSuggestionRoute: DsCardSuggestionRoute,
   DsCardsRoute: DsCardsRoute,
   DsChatBubblesRoute: DsChatBubblesRoute,
+  DsCheckboxRoute: DsCheckboxRoute,
   DsColorsRoute: DsColorsRoute,
   DsDividerRoute: DsDividerRoute,
   DsDrawerRoute: DsDrawerRoute,
   DsIconsRoute: DsIconsRoute,
+  DsMultipleChoiceRoute: DsMultipleChoiceRoute,
+  DsProgressBarRoute: DsProgressBarRoute,
   DsRadialProgressRoute: DsRadialProgressRoute,
   DsRatingScaleRoute: DsRatingScaleRoute,
   DsSegmentedToggleRoute: DsSegmentedToggleRoute,
   DsSliderRoute: DsSliderRoute,
   DsSpacingRoute: DsSpacingRoute,
+  DsStepDotsRoute: DsStepDotsRoute,
   DsSurfaceRoute: DsSurfaceRoute,
   DsSwitchesRoute: DsSwitchesRoute,
   DsTagsRoute: DsTagsRoute,
+  DsTextAreaRoute: DsTextAreaRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
+  DsTherapistCardRoute: DsTherapistCardRoute,
   DsToastsRoute: DsToastsRoute,
   DsTypographyRoute: DsTypographyRoute,
   DsWaveformRoute: DsWaveformRoute,
+  DsYunaExplainsRoute: DsYunaExplainsRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
+  SessionsIdRoute: SessionsIdRoute,
+  SettingsAccountRoute: SettingsAccountRoute,
   SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,
+  SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsSubscriptionRoute: SettingsSubscriptionRoute,
+  SettingsVoiceRoute: SettingsVoiceRoute,
   SkillIdRoute: SkillIdRoute,
+  TherapistProfileIdRoute: TherapistProfileIdRoute,
+  TherapistScheduleIdRoute: TherapistScheduleIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

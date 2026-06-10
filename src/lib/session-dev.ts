@@ -25,12 +25,20 @@ export const RECO_SAMPLES: Partial<
   },
 };
 
+// Sample guided-session title for the "Guided Session" dev chip, so toggling
+// it from the EngineerSidebar shows the distinctive header banner with real
+// copy (matching a guided-session Home card). Tapping into a guided session
+// from a Home card passes its own title via the /chat `guided` search param.
+export const GUIDED_SAMPLE_TITLE =
+  "Untangle perfectionism at work, one thread at a time";
+
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
 let statusState: YunaState | null = null;
 let recoKind: CardKind | null = null;
 let escalationTier: EscalationTier | null = null;
+let guidedTitle: string | null = null;
 
 function emit() {
   for (const l of listeners) l();
@@ -54,6 +62,10 @@ export function setSessionEscalation(next: EscalationTier | null) {
   escalationTier = next;
   emit();
 }
+export function setSessionGuided(next: string | null) {
+  guidedTitle = next;
+  emit();
+}
 
 export function useSessionStatus(): YunaState | null {
   return useSyncExternalStore(
@@ -74,5 +86,12 @@ export function useSessionEscalation(): EscalationTier | null {
     subscribe,
     () => escalationTier,
     () => escalationTier,
+  );
+}
+export function useSessionGuided(): string | null {
+  return useSyncExternalStore(
+    subscribe,
+    () => guidedTitle,
+    () => guidedTitle,
   );
 }

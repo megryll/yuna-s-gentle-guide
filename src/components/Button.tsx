@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
  *
  * variant: fill style
  *   - "primary"   — strongest CTA (solid fill)
+ *   - "destructive" — solid alert-orange fill for irreversible actions
+ *                   (delete account, remove). The DS's "warm orange, never
+ *                   red" destructive tone; same fill on both surfaces.
  *   - "secondary" — outlined, no fill
  *   - "plain"     — naked icon glyph: no border, no fill, no active-bg box
  *                   (presses via opacity only). For inline icon affordances
@@ -64,7 +67,7 @@ const buttonVariants = cva(
         false: "",
       },
       surface: { dark: "", light: "" },
-      variant: { primary: "", secondary: "", plain: "", card: "", link: "" },
+      variant: { primary: "", destructive: "", secondary: "", plain: "", card: "", link: "" },
     },
     compoundVariants: [
       // ─── Dark surface ────────────────────────────────────────────────────
@@ -73,6 +76,12 @@ const buttonVariants = cva(
         variant: "primary",
         className:
           "bg-white text-neutral-900 active:opacity-80 focus-visible:ring-white/60",
+      },
+      {
+        surface: "dark",
+        variant: "destructive",
+        className:
+          "bg-alert-orange text-neutral active:opacity-80 focus-visible:ring-alert-orange/50",
       },
       {
         surface: "dark",
@@ -91,6 +100,12 @@ const buttonVariants = cva(
         variant: "primary",
         className:
           "bg-foreground text-background active:opacity-80 focus-visible:ring-foreground/40",
+      },
+      {
+        surface: "light",
+        variant: "destructive",
+        className:
+          "bg-alert-orange text-neutral active:opacity-80 focus-visible:ring-alert-orange/50",
       },
       {
         surface: "light",

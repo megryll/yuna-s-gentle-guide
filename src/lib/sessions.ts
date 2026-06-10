@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 export type SessionTag = { label: string; emoji: string; tone: "positive" | "negative" };
 
 export type TranscriptTurn = { from: "you" | "yuna"; text: string };
@@ -22,17 +24,58 @@ export function useSessionEmotionColors(): Record<string, string> {
   const POSITIVE = "var(--secondary-green)";
   const NEGATIVE = "var(--alert-orange)";
   return {
-    Overwhelm: "#F7A7A7",
+    Overwhelm: "var(--rose)",
     Relief: POSITIVE,
     Resolve: NEGATIVE,
-    Hopefulness: "#A7C7E7",
-    "Self-compassion": "#C5B6E0",
+    Hopefulness: "var(--blue)",
+    "Self-compassion": "var(--purple-soft)",
     Gratitude: NEGATIVE,
-    Tenderness: "#F2B4D3",
-    Curiosity: "#B5DEDB",
-    Clarity: "#A7C7E7",
+    Tenderness: "var(--pink)",
+    Curiosity: "var(--aqua)",
+    Clarity: "var(--blue)",
     Pride: NEGATIVE,
   };
+}
+
+// Mutable working copy of the session list. PAST_SESSIONS is the seed; rename
+// and delete from a session's detail screen mutate this so the list re-renders
+// in step. In-memory only — a reload restores the seed (this is a prototype).
+let sessions: PastSession[] = [];
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+export function getSessions(): PastSession[] {
+  return sessions;
+}
+
+export function getSession(id: string): PastSession | undefined {
+  return sessions.find((s) => s.id === id);
+}
+
+export function deleteSession(id: string) {
+  sessions = sessions.filter((s) => s.id !== id);
+  emit();
+}
+
+export function renameSession(id: string, title: string) {
+  const next = title.trim();
+  if (!next) return;
+  sessions = sessions.map((s) => (s.id === id ? { ...s, title: next } : s));
+  emit();
+}
+
+export function useSessions(): PastSession[] {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    getSessions,
+    getSessions,
+  );
 }
 
 export const PAST_SESSIONS: PastSession[] = [
@@ -221,3 +264,7 @@ export const PAST_SESSIONS: PastSession[] = [
     ],
   },
 ];
+
+// Seed the working copy from the constant above (declared after the store so the
+// store helpers can hoist).
+sessions = [...PAST_SESSIONS];

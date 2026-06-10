@@ -19,16 +19,17 @@ import { cn } from "@/lib/utils";
  * (aria-hidden); pass `label` to give it an accessible name when the medallion
  * carries meaning rather than echoing adjacent copy.
  *
- * size: "md" (56px) | "lg" (64px, default) | "xl" (80px)
+ * size: "sm" (36px) | "md" (56px) | "lg" (64px, default) | "xl" (80px)
  */
 export interface IconMedallionProps {
-  size?: "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl";
   label?: string;
   className?: string;
   children: ReactNode;
 }
 
 const SIZES = {
+  sm: "h-9 w-9",
   md: "h-14 w-14",
   lg: "h-16 w-16",
   xl: "h-20 w-20",

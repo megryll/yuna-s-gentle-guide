@@ -14,6 +14,7 @@ import {
 import { Confetti } from "@/components/Confetti";
 import { NativeDatePicker } from "@/components/NativeDatePicker";
 import { useAppMode } from "@/lib/theme-prefs";
+import { useFrameSize } from "@/lib/frame-size";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useUserType } from "@/lib/user-type";
 
@@ -188,7 +189,6 @@ function GoalsRoute() {
         {step === "list" && (
           <ListView
             surface={surface}
-            photo={photo}
             goals={goals}
             filter={filter}
             onFilter={setFilter}
@@ -268,7 +268,6 @@ function GoalsRoute() {
 
 function ListView({
   surface,
-  photo,
   goals,
   filter,
   onFilter,
@@ -279,7 +278,6 @@ function ListView({
   onMarkDone,
 }: {
   surface: "dark" | "light";
-  photo: Parameters<typeof YunaAvatar>[0]["variant"];
   goals: Goal[];
   filter: Filter;
   onFilter: (f: Filter) => void;
@@ -289,26 +287,32 @@ function ListView({
   onNew: () => void;
   onMarkDone: (id: string) => void;
 }) {
+  const isSE = useFrameSize().id === "se";
   const hasGoals = goals.length > 0;
   const shown = goals.filter((g) => (filter === "active" ? !g.completed : g.completed));
 
   return (
-    <div className="flex-1 flex flex-col px-6 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <header className="shrink-0 pt-14">
+    <div className="flex-1 flex flex-col pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <header className="shrink-0 px-6 pt-14 flex items-center">
         <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={onBack}>
           <ChevronLeft strokeWidth={1.5} />
         </Button>
       </header>
+      <h1
+        className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
+          isSE ? "pt-4" : "pt-6 pb-2"
+        }`}
+      >
+        Goal Setting
+      </h1>
 
       <div
         className={
-          "flex flex-col items-center text-center " +
+          "px-6 flex flex-col items-center text-center " +
           (hasGoals ? "mt-4" : "flex-1 justify-center")
         }
       >
-        <YunaAvatar variant={photo} size={64} />
-        <h1 className="mt-5 font-display text-3xl tracking-tight text-white">Set your next goal!</h1>
-        <p className="mt-2 max-w-[17rem] text-sm leading-snug text-white/80">
+        <p className="max-w-[17rem] text-sm leading-snug text-white/80">
           Reaching goals helps build self-confidence and improves how we see ourselves.
         </p>
         <div className="mt-6">
@@ -319,7 +323,7 @@ function ListView({
       </div>
 
       {hasGoals && (
-        <section className="mt-10">
+        <section className="mt-10 px-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl tracking-tight text-white">Your Goals</h2>
             <SegmentedToggle

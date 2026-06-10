@@ -187,7 +187,12 @@ export function HomeScreen({
         )}
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center justify-between -mx-1">
-            <Button surface="dark" variant="secondary" size="xs" onClick={() => undefined}>
+            <Button
+              surface="dark"
+              variant="secondary"
+              size="xs"
+              onClick={() => navigate({ to: "/design-your-trial" })}
+            >
               Upgrade
             </Button>
             <Button
@@ -253,6 +258,12 @@ export function HomeScreen({
               }
               if (c.type === "gratitude") {
                 navigate({ to: "/gratitude" });
+                return;
+              }
+              if (c.type === "guided-session") {
+                // Carry the title into chat so the guided-session header
+                // banner can remind the user which session they're in.
+                startChat({ q: c.title, guided: c.title });
                 return;
               }
               open(openPrompt(c));

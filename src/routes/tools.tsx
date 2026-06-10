@@ -21,6 +21,7 @@ const TOOLS: Tool[] = [
     caption: "Discover licensed therapists",
     image: "/tools/therapist.jpg",
     emoji: "💬",
+    to: "/therapist-recommendations",
   },
   {
     id: "guided-audio",
@@ -36,6 +37,7 @@ const TOOLS: Tool[] = [
     caption: "Reflect daily on the best things in your life",
     image: "/tools/gratitude.jpg",
     emoji: "💗",
+    to: "/gratitude",
   },
   {
     id: "goal-setting",

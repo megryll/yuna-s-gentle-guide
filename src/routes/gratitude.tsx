@@ -1,10 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { useAppMode } from "@/lib/theme-prefs";
+import { useFrameSize } from "@/lib/frame-size";
 
 export const Route = createFileRoute("/gratitude")({
   head: () => ({ meta: [{ title: "Gratitude List — Yuna" }] }),
@@ -43,34 +44,39 @@ const PAST_DAYS: { date: string; entries: string[] }[] = [
 ];
 
 function GratitudeRoute() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const mode = useAppMode();
   const surface = mode === "dark" ? "dark" : "light";
-  const close = () => navigate({ to: "/home" });
+  const isSE = useFrameSize().id === "se";
+  // Return to wherever the user came from (Tools, Home, …) rather than a fixed
+  // screen; fall back to Home on a direct deep-link with no history.
+  const close = () =>
+    router.history.canGoBack() ? router.history.back() : router.navigate({ to: "/home" });
 
   const [today, setToday] = useState<string[]>(() => Array(TODAY_SLOTS).fill(""));
 
   return (
     <PhoneFrame themed>
       <div className="relative flex-1 flex flex-col text-white min-h-0">
-        <header className="flex justify-start px-6 pt-14 pb-2 shrink-0">
-          <Button
-            surface={surface}
-            variant="secondary"
-            size="icon"
-            onClick={close}
-            aria-label="Back"
-          >
+        <header className="shrink-0 px-6 pt-14 flex items-center">
+          <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={close}>
             <ChevronLeft strokeWidth={1.5} />
           </Button>
         </header>
+        <h1
+          className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
+            isSE ? "pt-4" : "pt-6 pb-2"
+          }`}
+        >
+          Gratitude Journal
+        </h1>
 
-        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <h1 className="font-display text-3xl italic leading-tight tracking-tight text-white text-center">
+        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <h2 className="font-display text-xl italic leading-snug tracking-tight text-white text-center">
             I feel <span className="text-secondary-green">grateful</span> 🙏 because:
-          </h1>
+          </h2>
 
-          <div className="mt-10">
+          <div className="mt-6">
             {/* Today — editable */}
             <DayHeader date={TODAY_DATE} label="Today" />
             {today.map((value, i) => (

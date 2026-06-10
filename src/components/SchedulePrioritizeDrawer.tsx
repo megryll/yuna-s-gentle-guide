@@ -3,7 +3,9 @@ import { CalendarClock, CalendarDays, ChevronDown, Clock } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
-import { Toast } from "@/components/Toast";
+import { Surface } from "@/components/Surface";
+import { Toast, ToastViewport } from "@/components/Toast";
+import { useAppMode } from "@/lib/theme-prefs";
 import {
   clearSchedulePrompt,
   getScheduleTopic,
@@ -31,6 +33,9 @@ export function SchedulePrioritizeDrawer({
   onSchedule: () => void;
   onDismiss: () => void;
 }) {
+  // The drawer paints the mode photo as its background, so its controls follow
+  // the app's Light/Dark toggle (white-on-dark copy inverts via .theme-light).
+  const surface = useAppMode();
   return (
     <Drawer
       open={open}
@@ -48,24 +53,24 @@ export function SchedulePrioritizeDrawer({
             Schedule To Prioritize Yourself
           </DrawerTitle>
 
-          <div className="mt-8 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md p-5 text-center">
+          <Surface className="mt-8 p-5 text-center">
             <p className="text-sm text-white/75">Commit to a follow-up:</p>
             <p className="mt-2 text-lg font-semibold leading-snug text-white">
               {topic || DEFAULT_TOPIC}
             </p>
 
             <div className="mt-5 flex items-center justify-center gap-2">
-              <MetaPill icon={<CalendarDays size={14} strokeWidth={1.8} aria-hidden />}>
+              <MetaPill surface={surface} icon={<CalendarDays size={14} strokeWidth={1.8} aria-hidden />}>
                 {FOLLOW_UP_DATE}
               </MetaPill>
-              <MetaPill icon={<Clock size={14} strokeWidth={1.8} aria-hidden />}>
+              <MetaPill surface={surface} icon={<Clock size={14} strokeWidth={1.8} aria-hidden />}>
                 {FOLLOW_UP_TIME}
               </MetaPill>
             </div>
-          </div>
+          </Surface>
 
           <Button
-            surface="light"
+            surface={surface}
             variant="primary"
             fullWidth
             className="mt-10"
@@ -83,9 +88,17 @@ export function SchedulePrioritizeDrawer({
 // secondary Button with a leading icon + value + downward chevron. The picker
 // is illustrative (fixed display values, not live), so there's no onClick; the
 // chevron signals the affordance and keeps the style consistent with Intro.
-function MetaPill({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function MetaPill({
+  surface,
+  icon,
+  children,
+}: {
+  surface: "dark" | "light";
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <Button surface="dark" variant="secondary" size="xs" type="button" className="gap-1.5">
+    <Button surface={surface} variant="secondary" size="xs" type="button" className="gap-1.5">
       <span className="text-white/70">{icon}</span>
       {children}
       <ChevronDown size={9} strokeWidth={1.5} aria-hidden className="text-white/70" />
@@ -123,19 +136,22 @@ export function SchedulePrioritizeGate() {
   );
 }
 
-// Positioned, animated wrapper around the DS Toast — slides/fades in from the
-// top edge of the phone frame. success variant is a fixed green fill (legible
-// on both photos), so it needs no surface flip with app mode.
+// Animated wrapper around the DS Toast — slides/fades in from the top edge.
+// Uses the shared ToastViewport so it lands at the exact same spot as every
+// other toast (top-0 + pt-7); the inner div just carries the enter/leave
+// transition. success variant is a fixed green fill (legible on both photos),
+// so it needs no surface flip with app mode.
 function ScheduleConfirmToast({ open }: { open: boolean }) {
   return (
-    <div
-      className={
-        "pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-xs " +
-        "transition-all duration-300 ease-out " +
-        (open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")
-      }
-    >
-      <Toast variant="success" message="You scheduled a session." />
-    </div>
+    <ToastViewport>
+      <div
+        className={
+          "transition-all duration-300 ease-out " +
+          (open ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2")
+        }
+      >
+        <Toast variant="success" message="You scheduled a session." />
+      </div>
+    </ToastViewport>
   );
 }

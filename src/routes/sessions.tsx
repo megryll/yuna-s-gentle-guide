@@ -1,10 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
 import { PastSessionCard } from "@/components/PastSessionCard";
-import { PAST_SESSIONS } from "@/lib/sessions";
+import { Toast, ToastViewport } from "@/components/Toast";
+import { useSessions } from "@/lib/sessions";
+import { consumeSessionToast } from "@/lib/session-toast";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 
@@ -45,15 +48,46 @@ function SessionsNew() {
 }
 
 function SessionsReturning() {
+  const navigate = useNavigate();
+  const sessions = useSessions();
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Pick up a one-shot confirmation handed off from a detail screen (e.g. after
+  // deleting a conversation), then auto-dismiss it.
+  useEffect(() => {
+    const message = consumeSessionToast();
+    if (message) setToast(message);
+  }, []);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   return (
     <ScreenChrome hideHeader surface="dark">
+      <ToastViewport>
+        {toast && (
+          <Toast
+            surface="dark"
+            variant="success"
+            message={toast}
+            onDismiss={() => setToast(null)}
+          />
+        )}
+      </ToastViewport>
+
       <div className="flex-1 flex flex-col px-6 pb-8 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Past sessions</h1>
 
         <ul className="mt-6 flex flex-col gap-4">
-          {PAST_SESSIONS.map((s, i) => (
+          {sessions.map((s, i) => (
             <li key={s.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
-              <PastSessionCard session={s} index={i} />
+              <PastSessionCard
+                session={s}
+                index={i}
+                onClick={() => navigate({ to: "/sessions/$id", params: { id: s.id } })}
+              />
             </li>
           ))}
         </ul>

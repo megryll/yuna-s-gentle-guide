@@ -33,7 +33,8 @@ function DSButtons() {
       <Section title="Props">
         <PropsBlock>{`<Button
   surface?:  "dark" | "light"                          // default: "light"
-  variant?:  "primary" | "secondary" | "plain" | "card" | "link"   // default: "primary"
+  variant?:  "primary" | "destructive" | "secondary" | "plain" | "card" | "link"   // default: "primary"
+             // destructive = solid alert-orange fill for irreversible actions (same on both surfaces)
              // plain = naked icon glyph (no border/fill/box); pressed → primary look
   size?:     "md" | "sm" | "xs" | "icon" | "icon-sm" | "icon-lg"   // default: "md" (ignored by card/link)
              // icon* sizes also set the glyph size (16 / 18 / 22px) — don't size icons at the call site
@@ -56,6 +57,7 @@ function DSButtons() {
 
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Primary", render: (s) => <SizeRow surface={s} variant="primary" label="Continue" /> },
+  { label: "Destructive", render: (s) => <SizeRow surface={s} variant="destructive" label="Delete account" /> },
   { label: "Secondary", render: (s) => <SizeRow surface={s} variant="secondary" label="Continue" /> },
   { label: "With icon", render: (s) => <IconLabelRow surface={s} /> },
   { label: "Link", render: (s) => <LinkRow surface={s} /> },
@@ -67,6 +69,7 @@ const VARIANT_ROWS: MatrixRow[] = [
 
 const STATE_ROWS: MatrixRow[] = [
   { label: "Primary", render: (s) => <StateStack surface={s} variant="primary" /> },
+  { label: "Destructive", render: (s) => <StateStack surface={s} variant="destructive" /> },
   { label: "Secondary", render: (s) => <StateStack surface={s} variant="secondary" /> },
   { label: "Link", render: (s) => <LinkStateRow surface={s} /> },
   { label: "Card", render: (s) => <CardStateStack surface={s} /> },
@@ -92,7 +95,7 @@ function SizeRow({
   label,
 }: {
   surface: "dark" | "light";
-  variant: "primary" | "secondary";
+  variant: "primary" | "destructive" | "secondary";
   label: string;
 }) {
   return (
@@ -207,7 +210,7 @@ function StateStack({
   variant,
 }: {
   surface: "dark" | "light";
-  variant: "primary" | "secondary";
+  variant: "primary" | "destructive" | "secondary";
 }) {
   return (
     <div className="flex flex-col gap-2 w-full max-w-[260px]">
@@ -299,7 +302,7 @@ function IconStateRow({
 // Static class mirroring each variant's `active:` press feedback, so the
 // "Pressed" state is visible at rest in the matrix.
 function pressedClass(
-  variant: "primary" | "secondary" | "card" | "link" | "plain",
+  variant: "primary" | "destructive" | "secondary" | "card" | "link" | "plain",
   surface: "dark" | "light",
 ): string {
   switch (variant) {

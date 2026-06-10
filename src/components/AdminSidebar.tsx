@@ -1,89 +1,13 @@
 import { Fragment, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LayoutGrid } from "lucide-react";
 
-type Leaf = {
-  label: string;
-  to: string;
-  search?: Record<string, unknown>;
-  params?: Record<string, string>;
-};
-
-type Entry = Leaf & {
-  // When present, this row is a collapsible parent: children render indented,
-  // and the group auto-expands while the parent or one of its children is the
-  // active route. Keeps the sidebar short without hiding where you are.
-  children?: Leaf[];
-};
-
-const PAGES: Entry[] = [
-  { label: "Welcome", to: "/" },
-  { label: "Log in", to: "/login" },
-  { label: "Employer access", to: "/employer-access" },
-  { label: "Create account", to: "/auth" },
-  { label: "Accept terms", to: "/accept-terms" },
-  {
-    label: "Intro",
-    to: "/intro",
-    children: [
-      { label: "Name", to: "/intro", search: { step: 0 } },
-      { label: "Credentials + Ratings", to: "/intro", search: { step: 1 } },
-      {
-        label: "Tell me more about Yuna",
-        to: "/intro",
-        search: { step: 2, branch: "tellMeMore" },
-      },
-      { label: "Notifications", to: "/intro", search: { step: 2 } },
-      { label: "Mood data", to: "/intro", search: { step: 3 } },
-      { label: "Voice", to: "/intro", search: { step: 4 } },
-      { label: "Privacy", to: "/intro", search: { step: 5 } },
-      { label: "Creating Your Space", to: "/creating-your-space" },
-    ],
-  },
-  { label: "Home", to: "/home" },
-  { label: "Session", to: "/chat" },
-  { label: "Wrap-up", to: "/wrap-up" },
-  {
-    label: "Profile",
-    to: "/you",
-    children: [
-      { label: "Focus area 1", to: "/focus-area/1" },
-      { label: "Focus area 2", to: "/focus-area/2" },
-    ],
-  },
-  { label: "Tools", to: "/tools" },
-  {
-    label: "Goal Setting",
-    to: "/goals",
-    children: [
-      { label: "Empty / list", to: "/goals" },
-      { label: "Name goal", to: "/goals", search: { step: "name" } },
-      { label: "Timeframe", to: "/goals", search: { step: "timeframe" } },
-      { label: "Goal created", to: "/goals", search: { step: "success" } },
-    ],
-  },
-  {
-    label: "Meditations",
-    to: "/meditation",
-    children: [
-      { label: "Create", to: "/meditation", search: { step: "create" } },
-      { label: "Crafting", to: "/meditation", search: { step: "crafting" } },
-      { label: "Player", to: "/meditation", search: { step: "player" } },
-      { label: "Complete", to: "/meditation", search: { step: "complete" } },
-    ],
-  },
-  { label: "Sessions", to: "/sessions" },
-  { label: "Gratitude List", to: "/gratitude" },
-  { label: "Book Reco", to: "/book/$id", params: { id: "self-compassion-neff" } },
-  { label: "Skill Article", to: "/skill/$id", params: { id: "please-technique" } },
-  {
-    label: "Settings",
-    to: "/settings",
-    children: [
-      { label: "Content Preferences", to: "/settings/content-preferences" },
-    ],
-  },
-];
+import {
+  PAGES,
+  resolveEntryPath,
+  type ScreenLeaf as Leaf,
+  type ScreenEntry as Entry,
+} from "@/lib/screen-catalog";
 
 type DsGroup = { label: string; items: Leaf[] };
 
@@ -106,22 +30,30 @@ const DS_GROUPS: DsGroup[] = [
       { label: "Avatars", to: "/ds/avatars" },
       { label: "Badge", to: "/ds/badge" },
       { label: "Buttons", to: "/ds/buttons" },
+      { label: "Calendar", to: "/ds/calendar" },
       { label: "Card Suggestion", to: "/ds/card-suggestion" },
       { label: "Cards", to: "/ds/cards" },
       { label: "Chat Bubbles", to: "/ds/chat-bubbles" },
+      { label: "Checkbox", to: "/ds/checkbox" },
       { label: "Divider", to: "/ds/divider" },
       { label: "Drawer", to: "/ds/drawer" },
       { label: "Icons", to: "/ds/icons" },
+      { label: "Multiple Choice", to: "/ds/multiple-choice" },
+      { label: "Progress Bar", to: "/ds/progress-bar" },
       { label: "Radial Progress", to: "/ds/radial-progress" },
       { label: "Rating Scale", to: "/ds/rating-scale" },
       { label: "Segmented Toggle", to: "/ds/segmented-toggle" },
       { label: "Slider", to: "/ds/slider" },
+      { label: "Step Dots", to: "/ds/step-dots" },
       { label: "Surface", to: "/ds/surface" },
       { label: "Switches", to: "/ds/switches" },
       { label: "Tags", to: "/ds/tags" },
+      { label: "Text Area", to: "/ds/text-area" },
       { label: "Text Fields", to: "/ds/text-fields" },
+      { label: "Therapist Card", to: "/ds/therapist-card" },
       { label: "Toast Alerts", to: "/ds/toasts" },
       { label: "Waveform", to: "/ds/waveform" },
+      { label: "Yuna Explains", to: "/ds/yuna-explains" },
     ],
   },
 ];
@@ -138,16 +70,6 @@ function entryMatchesSearch(
   if (!entrySearch) return true;
   return Object.entries(entrySearch).every(
     ([k, v]) => String(currentSearch[k] ?? "") === String(v),
-  );
-}
-
-// Resolve `$param` segments in an entry's `to` against its params, so a
-// pattern like `/sessions/$id` with `{ id: "s-04" }` becomes `/sessions/s-04`
-// and can be compared to the live pathname.
-function resolveEntryPath(entry: Leaf): string {
-  if (!entry.params) return entry.to;
-  return entry.to.replace(/\$(\w+)/g, (_, key: string) =>
-    entry.params?.[key] ?? `$${key}`,
   );
 }
 
@@ -206,6 +128,19 @@ export function AdminSidebar() {
       className="hidden md:flex fixed left-0 top-0 h-screen w-44 flex-col gap-1 px-4 py-6 border-r border-border bg-background/60 backdrop-blur-sm z-50 overflow-y-auto"
       aria-label="Admin navigation"
     >
+      <Link
+        to="/gallery"
+        className={
+          `mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 ${ROW_TEXT} ` +
+          (currentPath === "/gallery"
+            ? "bg-foreground text-background"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent")
+        }
+      >
+        <LayoutGrid size={13} strokeWidth={2} className="shrink-0" />
+        <span>All screens</span>
+      </Link>
+
       <div className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-3 px-2">
         Pages
       </div>
