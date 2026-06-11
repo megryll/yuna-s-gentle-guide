@@ -350,6 +350,7 @@ function CreatedForYou({
   onOpenMenu: (c: HomeCard) => void;
   showFeedback: boolean;
 }) {
+  const surface = useAppMode() === "light" ? "light" : "dark";
   const prefs = useContentPrefs();
   // Drop dismissed cards and any kind the user has turned off in Content
   // Preferences (or via the card menu's "Stop seeing …").
@@ -406,7 +407,7 @@ function CreatedForYou({
           {renderFeed(incomplete)}
           {done.length > 0 && (
             <>
-              <Divider surface="dark" label="Completed Today" className="mt-8 mb-3" />
+              <Divider surface={surface} label="Completed Today" className="mt-8 mb-3" />
               {renderFeed(done)}
             </>
           )}
