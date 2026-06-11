@@ -15,7 +15,7 @@ import {
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
-import { VOICES } from "@/lib/voices";
+import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import {
   isSpeechRecognitionSupported,
@@ -886,11 +886,7 @@ function VoicePad({
             </>
           )}
           <div className="relative rounded-full border border-white/25 bg-white/10 backdrop-blur-sm overflow-hidden flex items-center justify-center h-32 w-32">
-            {avatar ? (
-              <YunaAvatar variant={avatar} size={128} />
-            ) : (
-              <span className="h-3 w-3 rounded-full bg-white" />
-            )}
+            <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={128} />
           </div>
         </div>
 

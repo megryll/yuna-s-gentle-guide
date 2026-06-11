@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { Card, CardHeader, CardFooter, CardCTA } from "@/components/Card";
 import {
   SegmentedToggle,
@@ -104,7 +105,7 @@ function GoalsRoute() {
   const navigate = useNavigate();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const { avatar } = useYunaIdentity();
-  const photo = avatar ?? "iris";
+  const photo = avatar ?? DEFAULT_VOICE;
   const userType = useUserType();
   const { step: searchStep } = Route.useSearch();
 

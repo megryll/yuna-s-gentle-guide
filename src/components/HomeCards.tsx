@@ -3,6 +3,7 @@ import { Play, Star } from "lucide-react";
 import { KIND_META, type HomeCard } from "@/lib/home-cards";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { TextField } from "@/components/TextField";
 import {
   Card,
@@ -135,11 +136,7 @@ function GuidedSessionCard({
         meta={meta}
         onMore={onMenu}
         leading={
-          avatar ? (
-            <YunaAvatar variant={avatar} size={24} className="ring-1 ring-white" />
-          ) : (
-            <span aria-hidden className="h-6 w-6 rounded-full bg-white/25 ring-1 ring-white" />
-          )
+          <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={24} className="ring-1 ring-white" />
         }
       />
 

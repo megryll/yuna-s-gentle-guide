@@ -525,7 +525,7 @@ function CustomizeDrawer({
       onFocus={() => onKeyboard(true)}
       onBlur={() => onKeyboard(false)}
     >
-      <YunaAvatar variant={avatar ?? "iris"} size={64} />
+      <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
       <div className="flex flex-col items-center gap-1.5">
         <span className="text-uppercase tracking-[0.24em] uppercase text-white/70">
           Customize your meditation

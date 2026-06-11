@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown as ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/Button";
-import { YunaMark } from "@/components/YunaMark";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
@@ -37,9 +37,7 @@ export function YunaHeaderTrigger({
             (isDark ? "bg-[#f3f1ee]" : "bg-muted")
           }
         >
-          {avatar
-            ? <YunaAvatar variant={avatar} size={20} />
-            : <span className="h-5 w-5 rounded-full hairline flex items-center justify-center"><YunaMark size={12} className="text-foreground" /></span>}
+          <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={20} />
         </span>
         Yuna
         <ChevronDown />

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Mic, MessageCircle, Phone, Settings, User, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, Mic, MessageCircle, Phone, Settings, Volume2, VolumeX, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
@@ -13,7 +13,7 @@ import {
   useYunaIdentity,
 } from "@/lib/yuna-session";
 import { useUserType } from "@/lib/user-type";
-import { VOICES } from "@/lib/voices";
+import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import {
   isSpeechRecognitionSupported,
@@ -915,11 +915,7 @@ function Chat() {
         {!inVoice && (
           <div className={"absolute left-5 z-10 " + (guidedTitle ? "top-[180px]" : "top-[112px]")}>
             <IconMedallion>
-              {avatar ? (
-                <YunaAvatar variant={avatar} size={64} />
-              ) : (
-                <User size={28} strokeWidth={1.6} className="text-white" aria-hidden />
-              )}
+              <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
             </IconMedallion>
             <Button
               surface="dark"
