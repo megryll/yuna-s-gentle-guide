@@ -31,8 +31,12 @@ export const Route = createFileRoute("/auth")({
 function AuthScreen() {
   const navigate = useNavigate();
   const darkBg = useDarkBlurImage();
-  const { step: initialStep } = Route.useSearch();
-  const [step, setStep] = useState<Step>(initialStep ?? "email");
+  // The URL is the source of truth for the step, so sidebar taps that only
+  // change `?step=` (same route, no remount) actually switch the view.
+  const { step: searchStep } = Route.useSearch();
+  const step: Step = searchStep ?? "email";
+  const setStep = (s: Step) =>
+    navigate({ to: "/auth", search: s === "email" ? {} : { step: s }, replace: true });
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
