@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardRow,
   DailyTag,
+  MetaDot,
 } from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
@@ -88,12 +89,7 @@ export function HomeCardRow({
           </span>
           {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
           {card.type === "self-discovery" && (
-            <span
-              className={`text-xs font-medium tracking-[0.08em] uppercase ${isLight ? "text-neutral-700" : "text-white/80"}`}
-            >
-              <span aria-hidden className="mx-0.5">•</span>
-              {card.duration}
-            </span>
+            <MetaDot tone={isLight ? "light" : "dark"}>{card.duration}</MetaDot>
           )}
         </>
       }

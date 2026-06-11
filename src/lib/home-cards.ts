@@ -116,8 +116,8 @@ export type CardKindMeta = {
   // (fixed in both light/dark app modes — see Card `solidFill`). Pair a pale
   // fill with tone "light" (dark ink) and a deep fill with tone "dark" (white).
   solidBg?: string;
-  // Decorative brand-mark watermark rendered faintly behind the card content
-  // (tile + list row) — see Card/CardRow `watermark`.
+  // Image src painted as an oversized translucent glyph behind the content
+  // (see Card / CardRow `watermark`).
   watermark?: string;
 };
 
@@ -150,7 +150,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Try it now",
     naturePath: "/nature/Background-9.png",
-    solidBg: "#115430",
+    solidBg: "var(--primary-green)",
     watermark: "/yuna-mark.svg",
   },
   affirmation: {

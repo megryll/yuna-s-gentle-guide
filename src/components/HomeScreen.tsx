@@ -70,13 +70,13 @@ export function HomeScreen({
   const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
-  // For a new user the whole feed is new, so per-card "New" flags carry no
-  // signal — only returning users get the badge.
+  // A brand-new user's feed is new in its entirety, so per-card "New" flags
+  // carry no signal — the badges only render for returning users.
   const cards = useMemo(
     () =>
-      variant === "new"
-        ? POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false }))
-        : POST_INTRO_CARDS,
+      variant === "returning"
+        ? POST_INTRO_CARDS
+        : POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false })),
     [variant],
   );
   const initialSavedIds = useMemo(

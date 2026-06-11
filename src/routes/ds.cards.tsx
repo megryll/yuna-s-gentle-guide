@@ -31,9 +31,8 @@ function DSCards() {
   tone:       "dark" | "light"   // content tone (dark = white text)
   naturePath: string             // background photo (always dark-washed)
   solidFill?: string             // flat fill instead of photo
-  watermark?: string             // white brand-mark asset rendered faintly behind
-                                 //   the content, bleeding off the right edge
-                                 //   (pair with a deep solidFill)
+  watermark?: string             // image src painted as an oversized translucent
+                                 //   glyph behind the content
   isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
   completed?: boolean            // fade the tile + show a check Badge top-left
 >
@@ -56,6 +55,10 @@ function DSCards() {
 
 <CardCTA tone onClick>{label}</CardCTA>   // uppercase-tracked secondary button
 
+<MetaDot tone?>{text}</MetaDot>           // dot-prefixed meta token after an
+                                          //   eyebrow ("• Daily", "• 3 min");
+                                          //   <DailyTag> is its "Daily" preset
+
 <CardRow                            // the list-row layout of the content card
   title:        string             // top line
   meta:         ReactNode          // line below the title (eyebrow, date·length…)
@@ -65,7 +68,7 @@ function DSCards() {
   completed?:   boolean            // fade the row + show a check Badge top-left
   naturePath?:  string             // photo fill
   solidFill?:   string             // flat fill instead of photo
-  watermark?:   string             // same faint brand mark as the tile
+  watermark?:   string             // oversized translucent glyph behind content
   onClick?:     () => void
   onMenu?:      () => void         // top-right 3-dot button; drops the arrow to
                                    //   the bottom-right. Omit = arrow centered
@@ -74,7 +77,9 @@ function DSCards() {
 />
 
 <HomeCardRow
-  card:         HomeCard          // feed item — maps a HomeCard onto <CardRow>
+  card:         HomeCard          // feed item — maps a HomeCard onto <CardRow>;
+                                  //   cadence / duration render as <MetaDot>
+                                  //   after the kind label
   completed?:   boolean
   onClick:      () => void
   onMenu?:      () => void        // forwards to CardRow's 3-dot menu button
@@ -101,21 +106,13 @@ const ROW_PHOTO: HomeCard = {
   cadence: "Daily",
   naturePath: NATURE,
 };
+// Self-discovery: a solid-fill row whose meta line appends a "• duration" tag.
 const ROW_SOLID: HomeCard = {
-  type: "learn-skill",
-  id: "demo-row-solid",
-  title: "The Non-Judgemental Skill",
-  eyebrow: "Recommended Skill",
-  naturePath: NATURE,
-};
-// Carries a duration — HomeCardRow appends it to the meta line as a "• …" tag.
-const ROW_DURATION: HomeCard = {
   type: "self-discovery",
-  id: "demo-row-duration",
-  title: "Where Is Your Energy Actually Going?",
-  description: "A short audit of where your week is spent.",
-  duration: "6–8 minutes",
-  naturePath: NATURE,
+  id: "demo-row-solid",
+  title: "How Have You Been Feeling Lately?",
+  description: "A short check-in.",
+  duration: "5 min",
 };
 
 // Light cluster content inverts via .theme-light (as on Home in light mode);
@@ -132,12 +129,22 @@ const VARIANT_ROWS: MatrixRow[] = [
   },
   {
     label: "Solid (dark)",
-    render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#2C5C3D" />),
+    render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#6E5A6B" />),
   },
   {
-    label: "Watermark",
+    label: "Solid + watermark",
     render: (s) =>
-      withCluster(s, <DemoSolidCard tone="dark" fill="#115430" watermark="/yuna-mark.svg" />),
+      withCluster(
+        s,
+        <DemoSolidCard
+          tone="dark"
+          fill="var(--primary-green)"
+          watermark="/yuna-mark.svg"
+          label="Questionnaire"
+          title="How Have You Been Feeling Lately?"
+          cta="Try it now"
+        />,
+      ),
   },
   { label: "List row", render: (s) => withCluster(s, <DemoRow />) },
   {
@@ -171,7 +178,6 @@ function DemoRow() {
     <div className="max-w-[340px] flex flex-col gap-3">
       <HomeCardRow card={ROW_PHOTO} onClick={() => {}} interactive={false} />
       <HomeCardRow card={ROW_SOLID} onClick={() => {}} interactive={false} />
-      <HomeCardRow card={ROW_DURATION} onClick={() => {}} interactive={false} />
     </div>
   );
 }
@@ -205,17 +211,23 @@ function DemoSolidCard({
   tone,
   fill,
   watermark,
+  label = "Recommended Skill",
+  title = "The Non-Judgemental Skill",
+  cta = "Learn this",
 }: {
   tone: "dark" | "light";
   fill: string;
   watermark?: string;
+  label?: string;
+  title?: string;
+  cta?: string;
 }) {
   const [saved, setSaved] = useState(false);
   const isDark = tone === "dark";
   return (
     <div className="max-w-[300px]">
       <Card tone={tone} solidFill={fill} watermark={watermark}>
-        <CardHeader meta={{ label: "Recommended Skill", tone }} />
+        <CardHeader meta={{ label, tone }} />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3
             className={
@@ -223,7 +235,7 @@ function DemoSolidCard({
               (isDark ? "text-white" : "text-foreground")
             }
           >
-            The Non-Judgemental Skill
+            {title}
           </h3>
         </div>
         <CardFooter
@@ -232,7 +244,7 @@ function DemoSolidCard({
           onToggleSave={() => setSaved((v) => !v)}
           primary={
             <CardCTA tone={tone} onClick={() => {}}>
-              Learn this
+              {cta}
             </CardCTA>
           }
         />
