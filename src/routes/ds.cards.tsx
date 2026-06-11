@@ -31,6 +31,9 @@ function DSCards() {
   tone:       "dark" | "light"   // content tone (dark = white text)
   naturePath: string             // background photo (always dark-washed)
   solidFill?: string             // flat fill instead of photo
+  watermark?: string             // white brand-mark asset rendered faintly behind
+                                 //   the content, bleeding off the right edge
+                                 //   (pair with a deep solidFill)
   isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
   completed?: boolean            // fade the tile + show a check Badge top-left
 >
@@ -62,6 +65,7 @@ function DSCards() {
   completed?:   boolean            // fade the row + show a check Badge top-left
   naturePath?:  string             // photo fill
   solidFill?:   string             // flat fill instead of photo
+  watermark?:   string             // same faint brand mark as the tile
   onClick?:     () => void
   onMenu?:      () => void         // top-right 3-dot button; drops the arrow to
                                    //   the bottom-right. Omit = arrow centered
@@ -130,6 +134,11 @@ const VARIANT_ROWS: MatrixRow[] = [
     label: "Solid (dark)",
     render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#2C5C3D" />),
   },
+  {
+    label: "Watermark",
+    render: (s) =>
+      withCluster(s, <DemoSolidCard tone="dark" fill="#115430" watermark="/yuna-mark.svg" />),
+  },
   { label: "List row", render: (s) => withCluster(s, <DemoRow />) },
   {
     label: "List row + menu",
@@ -195,15 +204,17 @@ function DemoCard({ completed = false }: { completed?: boolean } = {}) {
 function DemoSolidCard({
   tone,
   fill,
+  watermark,
 }: {
   tone: "dark" | "light";
   fill: string;
+  watermark?: string;
 }) {
   const [saved, setSaved] = useState(false);
   const isDark = tone === "dark";
   return (
     <div className="max-w-[300px]">
-      <Card tone={tone} solidFill={fill}>
+      <Card tone={tone} solidFill={fill} watermark={watermark}>
         <CardHeader meta={{ label: "Recommended Skill", tone }} />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3

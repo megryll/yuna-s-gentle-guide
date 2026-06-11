@@ -25,6 +25,9 @@ import { Badge } from "@/components/Badge";
  *   tone:       "dark" | "light"  — content tone (dark = white text)
  *   naturePath: string            — background photo (dark-washed)
  *   solidFill?: string            — flat fill (overrides photo)
+ *   watermark?: string            — white brand-mark asset rendered faintly
+ *                                   behind the content, bleeding off the right
+ *                                   edge (pair with a deep solidFill)
  *   isNew?:     boolean           — green "New" flag, top-left
  *   completed?: boolean           — fade the tile + show a check Badge top-left
  *
@@ -35,6 +38,7 @@ import { Badge } from "@/components/Badge";
  *                                   the ActionCircle to the bottom-right corner;
  *                                   omit it to keep the arrow centered.
  *   completed?: boolean           — fade the row + show a check Badge top-left
+ *   watermark?: string            — same faint brand mark as the tile
  *
  * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?, onMore?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
@@ -76,6 +80,7 @@ export function Card({
   completed,
   naturePath,
   solidFill,
+  watermark,
   className,
   children,
 }: {
@@ -84,6 +89,7 @@ export function Card({
   completed?: boolean;
   naturePath?: string;
   solidFill?: string;
+  watermark?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -118,6 +124,14 @@ export function Card({
         style={style}
       >
         <span aria-hidden className="[grid-area:1/1] aspect-square" />
+        {watermark && (
+          <img
+            src={watermark}
+            alt=""
+            aria-hidden
+            className="[grid-area:1/1] justify-self-end pointer-events-none select-none h-[112%] w-auto max-w-none -mt-[6%] -mr-10 opacity-[0.15]"
+          />
+        )}
         <div className="[grid-area:1/1] min-w-0 px-5 py-7 flex flex-col">{children}</div>
       </div>
     </div>
@@ -138,6 +152,7 @@ export function CardRow({
   completed = false,
   naturePath,
   solidFill,
+  watermark,
   onClick,
   onMenu,
   interactive = true,
@@ -150,6 +165,7 @@ export function CardRow({
   completed?: boolean;
   naturePath?: string;
   solidFill?: string;
+  watermark?: string;
   onClick?: () => void;
   // When set, a 3-dot menu button is pinned to the top-right and the trailing
   // ActionCircle drops to the bottom-right corner. Without it the ActionCircle
@@ -187,6 +203,14 @@ export function CardRow({
         )}
         style={style}
       >
+        {watermark && (
+          <img
+            src={watermark}
+            alt=""
+            aria-hidden
+            className="absolute top-1/2 -translate-y-1/2 -right-5 pointer-events-none select-none h-[150%] w-auto max-w-none opacity-[0.15]"
+          />
+        )}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <p
             className={cn(

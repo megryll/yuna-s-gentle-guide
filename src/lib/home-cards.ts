@@ -116,6 +116,9 @@ export type CardKindMeta = {
   // (fixed in both light/dark app modes — see Card `solidFill`). Pair a pale
   // fill with tone "light" (dark ink) and a deep fill with tone "dark" (white).
   solidBg?: string;
+  // Decorative brand-mark watermark rendered faintly behind the card content
+  // (tile + list row) — see Card/CardRow `watermark`.
+  watermark?: string;
 };
 
 export const KIND_META: Record<CardKind, CardKindMeta> = {
@@ -147,7 +150,8 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Try it now",
     naturePath: "/nature/Background-9.png",
-    solidBg: "#6E5A6B",
+    solidBg: "#115430",
+    watermark: "/yuna-mark.svg",
   },
   affirmation: {
     label: "Affirmation",
@@ -162,7 +166,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Learn this skill",
     naturePath: "/nature/Background-6.png",
-    solidBg: "#115430",
+    solidBg: "#6E5A6B",
   },
   accountability: {
     label: "Accountability Partner",
