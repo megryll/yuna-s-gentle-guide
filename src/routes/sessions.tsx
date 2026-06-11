@@ -36,8 +36,7 @@ function SessionsNew() {
             No past sessions yet
           </h1>
           <p className="mt-3 text-sm text-white/80 leading-relaxed max-w-[20rem]">
-            Once you finish your first chat or call with Yuna, you'll find it here, ready to pick
-            back up from.
+            Once you finish your first chat or call with Yuna, you'll find it here.
           </p>
           <Button surface="dark" variant="primary" className="mt-7" onClick={() => startChat()}>
             Start your first conversation
