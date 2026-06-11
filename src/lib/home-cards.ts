@@ -369,6 +369,15 @@ export const HOME_CARDS: HomeCard[] = [
     naturePath: "/nature/Background-19.png",
   },
   {
+    type: "self-discovery",
+    id: "stress-signals",
+    title: "How Does Stress Show Up for You?",
+    description:
+      "A short check-in to help you notice the early signs of stress in your body, mood, and sleep.",
+    duration: "3–5 minutes",
+    naturePath: "/nature/Background-3.png",
+  },
+  {
     type: "meditation",
     id: "calm-heartbreak",
     title: "Meditation For You: Finding Calm After Heartbreak",
