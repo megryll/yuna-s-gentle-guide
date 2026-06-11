@@ -91,9 +91,8 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Avatar", href: "/avatar.png", note: "<YunaAvatar glow> in the hero." },
     ],
     gotchas: [
-      { id: "welcome-photo-lock", text: "Welcome uses the lush forest photo, not the blurred onboarding bg — locked regardless of the Light/Dark toggle." },
-      { id: "welcome-cardrow", text: "List-row sign-up choices are Button variant=\"card\" with subtitle/trailing props — not hand-rolled bordered rows." },
-      { id: "welcome-frame-height", text: "Layout keys on frame HEIGHT, not viewport (useFrameSize().h < 750): on a short frame (SE) the Yuna conversation bottom-anchors just above the sheet (mt-auto); on taller frames (iPhone 15 / 15 Plus) it centers in the space above the sheet (my-auto). A CSS breakpoint can't see this — the device toggle changes the frame height, not the browser viewport." },
+      { id: "welcome-frame-height", text: "Slight layout shift for small screens." },
+      { id: "25b0161d-c94b-4498-9989-514a9737dd0d", text: "Android uses background image for bubbles and lower container" },
     ],
   },
   "/login": {
@@ -103,9 +102,7 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Google logo", href: "/logos/google.svg" },
     ],
     gotchas: [
-      { id: "login-dark-lock", text: "Onboarding route — locked to the dark photo regardless of the Light/Dark toggle." },
-      { id: "login-keyboard", text: "The simulated keyboard auto-shows on input focus and overlays the bottom of the frame. The email field sits at the top of its stack so it clears the keyboard without a shift; tall screens whose field sits low must translateY the content up (see Employer access' FOCUS_SHIFT)." },
-      { id: "login-step-machine", text: "Email → password is a single-route step machine, not two routes." },
+      { id: "afb880fa-c905-457f-8edc-8a0890b4f8b7", text: "New; Show forgot password link always" },
     ],
   },
   "/auth": {
@@ -114,10 +111,7 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Apple logo", href: "/logos/apple.svg" },
       { label: "Google logo", href: "/logos/google.svg" },
     ],
-    gotchas: [
-      { id: "auth-dark-lock", text: "Onboarding route — locked to the dark photo." },
-      { id: "auth-email-top", text: "Email field is top-of-stack (above the social buttons) so the keyboard never covers it." },
-    ],
+    gotchas: [],
   },
   "/employer-access": {
     assets: [
@@ -125,8 +119,7 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Yuna logo", href: "/yuna-logo.svg", note: "On the activated pass face." },
     ],
     gotchas: [
-      { id: "employer-focus-shift", text: "FOCUS_SHIFT pattern: on input focus the whole screen translateY's up by (keyboard height − ~70px) so the field clears the keyboard, mimicking native iOS. Reference implementation for any low-field screen." },
-      { id: "employer-dark-lock", text: "Onboarding route — locked to the dark photo." },
+      { id: "employer-focus-shift", text: "Content should shift up when keyboard is triggered" },
     ],
   },
   "/intro": {
@@ -138,9 +131,10 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Yuna mark", href: "/yuna-mark.svg", note: "White brand glyph in the demo push notification (sits on the secondary-green tile)." },
     ],
     gotchas: [
-      { id: "intro-name-autofocus", text: "Name input auto-focuses ~200ms after the wait-input step begins, which triggers the keyboard shift on small screens." },
+      { id: "intro-name-autofocus", text: "Name input auto-focuses ~200ms after the wait-input step begins" },
       { id: "78367743-a9ff-42f7-8baf-ad02ba207845", text: "Voice starts reading text out loud after user chooses a voice (also their avatar replaces the default one.)" },
       { id: "6927704f-374e-487f-8388-1dee68cd44c6", text: "Voice fades out after clicking 'Let's Start!' button" },
+      { id: "d5147f63-4470-48a5-bf09-52df50a63f27", text: "Mute button top right mutes voice/sound effects" },
     ],
   },
   "/creating-your-space": {
@@ -184,7 +178,7 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Goal card photo 4", href: "/nature/Background-5.png" },
       { label: "Goal card photo 5", href: "/nature/Background-16.png" },
     ],
-    gotchas: [{ id: "goals-step-machine", text: "Empty/list → name → timeframe → success via ?step=." }],
+    gotchas: [],
   },
   "/home": {
     assets: [
@@ -223,6 +217,18 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
     gotchas: [
       { id: "a6e47c49-ad9d-4457-bac2-dc5cde223eca", text: "Background Sounds is new top item" },
       { id: "b136f341-ce38-4ace-81ee-040c3015cd97", text: "Content Preferences is new section" },
+    ],
+  },
+  "/book": {
+    assets: [],
+    gotchas: [
+      { id: "a72354f5-adc4-4ec4-8297-9fe2d297643e", text: "New buttons at the bottom" },
+    ],
+  },
+  "/skill": {
+    assets: [],
+    gotchas: [
+      { id: "2896418b-ce2f-4a37-943e-e3fc8b43dc8d", text: "New buttons at the bottom" },
     ],
   },
 };
