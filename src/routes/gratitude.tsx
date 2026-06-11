@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
+import { GRATITUDE_PROMPTS } from "@/lib/home-cards";
 import { useAppMode } from "@/lib/theme-prefs";
 import { useFrameSize } from "@/lib/frame-size";
 
@@ -91,7 +92,7 @@ function GratitudeRoute() {
                       return next;
                     })
                   }
-                  placeholder="Enter your answer"
+                  placeholder={GRATITUDE_PROMPTS[i] ?? "Enter your answer"}
                   aria-label={`Today, gratitude ${i + 1}`}
                 />
               </EntryRow>

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, ChevronLeft, EyeOff, X } from "lucide-react";
+import { Check, ChevronLeft, EyeOff, Star, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -68,6 +68,14 @@ function BookDetailRoute() {
               <h1 className="mt-1 font-display text-3xl leading-tight tracking-tight text-neutral-900">
                 {book.title}
               </h1>
+              <p className="mt-3 inline-flex items-center gap-1 text-sm text-neutral-900/80">
+                <span className="font-medium">{book.rating.toFixed(1)}</span>
+                <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+                <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+                <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+                <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+                <Star size={12} fill="currentColor" className="text-secondary-green/50" aria-hidden />
+              </p>
             </div>
 
             <h2 className="mt-8 font-display text-xl leading-snug tracking-tight text-white">

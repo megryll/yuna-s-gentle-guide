@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Play, Star } from "lucide-react";
-import { KIND_META, type HomeCard } from "@/lib/home-cards";
+import { GRATITUDE_PROMPTS, KIND_META, type HomeCard } from "@/lib/home-cards";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { DEFAULT_VOICE } from "@/lib/voices";
@@ -231,7 +231,7 @@ function GratitudeCard({
                   return next;
                 })
               }
-              placeholder="Type here…"
+              placeholder={GRATITUDE_PROMPTS[i]}
               aria-label={`Gratitude ${i + 1}`}
             />
           ))}
@@ -417,11 +417,11 @@ function BookCard({
           </p>
           <p className="mt-2 inline-flex items-center gap-1 text-sm text-foreground/80">
             <span className="font-medium">{card.rating.toFixed(1)}</span>
-            <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
-            <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
-            <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
-            <Star size={12} fill="currentColor" className="text-amber-300" aria-hidden />
-            <Star size={12} fill="currentColor" className="text-amber-300/50" aria-hidden />
+            <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+            <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+            <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+            <Star size={12} fill="currentColor" className="text-secondary-green" aria-hidden />
+            <Star size={12} fill="currentColor" className="text-secondary-green/50" aria-hidden />
           </p>
         </div>
       </div>

@@ -177,7 +177,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Read more",
     naturePath: "/nature/Background-3.png",
-    solidBg: "#F8F1DC",
+    solidBg: "#FFFFFF",
   },
 };
 
@@ -215,6 +215,15 @@ export const KIND_MENU: Record<CardKind, CardMenuActions> = {
   accountability: { complete: true, dismiss: true, stopSeeing: false },
   book: { complete: true, dismiss: true, stopSeeing: true },
 };
+
+// Placeholder ideas for the three gratitude entry fields — nudges that help
+// people land on something concrete. Shared by the Home gratitude card and
+// the Gratitude Journal screen so the two never drift.
+export const GRATITUDE_PROMPTS = [
+  "A small thing that went right",
+  "Someone I appreciated",
+  "A moment that made me smile",
+] as const;
 
 export const HOME_CARDS: HomeCard[] = [
   {
