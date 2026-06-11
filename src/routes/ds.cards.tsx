@@ -104,6 +104,15 @@ const ROW_SOLID: HomeCard = {
   eyebrow: "Recommended Skill",
   naturePath: NATURE,
 };
+// Carries a duration — HomeCardRow appends it to the meta line as a "• …" tag.
+const ROW_DURATION: HomeCard = {
+  type: "self-discovery",
+  id: "demo-row-duration",
+  title: "Where Is Your Energy Actually Going?",
+  description: "A short audit of where your week is spent.",
+  duration: "6–8 minutes",
+  naturePath: NATURE,
+};
 
 // Light cluster content inverts via .theme-light (as on Home in light mode);
 // the matrix panels don't add it, so wrap the light render to match.
@@ -153,6 +162,7 @@ function DemoRow() {
     <div className="max-w-[340px] flex flex-col gap-3">
       <HomeCardRow card={ROW_PHOTO} onClick={() => {}} interactive={false} />
       <HomeCardRow card={ROW_SOLID} onClick={() => {}} interactive={false} />
+      <HomeCardRow card={ROW_DURATION} onClick={() => {}} interactive={false} />
     </div>
   );
 }
