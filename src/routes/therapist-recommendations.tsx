@@ -6,7 +6,7 @@ import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { PageHeader } from "@/components/PageHeader";
 import { Toast, ToastViewport } from "@/components/Toast";
-import { YunaAvatar } from "@/components/YunaAvatar";
+import { Surface } from "@/components/Surface";
 import { TherapistCard, TherapistPhoto, frostedPanel } from "@/components/TherapistCard";
 import {
   TherapistFiltersDrawer,
@@ -215,12 +215,13 @@ function SavedView({
 }) {
   if (list.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-8 yuna-fade-in">
-        <YunaAvatar size={56} />
-        <h1 className="mt-5 font-display text-2xl tracking-tight text-white">No saved therapists yet</h1>
-        <p className="mt-2 text-sm leading-snug text-white/85 max-w-[16rem]">
-          Tap the bookmark on any therapist to save them here for later.
-        </p>
+      <div className="flex-1 flex flex-col justify-center px-6 yuna-fade-in">
+        <Surface dashed surface={surface} className="px-4 py-6 text-center">
+          <p className="text-sm text-white/80">No saved therapists yet</p>
+          <p className="mt-1 text-xs text-white/60 leading-relaxed">
+            Tap the bookmark on any therapist to save them here for later.
+          </p>
+        </Surface>
       </div>
     );
   }

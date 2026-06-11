@@ -190,6 +190,7 @@ function GoalsRoute() {
         {step === "list" && (
           <ListView
             surface={surface}
+            photo={photo}
             goals={goals}
             filter={filter}
             onFilter={setFilter}
@@ -216,6 +217,7 @@ function GoalsRoute() {
           <TimeframeView
             surface={surface}
             photo={photo}
+            goal={draft}
             pickDate={pickerOpen}
             onPickDate={() => setPickerOpen(true)}
             onPreset={(days) => {
@@ -269,6 +271,7 @@ function GoalsRoute() {
 
 function ListView({
   surface,
+  photo,
   goals,
   filter,
   onFilter,
@@ -279,6 +282,7 @@ function ListView({
   onMarkDone,
 }: {
   surface: "dark" | "light";
+  photo: Parameters<typeof YunaAvatar>[0]["variant"];
   goals: Goal[];
   filter: Filter;
   onFilter: (f: Filter) => void;
@@ -313,6 +317,7 @@ function ListView({
           (hasGoals ? "mt-4" : "flex-1 justify-center")
         }
       >
+        {!hasGoals && <YunaAvatar variant={photo} size={96} className="mb-8" />}
         <p className="max-w-[17rem] text-sm leading-snug text-white/80">
           Reaching goals helps build self-confidence and improves how we see ourselves.
         </p>
@@ -485,6 +490,7 @@ function NameView({
 function TimeframeView({
   surface,
   photo,
+  goal,
   pickDate,
   onPickDate,
   onPreset,
@@ -492,6 +498,7 @@ function TimeframeView({
 }: {
   surface: "dark" | "light";
   photo: Parameters<typeof YunaAvatar>[0]["variant"];
+  goal: string;
   pickDate: boolean;
   onPickDate: () => void;
   onPreset: (days: number) => void;
@@ -499,6 +506,11 @@ function TimeframeView({
 }) {
   return (
     <FlowShell surface={surface} onBack={onBack}>
+      {goal.trim() && (
+        <p className="shrink-0 mt-6 mx-auto max-w-[18rem] text-center font-display italic text-xl leading-snug text-white">
+          “{goal.trim()}”
+        </p>
+      )}
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         <YunaAvatar variant={photo} size={96} />
         <h1 className="mt-8 font-display text-2xl tracking-tight text-white">How long to reach it?</h1>
