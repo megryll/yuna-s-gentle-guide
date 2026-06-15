@@ -24,12 +24,16 @@ import {
   GUIDED_SAMPLE_TITLE,
   setSessionEscalation,
   setSessionGuided,
+  setSessionIllinois,
   setSessionReco,
   setSessionStatus,
+  setSessionSuicidality,
   useSessionEscalation,
   useSessionGuided,
+  useSessionIllinois,
   useSessionReco,
   useSessionStatus,
+  useSessionSuicidality,
 } from "@/lib/session-dev";
 
 // Right-hand admin panel for engineers: a link to the animation reference, asset
@@ -136,9 +140,10 @@ export function EngineerSidebar() {
 
       <NotesSection path={path} codeNotes={notes.gotchas} />
 
-      {/* Session-only: drive the live session into a given state for review.
-          Last in the panel, and only where these states actually live. */}
+      {/* Screen-scoped dev states: drive a screen into a given state for review.
+          Last in the panel, and only where each state actually lives. */}
       {path === "/chat" && <YunaStatesSection />}
+      {path === "/home" && <HomeStatesSection />}
     </aside>
   );
 }
@@ -536,15 +541,17 @@ function YunaStatesSection() {
   const status = useSessionStatus();
   const reco = useSessionReco();
   const escalation = useSessionEscalation();
+  const suicidality = useSessionSuicidality();
   const guided = useSessionGuided();
   const location = useLocation();
   const inVoice = (location.search as { mode?: string })?.mode === "voice";
 
-  // Picking any chip clears the other two states so one is active at a time.
+  // Picking any chip clears the other transient states so one is active at a time.
   const clearOthers = () => {
     setSessionStatus(null);
     setSessionReco(null);
     setSessionEscalation(null);
+    setSessionSuicidality(false);
   };
 
   return (
@@ -590,12 +597,40 @@ function YunaStatesSection() {
             if (!wasActive) setSessionEscalation("self-harm");
           }}
         />
+        <Chip
+          active={suicidality}
+          label="Suicidality"
+          onClick={() => {
+            const wasActive = suicidality;
+            clearOthers();
+            if (!wasActive) setSessionSuicidality(true);
+          }}
+        />
         {/* Session type — independent of the transient status/reco chips above:
             a guided session can still be listening, thinking, etc. */}
         <Chip
           active={!!guided}
           label="Guided Session"
           onClick={() => setSessionGuided(guided ? null : GUIDED_SAMPLE_TITLE)}
+        />
+      </div>
+    </Section>
+  );
+}
+
+// ─── Home states (screen trigger) ────────────────────────────────────────────
+// Pushes the Home screen into a given state for review. One chip for now: the
+// Illinois service-limitation takeover.
+
+function HomeStatesSection() {
+  const illinois = useSessionIllinois();
+  return (
+    <Section title="States" defaultOpen={true}>
+      <div className="flex flex-wrap gap-1">
+        <Chip
+          active={illinois}
+          label="Illinois Limitations"
+          onClick={() => setSessionIllinois(!illinois)}
         />
       </div>
     </Section>

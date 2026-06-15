@@ -38,6 +38,8 @@ const listeners = new Set<Listener>();
 let statusState: YunaState | null = null;
 let recoKind: CardKind | null = null;
 let escalationTier: EscalationTier | null = null;
+let suicidalityOn = false;
+let illinoisOn = false;
 let guidedTitle: string | null = null;
 
 function emit() {
@@ -60,6 +62,14 @@ export function setSessionReco(next: CardKind | null) {
 }
 export function setSessionEscalation(next: EscalationTier | null) {
   escalationTier = next;
+  emit();
+}
+export function setSessionSuicidality(next: boolean) {
+  suicidalityOn = next;
+  emit();
+}
+export function setSessionIllinois(next: boolean) {
+  illinoisOn = next;
   emit();
 }
 export function setSessionGuided(next: string | null) {
@@ -86,6 +96,20 @@ export function useSessionEscalation(): EscalationTier | null {
     subscribe,
     () => escalationTier,
     () => escalationTier,
+  );
+}
+export function useSessionSuicidality(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => suicidalityOn,
+    () => suicidalityOn,
+  );
+}
+export function useSessionIllinois(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => illinoisOn,
+    () => illinoisOn,
   );
 }
 export function useSessionGuided(): string | null {

@@ -21,6 +21,7 @@ import {
   type RecognitionHandle,
 } from "@/lib/speech";
 import { YunaSettingsDrawer } from "@/components/YunaSettingsDrawer";
+import { Drawer, DrawerContent, DrawerFooter, DrawerTitle } from "@/components/ui/drawer";
 import { VoiceSession } from "@/components/VoiceSession";
 import { Waveform } from "@/components/Waveform";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
@@ -35,10 +36,12 @@ import {
   setSessionEscalation,
   setSessionReco,
   setSessionStatus,
+  setSessionSuicidality,
   useSessionEscalation,
   useSessionGuided,
   useSessionReco,
   useSessionStatus,
+  useSessionSuicidality,
 } from "@/lib/session-dev";
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
@@ -178,6 +181,18 @@ function Chat() {
   // Dev override (EngineerSidebar "Yuna states"): surface a crisis/support
   // escalation as Yuna's latest turn for review.
   const escalation = useSessionEscalation();
+  // Dev override (EngineerSidebar "Yuna states"): a suicidality safety takeover
+  // drawer — the most urgent hand-off, covering text and voice alike.
+  const suicidality = useSessionSuicidality();
+  // Dismissing the takeover (X or drag) routes through a compact safety check
+  // rather than closing outright; "No, I'm okay" is the only clean exit. Both
+  // views share one drawer so the overlay hands off cleanly to the chat behind.
+  const [confirmSafetyOpen, setConfirmSafetyOpen] = useState(false);
+  // Each fresh open starts on the takeover; leave the flag alone while closing
+  // so the confirm view doesn't flicker back during the exit animation.
+  useEffect(() => {
+    if (suicidality) setConfirmSafetyOpen(false);
+  }, [suicidality]);
   // Dev override (EngineerSidebar "Yuna states"): force a conversational
   // status (thinking / slow / reconnecting / offline) above the input so it
   // can be reviewed without scripting a real exchange. Voice mode reads the
@@ -1077,6 +1092,107 @@ function Chat() {
       </div>
 
       <YunaSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* Suicidality safety takeover (EngineerSidebar "Suicidality" dev state):
+          a full-height drawer that hands the user to an emergency line when a
+          conversation surfaces risk beyond Yuna's scope. Covers text and voice
+          alike. One drawer, two views: trying to dismiss the takeover (X / drag)
+          swaps to a compact safety check rather than closing outright — "No, I'm
+          okay" is the only clean exit. Authored white-on-dark; the drawer paints
+          the mode photo and the shims invert it for light mode. */}
+      <Drawer
+        open={suicidality}
+        onOpenChange={(open) => {
+          if (open) return;
+          // Dismissing the takeover → safety check; dismissing the check → exit.
+          if (!confirmSafetyOpen) setConfirmSafetyOpen(true);
+          else setSessionSuicidality(false);
+        }}
+      >
+        <DrawerContent className={confirmSafetyOpen ? undefined : "min-h-[92%]"}>
+          {confirmSafetyOpen ? (
+            <>
+              <div className="px-8 pt-6 flex flex-col items-center text-center gap-3">
+                <DrawerTitle className="text-center text-balance">
+                  Are{" "}
+                  <span
+                    className={
+                      appMode === "light" ? "text-primary-green" : "text-secondary-green"
+                    }
+                  >
+                    you
+                  </span>{" "}
+                  in danger?
+                </DrawerTitle>
+                <p className="text-base text-white/80">
+                  Are you, or someone else, currently at risk of harm?
+                </p>
+              </div>
+              <DrawerFooter className="px-8 pb-8 pt-6 gap-3">
+                <Button
+                  surface={appMode === "light" ? "light" : "dark"}
+                  variant="primary"
+                  fullWidth
+                  onClick={() => setConfirmSafetyOpen(false)}
+                >
+                  Yes, I need help
+                </Button>
+                <Button
+                  surface={appMode === "light" ? "light" : "dark"}
+                  variant="link"
+                  className="self-center"
+                  onClick={() => setSessionSuicidality(false)}
+                >
+                  No, I'm okay
+                </Button>
+              </DrawerFooter>
+            </>
+          ) : (
+            <>
+              <Button
+                surface={appMode === "light" ? "light" : "dark"}
+                variant="secondary"
+                size="icon"
+                onClick={() => setConfirmSafetyOpen(true)}
+                aria-label="Close"
+                className="absolute right-5 top-5 z-10"
+              >
+                <X strokeWidth={1.8} aria-hidden />
+              </Button>
+              <div className="flex flex-1 flex-col min-h-0 px-8 pt-8 pb-10">
+                <div className="flex flex-col items-center gap-5 text-center">
+                  <IconMedallion size="xl">
+                    <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={80} />
+                  </IconMedallion>
+                  <ChatBubble
+                    from="yuna"
+                    tail={false}
+                    frostedImage={blurBg}
+                    className="max-w-[82%] text-center"
+                  >
+                    It sounds like you are going through something really hard
+                    right now, and that is beyond Yuna's capacity to help.
+                  </ChatBubble>
+                </div>
+
+                <div className="flex flex-1 items-center justify-center">
+                  <DrawerTitle className="text-center text-balance">
+                    If you are in need of immediate support, tap below.
+                  </DrawerTitle>
+                </div>
+
+                <Button
+                  surface={appMode === "light" ? "light" : "dark"}
+                  variant="primary"
+                  fullWidth
+                >
+                  Call emergency line
+                </Button>
+              </div>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </PhoneFrame>
   );
 }
