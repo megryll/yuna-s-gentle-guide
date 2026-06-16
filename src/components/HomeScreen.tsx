@@ -291,6 +291,11 @@ export function HomeScreen({
                 startChat({ q: c.title, guided: c.title });
                 return;
               }
+              if (c.type === "self-discovery") {
+                // Questionnaire cards aren't wired up yet — the "Try it now"
+                // CTA is a no-op until the survey flow exists.
+                return;
+              }
               open(openPrompt(c));
             }}
             onOpenMenu={setMenuCard}
