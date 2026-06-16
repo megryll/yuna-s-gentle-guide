@@ -5,6 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
 import { Badge } from "@/components/Badge";
+import { TextArea } from "@/components/TextArea";
 import {
   Drawer,
   DrawerContent,
@@ -164,6 +165,11 @@ function RadioDot({ selected }: { selected: boolean }) {
 // Light/Dark toggle along with the paywall behind it.
 type PlanId = "yearly" | "monthly";
 
+// The drawer hosts two views: the plan picker and a "Can't afford Yuna?"
+// message form the user reaches via the link under the plans. The form swaps in
+// place rather than opening a second drawer.
+type PlansView = "plans" | "afford";
+
 function AllPlansDrawer({
   open,
   onOpenChange,
@@ -174,60 +180,126 @@ function AllPlansDrawer({
   const mode = useAppMode();
   const surface = mode === "dark" ? "dark" : "light";
   const [plan, setPlan] = useState<PlanId>("yearly");
+  const [view, setView] = useState<PlansView>("plans");
+  const [message, setMessage] = useState("");
+
+  // Reset to the plan picker whenever the drawer fully closes.
+  const reset = (v: boolean) => {
+    if (!v) {
+      setView("plans");
+      setMessage("");
+    }
+    onOpenChange(v);
+  };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={reset}>
       <DrawerContent>
-        <DrawerHeader className="text-center px-6 pt-3 pb-2">
-          <DrawerTitle>Choose a plan for after your free trial</DrawerTitle>
-          <DrawerDescription className="text-white/75">
-            Cancel anytime in the app store
-          </DrawerDescription>
-        </DrawerHeader>
+        {view === "plans" ? (
+          <>
+            <DrawerHeader className="text-center px-6 pt-3 pb-2">
+              <DrawerTitle>Choose a plan for after your free trial</DrawerTitle>
+              <DrawerDescription className="text-white/75">
+                Cancel anytime in the app store
+              </DrawerDescription>
+            </DrawerHeader>
 
-        <div className="flex flex-col gap-3 px-6 pt-2">
-          <div className="relative">
-            <Badge className="absolute -top-3 right-4 z-10">Save 65%</Badge>
-            <Button
-              surface={surface}
-              variant="card"
-              selected={plan === "yearly"}
-              subtitle="$69.99 paid annually"
-              trailing={<PlanPrice>$5.83/month</PlanPrice>}
-              onClick={() => setPlan("yearly")}
-            >
-              <span className="inline-flex items-baseline gap-2">
-                Yearly
-                <span className="text-sm font-normal text-white/60 line-through">$264</span>
-              </span>
-            </Button>
-          </div>
+            <div className="flex flex-col gap-3 px-6 pt-2">
+              <div className="relative">
+                <Badge className="absolute -top-3 right-4 z-10">Save 65%</Badge>
+                <Button
+                  surface={surface}
+                  variant="card"
+                  selected={plan === "yearly"}
+                  subtitle="$69.99 paid annually"
+                  trailing={<PlanPrice>$5.83/month</PlanPrice>}
+                  onClick={() => setPlan("yearly")}
+                >
+                  <span className="inline-flex items-baseline gap-2">
+                    Yearly
+                    <span className="text-sm font-normal text-white/60 line-through">$264</span>
+                  </span>
+                </Button>
+              </div>
 
-          <Button
-            surface={surface}
-            variant="card"
-            selected={plan === "monthly"}
-            subtitle="$22.00 paid monthly"
-            trailing={<PlanPrice>$22/month</PlanPrice>}
-            onClick={() => setPlan("monthly")}
-          >
-            Monthly
-          </Button>
-        </div>
+              <Button
+                surface={surface}
+                variant="card"
+                selected={plan === "monthly"}
+                subtitle="$22.00 paid monthly"
+                trailing={<PlanPrice>$22/month</PlanPrice>}
+                onClick={() => setPlan("monthly")}
+              >
+                Monthly
+              </Button>
 
-        <DrawerFooter className="flex-row items-center justify-center gap-3 pt-6 pb-8">
-          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
-            Reactivate
-          </Button>
-          <Dot />
-          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
-            Terms &amp; Conditions
-          </Button>
-          <Dot />
-          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)}>
-            Privacy Policy
-          </Button>
-        </DrawerFooter>
+              <Button
+                surface={surface}
+                variant="link"
+                className="mx-auto mt-1"
+                onClick={() => setView("afford")}
+              >
+                I can't afford Yuna
+              </Button>
+            </div>
+
+            <DrawerFooter className="flex-row items-center justify-center gap-3 pt-6 pb-8">
+              <Button surface={surface} variant="link" onClick={() => reset(false)}>
+                Reactivate
+              </Button>
+              <Dot />
+              <Button surface={surface} variant="link" onClick={() => reset(false)}>
+                Terms &amp; Conditions
+              </Button>
+              <Dot />
+              <Button surface={surface} variant="link" onClick={() => reset(false)}>
+                Privacy Policy
+              </Button>
+            </DrawerFooter>
+          </>
+        ) : (
+          <>
+            <DrawerHeader className="text-left px-6 pt-3 pb-2">
+              <DrawerTitle>Can't afford Yuna?</DrawerTitle>
+              <DrawerDescription className="mt-2 text-white/85">
+                Our mission is to make mental health care accessible to the world. If Yuna isn't in
+                your budget right now, send us a message explaining your situation and we'll see
+                what we can do.
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="px-6 pt-2">
+              <TextArea
+                surface={surface}
+                rows={5}
+                placeholder="Tell us about your situation"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                aria-label="Tell us about your situation"
+              />
+            </div>
+
+            <DrawerFooter className="px-6 pb-8 gap-2">
+              <Button
+                surface={surface}
+                variant="primary"
+                fullWidth
+                disabled={message.trim().length === 0}
+                onClick={() => reset(false)}
+              >
+                Send
+              </Button>
+              <Button
+                surface={surface}
+                variant="link"
+                className="mx-auto"
+                onClick={() => setView("plans")}
+              >
+                Cancel
+              </Button>
+            </DrawerFooter>
+          </>
+        )}
       </DrawerContent>
     </Drawer>
   );

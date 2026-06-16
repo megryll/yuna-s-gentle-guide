@@ -35,11 +35,14 @@ export type ProfileData = {
   upcoming2: HomeCard[];
 
   breakthroughs: Insight[] | null;
+  /** Full lists. The You tab shows the first {@link INSIGHT_PREVIEW_COUNT} and a
+   * "+N more" button into /insights/$category; the list screen shows all. */
   beliefs: Insight[] | null;
-  beliefsMore: number;
   basics: Insight[];
-  basicsMore: number;
 };
+
+/** How many insights each You-tab section previews before the "+N more" button. */
+export const INSIGHT_PREVIEW_COUNT = 3;
 
 const priya: ProfileData = {
   conversations: 4,
@@ -82,7 +85,6 @@ const priya: ProfileData = {
 
   breakthroughs: null,
   beliefs: null,
-  beliefsMore: 0,
   basics: [
     {
       emoji: "🎓",
@@ -96,7 +98,6 @@ const priya: ProfileData = {
       yunaQuote: "I'll keep this context in mind as we explore what matters to you.",
     },
   ],
-  basicsMore: 0,
 };
 
 const james: ProfileData = {
@@ -210,8 +211,27 @@ const james: ProfileData = {
       ],
       yunaQuote: "I help you test this assumption in safe, low-stakes ways, building evidence that it is outdated.",
     },
+    {
+      emoji: "🎭",
+      title: "Keeping busy keeps the feelings away",
+      desc: "A full schedule has long been the way you outrun what you'd rather not sit with.",
+      meaning: [
+        "Productivity became a shield, not just a habit",
+        "Retirement removed the busyness, and the feelings arrived",
+      ],
+      yunaQuote: "I notice when busyness is doing a job that stillness could do more honestly.",
+    },
+    {
+      emoji: "🧱",
+      title: "Needing people is a weakness",
+      desc: "You learned early that leaning on others was something to avoid, not reach for.",
+      meaning: [
+        "Self-reliance kept you steady, and also kept you alone",
+        "Connection is starting to feel like strength, not surrender",
+      ],
+      yunaQuote: "I hold space for the idea that needing people is part of being one.",
+    },
   ],
-  beliefsMore: 2,
   basics: [
     {
       emoji: "🚒",
@@ -246,12 +266,152 @@ const james: ProfileData = {
       ],
       yunaQuote: "I see these not as hobbies but as core parts of your emotional toolkit.",
     },
+    {
+      emoji: "👨‍👧‍👦",
+      title: "Father to Megan and Ryan",
+      desc: "Two grown children you love deeply and rarely say so out loud.",
+      meaning: [
+        "Provision was how you showed love for years",
+        "Both are now asking for words, not just presence",
+      ],
+      yunaQuote: "I keep your children close in our work. They are why a lot of this matters.",
+    },
+    {
+      emoji: "🐕",
+      title: "Has a dog named Scout",
+      desc: "An early-morning walking companion and a quiet anchor to your day.",
+      meaning: [
+        "Scout gives your mornings shape now that shifts are gone",
+        "Caring for him is a small, steady source of purpose",
+      ],
+      yunaQuote: "Small daily rituals like this one matter more than they look like they do.",
+    },
+    {
+      emoji: "🌅",
+      title: "Lifelong early riser",
+      desc: "Thirty years of shift work left you awake before dawn, retired or not.",
+      meaning: [
+        "Your body still keeps the station's clock",
+        "The quiet hours are yours to shape now, not the alarm's",
+      ],
+      yunaQuote: "We can use those early hours intentionally rather than just enduring them.",
+    },
+    {
+      emoji: "🏔️",
+      title: "Grew up in a small mountain town",
+      desc: "A close-knit, self-sufficient upbringing where you didn't make a fuss.",
+      meaning: [
+        "Stoicism was the local language, not just yours",
+        "The values that raised you also set the limits you're testing now",
+      ],
+      yunaQuote: "Where you come from explains a lot of the rules you've never questioned.",
+    },
+    {
+      emoji: "🎖️",
+      title: "Decorated for a 2009 rescue",
+      desc: "Recognized for pulling a family from a house fire that winter.",
+      meaning: [
+        "You carry the weight of that day as much as the honor",
+        "Being the one who saves makes being the one who needs help harder",
+      ],
+      yunaQuote: "The moments that made you a hero can also be the ones that ask the most of you.",
+    },
+    {
+      emoji: "🪵",
+      title: "Built his own workshop",
+      desc: "A garage you converted by hand, where most of your woodworking happens.",
+      meaning: [
+        "You think clearest with your hands occupied",
+        "It's become a refuge as much as a workspace",
+      ],
+      yunaQuote: "Spaces you build for yourself say a lot about where you feel safe.",
+    },
+    {
+      emoji: "☕",
+      title: "Black coffee, every morning",
+      desc: "A small fixed ritual that has survived every change in your routine.",
+      meaning: [
+        "Constancy steadies you when other things shift",
+        "Even tiny rituals do real regulating work",
+      ],
+      yunaQuote: "I pay attention to the small constants. They tell me what keeps you grounded.",
+    },
+    {
+      emoji: "📻",
+      title: "Listens to classic rock",
+      desc: "The same stations and records that played through your firehouse years.",
+      meaning: [
+        "Music is one of your direct lines to memory and mood",
+        "Familiar sound can settle you faster than words",
+      ],
+      yunaQuote: "We can lean on what already soothes you instead of inventing new tools.",
+    },
+    {
+      emoji: "🩺",
+      title: "Watching his blood pressure since 2023",
+      desc: "A health flag from your doctor that made you slow down, reluctantly.",
+      meaning: [
+        "Your body is asking for the care you give everyone else",
+        "Stress and silence have a physical cost you're now feeling",
+      ],
+      yunaQuote: "What's happening in your body and what's happening in your mind are not separate here.",
+    },
+    {
+      emoji: "🤝",
+      title: "Still meets the old crew monthly",
+      desc: "A standing breakfast with the firefighters you served alongside.",
+      meaning: [
+        "The brotherhood is the connection that still feels easy",
+        "It's a model for the closeness you want elsewhere",
+      ],
+      yunaQuote: "You already know how to be close. We're widening where that's allowed to happen.",
+    },
+    {
+      emoji: "🐟",
+      title: "Catch and release, always",
+      desc: "On the water it was never about the catch, just the quiet of being there.",
+      meaning: [
+        "You're drawn to presence more than outcome",
+        "Stillness is something you already practice, just without the name",
+      ],
+      yunaQuote: "You've been practicing mindfulness on the river for years without calling it that.",
+    },
+    {
+      emoji: "🚐",
+      title: "Weekend trips with Linda",
+      desc: "Recent drives out of town, a small step back toward shared time.",
+      meaning: [
+        "Side-by-side is how closeness comes most easily to you",
+        "These trips are early evidence the reconnection is working",
+      ],
+      yunaQuote: "I notice these efforts. They are the work, even when they feel ordinary.",
+    },
   ],
-  basicsMore: 12,
 };
 
 export function getProfileData(userType: UserType): ProfileData {
   return userType === "returning" ? james : priya;
+}
+
+export type InsightCategory = "breakthroughs" | "beliefs" | "basics";
+
+const INSIGHT_CATEGORY_TITLE: Record<InsightCategory, string> = {
+  breakthroughs: "Breakthroughs",
+  beliefs: "Beliefs & Behaviors",
+  basics: "Basics",
+};
+
+export function isInsightCategory(value: string): value is InsightCategory {
+  return value === "breakthroughs" || value === "beliefs" || value === "basics";
+}
+
+/** Full list + display title for an insights category, for the /insights/$category screen. */
+export function getInsightCategory(userType: UserType, category: InsightCategory) {
+  const data = getProfileData(userType);
+  return {
+    title: INSIGHT_CATEGORY_TITLE[category],
+    insights: data[category] ?? [],
+  };
 }
 
 export function getFocusAreaData(userType: UserType, num: "1" | "2") {

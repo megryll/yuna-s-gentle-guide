@@ -1280,8 +1280,10 @@ function Attachment({ kind }: { kind: Card["kind"] }) {
   const { name } = useYunaIdentity();
   if (kind === "harvard") {
     return (
-      <div className="flex items-center justify-center">
-        <img src="/harvard.svg" alt="Harvard University" className="h-10 w-auto" />
+      <div className="flex items-center justify-center gap-2.5">
+        <img src="/harvard.svg" alt="Harvard University" className="h-8 w-auto" />
+        <span aria-hidden className="h-7 w-px bg-white/25" />
+        <img src="/cornell.png" alt="Cornell University" className="h-5 w-auto" />
       </div>
     );
   }

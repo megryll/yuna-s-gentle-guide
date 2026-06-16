@@ -6,6 +6,15 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { TextField } from "@/components/TextField";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { useDarkBlurImage, useWelcomeImage } from "@/lib/theme-prefs";
 import { usePlatform } from "@/lib/platform";
 import { useFrameSize } from "@/lib/frame-size";
@@ -42,6 +51,7 @@ function Index() {
         } as const)
       : undefined;
   const [loaded, setLoaded] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 1800);
     return () => clearTimeout(t);
@@ -135,7 +145,12 @@ function Index() {
         </div>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <Button surface="dark" variant="link" className="justify-self-end">
+          <Button
+            surface="dark"
+            variant="link"
+            className="justify-self-end"
+            onClick={() => setReferralOpen(true)}
+          >
             Referral Code
           </Button>
           <span aria-hidden className="text-white/30">|</span>
@@ -146,6 +161,68 @@ function Index() {
       </div>
       </div>
       )}
+
+      <ReferralCodeDrawer open={referralOpen} onOpenChange={setReferralOpen} />
     </PhoneFrame>
+  );
+}
+
+// ── Referral code ─────────────────────────────────────────────────────────────
+// Welcome is dark-locked (lush photo, hardcoded surface="dark"), so the drawer
+// locks to the dark image and dark-surface controls too.
+function ReferralCodeDrawer({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [code, setCode] = useState("");
+
+  const reset = (v: boolean) => {
+    if (!v) setCode("");
+    onOpenChange(v);
+  };
+
+  return (
+    <Drawer open={open} onOpenChange={reset}>
+      <DrawerContent mode="dark" className="max-h-[90%]">
+        <DrawerHeader className="px-6 pt-3 pb-2 text-left">
+          <DrawerTitle>Enter Referral Code</DrawerTitle>
+          <DrawerDescription className="mt-1">
+            Enter your referral code to unlock your special access to Yuna Premium.
+          </DrawerDescription>
+        </DrawerHeader>
+
+        <div className="px-6 pb-2">
+          <TextField
+            surface="dark"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="off"
+            placeholder="Referral code"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
+            aria-label="Referral code"
+          />
+        </div>
+
+        <DrawerFooter className="px-6 pb-8 gap-2">
+          <Button
+            surface="dark"
+            variant="primary"
+            fullWidth
+            disabled={code.trim().length === 0}
+            onClick={() => reset(false)}
+          >
+            Unlock Premium
+          </Button>
+          <Button surface="dark" variant="link" onClick={() => reset(false)} className="mx-auto">
+            Cancel
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

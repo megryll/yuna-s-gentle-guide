@@ -126,7 +126,8 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
     assets: [
       { label: "Avatar", href: "/avatar.png" },
       { label: "Dark blur bg", href: "/dark4-blur.png" },
-      { label: "Harvard logo", href: "/harvard.svg", note: "Credibility card in the 'tell me more' branch." },
+      { label: "Harvard logo", href: "/harvard.svg", note: "Credibility card in the 'tell me more' branch (paired with Cornell)." },
+      { label: "Cornell logo", href: "/cornell.png", note: "Shares the credibility card with the Harvard wordmark." },
       { label: "App Store rating", href: "/app-store-rating.png", note: "Scaling image (icon + 5 stars) in the rating card, same branch." },
       { label: "Yuna mark", href: "/yuna-mark.svg", note: "White brand glyph in the demo push notification (sits on the secondary-green tile)." },
     ],

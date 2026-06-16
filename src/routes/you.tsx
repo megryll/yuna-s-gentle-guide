@@ -1,11 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
 import { Surface } from "@/components/Surface";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
-import { getProfileData, type Insight } from "@/lib/profile-data";
+import {
+  getProfileData,
+  INSIGHT_PREVIEW_COUNT,
+  type Insight,
+  type InsightCategory,
+} from "@/lib/profile-data";
 import {
   EmptyStateCard,
   FocusAreaBentoCard,
@@ -26,9 +31,13 @@ export const Route = createFileRoute("/you")({
 
 function YouRoute() {
   const userType = useUserType();
+  const navigate = useNavigate();
 
   if (userType === "new") return <YouEmptyState />;
   const data = getProfileData(userType);
+
+  const openInsights = (category: InsightCategory) =>
+    navigate({ to: "/insights/$category", params: { category } });
 
   return (
     <ScreenChrome hideHeader surface="dark">
@@ -88,8 +97,13 @@ function YouRoute() {
           <Section heading="Beliefs & Behaviors">
             {data.beliefs ? (
               <>
-                <ListOfInsights insights={data.beliefs} />
-                {data.beliefsMore > 0 && <MoreButton count={data.beliefsMore} />}
+                <ListOfInsights insights={data.beliefs.slice(0, INSIGHT_PREVIEW_COUNT)} />
+                {data.beliefs.length > INSIGHT_PREVIEW_COUNT && (
+                  <MoreButton
+                    count={data.beliefs.length - INSIGHT_PREVIEW_COUNT}
+                    onClick={() => openInsights("beliefs")}
+                  />
+                )}
               </>
             ) : (
               <EmptyStateCard
@@ -101,8 +115,13 @@ function YouRoute() {
           </Section>
 
           <Section heading="Basics">
-            <ListOfInsights insights={data.basics} />
-            {data.basicsMore > 0 && <MoreButton count={data.basicsMore} />}
+            <ListOfInsights insights={data.basics.slice(0, INSIGHT_PREVIEW_COUNT)} />
+            {data.basics.length > INSIGHT_PREVIEW_COUNT && (
+              <MoreButton
+                count={data.basics.length - INSIGHT_PREVIEW_COUNT}
+                onClick={() => openInsights("basics")}
+              />
+            )}
           </Section>
         </div>
 

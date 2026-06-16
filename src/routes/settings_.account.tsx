@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { TextField } from "@/components/TextField";
+import { MultipleChoice } from "@/components/MultipleChoice";
 import {
   Drawer,
   DrawerContent,
@@ -28,11 +29,19 @@ function AccountSettingsRoute() {
   const mode = useAppMode();
   const bgImage = useModeImage();
 
+  const [name, setName] = useState("Megan");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
   const [email, setEmail] = useState("megan@yuna.io");
   const [phone, setPhone] = useState("+ 1 6477782199");
+  const [nameOpen, setNameOpen] = useState(false);
+  const [ageOpen, setAgeOpen] = useState(false);
+  const [genderOpen, setGenderOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const genderLabel = GENDER_OPTIONS.find((o) => o.value === gender)?.label ?? "";
 
   return (
     <PhoneFrame>
@@ -57,10 +66,20 @@ function AccountSettingsRoute() {
 
         <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md flex flex-col">
-            <FieldRow label="Name" value="Megan" />
+            <FieldRow label="Name" value={name} onEdit={() => setNameOpen(true)} />
             <FieldRow label="Email" value={email} onEdit={() => setEmailOpen(true)} />
-            <FieldRow label="Age" value="Missing age" muted />
-            <FieldRow label="Gender" value="Missing gender" muted />
+            <FieldRow
+              label="Age"
+              value={age || "Missing age"}
+              muted={!age}
+              onEdit={() => setAgeOpen(true)}
+            />
+            <FieldRow
+              label="Gender"
+              value={genderLabel || "Missing gender"}
+              muted={!gender}
+              onEdit={() => setGenderOpen(true)}
+            />
             <FieldRow label="Phone number" value={phone} onEdit={() => setPhoneOpen(true)} last />
           </div>
 
@@ -74,6 +93,49 @@ function AccountSettingsRoute() {
           </Button>
         </div>
       </div>
+
+      <UpdateTextDrawer
+        open={nameOpen}
+        onOpenChange={setNameOpen}
+        title="Update Name"
+        description="This is the name Yuna uses when speaking with you."
+        label="Name"
+        placeholder="Your name"
+        current={name}
+        onSave={(next) => {
+          setName(next);
+          setNameOpen(false);
+          flagSettingsSaved("Your name has been updated.");
+        }}
+      />
+
+      <UpdateTextDrawer
+        open={ageOpen}
+        onOpenChange={setAgeOpen}
+        title="Update Age"
+        description="Your age helps Yuna tailor support to where you are in life."
+        label="Age"
+        placeholder="Your age"
+        type="number"
+        inputMode="numeric"
+        current={age}
+        onSave={(next) => {
+          setAge(next);
+          setAgeOpen(false);
+          flagSettingsSaved("Your age has been updated.");
+        }}
+      />
+
+      <UpdateGenderDrawer
+        open={genderOpen}
+        current={gender}
+        onOpenChange={setGenderOpen}
+        onSave={(next) => {
+          setGender(next);
+          setGenderOpen(false);
+          flagSettingsSaved("Your gender has been updated.");
+        }}
+      />
 
       <UpdateEmailDrawer
         open={emailOpen}
@@ -142,6 +204,140 @@ function FieldRow({
         </Button>
       )}
     </div>
+  );
+}
+
+// ─── Gender options ──────────────────────────────────────────────────────────
+
+const GENDER_OPTIONS = [
+  { value: "woman", label: "Woman" },
+  { value: "man", label: "Man" },
+  { value: "non-binary", label: "Non-binary" },
+  { value: "prefer-not", label: "Prefer not to say" },
+];
+
+// ─── Update text drawer (Name, Age) ──────────────────────────────────────────
+
+function UpdateTextDrawer({
+  open,
+  onOpenChange,
+  title,
+  description,
+  label,
+  placeholder,
+  current,
+  type = "text",
+  inputMode = "text",
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  title: string;
+  description: string;
+  label: string;
+  placeholder: string;
+  current: string;
+  type?: React.HTMLInputTypeAttribute;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  onSave: (value: string) => void;
+}) {
+  const mode = useAppMode();
+  const [value, setValue] = useState(current);
+
+  const reset = (v: boolean) => {
+    if (!v) setValue(current);
+    onOpenChange(v);
+  };
+
+  const canSave = value.trim().length > 0 && value.trim() !== current.trim();
+
+  return (
+    <Drawer open={open} onOpenChange={reset}>
+      <DrawerContent className="max-h-[90%]">
+        <DrawerHeader className="px-6 pt-3 pb-2 text-left">
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription className="mt-1">{description}</DrawerDescription>
+        </DrawerHeader>
+
+        <div className="px-6 pb-2">
+          <TextField
+            surface={mode}
+            type={type}
+            inputMode={inputMode}
+            autoComplete="off"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            aria-label={label}
+          />
+        </div>
+
+        <DrawerFooter className="px-6 pb-8 gap-2">
+          <Button surface={mode} variant="primary" fullWidth disabled={!canSave} onClick={() => onSave(value.trim())}>
+            Save
+          </Button>
+          <Button surface={mode} variant="link" onClick={() => reset(false)} className="mx-auto">
+            Cancel
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+// ─── Update Gender drawer ─────────────────────────────────────────────────────
+
+function UpdateGenderDrawer({
+  open,
+  current,
+  onOpenChange,
+  onSave,
+}: {
+  open: boolean;
+  current: string;
+  onOpenChange: (v: boolean) => void;
+  onSave: (gender: string) => void;
+}) {
+  const mode = useAppMode();
+  const [value, setValue] = useState(current);
+
+  const reset = (v: boolean) => {
+    if (!v) setValue(current);
+    onOpenChange(v);
+  };
+
+  const canSave = value.length > 0 && value !== current;
+
+  return (
+    <Drawer open={open} onOpenChange={reset}>
+      <DrawerContent className="max-h-[90%]">
+        <DrawerHeader className="px-6 pt-3 pb-2 text-left">
+          <DrawerTitle>Update Gender</DrawerTitle>
+          <DrawerDescription className="mt-1">
+            Yuna uses this to understand you better. You can change it anytime.
+          </DrawerDescription>
+        </DrawerHeader>
+
+        <div className="px-6 pb-2">
+          <MultipleChoice
+            surface={mode}
+            ariaLabel="Gender"
+            options={GENDER_OPTIONS}
+            value={value || null}
+            onChange={setValue}
+          />
+        </div>
+
+        <DrawerFooter className="px-6 pb-8 gap-2">
+          <Button surface={mode} variant="primary" fullWidth disabled={!canSave} onClick={() => onSave(value)}>
+            Save
+          </Button>
+          <Button surface={mode} variant="link" onClick={() => reset(false)} className="mx-auto">
+            Cancel
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

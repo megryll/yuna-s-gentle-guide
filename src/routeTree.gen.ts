@@ -41,6 +41,7 @@ import { Route as SettingsLanguageRouteImport } from './routes/settings_.languag
 import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
 import { Route as SettingsAccountRouteImport } from './routes/settings_.account'
 import { Route as SessionsIdRouteImport } from './routes/sessions_.$id'
+import { Route as InsightsCategoryRouteImport } from './routes/insights.$category'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsYunaExplainsRouteImport } from './routes/ds.yuna-explains'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
@@ -237,6 +238,11 @@ const SettingsAccountRoute = SettingsAccountRouteImport.update({
 const SessionsIdRoute = SessionsIdRouteImport.update({
   id: '/sessions_/$id',
   path: '/sessions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsCategoryRoute = InsightsCategoryRouteImport.update({
+  id: '/insights/$category',
+  path: '/insights/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FocusAreaNumRoute = FocusAreaNumRouteImport.update({
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/insights/$category': typeof InsightsCategoryRoute
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
@@ -543,6 +550,7 @@ export interface FileRoutesByTo {
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/insights/$category': typeof InsightsCategoryRoute
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
@@ -613,6 +621,7 @@ export interface FileRoutesById {
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
+  '/insights/$category': typeof InsightsCategoryRoute
   '/sessions_/$id': typeof SessionsIdRoute
   '/settings_/account': typeof SettingsAccountRoute
   '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
@@ -684,6 +693,7 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/insights/$category'
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
@@ -753,6 +763,7 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/insights/$category'
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
@@ -822,6 +833,7 @@ export interface FileRouteTypes {
     | '/ds/waveform'
     | '/ds/yuna-explains'
     | '/focus-area/$num'
+    | '/insights/$category'
     | '/sessions_/$id'
     | '/settings_/account'
     | '/settings_/content-preferences'
@@ -892,6 +904,7 @@ export interface RootRouteChildren {
   DsWaveformRoute: typeof DsWaveformRoute
   DsYunaExplainsRoute: typeof DsYunaExplainsRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
+  InsightsCategoryRoute: typeof InsightsCategoryRoute
   SessionsIdRoute: typeof SessionsIdRoute
   SettingsAccountRoute: typeof SettingsAccountRoute
   SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
@@ -1127,6 +1140,13 @@ declare module '@tanstack/react-router' {
       path: '/sessions/$id'
       fullPath: '/sessions/$id'
       preLoaderRoute: typeof SessionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights/$category': {
+      id: '/insights/$category'
+      path: '/insights/$category'
+      fullPath: '/insights/$category'
+      preLoaderRoute: typeof InsightsCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/focus-area/$num': {
@@ -1436,6 +1456,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsWaveformRoute: DsWaveformRoute,
   DsYunaExplainsRoute: DsYunaExplainsRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
+  InsightsCategoryRoute: InsightsCategoryRoute,
   SessionsIdRoute: SessionsIdRoute,
   SettingsAccountRoute: SettingsAccountRoute,
   SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,
