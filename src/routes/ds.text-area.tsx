@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { TextArea } from "@/components/TextArea";
+import { DictationTextArea } from "@/components/DictationTextArea";
 import { FieldError } from "@/components/TextField";
 import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
 
@@ -58,6 +59,18 @@ function DisabledDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
+function IdleDictationDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState("");
+  return <DictationTextArea surface={surface} value={value} onChange={setValue} />;
+}
+
+function FilledDictationDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState(
+    "it kind of depends on the day. sometimes I'll just sit on the couch and scroll for a bit because my brain feels too tired to do anything else.",
+  );
+  return <DictationTextArea surface={surface} value={value} onChange={setValue} />;
+}
+
 function DSTextArea() {
   return (
     <DSPage title="Text Area">
@@ -69,12 +82,28 @@ function DSTextArea() {
         <SurfaceMatrix rows={STATE_ROWS} />
       </Section>
 
+      <Section
+        title="Dictation"
+        subtitle="DictationTextArea is the type-or-record sibling: an empty field shows a Mic, tap to record (a live waveform replaces the text), tap Stop to keep the transcript. With text the trailing button becomes an X to clear, and the field auto-grows with the answer."
+      >
+        <SurfaceMatrix rows={DICTATION_ROWS} />
+      </Section>
+
       <Section title="Props">
         <PropsBlock>{`<TextArea
   surface?: "dark" | "light"      // default "dark"
   variant?: "field" | "display"   // default "field"
   error?:   boolean               // field only — alert-orange border + aria-invalid
   ...textarea attributes          // rows, value, onChange, placeholder, disabled, …
+/>
+
+<DictationTextArea
+  value:        string                 // controlled text
+  onChange:     (v: string) => void    // typing or live transcript
+  onClear?:     () => void             // overrides the X (default clears to "")
+  surface?:     "dark" | "light"       // default "dark"
+  placeholder?: string                 // default "Type or record your answer"
+  autoFocus?:   boolean
 />`}</PropsBlock>
       </Section>
     </DSPage>
@@ -88,4 +117,9 @@ const VARIANT_ROWS: MatrixRow[] = [
 const STATE_ROWS: MatrixRow[] = [
   { label: "Error", render: (s) => <ErrorDemo surface={s} /> },
   { label: "Disabled", render: (s) => <DisabledDemo surface={s} /> },
+];
+
+const DICTATION_ROWS: MatrixRow[] = [
+  { label: "Empty", render: (s) => <IdleDictationDemo surface={s} /> },
+  { label: "With text", render: (s) => <FilledDictationDemo surface={s} /> },
 ];

@@ -51,7 +51,6 @@ const DS_GROUPS: DsGroup[] = [
       { label: "Tags", to: "/ds/tags" },
       { label: "Text Area", to: "/ds/text-area" },
       { label: "Text Fields", to: "/ds/text-fields" },
-      { label: "Therapist Card", to: "/ds/therapist-card" },
       { label: "Toast Alerts", to: "/ds/toasts" },
       { label: "Waveform", to: "/ds/waveform" },
       { label: "Yuna Explains", to: "/ds/yuna-explains" },

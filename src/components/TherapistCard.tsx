@@ -1,17 +1,17 @@
-import type { CSSProperties } from "react";
-import { Bookmark } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import { Bookmark, MapPin, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
-import { YunaExplains } from "@/components/YunaExplains";
 import { modeImage } from "@/lib/theme-prefs";
 
 /**
  * TherapistCard — a frosted content card for a recommended therapist. Two
  * forms:
  *   • "deck" — a tall card for the recommendation swipe stack: avatar, name,
- *     credentials, specialty tags, an optional Yuna match note, and actions
- *     (View profile + optional Not interested). Save lives in the corner.
+ *     credentials, a small location/Virtual meta line, a short description, a
+ *     "Suggested for you" tag list, and actions (View profile + optional Not
+ *     interested). Save lives in the corner.
  *   • "list" — a compact pressable row for the Saved view: avatar + name +
  *     credentials, save in the corner, the whole row opens the profile.
  *
@@ -25,7 +25,8 @@ import { modeImage } from "@/lib/theme-prefs";
  *
  * variant?:      "deck" (default) | "list"
  * name / credentials / location / photo / tags: therapist fields
- * matchNote?:    Yuna's voice — why she surfaced this match (deck only)
+ * virtual?:      shows a "Virtual" meta pill beside location (deck only)
+ * description?:  a short plain-text bio (deck only)
  * saved?:        bookmarked state
  * onToggleSave?: bookmark toggle
  * onView?:       open the profile (deck: View profile button; list: whole row)
@@ -39,7 +40,8 @@ export type TherapistCardProps = {
   location?: string;
   photo: string;
   tags?: string[];
-  matchNote?: string;
+  virtual?: boolean;
+  description?: string;
   saved?: boolean;
   onToggleSave?: () => void;
   onView?: () => void;
@@ -110,6 +112,26 @@ function deckBgStyle(surface: "dark" | "light"): CSSProperties | undefined {
   };
 }
 
+/** A quiet meta entry (location, Virtual) — a small icon + label, no fill. */
+function MetaItem({
+  icon,
+  children,
+  sub,
+}: {
+  icon: ReactNode;
+  children: ReactNode;
+  sub: string;
+}) {
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-xs [&_svg]:shrink-0 [&_svg]:size-3.5", sub)}>
+      <span className="flex items-center" aria-hidden>
+        {icon}
+      </span>
+      <span>{children}</span>
+    </span>
+  );
+}
+
 function SaveButton({
   saved,
   onToggleSave,
@@ -144,7 +166,8 @@ export function TherapistCard({
   location,
   photo,
   tags = [],
-  matchNote,
+  virtual,
+  description,
   saved,
   onToggleSave,
   onView,
@@ -186,35 +209,60 @@ export function TherapistCard({
   return (
     <div
       className={cn(
-        "rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden",
+        "relative rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden",
         dark ? "text-white" : "text-foreground",
         solidPanel(surface),
         className,
       )}
       style={deckBgStyle(surface)}
     >
-      <div className="flex items-start gap-4">
-        <TherapistPhoto src={photo} size={64} />
-        <div className="flex-1 min-w-0">
-          <h2 className="font-display text-2xl leading-tight tracking-tight">{name}</h2>
-          <p className={cn("text-sm mt-1 leading-snug", sub)}>{credentials}</p>
-          {location && <p className={cn("text-xs mt-1", dark ? "text-white/60" : "text-foreground/60")}>{location}</p>}
-        </div>
+      {/* Save pins to the content corner so the name/credential/meta column can
+          run the full content width (its right edge aligns with the bookmark's
+          outer edge); only the name reserves clearance for it on line one. */}
+      <div className="absolute top-6 right-6 z-10">
         <SaveButton saved={saved} onToggleSave={onToggleSave} surface={surface} />
       </div>
-
-      {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {tags.slice(0, 4).map((t) => (
-            <Tag key={t} surface={surface} variant="informational">
-              {t}
-            </Tag>
-          ))}
+      <div className="flex items-start gap-4">
+        <TherapistPhoto src={photo} size={64} />
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          <div>
+            <h2 className="font-display text-2xl leading-tight tracking-tight pr-9">{name}</h2>
+            <p className={cn("text-sm mt-1 leading-snug", sub)}>{credentials}</p>
+          </div>
+          {(location || virtual) && (
+            <div className="flex items-center gap-3">
+              {location && (
+                <MetaItem icon={<MapPin aria-hidden />} sub={sub}>
+                  {location}
+                </MetaItem>
+              )}
+              {virtual && (
+                <MetaItem icon={<Video aria-hidden />} sub={sub}>
+                  Virtual
+                </MetaItem>
+              )}
+            </div>
+          )}
         </div>
+      </div>
+
+      {description && (
+        <p className={cn("text-sm leading-relaxed", sub)}>{description}</p>
       )}
 
-      {matchNote && (
-        <YunaExplains surface={surface}>{matchNote}</YunaExplains>
+      {tags.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <p className={cn("text-sm font-semibold", dark ? "text-white" : "text-foreground")}>
+            Suggested for you
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((t) => (
+              <Tag key={t} surface={surface} variant="informational">
+                {t}
+              </Tag>
+            ))}
+          </div>
+        </div>
       )}
 
       {(onView || onDismiss) && (

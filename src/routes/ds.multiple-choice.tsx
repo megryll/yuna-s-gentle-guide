@@ -100,6 +100,27 @@ function DetailDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
+function OtherDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState<string[]>(["custom"]);
+  const [other, setOther] = useState("");
+  return (
+    <MultipleChoice
+      surface={surface}
+      multiple
+      ariaLabel="What would you like support with?"
+      otherValue={other}
+      onOtherChange={setOther}
+      options={[
+        { value: "stress", label: "Stress", emoji: "😰" },
+        { value: "sleep", label: "Sleep & Energy", emoji: "😴" },
+        { value: "custom", label: "Something Else", other: true },
+      ]}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+
 function DisabledDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState<string | null>("a");
   return (
@@ -129,7 +150,7 @@ function DSMultipleChoice() {
 
       <Section title="Props">
         <PropsBlock>{`<MultipleChoice
-  options:    { value, label, emoji?, icon?, subtitle?, trailing?, disabled? }[]
+  options:    { value, label, emoji?, icon?, subtitle?, trailing?, disabled?, other? }[]
   value:      string | null        // single
   onChange:   (value: string) => void
   // — or, with multiple —
@@ -139,6 +160,9 @@ function DSMultipleChoice() {
 
   indicator?: "check" | "none"     // default "check"; "none" = caller owns the
                                    // cue via trailing (e.g. priority numerals)
+  otherValue?:       string        // open-ended option's text (option.other)
+  onOtherChange?:    (v: string) => void
+  otherPlaceholder?: string        // idle hint for the open-ended field
   surface?:   "dark" | "light"     // default "dark"
   ariaLabel:  string               // names the group
   className?: string
@@ -153,6 +177,7 @@ const VARIANT_ROWS: MatrixRow[] = [
   { label: "Multiple", render: (s) => <MultiDemo surface={s} /> },
   { label: "Indicator: none", render: (s) => <NoneDemo surface={s} /> },
   { label: "With detail", render: (s) => <DetailDemo surface={s} /> },
+  { label: "Other (open-ended)", render: (s) => <OtherDemo surface={s} /> },
 ];
 
 const STATE_ROWS: MatrixRow[] = [

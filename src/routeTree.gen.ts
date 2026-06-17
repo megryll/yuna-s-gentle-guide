@@ -27,6 +27,7 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as EmployerAccessRouteImport } from './routes/employer-access'
 import { Route as DesignYourTrialRouteImport } from './routes/design-your-trial'
 import { Route as CreatingYourSpaceRouteImport } from './routes/creating-your-space'
+import { Route as CompletedTasksRouteImport } from './routes/completed-tasks'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimationSpecsRouteImport } from './routes/animation-specs'
@@ -48,7 +49,6 @@ import { Route as DsYunaExplainsRouteImport } from './routes/ds.yuna-explains'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
-import { Route as DsTherapistCardRouteImport } from './routes/ds.therapist-card'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsTextAreaRouteImport } from './routes/ds.text-area'
 import { Route as DsTagsRouteImport } from './routes/ds.tags'
@@ -170,6 +170,11 @@ const CreatingYourSpaceRoute = CreatingYourSpaceRouteImport.update({
   path: '/creating-your-space',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompletedTasksRoute = CompletedTasksRouteImport.update({
+  id: '/completed-tasks',
+  path: '/completed-tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -274,11 +279,6 @@ const DsTypographyRoute = DsTypographyRouteImport.update({
 const DsToastsRoute = DsToastsRouteImport.update({
   id: '/ds/toasts',
   path: '/ds/toasts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DsTherapistCardRoute = DsTherapistCardRouteImport.update({
-  id: '/ds/therapist-card',
-  path: '/ds/therapist-card',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsTextFieldsRoute = DsTextFieldsRouteImport.update({
@@ -433,6 +433,7 @@ export interface FileRoutesByFullPath {
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/completed-tasks': typeof CompletedTasksRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
@@ -480,7 +481,6 @@ export interface FileRoutesByFullPath {
   '/ds/tags': typeof DsTagsRoute
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
-  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
@@ -504,6 +504,7 @@ export interface FileRoutesByTo {
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/completed-tasks': typeof CompletedTasksRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
@@ -551,7 +552,6 @@ export interface FileRoutesByTo {
   '/ds/tags': typeof DsTagsRoute
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
-  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
@@ -576,6 +576,7 @@ export interface FileRoutesById {
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/completed-tasks': typeof CompletedTasksRoute
   '/creating-your-space': typeof CreatingYourSpaceRoute
   '/design-your-trial': typeof DesignYourTrialRoute
   '/employer-access': typeof EmployerAccessRoute
@@ -623,7 +624,6 @@ export interface FileRoutesById {
   '/ds/tags': typeof DsTagsRoute
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
-  '/ds/therapist-card': typeof DsTherapistCardRoute
   '/ds/toasts': typeof DsToastsRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
@@ -649,6 +649,7 @@ export interface FileRouteTypes {
     | '/animation-specs'
     | '/auth'
     | '/chat'
+    | '/completed-tasks'
     | '/creating-your-space'
     | '/design-your-trial'
     | '/employer-access'
@@ -696,7 +697,6 @@ export interface FileRouteTypes {
     | '/ds/tags'
     | '/ds/text-area'
     | '/ds/text-fields'
-    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
@@ -720,6 +720,7 @@ export interface FileRouteTypes {
     | '/animation-specs'
     | '/auth'
     | '/chat'
+    | '/completed-tasks'
     | '/creating-your-space'
     | '/design-your-trial'
     | '/employer-access'
@@ -767,7 +768,6 @@ export interface FileRouteTypes {
     | '/ds/tags'
     | '/ds/text-area'
     | '/ds/text-fields'
-    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
@@ -791,6 +791,7 @@ export interface FileRouteTypes {
     | '/animation-specs'
     | '/auth'
     | '/chat'
+    | '/completed-tasks'
     | '/creating-your-space'
     | '/design-your-trial'
     | '/employer-access'
@@ -838,7 +839,6 @@ export interface FileRouteTypes {
     | '/ds/tags'
     | '/ds/text-area'
     | '/ds/text-fields'
-    | '/ds/therapist-card'
     | '/ds/toasts'
     | '/ds/typography'
     | '/ds/waveform'
@@ -863,6 +863,7 @@ export interface RootRouteChildren {
   AnimationSpecsRoute: typeof AnimationSpecsRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
+  CompletedTasksRoute: typeof CompletedTasksRoute
   CreatingYourSpaceRoute: typeof CreatingYourSpaceRoute
   DesignYourTrialRoute: typeof DesignYourTrialRoute
   EmployerAccessRoute: typeof EmployerAccessRoute
@@ -910,7 +911,6 @@ export interface RootRouteChildren {
   DsTagsRoute: typeof DsTagsRoute
   DsTextAreaRoute: typeof DsTextAreaRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
-  DsTherapistCardRoute: typeof DsTherapistCardRoute
   DsToastsRoute: typeof DsToastsRoute
   DsTypographyRoute: typeof DsTypographyRoute
   DsWaveformRoute: typeof DsWaveformRoute
@@ -1055,6 +1055,13 @@ declare module '@tanstack/react-router' {
       path: '/creating-your-space'
       fullPath: '/creating-your-space'
       preLoaderRoute: typeof CreatingYourSpaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/completed-tasks': {
+      id: '/completed-tasks'
+      path: '/completed-tasks'
+      fullPath: '/completed-tasks'
+      preLoaderRoute: typeof CompletedTasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -1202,13 +1209,6 @@ declare module '@tanstack/react-router' {
       path: '/ds/toasts'
       fullPath: '/ds/toasts'
       preLoaderRoute: typeof DsToastsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ds/therapist-card': {
-      id: '/ds/therapist-card'
-      path: '/ds/therapist-card'
-      fullPath: '/ds/therapist-card'
-      preLoaderRoute: typeof DsTherapistCardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/text-fields': {
@@ -1423,6 +1423,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnimationSpecsRoute: AnimationSpecsRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
+  CompletedTasksRoute: CompletedTasksRoute,
   CreatingYourSpaceRoute: CreatingYourSpaceRoute,
   DesignYourTrialRoute: DesignYourTrialRoute,
   EmployerAccessRoute: EmployerAccessRoute,
@@ -1470,7 +1471,6 @@ const rootRouteChildren: RootRouteChildren = {
   DsTagsRoute: DsTagsRoute,
   DsTextAreaRoute: DsTextAreaRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
-  DsTherapistCardRoute: DsTherapistCardRoute,
   DsToastsRoute: DsToastsRoute,
   DsTypographyRoute: DsTypographyRoute,
   DsWaveformRoute: DsWaveformRoute,

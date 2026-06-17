@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconMedallion } from "@/components/IconMedallion";
+import { DictationTextArea } from "@/components/DictationTextArea";
 
 /**
  * MultipleChoice — a group of selectable option rows that manages single- or
@@ -22,13 +23,20 @@ import { IconMedallion } from "@/components/IconMedallion";
  * that becomes selected gives a brief settle pulse (`yuna-settle`) — the
  * simulated-haptic register beat used across the prototype.
  *
- * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled? }]
+ * An option flagged `other` is the open-ended escape hatch ("Something Else"):
+ * while selected it swaps its row for an inline DictationTextArea so the user
+ * can type or record a custom answer. Thread `otherValue` / `onOtherChange` for
+ * its text; clearing the field when it's already empty deselects the option.
+ *
+ * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled?, other? }]
  * value:      selected value (single) or values (multiple)
  * onChange:   next value (single) or next array (multiple)
  * multiple?:  allow more than one selection (default false)
  * indicator?: "check" (trailing) | "none". Default "check". Use "none" when the
  *             caller owns the selection cue via `trailing` (e.g. priority-order
  *             numerals on an ordered multi-select, or a detail badge).
+ * otherValue / onOtherChange / otherPlaceholder: the open-ended field's text,
+ *             setter, and idle hint — required once any option sets `other`.
  * surface?:   "dark" | "light" (default "dark")
  * ariaLabel:  names the group (radiogroup / group)
  */
@@ -40,6 +48,8 @@ export type MultipleChoiceOption = {
   subtitle?: string;
   trailing?: ReactNode;
   disabled?: boolean;
+  /** Open-ended option: while selected, the row becomes a text/record field. */
+  other?: boolean;
 };
 
 type BaseProps = {
@@ -48,6 +58,9 @@ type BaseProps = {
   surface?: "dark" | "light";
   ariaLabel: string;
   className?: string;
+  otherValue?: string;
+  onOtherChange?: (value: string) => void;
+  otherPlaceholder?: string;
 };
 
 export type MultipleChoiceProps =
@@ -59,6 +72,7 @@ export function MultipleChoice(props: MultipleChoiceProps) {
   const multiple = props.multiple ?? false;
   const indicator = props.indicator ?? "check";
   const dark = surface === "dark";
+  const otherValue = props.otherValue ?? "";
 
   const isSelected = (v: string) =>
     multiple ? (props.value as string[]).includes(v) : props.value === v;
@@ -80,6 +94,22 @@ export function MultipleChoice(props: MultipleChoiceProps) {
     >
       {options.map((opt) => {
         const selected = isSelected(opt.value);
+        // A selected open-ended option becomes the inline text/record field.
+        // Clearing it when already empty toggles the option back off.
+        if (opt.other && selected) {
+          return (
+            <DictationTextArea
+              key={opt.value}
+              surface={surface}
+              value={otherValue}
+              onChange={(v) => props.onOtherChange?.(v)}
+              onClear={() =>
+                otherValue.trim() ? props.onOtherChange?.("") : handle(opt.value)
+              }
+              placeholder={props.otherPlaceholder}
+            />
+          );
+        }
         return (
           <button
             key={opt.value}

@@ -59,6 +59,7 @@ export const PAGES: ScreenEntry[] = [
     ],
   },
   { label: "Home", to: "/home" },
+  { label: "All Completed Tasks", to: "/completed-tasks" },
   {
     label: "Your Starting Point",
     to: "/questionnaire/$id",

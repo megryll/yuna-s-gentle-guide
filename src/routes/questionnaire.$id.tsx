@@ -10,6 +10,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { Slider } from "@/components/Slider";
 import { QuestionCard, CardLead } from "@/components/SurveyCard";
 import { Tag } from "@/components/Tag";
+import { YunaExplains } from "@/components/YunaExplains";
 import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
@@ -63,6 +64,8 @@ function QuestionnaireRoute() {
 
   // Focus-area ids in tap order = priority order; the top one drives the rest.
   const [focus, setFocus] = useState<string[]>([]);
+  // Free text for the "Something Else" focus area (its inline text/record field).
+  const [otherFocus, setOtherFocus] = useState("");
   const [answers, setAnswers] = useState<Answers>({});
   // Prototype audio-readout toggle — swaps the icon, doesn't drive real TTS.
   const [audioOn, setAudioOn] = useState(true);
@@ -155,7 +158,15 @@ function QuestionnaireRoute() {
   // completion step, which renders as its own pane outside the card stage).
   const renderPaneContent = (paneStep: number): ReactNode => {
     if (paneStep === 0)
-      return <FocusPane surface={surface} value={focus} onToggle={onToggleFocus} />;
+      return (
+        <FocusPane
+          surface={surface}
+          value={focus}
+          onToggle={onToggleFocus}
+          otherValue={otherFocus}
+          onOtherChange={setOtherFocus}
+        />
+      );
     const q = itemFor(paneStep);
     if (!q) return null;
     return (
@@ -198,23 +209,50 @@ function QuestionnaireRoute() {
   const nextDisabled = !isStepAnswered(step);
 
   // The completion payoff is its own moment — no header, progress, or card.
+  // Mirrors the meditation complete screen: a frosted celebration badge, a
+  // congratulatory headline, then Yuna reflecting back the priorities they
+  // chose (in place of the meditation's rating), and a single Close button.
   if (onCompletion) {
+    const focusLabels = focus
+      .map((fid) => (fid === "other" ? otherFocus.trim() : focusAreaById(fid)?.label.toLowerCase()))
+      .filter((l): l is string => !!l);
+    const top = focusLabels[0];
+    const list =
+      focusLabels.length <= 1
+        ? focusLabels.join("")
+        : `${focusLabels.slice(0, -1).join(", ")} and ${focusLabels[focusLabels.length - 1]}`;
+    const reflection = !top
+      ? "Thank you for sharing this with me. You told me stress and sleep & energy are weighing on you most right now, and that stress comes first. We'll start there, one small step at a time."
+      : focusLabels.length === 1
+        ? `Thank you for sharing this with me. You told me ${top} is where you'd like support right now. We'll take it gently, one small step at a time.`
+        : `Thank you for sharing this with me. You told me ${list} matter to you, and that ${top} comes first. We'll start there, one small step at a time.`;
+
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0 text-white">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-16 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <CompletionPane />
+          <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+              <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
+                <span className="text-5xl" aria-hidden>
+                  🎉
+                </span>
+              </div>
+
+              <h1 className="font-display text-3xl leading-tight tracking-tight text-white max-w-[16rem]">
+                Great job sharing your starting point.
+              </h1>
+
+              <YunaExplains surface={surface} className="w-full text-left">
+                {reflection}
+              </YunaExplains>
+            </div>
+
+            <div className="shrink-0">
+              <Button surface={surface} variant="primary" fullWidth onClick={exitFlow}>
+                Close
+              </Button>
+            </div>
           </div>
-          <footer className="shrink-0 px-6 pb-10 pt-3">
-            <Button
-              surface={surface}
-              variant="primary"
-              fullWidth
-              onClick={() => navigate({ to: "/you" })}
-            >
-              See your progress
-            </Button>
-          </footer>
           {completedForReal && <Confetti />}
         </div>
       </PhoneFrame>
@@ -317,10 +355,14 @@ function FocusPane({
   surface,
   value,
   onToggle,
+  otherValue,
+  onOtherChange,
 }: {
   surface: "dark" | "light";
   value: string[];
   onToggle: (next: string[]) => void;
+  otherValue: string;
+  onOtherChange: (v: string) => void;
 }) {
   const atLimit = value.length >= MAX_PRIORITIES;
   return (
@@ -335,12 +377,16 @@ function FocusPane({
           multiple
           indicator="none"
           ariaLabel="What would you like support with right now?"
+          otherValue={otherValue}
+          onOtherChange={onOtherChange}
+          otherPlaceholder="Type or record your answer"
           options={FOCUS_AREAS.map((a) => {
             const rank = value.indexOf(a.id);
             return {
               value: a.id,
               label: a.label,
               emoji: a.emoji,
+              other: a.id === "other",
               disabled: atLimit && rank === -1,
               trailing:
                 rank >= 0 ? (
@@ -434,82 +480,3 @@ function ScaleBody({
   );
 }
 
-// The completion moment: today's answers become the first point on a chart
-// that future check-ins will draw — the payoff that converts completion into
-// anticipation. Deep-link previews (no answers) show the same pane without
-// the celebration side effects (those live in the route).
-function CompletionPane() {
-  return (
-    <div className="flex h-full flex-col justify-center">
-      <p className="text-xs font-semibold tracking-[0.12em] uppercase text-white/75 yuna-rise">
-        Your starting point
-      </p>
-      <h1
-        className="mt-3 font-display text-3xl leading-tight tracking-tight text-white yuna-rise"
-        style={{ animationDelay: "80ms" }}
-      >
-        This is day one
-      </h1>
-      <p
-        className="mt-3 text-sm leading-snug text-white/85 yuna-rise"
-        style={{ animationDelay: "160ms" }}
-      >
-        Your baseline is in. Every check-in from here adds a point to your chart,
-        and gives Yuna a deeper understanding of how to support you.
-      </p>
-
-      <div
-        className="mt-8 rounded-2xl bg-white/8 p-4 yuna-rise"
-        style={{ animationDelay: "260ms" }}
-      >
-        <BaselineChart />
-        <div className="mt-2 flex items-center justify-between text-[10px] tracking-wide text-white/60">
-          <span className="font-semibold text-white/85">Today</span>
-          <span>Next check-in</span>
-          <span aria-hidden />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BaselineChart() {
-  return (
-    <svg viewBox="0 0 288 96" className="w-full" role="img" aria-label="Your baseline chart, starting today">
-      {/* baseline rule */}
-      <line x1="4" y1="88" x2="284" y2="88" className="stroke-white/15" strokeWidth="1" />
-      {/* the trend future check-ins will draw — a dotted hint, fading in late */}
-      <path
-        d="M16 72 C 60 68, 96 52, 140 46 S 240 24, 272 18"
-        fill="none"
-        strokeWidth="2"
-        strokeDasharray="1 7"
-        strokeLinecap="round"
-        className="stroke-white/45 yuna-fade-in"
-        style={{ animationDelay: "700ms" }}
-      />
-      {/* faint future points */}
-      {[
-        { cx: 140, cy: 46, delay: "950ms" },
-        { cx: 272, cy: 18, delay: "1100ms" },
-      ].map((p) => (
-        <circle
-          key={p.cx}
-          cx={p.cx}
-          cy={p.cy}
-          r="3.5"
-          className="fill-white/30 yuna-fade-in"
-          style={{ animationDelay: p.delay }}
-        />
-      ))}
-      {/* today's dot lands with a spring */}
-      <g
-        className="survey-dot-pop"
-        style={{ transformBox: "fill-box", transformOrigin: "center", animationDelay: "450ms" }}
-      >
-        <circle cx="16" cy="72" r="6" className="fill-secondary-green" />
-        <circle cx="16" cy="72" r="10" className="fill-secondary-green/25" />
-      </g>
-    </svg>
-  );
-}

@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Ban, Bookmark, LayoutGrid, List, Menu } from "lucide-react";
+import { Ban, Bookmark, ChevronRight, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
 import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
@@ -62,6 +62,11 @@ const stripHeadlinePeriod = (s: string) =>
 // first step. Returning users have it dropped (see `cards` below).
 const POST_INTRO_CARDS = HOME_CARDS;
 
+// Returning users land with a few tasks already behind them — these drop under
+// the "Completed Today" divider so the feed reflects an in-progress day rather
+// than a blank slate. (New users' day is genuinely empty.)
+const RETURNING_COMPLETED = ["please-technique", "strength-overcome", "feeling-check"];
+
 export function HomeScreen({
   variant,
   showWelcome = false,
@@ -108,7 +113,9 @@ export function HomeScreen({
   // saves; finished questionnaires live in the shared in-memory store and are
   // merged in after mount so the server and first client render agree.
   // The 3-dot menu acts on whichever card opened it (menuCard).
-  const [completedIds, setCompletedIds] = useState<Set<string>>(() => new Set());
+  const [completedIds, setCompletedIds] = useState<Set<string>>(() =>
+    variant === "returning" ? new Set(RETURNING_COMPLETED) : new Set(),
+  );
   useEffect(() => {
     const done = getCompletedQuestionnaireIds();
     if (done.length) setCompletedIds((prev) => new Set([...prev, ...done]));
@@ -312,6 +319,7 @@ export function HomeScreen({
             }}
             onOpenMenu={setMenuCard}
             showFeedback={returning}
+            onViewAllCompleted={() => navigate({ to: "/completed-tasks" })}
           />
         </div>
 
@@ -470,6 +478,7 @@ function CreatedForYou({
   onOpen,
   onOpenMenu,
   showFeedback,
+  onViewAllCompleted,
 }: {
   cards: HomeCard[];
   viewMode: "card" | "list";
@@ -483,6 +492,7 @@ function CreatedForYou({
   onOpen: (c: HomeCard) => void;
   onOpenMenu: (c: HomeCard) => void;
   showFeedback: boolean;
+  onViewAllCompleted: () => void;
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
   const prefs = useContentPrefs();
@@ -543,6 +553,17 @@ function CreatedForYou({
             <>
               <Divider surface={surface} label="Completed Today" className="mt-8 mb-3" />
               {renderFeed(done)}
+              <div className="mt-4 flex justify-center">
+                <Button
+                  surface={surface}
+                  variant="link"
+                  onClick={onViewAllCompleted}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  All completed tasks
+                  <ChevronRight size={16} strokeWidth={2} aria-hidden />
+                </Button>
+              </div>
             </>
           )}
         </>

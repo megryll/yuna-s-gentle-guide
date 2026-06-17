@@ -365,7 +365,8 @@ function Deck({
                 location={t.location}
                 photo={t.photo}
                 tags={t.tags}
-                matchNote={t.yunaMatch}
+                virtual={t.sessionFormats.includes("Video")}
+                description={t.bio}
                 saved={savedIds.includes(t.id)}
                 onToggleSave={() => toggleSaved(t.id)}
                 onDismiss={() => advance("left")}
@@ -451,7 +452,8 @@ function ExitingCard({
         location={therapist.location}
         photo={therapist.photo}
         tags={therapist.tags}
-        matchNote={therapist.yunaMatch}
+        virtual={therapist.sessionFormats.includes("Video")}
+        description={therapist.bio}
         saved={saved}
         onToggleSave={() => {}}
         onDismiss={() => {}}
