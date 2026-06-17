@@ -125,7 +125,7 @@ export function AdminSidebar() {
 
   return (
     <aside
-      className="hidden md:flex fixed left-0 top-0 h-screen w-44 flex-col gap-1 px-4 py-6 border-r border-border bg-background/60 backdrop-blur-sm z-50 overflow-y-auto"
+      className="hidden md:flex fixed left-0 top-0 h-screen w-72 flex-col gap-1 px-4 py-6 border-r border-border bg-background/60 backdrop-blur-sm z-50 overflow-y-auto"
       aria-label="Admin navigation"
     >
       <Link
