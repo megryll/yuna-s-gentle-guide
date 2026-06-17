@@ -27,6 +27,7 @@ import { Toast, ToastViewport } from "@/components/Toast";
 import { Confetti } from "@/components/Confetti";
 import { Divider } from "@/components/Divider";
 import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
+import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
@@ -56,10 +57,10 @@ const stripHeadlinePeriod = (s: string) =>
   s.endsWith(".") && !s.endsWith("...") ? s.slice(0, -1) : s;
 
 // The home feed is the same for new and returning users — only the greeting
-// and the welcome audio differ by user type. HOME_CARDS[0] is the first
-// check-in card, kept out of the feed (slice(1)) so it doesn't sit beneath the
-// richer, personalized content.
-const POST_INTRO_CARDS = HOME_CARDS.slice(1);
+// and the welcome audio differ by user type. New users see the full authored
+// list, whose first entry is the starting-point questionnaire — their natural
+// first step. Returning users have it dropped (see `cards` below).
+const POST_INTRO_CARDS = HOME_CARDS;
 
 export function HomeScreen({
   variant,
@@ -79,11 +80,13 @@ export function HomeScreen({
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
   // A brand-new user's feed is new in its entirety, so per-card "New" flags
-  // carry no signal — the badges only render for returning users.
+  // carry no signal — the badges only render for returning users. Returning
+  // users have already set their starting point, so that onboarding card is
+  // dropped for them.
   const cards = useMemo(
     () =>
       variant === "returning"
-        ? POST_INTRO_CARDS
+        ? POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point")
         : POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false })),
     [variant],
   );
@@ -101,9 +104,15 @@ export function HomeScreen({
     });
 
   // Completed cards drop under the "Completed Today" divider (faded + a check
-  // badge); dismissed cards leave the feed. Both are session-local, like saves.
+  // badge); dismissed cards leave the feed. All of it is session-local, like
+  // saves; finished questionnaires live in the shared in-memory store and are
+  // merged in after mount so the server and first client render agree.
   // The 3-dot menu acts on whichever card opened it (menuCard).
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const done = getCompletedQuestionnaireIds();
+    if (done.length) setCompletedIds((prev) => new Set([...prev, ...done]));
+  }, []);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
   const [menuCard, setMenuCard] = useState<HomeCard | null>(null);
 
@@ -292,8 +301,11 @@ export function HomeScreen({
                 return;
               }
               if (c.type === "self-discovery") {
-                // Questionnaire cards aren't wired up yet — the "Try it now"
-                // CTA is a no-op until the survey flow exists.
+                // Only the starting-point questionnaire has a built flow; the
+                // other questionnaire cards stay a no-op until theirs exist.
+                if (c.id === "your-starting-point") {
+                  navigate({ to: "/questionnaire/$id", params: { id: c.id } });
+                }
                 return;
               }
               open(openPrompt(c));

@@ -7,7 +7,7 @@ import { IconMedallion } from "@/components/IconMedallion";
  * MultipleChoice — a group of selectable option rows that manages single- or
  * multi-select state. Each row is a full-width rounded card: an optional
  * leading glyph (emoji medallion or icon), a title with optional subtitle, and
- * a selection indicator (a left radio or a trailing check).
+ * a selection indicator (a trailing check).
  *
  * This is NOT `<Button variant="card">`. Button's card variant is a single
  * navigational list-row (tap to go somewhere). MultipleChoice owns *group
@@ -18,14 +18,17 @@ import { IconMedallion } from "@/components/IconMedallion";
  *
  * The selected row borrows the DS's neutral selection idiom (filled ink/white
  * highlight + a foreground check), the same vocabulary as Button's card
- * selected state, so selection reads consistently across the system.
+ * selected state, so selection reads consistently across the system. A row
+ * that becomes selected gives a brief settle pulse (`yuna-settle`) — the
+ * simulated-haptic register beat used across the prototype.
  *
  * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled? }]
  * value:      selected value (single) or values (multiple)
  * onChange:   next value (single) or next array (multiple)
  * multiple?:  allow more than one selection (default false)
- * indicator?: "radio" (leading) | "check" (trailing). Default "radio" for
- *             single, "check" for multiple.
+ * indicator?: "check" (trailing) | "none". Default "check". Use "none" when the
+ *             caller owns the selection cue via `trailing` (e.g. priority-order
+ *             numerals on an ordered multi-select, or a detail badge).
  * surface?:   "dark" | "light" (default "dark")
  * ariaLabel:  names the group (radiogroup / group)
  */
@@ -41,7 +44,7 @@ export type MultipleChoiceOption = {
 
 type BaseProps = {
   options: MultipleChoiceOption[];
-  indicator?: "radio" | "check";
+  indicator?: "check" | "none";
   surface?: "dark" | "light";
   ariaLabel: string;
   className?: string;
@@ -54,7 +57,7 @@ export type MultipleChoiceProps =
 export function MultipleChoice(props: MultipleChoiceProps) {
   const { options, surface = "dark", ariaLabel, className } = props;
   const multiple = props.multiple ?? false;
-  const indicator = props.indicator ?? (multiple ? "check" : "radio");
+  const indicator = props.indicator ?? "check";
   const dark = surface === "dark";
 
   const isSelected = (v: string) =>
@@ -88,6 +91,7 @@ export function MultipleChoice(props: MultipleChoiceProps) {
             className={cn(
               "w-full rounded-2xl border px-4 py-3 flex items-center gap-3 text-left",
               "transition-[transform,background-color,border-color] duration-100 ease-out active:scale-[0.99]",
+              selected && "yuna-settle",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
               "disabled:opacity-50 disabled:pointer-events-none",
               dark
@@ -99,9 +103,6 @@ export function MultipleChoice(props: MultipleChoiceProps) {
                   : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
             )}
           >
-            {indicator === "radio" && (
-              <Radio selected={selected} dark={dark} />
-            )}
             {(opt.emoji || opt.icon) && (
               <IconMedallion size="sm">
                 {opt.emoji ? (
@@ -142,30 +143,3 @@ export function MultipleChoice(props: MultipleChoiceProps) {
   );
 }
 MultipleChoice.displayName = "MultipleChoice";
-
-function Radio({ selected, dark }: { selected: boolean; dark: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative shrink-0 h-5 w-5 rounded-full border-2 transition-colors",
-        selected
-          ? dark
-            ? "border-white"
-            : "border-foreground"
-          : dark
-            ? "border-white/40"
-            : "border-foreground/30",
-      )}
-    >
-      {selected && (
-        <span
-          className={cn(
-            "absolute inset-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full",
-            dark ? "bg-white" : "bg-foreground",
-          )}
-        />
-      )}
-    </span>
-  );
-}

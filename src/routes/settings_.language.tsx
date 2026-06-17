@@ -58,7 +58,6 @@ function SessionLanguageRoute() {
           <MultipleChoice
             surface="light"
             ariaLabel="Session language"
-            indicator="radio"
             options={LANGUAGES}
             value={language}
             onChange={choose}

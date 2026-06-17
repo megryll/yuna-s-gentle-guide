@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { X, Search, MapPin, Check } from "lucide-react";
+import { X, Search, MapPin, Check, MessageCircle, Pause, Play } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
 import { ProgressBar } from "@/components/ProgressBar";
-import { PageHeader } from "@/components/PageHeader";
+import { QuestionCard } from "@/components/SurveyCard";
 import { MultipleChoice } from "@/components/MultipleChoice";
 import { LeafSpinner } from "@/components/LeafSpinner";
 import { IconMedallion } from "@/components/IconMedallion";
 import { useAppMode } from "@/lib/theme-prefs";
+import { usePrototypeMute } from "@/lib/prototype-mute";
+import { playSelectPop } from "@/lib/survey-sound";
 import { setPreferencesApplied } from "@/lib/therapist-prefs";
 import { SURVEY_QUESTIONS, LOCATIONS, type SurveyQuestion } from "@/lib/therapist-data";
 
@@ -33,14 +35,32 @@ function PreferencesRoute() {
   const { step = 0 } = Route.useSearch();
   const navigate = useNavigate();
   const surface = useAppMode() === "light" ? "light" : "dark";
+  const muted = usePrototypeMute();
 
   const [answers, setAnswers] = useState<Answers>({});
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  // Prototype audio-readout toggle — swaps the icon, doesn't drive real TTS.
+  const [audioOn, setAudioOn] = useState(true);
 
   const total = SURVEY_QUESTIONS.length;
-  const question = SURVEY_QUESTIONS[step];
   const isLast = step === total - 1;
+
+  // Card transition: the leaving card stays mounted with its exit animation
+  // while the new one enters; direction derives from the step delta (mirrors
+  // the questionnaire route's tilt-and-slide grammar).
+  const prevStep = useRef(step);
+  const [leaving, setLeaving] = useState<{ step: number; dir: "fwd" | "back" } | null>(null);
+  useLayoutEffect(() => {
+    if (step === prevStep.current) return;
+    setLeaving({ step: prevStep.current, dir: step > prevStep.current ? "fwd" : "back" });
+    prevStep.current = step;
+  }, [step]);
+  useEffect(() => {
+    if (!leaving) return;
+    const t = setTimeout(() => setLeaving(null), 380);
+    return () => clearTimeout(t);
+  }, [leaving]);
 
   const goto = (next: number) => {
     setSearch("");
@@ -48,6 +68,7 @@ function PreferencesRoute() {
   };
 
   const onNext = () => {
+    playSelectPop({ muted });
     if (isLast) {
       setLoading(true);
       setTimeout(() => {
@@ -62,6 +83,30 @@ function PreferencesRoute() {
   const onBack = () => {
     if (step === 0) return;
     goto(step - 1);
+  };
+
+  // A question's content (title + prompt + body) for a given step, rendered
+  // inside the QuestionCard. The questions themselves are unchanged — only the
+  // chrome around them is new.
+  const renderQuestion = (qIndex: number): ReactNode => {
+    const q = SURVEY_QUESTIONS[qIndex];
+    if (!q) return null;
+    return (
+      <>
+        <h2 className="font-display text-2xl leading-tight tracking-tight text-white">{q.title}</h2>
+        <p className="mt-2 text-sm leading-snug text-white/85">{q.prompt}</p>
+        <div className="mt-6">
+          <QuestionBody
+            question={q}
+            surface={surface}
+            search={search}
+            setSearch={setSearch}
+            answers={answers}
+            setAnswers={setAnswers}
+          />
+        </div>
+      </>
+    );
   };
 
   if (loading) {
@@ -82,12 +127,28 @@ function PreferencesRoute() {
 
   return (
     <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0">
-        <PageHeader
-          surface={surface}
-          onBack={onBack}
-          backDisabled={step === 0}
-          trailing={
+      <div className="flex-1 flex flex-col min-h-0 text-white">
+        {/* Header: audio toggle · label · close. */}
+        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
+          <div className="justify-self-start">
+            <Button
+              surface={surface}
+              variant="secondary"
+              size="icon"
+              aria-label={audioOn ? "Pause question audio" : "Play question audio"}
+              onClick={() => {
+                setAudioOn((v) => !v);
+                playSelectPop({ muted });
+              }}
+            >
+              {audioOn ? <Pause strokeWidth={1.5} /> : <Play strokeWidth={1.5} />}
+            </Button>
+          </div>
+          <span className="justify-self-center inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+            <MessageCircle size={15} strokeWidth={2} aria-hidden />
+            Preferences
+          </span>
+          <div className="justify-self-end">
             <Button
               surface={surface}
               variant="secondary"
@@ -97,40 +158,63 @@ function PreferencesRoute() {
             >
               <X strokeWidth={1.5} />
             </Button>
-          }
-        />
-        <div className="shrink-0 px-6 mt-4 flex items-center gap-3">
-          <ProgressBar
-            surface={surface}
-            value={(step + 1) / total}
-            aria-label={`Question ${step + 1} of ${total}`}
-          />
-          <span className="shrink-0 text-xs tabular-nums text-white/75">
-            {step + 1} of {total}
+          </div>
+        </header>
+
+        {/* Persistent screen title. */}
+        <div className="px-6 pt-2 text-center">
+          <h1 className="font-display text-2xl leading-snug tracking-tight text-white">
+            Find your therapist
+          </h1>
+        </div>
+
+        {/* Partial progress bar + question counter, centered as a group. */}
+        <div className="flex items-center justify-center gap-3 px-6 pt-4">
+          <div className="w-[42%]">
+            <ProgressBar
+              surface={surface}
+              value={(step + 1) / total}
+              aria-label={`Question ${step + 1} of ${total}`}
+            />
+          </div>
+          <span className="text-sm text-white/75">
+            Question {step + 1} of {total}
           </span>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden yuna-fade-in">
-          <h1 className="font-display text-3xl leading-tight tracking-tight text-white">{question.title}</h1>
-          <p className="mt-2 text-sm leading-snug text-white/85">{question.prompt}</p>
-
-          <div className="mt-6">
-            <QuestionBody
-              question={question}
+        {/* Card stage — the current card sits top-aligned; the leaving card
+            overlays it during the tilt-and-slide transition. */}
+        <div className="relative flex-1 min-h-0">
+          <div key={step} className="absolute inset-0 flex items-start px-6 pt-5 pb-2">
+            <QuestionCard
               surface={surface}
-              search={search}
-              setSearch={setSearch}
-              answers={answers}
-              setAnswers={setAnswers}
-            />
+              className={leaving ? (leaving.dir === "fwd" ? "survey-card-in-fwd" : "survey-card-in-back") : ""}
+            >
+              {renderQuestion(step)}
+            </QuestionCard>
           </div>
+          {leaving && (
+            <div
+              key={`leaving-${leaving.step}`}
+              aria-hidden
+              className="absolute inset-0 flex items-start px-6 pt-5 pb-2 pointer-events-none"
+            >
+              <QuestionCard
+                surface={surface}
+                className={leaving.dir === "fwd" ? "survey-card-out-fwd" : "survey-card-out-back"}
+              >
+                {renderQuestion(leaving.step)}
+              </QuestionCard>
+            </div>
+          )}
         </div>
 
-        <footer className="shrink-0 flex items-center gap-3 px-6 pb-10 pt-3">
-          <Button surface={surface} variant="secondary" fullWidth disabled={step === 0} onClick={onBack}>
+        {/* Previous / Next. */}
+        <footer className="flex items-center justify-between px-6 pb-10 pt-3">
+          <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
-          <Button surface={surface} variant="primary" fullWidth onClick={onNext}>
+          <Button surface={surface} variant="primary" onClick={onNext}>
             {isLast ? "See matches" : "Next"}
           </Button>
         </footer>

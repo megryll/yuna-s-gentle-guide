@@ -41,6 +41,7 @@ import { Route as SettingsLanguageRouteImport } from './routes/settings_.languag
 import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
 import { Route as SettingsAccountRouteImport } from './routes/settings_.account'
 import { Route as SessionsIdRouteImport } from './routes/sessions_.$id'
+import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as InsightsCategoryRouteImport } from './routes/insights.$category'
 import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsYunaExplainsRouteImport } from './routes/ds.yuna-explains'
@@ -238,6 +239,11 @@ const SettingsAccountRoute = SettingsAccountRouteImport.update({
 const SessionsIdRoute = SessionsIdRouteImport.update({
   id: '/sessions_/$id',
   path: '/sessions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
+  id: '/questionnaire/$id',
+  path: '/questionnaire/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsCategoryRoute = InsightsCategoryRouteImport.update({
@@ -481,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/insights/$category': typeof InsightsCategoryRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
@@ -551,6 +558,7 @@ export interface FileRoutesByTo {
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/insights/$category': typeof InsightsCategoryRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
@@ -622,6 +630,7 @@ export interface FileRoutesById {
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
   '/focus-area/$num': typeof FocusAreaNumRoute
   '/insights/$category': typeof InsightsCategoryRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/sessions_/$id': typeof SessionsIdRoute
   '/settings_/account': typeof SettingsAccountRoute
   '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
@@ -694,6 +703,7 @@ export interface FileRouteTypes {
     | '/ds/yuna-explains'
     | '/focus-area/$num'
     | '/insights/$category'
+    | '/questionnaire/$id'
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
@@ -764,6 +774,7 @@ export interface FileRouteTypes {
     | '/ds/yuna-explains'
     | '/focus-area/$num'
     | '/insights/$category'
+    | '/questionnaire/$id'
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/ds/yuna-explains'
     | '/focus-area/$num'
     | '/insights/$category'
+    | '/questionnaire/$id'
     | '/sessions_/$id'
     | '/settings_/account'
     | '/settings_/content-preferences'
@@ -905,6 +917,7 @@ export interface RootRouteChildren {
   DsYunaExplainsRoute: typeof DsYunaExplainsRoute
   FocusAreaNumRoute: typeof FocusAreaNumRoute
   InsightsCategoryRoute: typeof InsightsCategoryRoute
+  QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   SessionsIdRoute: typeof SessionsIdRoute
   SettingsAccountRoute: typeof SettingsAccountRoute
   SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
@@ -1140,6 +1153,13 @@ declare module '@tanstack/react-router' {
       path: '/sessions/$id'
       fullPath: '/sessions/$id'
       preLoaderRoute: typeof SessionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/questionnaire/$id': {
+      id: '/questionnaire/$id'
+      path: '/questionnaire/$id'
+      fullPath: '/questionnaire/$id'
+      preLoaderRoute: typeof QuestionnaireIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights/$category': {
@@ -1457,6 +1477,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsYunaExplainsRoute: DsYunaExplainsRoute,
   FocusAreaNumRoute: FocusAreaNumRoute,
   InsightsCategoryRoute: InsightsCategoryRoute,
+  QuestionnaireIdRoute: QuestionnaireIdRoute,
   SessionsIdRoute: SessionsIdRoute,
   SettingsAccountRoute: SettingsAccountRoute,
   SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,

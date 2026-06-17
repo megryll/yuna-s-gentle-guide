@@ -59,6 +59,19 @@ export const PAGES: ScreenEntry[] = [
     ],
   },
   { label: "Home", to: "/home" },
+  {
+    label: "Your Starting Point",
+    to: "/questionnaire/$id",
+    params: { id: "your-starting-point" },
+    children: [
+      { label: "Focus picker", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 0 } },
+      { label: "Work impact", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 1 } },
+      { label: "Branch · 1", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 2 } },
+      { label: "Branch · 2", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 3 } },
+      { label: "Branch · 3", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 4 } },
+      { label: "Completion", to: "/questionnaire/$id", params: { id: "your-starting-point" }, search: { step: 5 } },
+    ],
+  },
   { label: "Design Your Trial", to: "/design-your-trial" },
   {
     label: "Session",

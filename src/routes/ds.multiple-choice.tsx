@@ -39,14 +39,31 @@ function SingleDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
-function SingleCheckDemo({ surface }: { surface: "dark" | "light" }) {
-  const [value, setValue] = useState<string | null>("Online");
+const PRIORITIES = ["Sleep", "Stress", "Focus"];
+
+function NoneDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState<string[]>(["Sleep"]);
   return (
     <MultipleChoice
       surface={surface}
-      ariaLabel="Session format"
-      indicator="check"
-      options={FORMAT}
+      multiple
+      indicator="none"
+      ariaLabel="Priorities in order"
+      options={PRIORITIES.map((o) => {
+        const rank = value.indexOf(o);
+        return {
+          value: o,
+          label: o,
+          trailing:
+            rank >= 0 ? (
+              <Badge
+                size="sm"
+                icon={<span className="text-[11px] font-bold leading-none">{rank + 1}</span>}
+                label={`Priority ${rank + 1}`}
+              />
+            ) : undefined,
+        };
+      })}
       value={value}
       onChange={setValue}
     />
@@ -120,7 +137,8 @@ function DSMultipleChoice() {
   value:      string[]
   onChange:   (value: string[]) => void
 
-  indicator?: "radio" | "check"    // default radio (single) / check (multiple)
+  indicator?: "check" | "none"     // default "check"; "none" = caller owns the
+                                   // cue via trailing (e.g. priority numerals)
   surface?:   "dark" | "light"     // default "dark"
   ariaLabel:  string               // names the group
   className?: string
@@ -131,9 +149,9 @@ function DSMultipleChoice() {
 }
 
 const VARIANT_ROWS: MatrixRow[] = [
-  { label: "Single, radio", render: (s) => <SingleDemo surface={s} /> },
-  { label: "Single, check", render: (s) => <SingleCheckDemo surface={s} /> },
+  { label: "Single", render: (s) => <SingleDemo surface={s} /> },
   { label: "Multiple", render: (s) => <MultiDemo surface={s} /> },
+  { label: "Indicator: none", render: (s) => <NoneDemo surface={s} /> },
   { label: "With detail", render: (s) => <DetailDemo surface={s} /> },
 ];
 

@@ -230,13 +230,15 @@ export const GRATITUDE_PROMPTS = [
 ] as const;
 
 export const HOME_CARDS: HomeCard[] = [
+  // Questionnaire cards never set naturePath — the kind's solidBg is the one
+  // shared background for every questionnaire, everywhere it renders.
   {
     type: "self-discovery",
-    id: "first-check-in",
-    title: "Let's get to know each other",
-    description: "Tell me what's going on, and we'll find a place to start.",
-    duration: "1 minute",
-    naturePath: "/nature/Background-2.png",
+    id: "your-starting-point",
+    title: "Your starting point",
+    description:
+      "Choose what you'd like support with, then answer a short set of research-backed questions to mark where you're starting from.",
+    duration: "3 min",
   },
   {
     type: "meditation",
