@@ -2,12 +2,13 @@ import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconMedallion } from "@/components/IconMedallion";
+import { DictationTextArea } from "@/components/DictationTextArea";
 
 /**
  * MultipleChoice — a group of selectable option rows that manages single- or
  * multi-select state. Each row is a full-width rounded card: an optional
  * leading glyph (emoji medallion or icon), a title with optional subtitle, and
- * a selection indicator (a left radio or a trailing check).
+ * a selection indicator (a trailing check).
  *
  * This is NOT `<Button variant="card">`. Button's card variant is a single
  * navigational list-row (tap to go somewhere). MultipleChoice owns *group
@@ -18,15 +19,26 @@ import { IconMedallion } from "@/components/IconMedallion";
  *
  * The selected row borrows the DS's neutral selection idiom (filled ink/white
  * highlight + a foreground check), the same vocabulary as Button's card
- * selected state, so selection reads consistently across the system.
+ * selected state, so selection reads consistently across the system. A row
+ * that becomes selected gives a brief settle pulse (`yuna-settle`) — the
+ * simulated-haptic register beat used across the prototype.
  *
- * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled? }]
+ * An option flagged `other` is the open-ended escape hatch ("Something Else"):
+ * while selected it swaps its row for an inline DictationTextArea so the user
+ * can type or record a custom answer. Thread `otherValue` / `onOtherChange` for
+ * its text; clearing the field when it's already empty deselects the option.
+ *
+ * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled?, other? }]
  * value:      selected value (single) or values (multiple)
  * onChange:   next value (single) or next array (multiple)
  * multiple?:  allow more than one selection (default false)
- * indicator?: "radio" (leading) | "check" (trailing). Default "radio" for
- *             single, "check" for multiple.
+ * indicator?: "check" (trailing) | "none". Default "check". Use "none" when the
+ *             caller owns the selection cue via `trailing` (e.g. priority-order
+ *             numerals on an ordered multi-select, or a detail badge).
+ * otherValue / onOtherChange / otherPlaceholder: the open-ended field's text,
+ *             setter, and idle hint — required once any option sets `other`.
  * surface?:   "dark" | "light" (default "dark")
+ * animateIn?: cascade the rows in on mount, one after another (default false)
  * ariaLabel:  names the group (radiogroup / group)
  */
 export type MultipleChoiceOption = {
@@ -37,25 +49,34 @@ export type MultipleChoiceOption = {
   subtitle?: string;
   trailing?: ReactNode;
   disabled?: boolean;
+  /** Open-ended option: while selected, the row becomes a text/record field. */
+  other?: boolean;
 };
 
 type BaseProps = {
   options: MultipleChoiceOption[];
-  indicator?: "radio" | "check";
+  indicator?: "check" | "none";
   surface?: "dark" | "light";
+  animateIn?: boolean;
   ariaLabel: string;
   className?: string;
+  otherValue?: string;
+  onOtherChange?: (value: string) => void;
+  otherPlaceholder?: string;
 };
+
+const CASCADE_STEP_MS = 55;
 
 export type MultipleChoiceProps =
   | (BaseProps & { multiple?: false; value: string | null; onChange: (value: string) => void })
   | (BaseProps & { multiple: true; value: string[]; onChange: (value: string[]) => void });
 
 export function MultipleChoice(props: MultipleChoiceProps) {
-  const { options, surface = "dark", ariaLabel, className } = props;
+  const { options, surface = "dark", animateIn = false, ariaLabel, className } = props;
   const multiple = props.multiple ?? false;
-  const indicator = props.indicator ?? (multiple ? "check" : "radio");
+  const indicator = props.indicator ?? "check";
   const dark = surface === "dark";
+  const otherValue = props.otherValue ?? "";
 
   const isSelected = (v: string) =>
     multiple ? (props.value as string[]).includes(v) : props.value === v;
@@ -75,8 +96,24 @@ export function MultipleChoice(props: MultipleChoiceProps) {
       aria-label={ariaLabel}
       className={cn("flex flex-col gap-2", className)}
     >
-      {options.map((opt) => {
+      {options.map((opt, i) => {
         const selected = isSelected(opt.value);
+        // A selected open-ended option becomes the inline text/record field.
+        // Clearing it when already empty toggles the option back off.
+        if (opt.other && selected) {
+          return (
+            <DictationTextArea
+              key={opt.value}
+              surface={surface}
+              value={otherValue}
+              onChange={(v) => props.onOtherChange?.(v)}
+              onClear={() =>
+                otherValue.trim() ? props.onOtherChange?.("") : handle(opt.value)
+              }
+              placeholder={props.otherPlaceholder}
+            />
+          );
+        }
         return (
           <button
             key={opt.value}
@@ -85,9 +122,12 @@ export function MultipleChoice(props: MultipleChoiceProps) {
             aria-checked={selected}
             disabled={opt.disabled}
             onClick={() => handle(opt.value)}
+            style={animateIn ? { animationDelay: `${i * CASCADE_STEP_MS}ms` } : undefined}
             className={cn(
               "w-full rounded-2xl border px-4 py-3 flex items-center gap-3 text-left",
               "transition-[transform,background-color,border-color] duration-100 ease-out active:scale-[0.99]",
+              animateIn && "survey-cascade-item",
+              selected && "yuna-settle",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
               "disabled:opacity-50 disabled:pointer-events-none",
               dark
@@ -99,9 +139,6 @@ export function MultipleChoice(props: MultipleChoiceProps) {
                   : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
             )}
           >
-            {indicator === "radio" && (
-              <Radio selected={selected} dark={dark} />
-            )}
             {(opt.emoji || opt.icon) && (
               <IconMedallion size="sm">
                 {opt.emoji ? (
@@ -142,30 +179,3 @@ export function MultipleChoice(props: MultipleChoiceProps) {
   );
 }
 MultipleChoice.displayName = "MultipleChoice";
-
-function Radio({ selected, dark }: { selected: boolean; dark: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative shrink-0 h-5 w-5 rounded-full border-2 transition-colors",
-        selected
-          ? dark
-            ? "border-white"
-            : "border-foreground"
-          : dark
-            ? "border-white/40"
-            : "border-foreground/30",
-      )}
-    >
-      {selected && (
-        <span
-          className={cn(
-            "absolute inset-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full",
-            dark ? "bg-white" : "bg-foreground",
-          )}
-        />
-      )}
-    </span>
-  );
-}

@@ -11,17 +11,23 @@ import type { CardKind } from "@/lib/home-cards";
 
 // Sample card content for each reco chip, so the dev trigger renders a real
 // suggestion. CardSuggestion itself is generic (kind + title + photo); this is
-// just the demo payload shared by the text and voice session screens.
+// just the demo payload shared by the text and voice session screens. Solid
+// kinds (questionnaire) carry their fixed fill + watermark, so no naturePath.
 export const RECO_SAMPLES: Partial<
-  Record<CardKind, { title: string; naturePath: string }>
+  Record<
+    CardKind,
+    { title: string; naturePath?: string; description?: string; duration?: string }
+  >
 > = {
   meditation: {
     title: "Meditation For You: A Five-Minute Midday Reset",
     naturePath: "/nature/Background-13.png",
   },
   "self-discovery": {
-    title: "How Have You Been Feeling Lately?",
-    naturePath: "/nature/Background-11.png",
+    title: "Sleep, Stress & Burnout",
+    description:
+      "A quick measure of how you're sleeping, what's weighing on you, and how much you're carrying.",
+    duration: "5 min",
   },
 };
 

@@ -965,6 +965,8 @@ function Chat() {
                     mode="text"
                     kind={reco}
                     title={RECO_SAMPLES[reco]!.title}
+                    description={RECO_SAMPLES[reco]!.description}
+                    duration={RECO_SAMPLES[reco]!.duration}
                     naturePath={RECO_SAMPLES[reco]!.naturePath}
                     surface={appMode === "light" ? "light" : "dark"}
                     frostedImage={blurBg}

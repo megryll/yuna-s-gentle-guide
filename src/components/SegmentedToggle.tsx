@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
 /**
- * Two-segment pill toggle used across the app — chat's Text/Voice switch,
- * the settings appearance toggle, Home's card/list switcher, and the Goals
- * Active/Completed filter. One component so future visual tweaks affect
- * every surface.
+ * Segmented pill toggle used across the app — chat's Text/Voice switch, the
+ * settings appearance toggle, Home's card/list switcher, the Goals
+ * Active/Completed filter, and short survey quick-fire picks. One component so
+ * future visual tweaks affect every surface. Holds a small set of segments
+ * (two is the common binary; three works for a compact pick — keep labels
+ * short so the pills fit the frame).
  *
  * Pass `surface="dark"` when the toggle sits on the dark photo cluster,
  * `surface="light"` for the pale light photo. Defaults to `"dark"` (the
@@ -18,6 +20,11 @@ import type { ReactNode } from "react";
  * Either size takes segments with text only, an icon only, or both — set
  * `label` and/or `icon` per option (icon-only segments need `ariaLabel`).
  * Labelled segments grow with their text; icon-only segments stay square.
+ *
+ * `labelCase` styles the text labels: `"upper"` (default) is tracked uppercase,
+ * for system-y toggles (Text/Voice, Light/Dark, card/list). `"normal"` is
+ * sentence case, for conversational picks like a survey's quick-fire answers
+ * ("Night owl", "Room to flow").
  */
 
 export type SegmentedToggleOption<V extends string> = {
@@ -36,6 +43,7 @@ export function SegmentedToggle<V extends string>({
   surface = "dark",
   ariaLabel,
   size = "md",
+  labelCase = "upper",
 }: {
   value: V;
   options: ReadonlyArray<SegmentedToggleOption<V>>;
@@ -43,6 +51,7 @@ export function SegmentedToggle<V extends string>({
   surface?: "dark" | "light";
   ariaLabel: string;
   size?: "sm" | "md";
+  labelCase?: "upper" | "normal";
 }) {
   const isDark = surface === "dark";
   // Dark surface: a slight dark wash sits on the whole rail so the inactive
@@ -82,7 +91,13 @@ export function SegmentedToggle<V extends string>({
           >
             {opt.icon}
             {opt.label ? (
-              <span className="text-uppercase tracking-[0.16em] uppercase">
+              <span
+                className={
+                  labelCase === "upper"
+                    ? "text-uppercase tracking-[0.16em] uppercase"
+                    : "text-sm font-medium"
+                }
+              >
                 {opt.label}
               </span>
             ) : null}

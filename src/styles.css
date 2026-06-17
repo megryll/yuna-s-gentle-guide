@@ -356,6 +356,157 @@
     from { opacity: 0; transform: translateY(100%); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* ─── Questionnaire pane transitions ──────────────────────────────────────
+     The survey's directional slide grammar (QUESTIONNAIRE-UX-APPROACH.md):
+     the outgoing question exits up fast (ease-in), the incoming one enters
+     from below on the house curve, slightly later so the exit reads first.
+     Back navigation mirrors the direction. Exits shorter than entrances. */
+  .survey-pane-in-fwd {
+    animation: survey-pane-in-fwd 280ms cubic-bezier(0.2, 0.8, 0.2, 1) 70ms both;
+  }
+  .survey-pane-out-fwd {
+    animation: survey-pane-out-fwd 200ms ease-in both;
+  }
+  .survey-pane-in-back {
+    animation: survey-pane-in-back 280ms cubic-bezier(0.2, 0.8, 0.2, 1) 70ms both;
+  }
+  .survey-pane-out-back {
+    animation: survey-pane-out-back 200ms ease-in both;
+  }
+  @keyframes survey-pane-in-fwd {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes survey-pane-out-fwd {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-24px); }
+  }
+  @keyframes survey-pane-in-back {
+    from { opacity: 0; transform: translateY(-28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes survey-pane-out-back {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(24px); }
+  }
+
+  /* ─── Survey question-card transitions ────────────────────────────────────
+     The demo survey moves the whole question CARD as one rigid unit — it tilts
+     and slides off to the left while the next card tilts in from the right
+     (mirrored on Previous). One transform on one element, so nothing inside the
+     card competes and the motion stays smooth. */
+  .survey-card-in-fwd {
+    animation: survey-card-in-fwd 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .survey-card-out-fwd {
+    animation: survey-card-out-fwd 340ms cubic-bezier(0.4, 0, 0.7, 1) both;
+  }
+  .survey-card-in-back {
+    animation: survey-card-in-back 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .survey-card-out-back {
+    animation: survey-card-out-back 340ms cubic-bezier(0.4, 0, 0.7, 1) both;
+  }
+  @keyframes survey-card-in-fwd {
+    from { opacity: 0; transform: translateX(72%) rotate(6deg); }
+    to { opacity: 1; transform: translateX(0) rotate(0deg); }
+  }
+  @keyframes survey-card-out-fwd {
+    from { opacity: 1; transform: translateX(0) rotate(0deg); }
+    to { opacity: 0; transform: translateX(-55%) rotate(-6deg); }
+  }
+  @keyframes survey-card-in-back {
+    from { opacity: 0; transform: translateX(-72%) rotate(-6deg); }
+    to { opacity: 1; transform: translateX(0) rotate(0deg); }
+  }
+  @keyframes survey-card-out-back {
+    from { opacity: 1; transform: translateX(0) rotate(0deg); }
+    to { opacity: 0; transform: translateX(55%) rotate(6deg); }
+  }
+
+  /* Settle pulse — a row that just became selected (MultipleChoice). */
+  .yuna-settle {
+    animation: yuna-settle 220ms ease-out;
+  }
+  @keyframes yuna-settle {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  /* Option cascade — answer choices slide in from the side and fade together,
+     one after another as a question loads (consumers stagger via inline
+     animation-delay per index). */
+  .survey-cascade-item {
+    animation: survey-cascade 460ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  @keyframes survey-cascade {
+    from { opacity: 0; transform: translateX(-22px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Option pop — used for the tile grid: fade in while overshooting scale,
+     then settling back, so the tiles "pop" into place. */
+  .survey-pop-item {
+    animation: survey-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes survey-pop {
+    0% { opacity: 0; transform: scale(0.8); }
+    60% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* A tile/list lifting under the pointer while being dragged to reorder. */
+  .rank-dragging {
+    box-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.35);
+    z-index: 20;
+  }
+
+  /* Numeral pop for the expressive scale readout. */
+  .survey-numeral-pop {
+    animation: survey-numeral-pop 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @keyframes survey-numeral-pop {
+    from { opacity: 0.4; transform: scale(0.82); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Day-one dot landing on the completion chart — spring overshoot. */
+  .survey-dot-pop {
+    animation: survey-dot-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes survey-dot-pop {
+    from { opacity: 0; transform: scale(0); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* ─── Assessment chart reveal ─────────────────────────────────────────────
+     The completed-survey trend chart animates itself into being: the severity
+     bands settle in, a soft area fill grows up from the baseline, the guide
+     line draws left-to-right, and the dots pop along it in sequence. Paths use
+     pathLength="1" so the dash math is resolution-independent under the
+     non-uniform viewBox stretch. */
+  .survey-band-in {
+    animation: yuna-fade 500ms ease both;
+  }
+  .survey-line-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: survey-line-draw 1000ms cubic-bezier(0.4, 0, 0.2, 1) 260ms forwards;
+  }
+  @keyframes survey-line-draw {
+    to { stroke-dashoffset: 0; }
+  }
+  .survey-area-grow {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: survey-area-grow 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 320ms both;
+  }
+  @keyframes survey-area-grow {
+    from { opacity: 0; transform: scaleY(0); }
+    to { opacity: 1; transform: scaleY(1); }
+  }
   @keyframes welcome-rise {
     from { opacity: 0; transform: translateY(40px); }
     to { opacity: 1; transform: translateY(0); }

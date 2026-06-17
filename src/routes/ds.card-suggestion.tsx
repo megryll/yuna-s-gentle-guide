@@ -42,7 +42,8 @@ function DSCardSuggestion() {
                     mode="text"
                     kind="self-discovery"
                     title="How Have You Been Feeling Lately?"
-                    naturePath="/nature/Background-11.png"
+                    description="A simple check-in to start noticing your emotional patterns."
+                    duration="5 min"
                     surface={s}
                     frostedImage={modeImage(s)}
                   />
@@ -78,9 +79,13 @@ function DSCardSuggestion() {
   style?:        CSSProperties
 
   // variant="reco" (default) — recommend a card
-  kind:          CardKind           // drives the eyebrow label + fallback photo
+  kind:          CardKind           // drives the eyebrow label + tile background
+                                    //   (solid kinds: fixed fill + watermark)
   title:         string             // recommended card's title (white Fraunces)
-  naturePath?:   string             // tile photo, default: KIND_META[kind].naturePath
+  description?:  string             // teaser line under the title, inside the tile
+  duration?:     string             // length estimate — "• 5 min" after the eyebrow
+  naturePath?:   string             // tile photo (photo kinds only), default:
+                                    //   KIND_META[kind].naturePath
   startLabel?:   string             // primary action label, default: "Start"
   onStart?:      () => void
   onDismiss?:    () => void

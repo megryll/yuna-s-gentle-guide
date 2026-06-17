@@ -7,7 +7,9 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
  * variant="linear" (default): a left-to-right control over a small ordered
  *   set of steps (e.g. voice pace 0.5x → 1.5x). `value` is the 0-based step
  *   index; step labels render below the rail and a green fill grows from the
- *   left edge to the thumb.
+ *   left edge to the thumb. For ranges too wide to label every step (a 0–10
+ *   instrument scale), pass `stepCount` instead of `steps` and anchor the rail
+ *   with `leftLabel`/`rightLabel` end labels below it.
  *
  * variant="bipolar": a center-out rating. The thumb rests at the midpoint and
  *   the fill grows from center — right/green when positive, left/orange when
@@ -28,11 +30,19 @@ export interface SliderProps {
   label?: string;
   /** linear: step labels below the rail; length defines the step count. */
   steps?: readonly string[];
-  /** bipolar: negative-end label, above the rail. */
+  /** linear: discrete step count when steps are unlabeled (e.g. 11 for 0–10). */
+  stepCount?: number;
+  /**
+   * linear: fill color (default "green"). Pass a value-dependent choice to
+   * mirror bipolar's sentiment colors on an anchored range — green while the
+   * value reads as positive, orange once it crosses into the negative side.
+   */
+  fill?: "green" | "orange";
+  /** bipolar: negative-end label, above the rail. linear: min-end label, below. */
   leftLabel?: string;
-  /** bipolar: positive-end label, above the rail. */
+  /** bipolar: positive-end label, above the rail. linear: max-end label, below. */
   rightLabel?: string;
-  /** bipolar: emphasise the active end label once the user has moved it. */
+  /** emphasise the active end label once the user has moved the thumb. */
   touched?: boolean;
   /** bipolar: "sentiment" (default, green/orange) or "neutral" (ink fill). */
   tone?: "sentiment" | "neutral";
@@ -70,6 +80,8 @@ export function Slider({
   surface = "dark",
   label,
   steps,
+  stepCount,
+  fill = "green",
   leftLabel,
   rightLabel,
   touched,
@@ -155,7 +167,8 @@ export function Slider({
 
   // ── linear ──────────────────────────────────────────────────────────────
   const stepList = steps ?? [];
-  const maxIdx = Math.max(stepList.length - 1, 0);
+  const count = stepList.length > 0 ? stepList.length : (stepCount ?? 0);
+  const maxIdx = Math.max(count - 1, 0);
 
   return (
     <div className="flex flex-col">
@@ -172,7 +185,12 @@ export function Slider({
         aria-label={label}
       >
         <SliderPrimitive.Track className={trackCls}>
-          <SliderPrimitive.Range className="absolute h-full rounded-full bg-secondary-green" />
+          <SliderPrimitive.Range
+            className={
+              "absolute h-full rounded-full transition-colors duration-150 " +
+              (fill === "orange" ? "bg-alert-orange" : "bg-secondary-green")
+            }
+          />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb className={thumbCls} />
       </SliderPrimitive.Root>
@@ -194,6 +212,17 @@ export function Slider({
               {stepLabel}
             </button>
           ))}
+        </div>
+      )}
+      {stepList.length === 0 && (leftLabel || rightLabel) && (
+        <div
+          className={
+            "mt-3 flex items-center justify-between text-xs font-medium tracking-[0.04em] uppercase " +
+            s.end
+          }
+        >
+          <span className={value === 0 && touched ? s.endActive : ""}>{leftLabel}</span>
+          <span className={value === maxIdx && touched ? s.endActive : ""}>{rightLabel}</span>
         </div>
       )}
     </div>

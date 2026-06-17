@@ -25,6 +25,8 @@ import { Badge } from "@/components/Badge";
  *   tone:       "dark" | "light"  — content tone (dark = white text)
  *   naturePath: string            — background photo (dark-washed)
  *   solidFill?: string            — flat fill (overrides photo)
+ *   watermark?: string            — image src painted as an oversized translucent
+ *                                   glyph behind the content (e.g. the Yuna mark)
  *   isNew?:     boolean           — green "New" flag, top-left
  *   completed?: boolean           — fade the tile + show a check Badge top-left
  *
@@ -39,6 +41,8 @@ import { Badge } from "@/components/Badge";
  * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?, onMore?
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
  * CardCTA props:    tone, onClick, children
+ * MetaDot props:    tone?, children — dot-prefixed meta token after an eyebrow
+ *                   ("• Daily", "• 3 min"); DailyTag is its "Daily" preset.
  */
 
 export type CardChromeMeta = {
@@ -76,6 +80,7 @@ export function Card({
   completed,
   naturePath,
   solidFill,
+  watermark,
   className,
   children,
 }: {
@@ -84,6 +89,7 @@ export function Card({
   completed?: boolean;
   naturePath?: string;
   solidFill?: string;
+  watermark?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -109,7 +115,7 @@ export function Card({
           exceeds that square — so nothing clips on a narrower frame. */}
       <div
         className={cn(
-          "grid grid-cols-1 rounded-[2.5rem] overflow-hidden",
+          "relative grid grid-cols-1 rounded-[2.5rem] overflow-hidden",
           isDark ? "text-white" : "text-neutral-900",
           isDark && "card-fixed-dark",
           completed && "opacity-60",
@@ -117,8 +123,9 @@ export function Card({
         )}
         style={style}
       >
+        {watermark && <CardWatermark src={watermark} className="h-[80%] -right-6" />}
         <span aria-hidden className="[grid-area:1/1] aspect-square" />
-        <div className="[grid-area:1/1] min-w-0 px-5 py-7 flex flex-col">{children}</div>
+        <div className="[grid-area:1/1] relative min-w-0 px-5 py-7 flex flex-col">{children}</div>
       </div>
     </div>
   );
@@ -138,6 +145,7 @@ export function CardRow({
   completed = false,
   naturePath,
   solidFill,
+  watermark,
   onClick,
   onMenu,
   interactive = true,
@@ -150,6 +158,7 @@ export function CardRow({
   completed?: boolean;
   naturePath?: string;
   solidFill?: string;
+  watermark?: string;
   onClick?: () => void;
   // When set, a 3-dot menu button is pinned to the top-right and the trailing
   // ActionCircle drops to the bottom-right corner. Without it the ActionCircle
@@ -187,7 +196,8 @@ export function CardRow({
         )}
         style={style}
       >
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
+        {watermark && <CardWatermark src={watermark} className="h-[130%] -right-3" />}
+        <div className="relative flex-1 min-w-0 flex flex-col justify-center">
           <p
             className={cn(
               "font-display text-xl leading-snug tracking-tight",
@@ -199,7 +209,7 @@ export function CardRow({
           </p>
           <div className="mt-3.5 flex items-center gap-1 flex-wrap">{meta}</div>
         </div>
-        {!hasMenu && <ActionCircle tone={isLight ? "light" : "dark"} />}
+        {!hasMenu && <ActionCircle tone={isLight ? "light" : "dark"} className="relative" />}
       </button>
 
       {/* Menu + trailing arrow are siblings of the row button (not nested in
@@ -228,17 +238,37 @@ export function CardRow({
   );
 }
 
-function ActionCircle({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
+// Oversized translucent glyph painted behind a card's content — white-alpha,
+// so it reads as a lighter tint of whatever fill it sits on. Height/offset come
+// from the caller (the tile and the row crop it differently). Exported for the
+// other surfaces that paint a card background (e.g. CardSuggestion's reco tile).
+export function CardWatermark({ src, className }: { src: string; className?: string }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className={cn(
+        "absolute top-1/2 -translate-y-1/2 w-auto max-w-none opacity-[0.08] pointer-events-none select-none",
+        className,
+      )}
+    />
+  );
+}
+
+function ActionCircle({
+  tone = "dark",
+  className,
+}: { tone?: "dark" | "light"; className?: string } = {}) {
   const isDark = tone === "dark";
   return (
     <span
       aria-hidden
-      className={
-        "shrink-0 h-9 w-9 rounded-full border-[1.5px] inline-flex items-center justify-center " +
-        (isDark
-          ? "border-white/40 text-white"
-          : "border-neutral-900/55 text-neutral-900")
-      }
+      className={cn(
+        "shrink-0 h-9 w-9 rounded-full border-[1.5px] inline-flex items-center justify-center",
+        isDark ? "border-white/40 text-white" : "border-neutral-900/55 text-neutral-900",
+        className,
+      )}
     >
       <ArrowRight size={16} strokeWidth={2.25} />
     </span>
@@ -380,7 +410,15 @@ export function CardCTA({
   );
 }
 
-export function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
+// Dot-prefixed meta token rendered after a card's eyebrow — a cadence
+// ("• Daily") or a length estimate ("• 3 min").
+export function MetaDot({
+  tone = "dark",
+  children,
+}: {
+  tone?: "dark" | "light";
+  children: React.ReactNode;
+}) {
   const isDark = tone === "dark";
   return (
     <span
@@ -390,7 +428,11 @@ export function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
       }
     >
       <span aria-hidden className="mx-0.5">•</span>
-      Daily
+      {children}
     </span>
   );
+}
+
+export function DailyTag({ tone = "dark" }: { tone?: "dark" | "light" } = {}) {
+  return <MetaDot tone={tone}>Daily</MetaDot>;
 }

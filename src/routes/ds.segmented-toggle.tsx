@@ -8,7 +8,7 @@ export const Route = createFileRoute("/ds/segmented-toggle")({
   head: () => ({
     meta: [
       { title: "Design System — Segmented Toggle" },
-      { name: "description", content: "Two-segment pill toggle." },
+      { name: "description", content: "Segmented pill toggle (two or three segments)." },
     ],
   }),
   component: DSSegmentedToggle,
@@ -58,6 +58,49 @@ function Demo({
   );
 }
 
+type LevelV = "low" | "med" | "high";
+
+function CountDemo({
+  surface,
+  three,
+  labelCase = "upper",
+}: {
+  surface: "dark" | "light";
+  three: boolean;
+  labelCase?: "upper" | "normal";
+}) {
+  const [value, setValue] = useState<LevelV>("low");
+  const options = three
+    ? ([
+        { value: "low", label: "Low" },
+        { value: "med", label: "Medium" },
+        { value: "high", label: "High" },
+      ] as const)
+    : ([
+        { value: "low", label: "Low" },
+        { value: "high", label: "High" },
+      ] as const);
+  return (
+    <SegmentedToggle
+      surface={surface}
+      ariaLabel="Energy level"
+      value={value}
+      onChange={setValue}
+      options={options}
+      labelCase={labelCase}
+    />
+  );
+}
+
+const VARIANT_ROWS: MatrixRow[] = [
+  { label: "Two segments", render: (s) => <CountDemo surface={s} three={false} /> },
+  { label: "Three segments", render: (s) => <CountDemo surface={s} three /> },
+  {
+    label: "Sentence-case labels",
+    render: (s) => <CountDemo surface={s} three labelCase="normal" />,
+  },
+];
+
 const SIZE_ROWS: MatrixRow[] = [
   { label: "sm · text", render: (s) => <Demo surface={s} size="sm" content="text" /> },
   { label: "sm · icon", render: (s) => <Demo surface={s} size="sm" content="icon" /> },
@@ -70,6 +113,13 @@ const SIZE_ROWS: MatrixRow[] = [
 function DSSegmentedToggle() {
   return (
     <DSPage title="Segmented toggle">
+      <Section
+        title="Variants"
+        subtitle="Holds a small set of segments — two for a binary, three for a compact pick. Keep labels short so the pills fit the frame."
+      >
+        <SurfaceMatrix rows={VARIANT_ROWS} />
+      </Section>
+
       <Section
         title="Sizes"
         subtitle="Two sizes that differ mainly by height — sm (h-8 rail) and md (h-9 rail). Either size takes segments with text only, an icon only, or both; labelled segments grow with their text while icon-only segments stay square."
@@ -85,6 +135,7 @@ function DSSegmentedToggle() {
   surface?: "dark" | "light"   // default "dark" (photo-cluster house default)
   ariaLabel: string
   size?:    "sm" | "md"        // default "md"; differ mainly by height
+  labelCase?: "upper" | "normal" // default "upper" (tracked caps); "normal" = sentence case
 />
 
 type SegmentedToggleOption<V extends string> = {

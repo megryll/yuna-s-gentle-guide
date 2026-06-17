@@ -116,6 +116,9 @@ export type CardKindMeta = {
   // (fixed in both light/dark app modes — see Card `solidFill`). Pair a pale
   // fill with tone "light" (dark ink) and a deep fill with tone "dark" (white).
   solidBg?: string;
+  // Image src painted as an oversized translucent glyph behind the content
+  // (see Card / CardRow `watermark`).
+  watermark?: string;
 };
 
 export const KIND_META: Record<CardKind, CardKindMeta> = {
@@ -147,7 +150,8 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Try it now",
     naturePath: "/nature/Background-9.png",
-    solidBg: "#6E5A6B",
+    solidBg: "var(--primary-green)",
+    watermark: "/yuna-mark.svg",
   },
   affirmation: {
     label: "Affirmation",
@@ -162,7 +166,7 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     action: "arrow",
     ctaLabel: "Learn this skill",
     naturePath: "/nature/Background-6.png",
-    solidBg: "#115430",
+    solidBg: "#6E5A6B",
   },
   accountability: {
     label: "Accountability Partner",
@@ -226,13 +230,15 @@ export const GRATITUDE_PROMPTS = [
 ] as const;
 
 export const HOME_CARDS: HomeCard[] = [
+  // Questionnaire cards never set naturePath — the kind's solidBg is the one
+  // shared background for every questionnaire, everywhere it renders.
   {
     type: "self-discovery",
-    id: "first-check-in",
-    title: "Let's get to know each other",
-    description: "Tell me what's going on, and we'll find a place to start.",
-    duration: "1 minute",
-    naturePath: "/nature/Background-2.png",
+    id: "your-starting-point",
+    title: "Your starting point",
+    description:
+      "Choose what you'd like support with, then answer a short set of research-backed questions to mark where you're starting from.",
+    duration: "3 min",
   },
   {
     type: "meditation",
@@ -252,12 +258,11 @@ export const HOME_CARDS: HomeCard[] = [
   },
   {
     type: "self-discovery",
-    id: "feeling-check",
-    title: "How Have You Been Feeling Lately?",
+    id: "sleep-stress-burnout",
+    title: "Sleep, Stress & Burnout",
     description:
-      "A 9-question check-in that helps measure your mood and emotional wellbeing over the past two weeks.",
-    duration: "5–10 minutes",
-    naturePath: "/nature/Background-11.png",
+      "A quick measure of how you're sleeping, what's weighing on you, and how much you're carrying.",
+    duration: "5 min",
   },
   {
     type: "affirmation",
@@ -392,8 +397,7 @@ export const HOME_CARDS: HomeCard[] = [
     title: "Where Is Your Energy Actually Going?",
     description:
       "A short audit of where your week is spent versus where you wish it were. Surfaces the invisible trade-offs.",
-    duration: "6–8 minutes",
-    naturePath: "/nature/Background-12.png",
+    duration: "6–8 min",
   },
   {
     type: "affirmation",

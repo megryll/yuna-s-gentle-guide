@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardRow,
   DailyTag,
+  MetaDot,
 } from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
@@ -76,6 +77,7 @@ export function HomeCardRow({
       completed={completed}
       naturePath={isSolid ? undefined : card.naturePath ?? meta.naturePath}
       solidFill={isSolid ? meta.solidBg ?? undefined : undefined}
+      watermark={meta.watermark}
       onClick={onClick}
       onMenu={onMenu}
       interactive={interactive}
@@ -86,6 +88,9 @@ export function HomeCardRow({
             {meta.label}
           </span>
           {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
+          {card.type === "self-discovery" && (
+            <MetaDot tone={isLight ? "light" : "dark"}>{card.duration}</MetaDot>
+          )}
         </>
       }
     />
@@ -261,7 +266,7 @@ function SelfDiscoveryCard({
 }: ItemProps & { card: Extract<HomeCard, { type: "self-discovery" }> }) {
   const meta = KIND_META[card.type];
   return (
-    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg}>
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg} watermark={meta.watermark}>
       <CardHeader meta={meta} onMore={onMenu} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
         <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white">

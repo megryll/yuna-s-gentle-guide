@@ -59,6 +59,7 @@ export const PAGES: ScreenEntry[] = [
     ],
   },
   { label: "Home", to: "/home" },
+  { label: "All Completed Tasks", to: "/completed-tasks" },
   { label: "Design Your Trial", to: "/design-your-trial" },
   {
     label: "Session",
@@ -76,6 +77,9 @@ export const PAGES: ScreenEntry[] = [
     children: [
       { label: "Focus area 1", to: "/focus-area/1" },
       { label: "Focus area 2", to: "/focus-area/2" },
+      { label: "Anxiety history (GAD-7)", to: "/assessment/$id", params: { id: "gad-7" } },
+      { label: "Depression history (PHQ-9)", to: "/assessment/$id", params: { id: "phq-9" } },
+      { label: "Self-esteem history", to: "/assessment/$id", params: { id: "self-esteem" } },
     ],
   },
   { label: "Tools", to: "/tools" },
@@ -112,6 +116,58 @@ export const PAGES: ScreenEntry[] = [
       { label: "Crafting", to: "/meditation", search: { step: "crafting" } },
       { label: "Player", to: "/meditation", search: { step: "player" } },
       { label: "Complete", to: "/meditation", search: { step: "complete" } },
+    ],
+  },
+  {
+    label: "Your Starting Point",
+    to: "/questionnaire/$id",
+    params: { id: "your-starting-point" },
+    children: [
+      {
+        label: "Focus areas",
+        to: "/questionnaire/$id",
+        params: { id: "your-starting-point" },
+        search: { step: 0 },
+      },
+      {
+        label: "Work impact",
+        to: "/questionnaire/$id",
+        params: { id: "your-starting-point" },
+        search: { step: 1 },
+      },
+      {
+        label: "Branch · scale",
+        to: "/questionnaire/$id",
+        params: { id: "your-starting-point" },
+        search: { step: 2 },
+      },
+      {
+        label: "Branch · likert",
+        to: "/questionnaire/$id",
+        params: { id: "your-starting-point" },
+        search: { step: 3 },
+      },
+      {
+        label: "Completion",
+        to: "/questionnaire/$id",
+        params: { id: "your-starting-point" },
+        search: { step: 5 },
+      },
+    ],
+  },
+  {
+    label: "Demo Survey",
+    to: "/survey/$id",
+    params: { id: "discover-your-style" },
+    children: [
+      { label: "Emoji scale", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 0 } },
+      { label: "Multiple choice", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 1 } },
+      { label: "Tiles", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 2 } },
+      { label: "Quick-fire pills", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 3 } },
+      { label: "Slider scale", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 4 } },
+      { label: "Numeric scale", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 5 } },
+      { label: "Rank", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 6 } },
+      { label: "Completion", to: "/survey/$id", params: { id: "discover-your-style" }, search: { step: 7 } },
     ],
   },
   {

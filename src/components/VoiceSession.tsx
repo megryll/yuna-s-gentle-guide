@@ -718,6 +718,8 @@ export function VoiceSession({
             mode="voice"
             kind={devReco}
             title={RECO_SAMPLES[devReco]!.title}
+            description={RECO_SAMPLES[devReco]!.description}
+            duration={RECO_SAMPLES[devReco]!.duration}
             naturePath={RECO_SAMPLES[devReco]!.naturePath}
             surface={appMode === "light" ? "light" : "dark"}
             frostedImage={blurBg}

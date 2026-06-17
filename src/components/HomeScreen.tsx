@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bookmark, LayoutGrid, List, Menu } from "lucide-react";
+import { Bookmark, ChevronRight, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
 import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
@@ -19,6 +19,7 @@ import { Toast, ToastViewport } from "@/components/Toast";
 import { Confetti } from "@/components/Confetti";
 import { Divider } from "@/components/Divider";
 import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
+import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
@@ -47,11 +48,15 @@ const RETURNING_GREETINGS: { title: (name: string | null) => string; sub: string
 const stripHeadlinePeriod = (s: string) =>
   s.endsWith(".") && !s.endsWith("...") ? s.slice(0, -1) : s;
 
-// The home feed is the same for new and returning users — only the greeting
-// and the welcome audio differ by user type. HOME_CARDS[0] is the first
-// check-in card, kept out of the feed (slice(1)) so it doesn't sit beneath the
-// richer, personalized content.
-const POST_INTRO_CARDS = HOME_CARDS.slice(1);
+// Source feed for both user types. New users see the full authored list; the
+// returning-user view (see `cards` below) drops the onboarding starting-point
+// card and floats New items to the top.
+const POST_INTRO_CARDS = HOME_CARDS;
+
+// Returning users land with a few tasks already behind them — these drop under
+// the "Completed Today" divider so the feed reflects an in-progress day rather
+// than a blank slate. (New users' day is genuinely empty.)
+const RETURNING_COMPLETED = ["please-technique", "strength-overcome", "feeling-check"];
 
 export function HomeScreen({
   variant,
@@ -70,7 +75,18 @@ export function HomeScreen({
   const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
-  const cards = POST_INTRO_CARDS;
+  const cards = useMemo(() => {
+    // A brand-new user's feed is new in its entirety, so per-card "New" flags
+    // carry no signal — strip them and keep the authored order (incl. the
+    // starting-point questionnaire, their natural first step).
+    if (variant !== "returning") {
+      return POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false }));
+    }
+    // Returning users have already set their starting point, so drop that card,
+    // and float anything flagged New to the top (stable within each group).
+    const kept = POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point");
+    return [...kept.filter((c) => c.isNew), ...kept.filter((c) => !c.isNew)];
+  }, [variant]);
   const initialSavedIds = useMemo(
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
@@ -85,9 +101,16 @@ export function HomeScreen({
     });
 
   // Completed cards drop under the "Completed Today" divider (faded + a check
-  // badge); dismissed cards leave the feed. Both are session-local, like saves.
-  // The 3-dot menu acts on whichever card opened it (menuCard).
-  const [completedIds, setCompletedIds] = useState<Set<string>>(() => new Set());
+  // badge); dismissed cards leave the feed. All of it is session-local, like
+  // saves; finished questionnaires live in the shared in-memory store and are
+  // merged in after mount so the server and first client render agree.
+  const [completedIds, setCompletedIds] = useState<Set<string>>(() =>
+    variant === "returning" ? new Set(RETURNING_COMPLETED) : new Set(),
+  );
+  useEffect(() => {
+    const done = getCompletedQuestionnaireIds();
+    if (done.length) setCompletedIds((prev) => new Set([...prev, ...done]));
+  }, []);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
   const [menuCard, setMenuCard] = useState<HomeCard | null>(null);
 
@@ -187,14 +210,16 @@ export function HomeScreen({
         )}
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center justify-between -mx-1">
-            <Button
-              surface="dark"
-              variant="secondary"
-              size="xs"
-              onClick={() => navigate({ to: "/design-your-trial" })}
-            >
-              Upgrade
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                surface="dark"
+                variant="secondary"
+                size="xs"
+                onClick={() => navigate({ to: "/design-your-trial" })}
+              >
+                Upgrade
+              </Button>
+            </div>
             <Button
               surface="dark"
               variant="plain"
@@ -260,6 +285,10 @@ export function HomeScreen({
                 navigate({ to: "/gratitude" });
                 return;
               }
+              if (c.type === "self-discovery" && c.id === "your-starting-point") {
+                navigate({ to: "/questionnaire/$id", params: { id: c.id } });
+                return;
+              }
               if (c.type === "guided-session") {
                 // Carry the title into chat so the guided-session header
                 // banner can remind the user which session they're in.
@@ -270,6 +299,7 @@ export function HomeScreen({
             }}
             onOpenMenu={setMenuCard}
             showFeedback={returning}
+            onViewAllCompleted={() => navigate({ to: "/completed-tasks" })}
           />
         </div>
 
@@ -336,6 +366,7 @@ function CreatedForYou({
   onOpen,
   onOpenMenu,
   showFeedback,
+  onViewAllCompleted,
 }: {
   cards: HomeCard[];
   viewMode: "card" | "list";
@@ -349,6 +380,7 @@ function CreatedForYou({
   onOpen: (c: HomeCard) => void;
   onOpenMenu: (c: HomeCard) => void;
   showFeedback: boolean;
+  onViewAllCompleted: () => void;
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
   const prefs = useContentPrefs();
@@ -409,6 +441,17 @@ function CreatedForYou({
             <>
               <Divider surface={surface} label="Completed Today" className="mt-8 mb-3" />
               {renderFeed(done)}
+              <div className="mt-4 flex justify-center">
+                <Button
+                  surface={surface}
+                  variant="link"
+                  onClick={onViewAllCompleted}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  All completed tasks
+                  <ChevronRight size={16} strokeWidth={2} aria-hidden />
+                </Button>
+              </div>
             </>
           )}
         </>
@@ -419,12 +462,18 @@ function CreatedForYou({
   );
 }
 
+// Emoji nudge down a hair so they read as vertically centered in the pill.
+const Emoji = ({ children }: { children: string }) => (
+  <span aria-hidden className="inline-block translate-y-[1.5px]">
+    {children}
+  </span>
+);
 const EXPERIENCE_FACES = [
-  { value: "angry", content: "😠", label: "Angry" },
-  { value: "sad", content: "😞", label: "Sad" },
-  { value: "neutral", content: "😐", label: "Neutral" },
-  { value: "good", content: "🙂", label: "Good" },
-  { value: "great", content: "😊", label: "Great" },
+  { value: "angry", content: <Emoji>😠</Emoji>, label: "Angry" },
+  { value: "sad", content: <Emoji>😞</Emoji>, label: "Sad" },
+  { value: "neutral", content: <Emoji>😐</Emoji>, label: "Neutral" },
+  { value: "good", content: <Emoji>🙂</Emoji>, label: "Good" },
+  { value: "great", content: <Emoji>😊</Emoji>, label: "Great" },
 ] as const;
 
 function ExperienceFeedback() {
@@ -439,9 +488,10 @@ function ExperienceFeedback() {
       <p className="mt-2 text-sm leading-relaxed text-white/75">
         {hasPick ? "Your feedback helps us improve!" : "Our team reads every submission"}
       </p>
-      <div className="mt-5">
+      <div className="mt-5 flex justify-center">
         <RatingScale
           surface={surface}
+          size="lg"
           ariaLabel="What was your Yuna experience like today?"
           value={picked}
           onChange={setPicked}
