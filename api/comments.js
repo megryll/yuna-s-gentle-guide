@@ -11,6 +11,12 @@ const supabase = url && key ? createClient(url, key, { auth: { persistSession: f
 
 const TABLE = "comments";
 
+// Per-deployment comment isolation: comments left on the feature preview stay
+// off production and vice-versa. The git branch (main vs feature/…) is the
+// natural key; fall back to Vercel's environment, then "local" for dev.
+const CHANNEL =
+  process.env.VERCEL_GIT_COMMIT_REF || process.env.VERCEL_ENV || "local";
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
@@ -58,6 +64,7 @@ export default async function handler(req, res) {
       const { data, error } = await supabase
         .from(TABLE)
         .select("*")
+        .eq("channel", CHANNEL)
         .order("created_at", { ascending: true });
       if (error) throw error;
       return json(res, 200, (data ?? []).map(toClient));
@@ -74,6 +81,7 @@ export default async function handler(req, res) {
         y: clamp01(body.y),
         text,
         name: String(body.name ?? "").trim().slice(0, 80),
+        channel: CHANNEL,
       };
       const { data, error } = await supabase.from(TABLE).insert(row).select().single();
       if (error) throw error;
@@ -84,7 +92,11 @@ export default async function handler(req, res) {
       const { searchParams } = new URL(req.url, "http://localhost");
       const id = searchParams.get("id");
       if (!id) return json(res, 400, { error: "id required" });
-      const { error } = await supabase.from(TABLE).delete().eq("id", id);
+      const { error } = await supabase
+        .from(TABLE)
+        .delete()
+        .eq("id", id)
+        .eq("channel", CHANNEL);
       if (error) throw error;
       return json(res, 200, { ok: true });
     }
