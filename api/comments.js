@@ -5,7 +5,11 @@ export const config = { runtime: "nodejs" };
 // Server-side only: the service-role key bypasses RLS, so the prototype's
 // `comments` table can keep RLS enabled (public anon key blocked) while this
 // function reads/writes freely. The key never reaches the browser.
-const url = process.env.SUPABASE_URL;
+// Tolerate a pasted REST endpoint (…/rest/v1/) or a trailing slash —
+// supabase-js wants the bare project origin and appends the REST path itself.
+const url = (process.env.SUPABASE_URL || "")
+  .replace(/\/rest\/v1\/?$/, "")
+  .replace(/\/+$/, "");
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
 
