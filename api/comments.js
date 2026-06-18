@@ -1,22 +1,34 @@
-import { Redis } from "@upstash/redis";
+import { createClient } from "@supabase/supabase-js";
 
 export const config = { runtime: "nodejs" };
 
-// Vercel↔Upstash integrations inject one of these env-var pairs depending on
-// which marketplace flow created the store; accept either.
-const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const redis = url && token ? new Redis({ url, token }) : null;
+// Server-side only: the service-role key bypasses RLS, so the prototype's
+// `comments` table can keep RLS enabled (public anon key blocked) while this
+// function reads/writes freely. The key never reaches the browser.
+const url = process.env.SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
 
-// All comments live in one hash keyed by id, so deletes are a single HDEL and
-// there's no list-rewrite race when several reviewers comment at once.
-const KEY = "yuna:comments";
+const TABLE = "comments";
 
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
   res.setHeader("cache-control", "no-store");
   res.end(JSON.stringify(body));
+}
+
+// Map a DB row to the shape the client expects (created_at → createdAt ms).
+function toClient(row) {
+  return {
+    id: row.id,
+    route: row.route,
+    x: row.x,
+    y: row.y,
+    text: row.text,
+    name: row.name ?? "",
+    createdAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
+  };
 }
 
 async function readBody(req) {
@@ -37,17 +49,18 @@ function clamp01(n) {
 }
 
 export default async function handler(req, res) {
-  // No store provisioned yet (or local dev) — signal unavailable so the client
+  // No store configured (or local dev) — signal unavailable so the client
   // falls back to its localStorage cache.
-  if (!redis) return json(res, 503, { error: "comments store not configured" });
+  if (!supabase) return json(res, 503, { error: "comments store not configured" });
 
   try {
     if (req.method === "GET") {
-      const map = (await redis.hgetall(KEY)) || {};
-      const comments = Object.values(map).sort(
-        (a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0),
-      );
-      return json(res, 200, comments);
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return json(res, 200, (data ?? []).map(toClient));
     }
 
     if (req.method === "POST") {
@@ -55,24 +68,24 @@ export default async function handler(req, res) {
       const text = String(body.text ?? "").trim().slice(0, 2000);
       if (!text) return json(res, 400, { error: "text required" });
 
-      const comment = {
-        id: globalThis.crypto.randomUUID(),
+      const row = {
         route: String(body.route ?? "/").slice(0, 300),
         x: clamp01(body.x),
         y: clamp01(body.y),
         text,
         name: String(body.name ?? "").trim().slice(0, 80),
-        createdAt: Date.now(),
       };
-      await redis.hset(KEY, { [comment.id]: comment });
-      return json(res, 200, comment);
+      const { data, error } = await supabase.from(TABLE).insert(row).select().single();
+      if (error) throw error;
+      return json(res, 200, toClient(data));
     }
 
     if (req.method === "DELETE") {
       const { searchParams } = new URL(req.url, "http://localhost");
       const id = searchParams.get("id");
       if (!id) return json(res, 400, { error: "id required" });
-      await redis.hdel(KEY, id);
+      const { error } = await supabase.from(TABLE).delete().eq("id", id);
+      if (error) throw error;
       return json(res, 200, { ok: true });
     }
 
