@@ -92,6 +92,34 @@ export default async function handler(req, res) {
       return json(res, 200, toClient(data));
     }
 
+    if (req.method === "PATCH") {
+      const { searchParams } = new URL(req.url, "http://localhost");
+      const id = searchParams.get("id");
+      if (!id) return json(res, 400, { error: "id required" });
+
+      const body = await readBody(req);
+      const patch = {};
+      if (body.text !== undefined) {
+        const text = String(body.text ?? "").trim().slice(0, 2000);
+        if (!text) return json(res, 400, { error: "text required" });
+        patch.text = text;
+      }
+      if (body.name !== undefined) {
+        patch.name = String(body.name ?? "").trim().slice(0, 80);
+      }
+      if (!Object.keys(patch).length) return json(res, 400, { error: "nothing to update" });
+
+      const { data, error } = await supabase
+        .from(TABLE)
+        .update(patch)
+        .eq("id", id)
+        .eq("channel", CHANNEL)
+        .select()
+        .single();
+      if (error) throw error;
+      return json(res, 200, toClient(data));
+    }
+
     if (req.method === "DELETE") {
       const { searchParams } = new URL(req.url, "http://localhost");
       const id = searchParams.get("id");
@@ -105,7 +133,7 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true });
     }
 
-    res.setHeader("allow", "GET, POST, DELETE");
+    res.setHeader("allow", "GET, POST, PATCH, DELETE");
     return json(res, 405, { error: "method not allowed" });
   } catch (err) {
     return json(res, 500, { error: String(err?.message ?? err) });
