@@ -21,6 +21,29 @@ const TABLE = "comments";
 const CHANNEL =
   process.env.VERCEL_GIT_COMMIT_REF || process.env.VERCEL_ENV || "local";
 
+// Optional Slack notification: when SLACK_WEBHOOK_URL is set (an incoming
+// webhook bound to a public channel), every new comment pings it. Best-effort —
+// a Slack failure never blocks saving the comment.
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
+
+async function notifySlack(comment) {
+  if (!SLACK_WEBHOOK_URL) return;
+  const who = comment.name?.trim() || "Anonymous";
+  const text =
+    `*New prototype comment* from *${who}*\n` +
+    `> ${comment.text}\n` +
+    `_route_ \`${comment.route}\`  ·  _deployment_ \`${CHANNEL}\``;
+  try {
+    await fetch(SLACK_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+  } catch {
+    // Notification is a side effect — swallow so the comment still returns 200.
+  }
+}
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
@@ -89,7 +112,9 @@ export default async function handler(req, res) {
       };
       const { data, error } = await supabase.from(TABLE).insert(row).select().single();
       if (error) throw error;
-      return json(res, 200, toClient(data));
+      const saved = toClient(data);
+      await notifySlack(saved);
+      return json(res, 200, saved);
     }
 
     if (req.method === "PATCH") {
