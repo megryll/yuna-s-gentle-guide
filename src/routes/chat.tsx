@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Mic, MessageCircle, Phone, Settings, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, Copy, Mic, MessageCircle, Phone, Settings, ThumbsDown, Volume2, VolumeX, X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
@@ -28,7 +28,7 @@ import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { pauseAmbient, startAmbient } from "@/lib/ambient-audio";
 import { getNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { Button } from "@/components/Button";
-import { ChatBubble } from "@/components/ChatBubble";
+import { ChatBubble, type ChatBubbleMenuAction } from "@/components/ChatBubble";
 import { CardSuggestion } from "@/components/CardSuggestion";
 import { YunaStatus } from "@/components/YunaStatus";
 import {
@@ -1211,11 +1211,32 @@ function Bubble({
         from={mine ? "user" : "yuna"}
         frostedImage={mine ? undefined : frostedImage}
         className="max-w-[82%]"
+        menuActions={mine ? undefined : yunaBubbleMenu(msg.text)}
       >
         {msg.text}
       </ChatBubble>
     </div>
   );
+}
+
+// Contextual menu for Yuna's text replies — surfaced via the 3-dot trigger in
+// the bubble's top-right corner. Copy lifts the reply to the clipboard; Bad
+// Response is the (prototype) feedback hook.
+function yunaBubbleMenu(text: string): ChatBubbleMenuAction[] {
+  return [
+    {
+      label: "Bad Response",
+      icon: <ThumbsDown size={18} strokeWidth={1.6} aria-hidden />,
+      onSelect: () => {},
+    },
+    {
+      label: "Copy",
+      icon: <Copy size={18} strokeWidth={1.6} aria-hidden />,
+      onSelect: () => {
+        navigator.clipboard?.writeText(text).catch(() => {});
+      },
+    },
+  ];
 }
 
 function VoicePitchCard({ frostedImage }: { frostedImage?: string }) {

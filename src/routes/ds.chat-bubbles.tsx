@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Copy, ThumbsDown } from "lucide-react";
 import { ChatBubble } from "@/components/ChatBubble";
 import { DSPage, PropsBlock, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
 
@@ -44,6 +45,7 @@ function DSChatBubbles() {
   tail?:         boolean           // default: true
   frostedImage?: string            // Android backdrop-blur fallback photo
   attachment?:   ReactNode         // full-bleed footer below the text
+  menuActions?:  ChatBubbleMenuAction[]  // { label, icon, onSelect }[] — 3-dot menu (yuna only)
   className?:    string
   style?:        CSSProperties     // entrance animation goes here
 >
@@ -101,9 +103,26 @@ const SIZE_ROWS: MatrixRow[] = [
   { label: "Large", render: (s) => themed(s, box(<ChatBubble from="yuna" size="lg">Hi, I'm Yuna.</ChatBubble>)) },
 ];
 
+const BUBBLE_MENU = [
+  { label: "Bad Response", icon: <ThumbsDown size={18} strokeWidth={1.6} aria-hidden />, onSelect: () => {} },
+  { label: "Copy", icon: <Copy size={18} strokeWidth={1.6} aria-hidden />, onSelect: () => {} },
+];
+
 const STATE_ROWS: MatrixRow[] = [
   {
     label: "Typing",
     render: (s) => themed(s, <div className="flex justify-start"><ChatBubble from="yuna" typing /></div>),
+  },
+  {
+    label: "Menu",
+    render: (s) =>
+      themed(
+        s,
+        box(
+          <ChatBubble from="yuna" menuActions={BUBBLE_MENU}>
+            Good evening. I'm glad you're here. How are you doing right now?
+          </ChatBubble>,
+        ),
+      ),
   },
 ];
