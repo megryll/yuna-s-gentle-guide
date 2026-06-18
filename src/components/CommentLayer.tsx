@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { MessageSquarePlus, X } from "lucide-react";
+import { MessageSquarePlus, Pencil, Trash2, X } from "lucide-react";
 
 import {
   getCommenterName,
@@ -84,7 +84,7 @@ function cardPosition(px: number, py: number, frame: Rect, w: number, h: number)
 
 export function CommentLayer() {
   const pathname = useLocation({ select: (l) => l.pathname });
-  const { items, add, remove } = useComments(pathname);
+  const { items, add, edit, remove } = useComments(pathname);
   const frame = useFrameRect(pathname);
 
   const [adding, setAdding] = useState(false);
@@ -184,6 +184,8 @@ export function CommentLayer() {
         <PinPopover
           comment={active}
           frame={frame}
+          onClose={() => setActiveId(null)}
+          onEdit={(text, name) => edit(active.id, { text, name })}
           onDelete={() => {
             remove(active.id);
             setActiveId(null);
@@ -264,15 +266,36 @@ function PinDot({
 function PinPopover({
   comment,
   frame,
+  onClose,
+  onEdit,
   onDelete,
 }: {
   comment: Comment;
   frame: Rect;
+  onClose: () => void;
+  onEdit: (text: string, name: string) => void;
   onDelete: () => void;
 }) {
-  const W = 240;
-  const H = 120;
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(comment.text);
+  const [name, setName] = useState(comment.name);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing) textRef.current?.focus();
+  }, [editing]);
+
+  const W = 260;
+  const H = editing ? 220 : 150;
   const pos = cardPosition(comment.x * frame.width, comment.y * frame.height, frame, W, H);
+
+  const save = () => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    onEdit(trimmed, name.trim());
+    setEditing(false);
+  };
+
   return (
     <div
       className="absolute rounded-2xl border border-border bg-background p-3 shadow-xl"
@@ -288,16 +311,77 @@ function PinPopover({
         </div>
         <button
           type="button"
-          onClick={onDelete}
-          aria-label="Delete comment"
+          onClick={onClose}
+          aria-label="Close"
           className="shrink-0 rounded-full p-1 text-muted-foreground active:text-foreground"
         >
           <X size={15} />
         </button>
       </div>
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm text-foreground">
-        {comment.text}
-      </p>
+
+      {editing ? (
+        <>
+          <textarea
+            ref={textRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
+            }}
+            rows={3}
+            className="mt-2 w-full resize-none rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-foreground/40"
+          />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name (optional)"
+            className="mt-2 w-full rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-foreground/40"
+          />
+          <div className="mt-2.5 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setText(comment.text);
+                setName(comment.name);
+                setEditing(false);
+              }}
+              className="rounded-full px-3 py-1.5 text-sm text-muted-foreground active:text-foreground"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={!text.trim()}
+              className="rounded-full bg-foreground px-3.5 py-1.5 text-sm text-background shadow-sm transition-opacity disabled:opacity-40"
+            >
+              Save
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm text-foreground">
+            {comment.text}
+          </p>
+          <div className="mt-3 flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground active:text-foreground"
+            >
+              <Pencil size={13} /> Edit
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-red-600 active:text-red-700"
+            >
+              <Trash2 size={13} /> Delete
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

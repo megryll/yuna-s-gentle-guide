@@ -173,6 +173,33 @@ export async function addComment(input: NewComment) {
   }
 }
 
+export async function editComment(
+  id: string,
+  patch: Partial<Pick<Comment, "text" | "name">>,
+) {
+  comments = comments.map((c) => (c.id === id ? { ...c, ...patch } : c));
+  emitData();
+
+  if (useLocal) {
+    saveLocal();
+    return;
+  }
+  try {
+    const res = await fetch(`/api/comments?id=${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const saved: Comment = await res.json();
+    comments = comments.map((c) => (c.id === id ? saved : c));
+    emitData();
+  } catch {
+    useLocal = true;
+    saveLocal();
+  }
+}
+
 export async function deleteComment(id: string) {
   comments = comments.filter((c) => c.id !== id);
   emitData();
@@ -219,6 +246,7 @@ export function useComments(route: string) {
   return {
     items: all.filter((c) => c.route === route),
     add: (input: Omit<NewComment, "route">) => addComment({ ...input, route }),
+    edit: editComment,
     remove: deleteComment,
   };
 }
