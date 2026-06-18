@@ -122,8 +122,13 @@ export function CommentLayer() {
 
   const active = activeId ? items.find((c) => c.id === activeId) ?? null : null;
 
+  // Park the add-comment button in the gutter just below the phone, clamped to
+  // stay on-screen on short viewports.
+  const fabTop = Math.min(frame.top + frame.height + 12, window.innerHeight - 52);
+
   return (
-    <div
+    <>
+      <div
       className="fixed z-40"
       style={{
         left: frame.left,
@@ -200,7 +205,10 @@ export function CommentLayer() {
         />
       )}
 
-      {/* Add-comment affordance */}
+      </div>
+
+      {/* Add-comment affordance — parked in the gutter below the phone, out of
+          the device frame so it never covers screen content. */}
       <button
         type="button"
         onClick={() => {
@@ -210,17 +218,17 @@ export function CommentLayer() {
         }}
         aria-pressed={adding}
         className={
-          "absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm shadow-lg shadow-black/25 backdrop-blur-md transition-colors " +
+          "fixed z-50 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm shadow-lg shadow-black/25 backdrop-blur-md transition-colors " +
           (adding
             ? "bg-amber-500 text-white"
             : "bg-background/85 text-foreground active:bg-background")
         }
-        style={{ pointerEvents: "auto" }}
+        style={{ left: frame.left + frame.width / 2, top: fabTop }}
       >
         {adding ? <X size={15} /> : <MessageSquarePlus size={15} />}
         {adding ? "Cancel" : "Comment"}
       </button>
-    </div>
+    </>
   );
 }
 
