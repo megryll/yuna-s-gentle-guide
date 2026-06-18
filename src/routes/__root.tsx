@@ -10,6 +10,9 @@ import { ModeToggle } from "@/components/ModeToggle";
 import { FrameSizeToggle } from "@/components/FrameSizeToggle";
 import { PrototypeMuteToggle } from "@/components/PrototypeMuteToggle";
 import { SoundtrackToggle } from "@/components/SoundtrackToggle";
+import { CommentsToggle } from "@/components/CommentsToggle";
+import { CommentLayer } from "@/components/CommentLayer";
+import { useCommentsEnabled } from "@/lib/comments";
 // Side-effect import: installs the global Audio() interceptor early so every
 // audio element the app creates respects the prototype-mute admin toggle.
 import "@/lib/prototype-mute";
@@ -134,6 +137,8 @@ function RootComponent() {
     switchSoundtrack();
   }, [soundtrackId, bare]);
 
+  const commentsEnabled = useCommentsEnabled();
+
   if (bare) {
     return <Outlet />;
   }
@@ -149,8 +154,10 @@ function RootComponent() {
         <UserTypeToggle />
         <SoundtrackToggle />
         <PrototypeMuteToggle />
+        <CommentsToggle />
       </div>
       <Outlet />
+      {commentsEnabled && <CommentLayer />}
     </>
   );
 }
