@@ -77,10 +77,18 @@ export function HomeScreen({
   const [savedOnly, setSavedOnly] = useState(false);
   const cards = useMemo(() => {
     // A brand-new user's feed is new in its entirety, so per-card "New" flags
-    // carry no signal — strip them and keep the authored order (incl. the
-    // starting-point questionnaire, their natural first step).
+    // carry no signal — strip them. Pin the starting-point questionnaire to the
+    // very top (their natural first step), and drop the other questionnaire
+    // (Sleep, Stress & Burnout) so onboarding has a single, unambiguous baseline.
     if (variant !== "returning") {
-      return POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false }));
+      const stripped = POST_INTRO_CARDS.filter((c) => c.id !== "sleep-stress-burnout").map((c) => ({
+        ...c,
+        isNew: false,
+      }));
+      return [
+        ...stripped.filter((c) => c.id === "your-starting-point"),
+        ...stripped.filter((c) => c.id !== "your-starting-point"),
+      ];
     }
     // Returning users have already set their starting point, so drop that card,
     // and float anything flagged New to the top (stable within each group).

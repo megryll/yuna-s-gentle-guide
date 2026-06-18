@@ -126,30 +126,8 @@ export const PAGES: ScreenEntry[] = [
     params: { id: "your-starting-point" },
     children: [
       {
-        label: "Focus areas",
-        to: "/questionnaire/$id",
-        params: { id: "your-starting-point" },
-        search: { step: 0 },
-      },
-      {
-        label: "Work impact",
-        to: "/questionnaire/$id",
-        params: { id: "your-starting-point" },
-        search: { step: 1 },
-      },
-      {
-        label: "Branch · scale",
-        to: "/questionnaire/$id",
-        params: { id: "your-starting-point" },
-        search: { step: 2 },
-      },
-      {
-        label: "Branch · likert",
-        to: "/questionnaire/$id",
-        params: { id: "your-starting-point" },
-        search: { step: 3 },
-      },
-      {
+        // The completion payoff. A no-pick deep link falls back to the stress
+        // branch (impact + 3 items), so step 5 lands on the completion screen.
         label: "Completion",
         to: "/questionnaire/$id",
         params: { id: "your-starting-point" },

@@ -290,8 +290,9 @@ function AssessmentDetail({
             {a.reflection}
           </YunaExplains>
 
-          {/* Direct, editable cadence line. Omitted for custom dimensions,
-              which have no recommended instrument cadence. */}
+          {/* Direct, editable cadence line — the next recommended check-in.
+              Validated instruments carry an authored date; custom dimensions get
+              Yuna's regular check-in rhythm. */}
           {nextOn && (
             <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/75">
               <CalendarClock size={15} strokeWidth={1.75} className="text-white/60" aria-hidden />

@@ -5,6 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
 import { MultipleChoice } from "@/components/MultipleChoice";
+import { ProgressRecap } from "@/components/DimensionTrends";
 import { ProgressBar } from "@/components/ProgressBar";
 import { RankList } from "@/components/RankList";
 import { RatingScale } from "@/components/RatingScale";
@@ -13,12 +14,9 @@ import { Slider } from "@/components/Slider";
 import { TileChoice } from "@/components/TileChoice";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
-import { Surface } from "@/components/Surface";
 import { QuestionCard, CardLead } from "@/components/SurveyCard";
-import { PlacedForYou } from "@/components/SessionReflection";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { DEFAULT_VOICE } from "@/lib/voices";
-import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
@@ -38,9 +36,6 @@ import { surveyById, type DemoQuestion, type ScaleQuestion } from "@/lib/demo-su
 // the cluster `surface` too — so it reads white-on-dark in dark mode and
 // inverts with the rest of the screen in light mode, rather than being a solid
 // white tile.
-
-// Two new activities Yuna places after a survey (same source as the wrap-up).
-const PLACED_FOR_YOU: HomeCard[] = HOME_CARDS.filter((c) => c.isNew).slice(0, 2);
 
 type Answers = Record<string, string | string[]>;
 type StepSearch = { step?: number };
@@ -202,12 +197,11 @@ function SurveyRoute() {
 
             <CompletionPane survey={survey} />
 
+            <ProgressRecap priorities={[]} surface={surface} />
+
             <div className="pt-2 flex flex-col gap-3">
               <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/home" })}>
-                Return home
-              </Button>
-              <Button surface={surface} variant="secondary" fullWidth onClick={() => navigate({ to: "/you" })}>
-                See your progress
+                Continue
               </Button>
             </div>
           </div>
@@ -341,7 +335,7 @@ function QuestionPane({
                 value={(answers[question.id] as string) ?? null}
                 onChange={(v) => onPick(question.id, v)}
               />
-              <div className="mt-3 flex justify-between text-[11px] text-white/60">
+              <div className="mt-3 flex justify-between text-sm font-medium text-white/75">
                 <span>{question.minLabel}</span>
                 <span>{question.maxLabel}</span>
               </div>
@@ -460,7 +454,7 @@ function QuestionPane({
                 value={(answers[question.id] as string) ?? null}
                 onChange={(v) => onPick(question.id, v)}
               />
-              <div className="mt-3 flex justify-between text-[11px] text-white/60">
+              <div className="mt-3 flex justify-between text-sm font-medium text-white/75">
                 <span>{question.minLabel}</span>
                 <span>{question.maxLabel}</span>
               </div>
@@ -564,26 +558,22 @@ function CompletionPane({
 }) {
   const { avatar } = useYunaIdentity();
   return (
-    <>
-      <Surface className="px-6 pt-7 pb-7 flex flex-col items-center text-center gap-4">
-        <IconMedallion size="lg" label="Yuna">
-          <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
-        </IconMedallion>
-        {survey.conclusion.title && (
-          <h1 className="font-display text-2xl leading-tight tracking-tight text-white">
-            {survey.conclusion.title}
-          </h1>
-        )}
-        <div className="flex flex-col gap-3">
-          {survey.conclusion.reflection.map((line, i) => (
-            <p key={i} className="text-base leading-relaxed text-white/90">
-              {line}
-            </p>
-          ))}
-        </div>
-      </Surface>
-
-      <PlacedForYou items={PLACED_FOR_YOU} />
-    </>
+    <div className="flex flex-col items-center text-center gap-4">
+      <IconMedallion size="lg" label="Yuna">
+        <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
+      </IconMedallion>
+      {survey.conclusion.title && (
+        <h1 className="font-display text-2xl leading-tight tracking-tight text-white">
+          {survey.conclusion.title}
+        </h1>
+      )}
+      <div className="flex flex-col gap-3">
+        {survey.conclusion.reflection.map((line, i) => (
+          <p key={i} className="text-base leading-relaxed text-white/90">
+            {line}
+          </p>
+        ))}
+      </div>
+    </div>
   );
 }

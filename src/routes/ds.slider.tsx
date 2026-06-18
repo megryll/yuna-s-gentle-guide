@@ -122,13 +122,13 @@ function NeutralDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState(0);
   return (
     <div className="w-full max-w-sm flex items-center gap-3">
-      <span className="text-uppercase tracking-[0.04em] uppercase text-muted-foreground shrink-0">
+      <span className="text-sm font-medium text-muted-foreground shrink-0">
         Music
       </span>
       <div className="flex-1">
         <Slider variant="bipolar" tone="neutral" surface={surface} value={value} onChange={setValue} />
       </div>
-      <span className="text-uppercase tracking-[0.04em] uppercase text-muted-foreground shrink-0">
+      <span className="text-sm font-medium text-muted-foreground shrink-0">
         Voice
       </span>
     </div>

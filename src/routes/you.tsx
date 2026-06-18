@@ -1,9 +1,12 @@
 import {
   ClipboardList,
+  Compass,
   Flower2,
   GraduationCap,
+  LineChart,
   MessageCircle,
   NotebookPen,
+  Sparkles,
   Target,
   type LucideIcon,
 } from "lucide-react";
@@ -197,25 +200,39 @@ function YouEmptyState() {
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center pt-10">
+        <div className="flex flex-col items-center text-center pt-1">
           <EmptyHeroGlow />
-          <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-6">
+          <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-5">
             Your space, just beginning
           </h1>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <PreviewRow heading="Focus Areas" body="Where we'll be working together" />
-          <PreviewRow heading="Breakthroughs" body="Real shifts in your thinking, as they emerge" />
+        <div className="mt-7 flex flex-col gap-2.5">
           <PreviewRow
-            heading="Beliefs & Behaviors"
-            body="Patterns I'll start to notice as we talk"
+            icon={Compass}
+            heading="Focus areas"
+            body="Where you and Yuna choose to put your energy."
+          />
+          <PreviewRow
+            icon={LineChart}
+            heading="Progress"
+            body="How your mood, stress, and motivation shift over time."
+          />
+          <PreviewRow
+            icon={Sparkles}
+            heading="Insights"
+            body="The breakthroughs and patterns Yuna reflects back to you."
           />
         </div>
 
-        <div className="mt-10 flex justify-center">
-          <Button surface="dark" variant="primary" onClick={() => startChat()}>
+        <div className="mt-8 flex flex-col items-center gap-2.5">
+          <Button surface="dark" variant="primary" fullWidth onClick={() => startChat()}>
             Start your first conversation
+          </Button>
+          <Button surface="dark" variant="secondary" fullWidth asChild>
+            <Link to="/questionnaire/$id" params={{ id: "your-starting-point" }}>
+              Take a 3-minute questionnaire
+            </Link>
           </Button>
         </div>
       </div>
@@ -255,13 +272,29 @@ function EmptyHeroGlow() {
   );
 }
 
-function PreviewRow({ heading, body }: { heading: string; body: string }) {
+function PreviewRow({
+  icon: Icon,
+  heading,
+  body,
+}: {
+  icon: LucideIcon;
+  heading: string;
+  body: string;
+}) {
   return (
-    <Surface dashed className="px-4 py-3.5">
-      <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/75">
-        {heading}
-      </p>
-      <p className="text-sm leading-[20px] text-white/75 mt-1">{body}</p>
+    <Surface dashed className="flex items-start gap-3 px-4 py-3.5">
+      <span
+        aria-hidden
+        className="h-9 w-9 rounded-lg shrink-0 flex items-center justify-center bg-white/10"
+      >
+        <Icon size={18} strokeWidth={1.5} className="text-white/85" />
+      </span>
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/75">
+          {heading}
+        </p>
+        <p className="text-sm leading-[20px] text-white/80">{body}</p>
+      </div>
     </Surface>
   );
 }

@@ -970,7 +970,15 @@ function Chat() {
                     naturePath={RECO_SAMPLES[reco]!.naturePath}
                     surface={appMode === "light" ? "light" : "dark"}
                     frostedImage={blurBg}
-                    onStart={() => setSessionReco(null)}
+                    onStart={() => {
+                      setSessionReco(null);
+                      if (reco === "self-discovery")
+                        navigate({
+                          to: "/questionnaire/$id",
+                          params: { id: "your-starting-point" },
+                          search: { from: "session" },
+                        });
+                    }}
                     onDismiss={() => setSessionReco(null)}
                   />
                 </div>

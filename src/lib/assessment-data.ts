@@ -192,6 +192,14 @@ const MONTHS: Record<string, string> = {
 const shortDate = (longDate: string): string =>
   longDate.replace(/^(\w+)/, (m) => MONTHS[m] ?? m);
 
+// Custom dimensions carry no authored instrument cadence, so Yuna recommends the
+// next check-in on a regular rhythm — a couple of weeks out from today.
+function nextCheckInDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+}
+
 // A custom dimension (no validated instrument) rendered through the same detail
 // view: its real 0–100 wellness history, generic wellness bands, and a short
 // reflection drawn from the trend so the screen needs no per-dimension copy.
@@ -217,7 +225,7 @@ function synthFromDimension(id: string): Assessment | undefined {
     description: "",
     reflection,
     cadenceNote: "",
-    nextOn: "",
+    nextOn: nextCheckInDate(),
     history: d.history.map((m) => ({
       date: shortDate(m.longDate),
       longDate: m.longDate,

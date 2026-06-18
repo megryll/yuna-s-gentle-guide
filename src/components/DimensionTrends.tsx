@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Minus, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { Surface } from "@/components/Surface";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
+import { ProgressBar } from "@/components/ProgressBar";
 import { Divider } from "@/components/Divider";
 import { Accordion } from "@/components/Accordion";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -142,6 +144,74 @@ export function DimensionTrends({
         onAdd={addDimension}
       />
     </>
+  );
+}
+
+// ─── Completion recap ────────────────────────────────────────────────────────
+// The payoff shown on the questionnaire completion screen: not a trend, but the
+// baselines this run just set. The user prioritized up to three areas in Q1, so
+// the recap names each one, marks it "Baseline set", and shows its starting
+// reading on the 0–100 wellness axis — the point every future check-in will be
+// measured against. Showing the raw number is intentional here (it's hidden on
+// the trend rows above, where the signed % is the story): at baseline there's no
+// trend yet, so the starting value *is* the data.
+//
+// `priorities` are focus-area ids in priority order (the questionnaire's Q1
+// picks). Show every trackable pick, top three in order. With no picks at all (a
+// gallery deep-link to completion, or a survey that doesn't capture wellness
+// areas) fall back to burnout so the moment always has a baseline to show. Picks
+// given but none trackable (e.g. only "Something Else") → nothing wellness-shaped,
+// so render nothing.
+export function ProgressRecap({
+  priorities,
+  surface = "dark",
+}: {
+  priorities: string[];
+  surface?: Cluster;
+}) {
+  const trackable = priorities.filter((id) => TRACKABLE_IDS.includes(id)).slice(0, 3);
+  const ids = trackable.length ? trackable : priorities.length === 0 ? ["burnout"] : [];
+  const dims = ids.map(getDimension).filter((d): d is Dimension => !!d);
+  if (dims.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-3">
+      {dims.map((d) => {
+        const score = latestMeasurement(d)?.score ?? null;
+        return (
+          <Surface key={d.id} className="p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl leading-none shrink-0" aria-hidden>
+                {d.emoji}
+              </span>
+              <span className="min-w-0 flex-1 font-display text-lg leading-tight text-white">
+                {d.label}
+              </span>
+              <span className="shrink-0">
+                <Badge>Baseline set</Badge>
+              </span>
+            </div>
+
+            {score !== null && (
+              <div className="mt-3">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-3xl leading-none text-white tabular-nums">
+                    {score}
+                  </span>
+                  <span className="text-sm text-white/55">/ 100</span>
+                </div>
+                <ProgressBar
+                  surface={surface}
+                  value={score / 100}
+                  aria-label={`${d.label} baseline`}
+                  className="mt-2.5"
+                />
+              </div>
+            )}
+          </Surface>
+        );
+      })}
+    </section>
   );
 }
 

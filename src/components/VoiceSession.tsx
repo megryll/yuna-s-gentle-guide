@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { YunaStatus, type YunaState } from "@/components/YunaStatus";
@@ -110,6 +111,7 @@ export function VoiceSession({
   micEnabled = true,
   onRequestMicPermission,
 }: VoiceSessionProps) {
+  const navigate = useNavigate();
   const { avatar } = useYunaIdentity();
   const [phase, setPhase] = useState<Phase>("connecting");
   const [speakerOn, setSpeakerOn] = useState(true);
@@ -723,7 +725,15 @@ export function VoiceSession({
             naturePath={RECO_SAMPLES[devReco]!.naturePath}
             surface={appMode === "light" ? "light" : "dark"}
             frostedImage={blurBg}
-            onStart={() => setSessionReco(null)}
+            onStart={() => {
+              setSessionReco(null);
+              if (devReco === "self-discovery")
+                navigate({
+                  to: "/questionnaire/$id",
+                  params: { id: "your-starting-point" },
+                  search: { from: "session" },
+                });
+            }}
             onDismiss={() => setSessionReco(null)}
           />
         </div>

@@ -41,6 +41,10 @@ export type ScaleItem = {
   minLabel: string;
   maxLabel: string;
   midLabel?: string; // when present, a live descriptor accompanies the value
+  // Per-value descriptor (length === points). When present it names every step,
+  // so the chosen label shows below the number for any choice — preferred over
+  // midLabel's coarse three-band fallback.
+  levels?: readonly string[];
   distress?: "high" | "low";
 };
 export type BankItem = LikertItem | ScaleItem;
@@ -99,8 +103,21 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     id: "loneliness",
     prompt: "How lonely have you been feeling?",
     points: 11,
-    minLabel: "None",
-    maxLabel: "Extremely",
+    minLabel: "No loneliness",
+    maxLabel: "Extremely lonely",
+    levels: [
+      "No loneliness",
+      "Barely lonely",
+      "Slightly lonely",
+      "A little lonely",
+      "Somewhat lonely",
+      "Moderately lonely",
+      "Fairly lonely",
+      "Quite lonely",
+      "Very lonely",
+      "Severely lonely",
+      "Extremely lonely",
+    ],
     distress: "high",
   },
   perceivedControl: likert(

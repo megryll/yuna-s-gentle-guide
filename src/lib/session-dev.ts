@@ -24,10 +24,10 @@ export const RECO_SAMPLES: Partial<
     naturePath: "/nature/Background-13.png",
   },
   "self-discovery": {
-    title: "Sleep, Stress & Burnout",
+    title: "Your starting point",
     description:
-      "A quick measure of how you're sleeping, what's weighing on you, and how much you're carrying.",
-    duration: "5 min",
+      "Choose what you'd like support with, then answer a short set of research-backed questions to mark where you're starting from.",
+    duration: "3 min",
   },
 };
 
