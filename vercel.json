@@ -5,6 +5,7 @@
     { "src": "/api/tts", "dest": "/api/tts" },
     { "src": "/api/chat", "dest": "/api/chat" },
     { "src": "/api/wrap-up", "dest": "/api/wrap-up" },
+    { "src": "/api/comments", "dest": "/api/comments" },
     { "src": "/.*", "dest": "/api/index" }
   ]
 }
