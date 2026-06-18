@@ -10,6 +10,7 @@ import {
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
+import { Divider } from "@/components/Divider";
 import { IconMedallion } from "@/components/IconMedallion";
 import { Surface } from "@/components/Surface";
 import { DimensionTrends } from "@/components/DimensionTrends";
@@ -99,7 +100,9 @@ function YouRoute() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-6">
+        <Divider surface="dark" className="mt-4" />
+
+        <div className="grid grid-cols-2 gap-2 mt-4">
           {STAT_CARDS.map(({ key, label, icon: Icon, to, search }) => (
             <Link
               key={key}
