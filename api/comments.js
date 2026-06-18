@@ -26,18 +26,46 @@ const CHANNEL =
 // a Slack failure never blocks saving the comment.
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 
-async function notifySlack(comment) {
+async function notifySlack(comment, meta = {}) {
   if (!SLACK_WEBHOOK_URL) return;
   const who = comment.name?.trim() || "Anonymous";
-  const text =
-    `*New prototype comment* from *${who}*\n` +
-    `> ${comment.text}\n` +
-    `_route_ \`${comment.route}\`  ·  _deployment_ \`${CHANNEL}\``;
+  const quoted = comment.text.replace(/\n/g, "\n> ");
+
+  // device · platform · mode — only the parts the client actually sent.
+  const config = [
+    meta.device && `📱 ${meta.device}`,
+    meta.platform,
+    meta.mode && `${meta.mode} mode`,
+  ]
+    .filter(Boolean)
+    .join("  ·  ");
+
+  const context = [
+    config,
+    `route \`${comment.route}\``,
+    `deployment \`${CHANNEL}\``,
+  ].filter(Boolean);
+
+  const blocks = [
+    { type: "section", text: { type: "mrkdwn", text: `💬 *New prototype comment* from *${who}*` } },
+    { type: "section", text: { type: "mrkdwn", text: `> ${quoted}` } },
+    { type: "context", elements: [{ type: "mrkdwn", text: context.join("  ·  ") }] },
+  ];
+  if (meta.url) {
+    blocks.push({
+      type: "actions",
+      elements: [
+        { type: "button", text: { type: "plain_text", text: "Open screen ↗" }, url: meta.url },
+      ],
+    });
+  }
+
   try {
     await fetch(SLACK_WEBHOOK_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text }),
+      // `text` is the notification/fallback preview; `blocks` is the rich body.
+      body: JSON.stringify({ text: `New comment from ${who}: ${comment.text}`, blocks }),
     });
   } catch {
     // Notification is a side effect — swallow so the comment still returns 200.
@@ -113,7 +141,7 @@ export default async function handler(req, res) {
       const { data, error } = await supabase.from(TABLE).insert(row).select().single();
       if (error) throw error;
       const saved = toClient(data);
-      await notifySlack(saved);
+      await notifySlack(saved, body.meta || {});
       return json(res, 200, saved);
     }
 

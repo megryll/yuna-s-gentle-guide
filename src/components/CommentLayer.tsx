@@ -8,6 +8,9 @@ import {
   useComments,
   type Comment,
 } from "@/lib/comments";
+import { useAppMode } from "@/lib/theme-prefs";
+import { usePlatform } from "@/lib/platform";
+import { useFrameSize } from "@/lib/frame-size";
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -86,6 +89,12 @@ export function CommentLayer() {
   const pathname = useLocation({ select: (l) => l.pathname });
   const { items, add, edit, remove } = useComments(pathname);
   const frame = useFrameRect(pathname);
+
+  // Captured at post-time so the Slack notification can name the exact screen
+  // and simulator config the reviewer was looking at.
+  const mode = useAppMode();
+  const platform = usePlatform();
+  const frameSize = useFrameSize();
 
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState<{ x: number; y: number } | null>(null);
@@ -201,7 +210,15 @@ export function CommentLayer() {
           y={draft.y}
           onCancel={() => setDraft(null)}
           onPost={(text, name) => {
-            add({ x: draft.x, y: draft.y, text, name });
+            add(
+              { x: draft.x, y: draft.y, text, name },
+              {
+                url: window.location.href,
+                device: frameSize.label,
+                platform: platform === "android" ? "Android" : "iOS",
+                mode,
+              },
+            );
             setDraft(null);
           }}
         />

@@ -19,6 +19,14 @@ export type Comment = {
 
 export type NewComment = Omit<Comment, "id" | "createdAt">;
 
+// Context attached to the Slack notification only — not persisted in the DB.
+export type CommentMeta = {
+  url?: string; // full page URL, for a one-click "open screen" link
+  device?: string; // frame size label, e.g. "15 Plus"
+  platform?: string; // "iOS" | "Android"
+  mode?: string; // "dark" | "light"
+};
+
 // ─── "Comments visible" admin toggle (per-browser) ───────────────────────────
 
 const ENABLED_KEY = "yuna.commentsEnabled";
@@ -147,7 +155,7 @@ function ensureLoaded() {
   void refreshComments();
 }
 
-export async function addComment(input: NewComment) {
+export async function addComment(input: NewComment, meta?: CommentMeta) {
   const optimistic: Comment = { ...input, id: newId(), createdAt: Date.now() };
   comments = [...comments, optimistic];
   emitData();
@@ -160,7 +168,7 @@ export async function addComment(input: NewComment) {
     const res = await fetch("/api/comments", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, meta }),
     });
     if (!res.ok) throw new Error(String(res.status));
     const saved: Comment = await res.json();
@@ -245,7 +253,8 @@ export function useComments(route: string) {
 
   return {
     items: all.filter((c) => c.route === route),
-    add: (input: Omit<NewComment, "route">) => addComment({ ...input, route }),
+    add: (input: Omit<NewComment, "route">, meta?: CommentMeta) =>
+      addComment({ ...input, route }, meta),
     edit: editComment,
     remove: deleteComment,
   };
