@@ -175,7 +175,9 @@ export function CardRow({
   return (
     // Dark-tone rows pin white ink against `.theme-light` at the wrapper so the
     // arrow + menu (siblings of the inner button) stay white in light app mode.
-    <div className={cn("relative", !isLight && "card-fixed-dark")}>
+    // Completed rows reserve top margin for the badge that overhangs (-top-2), so
+    // stacked cards keep their gap instead of the badge crowding the row above.
+    <div className={cn("relative", completed && "mt-2", !isLight && "card-fixed-dark")}>
       {isNew && !completed && <NewBadge className="-top-3 left-4" />}
       {completed && <Badge icon size="sm" label="Completed" className="absolute -top-2 left-4 z-10" />}
       <button

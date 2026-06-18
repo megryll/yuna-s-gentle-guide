@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { Plus, ThumbsUp, ThumbsDown, Check, ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -120,6 +120,11 @@ async function generateScript(minutes: number, focus: string[]): Promise<string>
 
 function MeditationRoute() {
   const navigate = useNavigate();
+  const router = useRouter();
+  // Return to wherever the user came from (You, Tools, …); fall back to Tools on
+  // a direct deep-link with no history.
+  const goBack = () =>
+    router.history.canGoBack() ? router.history.back() : navigate({ to: "/tools" });
   const { step: stepParam } = Route.useSearch();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const [step, setStep] = useState<Step>(stepParam ?? "create");
@@ -248,7 +253,7 @@ function MeditationRoute() {
             selected={selected}
             onToggleTag={toggleTag}
             onOpenCustomize={() => setDrawerOpen(true)}
-            onBack={() => navigate({ to: "/tools" })}
+            onBack={goBack}
             onStart={() => setStep("crafting")}
           />
         )}
@@ -277,7 +282,7 @@ function MeditationRoute() {
               setSaved(true);
               showToast("The meditation has been saved!", "success");
             }}
-            onClose={() => navigate({ to: "/tools" })}
+            onClose={goBack}
           />
         )}
       </div>

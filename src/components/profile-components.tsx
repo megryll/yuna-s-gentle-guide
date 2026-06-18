@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/Button";
 import { Accordion } from "@/components/Accordion";
 import { Badge } from "@/components/Badge";
-import type { Insight, InsightCategory } from "@/lib/profile-data";
+import type { Insight } from "@/lib/profile-data";
 import { useAppMode } from "@/lib/theme-prefs";
 import { YunaExplains } from "@/components/YunaExplains";
 
@@ -24,10 +25,15 @@ const greenMix = (pct: number) =>
 export function ProgressRing({
   progress,
   icon,
+  size = 89,
 }: {
   progress: number;
   icon: string;
+  /** Rendered diameter in px. Geometry is defined in a fixed 92-unit viewBox, so
+   *  the stroke and centred icon scale with this. Defaults to 89. */
+  size?: number;
 }) {
+  const imgSize = Math.round(size * 0.58);
   const r = 43;
   const cx = 46;
   const cy = 46;
@@ -51,8 +57,8 @@ export function ProgressRing({
   const trackStroke = isLight ? "#ffffff" : "rgba(255,255,255,0.18)";
 
   return (
-    <div className="relative" style={{ width: 89, height: 89 }}>
-      <svg viewBox="0 0 92 92" width={89} height={89} className="absolute inset-0">
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 92 92" width={size} height={size} className="absolute inset-0">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={trackStroke} strokeWidth={3} />
         <circle
           cx={cx}
@@ -72,7 +78,7 @@ export function ProgressRing({
         src={icon}
         alt=""
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain"
-        style={{ width: 52, height: 52 }}
+        style={{ width: imgSize, height: imgSize }}
       />
     </div>
   );
@@ -130,43 +136,6 @@ export function FocusAreaBentoCard({
         <div className="flex items-center justify-between mt-4">
           <span className="text-xs leading-[18px] text-white/75">{taskCount} tasks</span>
           <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ─── Insight category tile ────────────────────────────────────────────────
-// Compact 3-up bento tile summarising one "what Yuna knows" group (count +
-// label), tapping through to its /insights/$category list. Shares the Focus
-// Area tile's frosted-glass look so the two bento rows read as one family.
-
-export function InsightCategoryTile({
-  category,
-  label,
-  count,
-}: {
-  category: InsightCategory;
-  label: string;
-  count: number;
-}) {
-  const mode = useAppMode();
-  const isLight = mode === "light";
-  const cardBg = isLight ? "bg-white/[0.55]" : "bg-white/[0.06]";
-  return (
-    <Link
-      to="/insights/$category"
-      params={{ category }}
-      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-md active:opacity-90 transition-opacity`}
-      style={{ minHeight: 116 }}
-    >
-      <div className="relative flex-1 flex flex-col justify-between p-3.5">
-        <span className="font-display font-normal text-3xl leading-none text-white">{count}</span>
-        <div className="flex items-end justify-between gap-1 mt-3">
-          <span className="text-xs font-medium leading-[15px] tracking-[0.02em] text-white/75">
-            {label}
-          </span>
-          <ArrowRight size={13} strokeWidth={1.5} className="text-white/60 shrink-0" aria-hidden />
         </div>
       </div>
     </Link>
@@ -242,6 +211,26 @@ export function InsightCard({
         </div>
       </Accordion>
     </div>
+  );
+}
+
+// ─── More button ──────────────────────────────────────────────────────────
+
+export function MoreButton({ count, onClick }: { count: number; onClick?: () => void }) {
+  return (
+    <Button
+      surface="dark"
+      variant="secondary"
+      fullWidth
+      type="button"
+      onClick={onClick}
+      className="gap-2.5 px-5 py-2.5"
+    >
+      <span className="text-uppercase font-bold tracking-[0.08em] uppercase text-white/75">
+        +{count} more
+      </span>
+      <ArrowRight size={14} strokeWidth={1.5} className="text-white/60" aria-hidden />
+    </Button>
   );
 }
 

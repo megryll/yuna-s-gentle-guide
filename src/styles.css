@@ -490,22 +490,12 @@
   .survey-band-in {
     animation: yuna-fade 500ms ease both;
   }
-  .survey-line-draw {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: survey-line-draw 1000ms cubic-bezier(0.4, 0, 0.2, 1) 260ms forwards;
-  }
-  @keyframes survey-line-draw {
-    to { stroke-dashoffset: 0; }
-  }
-  .survey-area-grow {
-    transform-box: fill-box;
-    transform-origin: bottom;
-    animation: survey-area-grow 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 320ms both;
-  }
-  @keyframes survey-area-grow {
-    from { opacity: 0; transform: scaleY(0); }
-    to { opacity: 1; transform: scaleY(1); }
+  /* The line + area fade in together. A stroke-dash draw paired with
+     non-scaling-stroke, and a fill-box scaleY on the polygon, both render as
+     broken fragments under the chart's non-uniform (preserveAspectRatio="none")
+     viewBox — a plain opacity fade is crisp and reliable. */
+  .survey-chart-in {
+    animation: yuna-fade 600ms ease 220ms both;
   }
   @keyframes welcome-rise {
     from { opacity: 0; transform: translateY(40px); }

@@ -263,6 +263,7 @@ export const HOME_CARDS: HomeCard[] = [
     description:
       "A quick measure of how you're sleeping, what's weighing on you, and how much you're carrying.",
     duration: "5 min",
+    isNew: true,
   },
   {
     type: "affirmation",

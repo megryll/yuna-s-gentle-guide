@@ -72,11 +72,13 @@ export const PAGES: ScreenEntry[] = [
   },
   { label: "Wrap-up", to: "/wrap-up" },
   {
-    label: "Profile",
+    label: "You",
     to: "/you",
     children: [
       { label: "Focus area 1", to: "/focus-area/1" },
       { label: "Focus area 2", to: "/focus-area/2" },
+      { label: "All Insights", to: "/your-insights" },
+      { label: "All Tasks", to: "/all-tasks" },
       { label: "Anxiety history (GAD-7)", to: "/assessment/$id", params: { id: "gad-7" } },
       { label: "Depression history (PHQ-9)", to: "/assessment/$id", params: { id: "phq-9" } },
       { label: "Self-esteem history", to: "/assessment/$id", params: { id: "self-esteem" } },

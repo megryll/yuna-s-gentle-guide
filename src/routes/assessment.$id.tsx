@@ -3,7 +3,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CalendarClock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { PageHeader } from "@/components/PageHeader";
-import { Surface } from "@/components/Surface";
 import { Button } from "@/components/Button";
 import { CalendarPicker } from "@/components/CalendarPicker";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -16,7 +15,7 @@ import {
   assessmentDelta,
   bandConcernRank,
   bandFor,
-  getAssessment,
+  getAssessmentOrDimension,
 } from "@/lib/assessment-data";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +54,7 @@ const BAND_FILLS = {
 
 function AssessmentDetailRoute() {
   const { id } = Route.useParams();
-  const assessment = getAssessment(id);
+  const assessment = getAssessmentOrDimension(id);
   const router = useRouter();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const muted = usePrototypeMute();
@@ -92,6 +91,11 @@ function AssessmentDetail({
   const [selected, setSelected] = useState(a.history.length - 1);
   const entry = a.history[selected];
 
+  // Custom dimensions ride a synthesized 0–100 wellness scale whose raw number
+  // is meaningless, so they lead with the band + trend rather than a score.
+  // Validated instruments (PHQ-9, GAD-7, …) keep their real, interpretable score.
+  const isDimension = !a.questionCount;
+
   // Editable next-recommended date. Prototype-local: the drawer's CalendarPicker
   // sets it; nothing is persisted.
   const [nextOn, setNextOn] = useState(a.nextOn);
@@ -112,8 +116,8 @@ function AssessmentDetail({
   // Area polygon: the line, then down the right edge to the baseline and back.
   const areaPoints = `${linePoints} ${xPct(a.history.length - 1)},100 ${xPct(0)},100`;
 
-  // Dots pop as the drawing line reaches them: first at the line-draw delay,
-  // last as the stroke finishes (matches survey-line-draw timing in styles.css).
+  // Dots pop in left-to-right after the chart fades in, so the eye tracks along
+  // the trend.
   const dotDelay = (i: number) =>
     a.history.length === 1 ? 320 : 320 + (i * 760) / (a.history.length - 1);
 
@@ -124,25 +128,42 @@ function AssessmentDetail({
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-2 pb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <p className="text-center text-xs font-semibold tracking-[0.12em] uppercase text-white/75">
-            {a.instrument} · {a.questionCount} questions · {a.durationLabel}
+            {a.instrument}
+            {a.questionCount ? ` · ${a.questionCount} questions · ${a.durationLabel}` : ""}
           </p>
 
           {/* The selected administration's score, on the instrument's real
               scale, with the range it landed in and the change since last time. */}
           <section className="mt-6 flex flex-col items-center text-center">
-            <span
-              key={selected}
-              className="survey-numeral-pop font-display text-6xl tabular-nums text-white"
-            >
-              {entry.score}
-            </span>
-            <span className="mt-1 text-xs text-white/60">out of {a.max}</span>
-            <p className="mt-2 text-sm text-white/85">
-              {bandFor(a, entry.score).label} range · {assessmentDelta(a.history, selected)}
-            </p>
+            {isDimension ? (
+              <>
+                <span
+                  key={selected}
+                  className="survey-numeral-pop font-display text-4xl leading-tight text-white"
+                >
+                  {bandFor(a, entry.score).label}
+                </span>
+                <p className="mt-2 text-sm text-white/85">{assessmentDelta(a.history, selected)}</p>
+              </>
+            ) : (
+              <>
+                <span
+                  key={selected}
+                  className="survey-numeral-pop font-display text-6xl tabular-nums text-white"
+                >
+                  {entry.score}
+                </span>
+                <span className="mt-1 text-xs text-white/60">out of {a.max}</span>
+                <p className="mt-2 text-sm text-white/85">
+                  {bandFor(a, entry.score).label} range · {assessmentDelta(a.history, selected)}
+                </p>
+              </>
+            )}
           </section>
 
-          <Surface className="mt-6 overflow-hidden pb-3">
+          {/* Full-bleed: the chart breaks out of the px-6 gutter to span the
+              screen, sitting directly on the photo rather than in a panel. */}
+          <div className="-mx-6 mt-6 overflow-hidden pb-3">
             <div className="relative h-44">
               {/* Severity bands: the background geography that gives a score
                   its meaning. Crossing a border is the headline event. */}
@@ -162,21 +183,20 @@ function AssessmentDetail({
                     animationDelay: `${i * 50}ms`,
                   }}
                 >
-                  <span className="absolute left-2 top-1 text-[10px] font-medium tracking-[0.12em] uppercase text-white/60">
+                  <span className="absolute right-2 top-1 text-[10px] font-medium tracking-[0.12em] uppercase text-white/60">
                     {b.label}
                   </span>
                 </div>
               ))}
 
-              {/* Soft area fill + guide line. The area grows up from the
-                  baseline; the line draws left-to-right. Dots are the data; the
-                  line is a guide for the eye. non-scaling-stroke keeps it
-                  hairline under the non-uniform viewBox stretch. */}
+              {/* Soft area fill + guide line, faded in together. Dots are the
+                  data; the line is a guide for the eye. non-scaling-stroke keeps
+                  it hairline under the non-uniform viewBox stretch. */}
               <svg
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 aria-hidden="true"
-                className="absolute inset-0 h-full w-full"
+                className="survey-chart-in absolute inset-0 h-full w-full"
               >
                 <defs>
                   <linearGradient id={`area-${a.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -184,14 +204,9 @@ function AssessmentDetail({
                     <stop offset="100%" stopColor="var(--secondary-green)" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <polygon
-                  className="survey-area-grow"
-                  points={areaPoints}
-                  fill={`url(#area-${a.id})`}
-                />
+                <polygon points={areaPoints} fill={`url(#area-${a.id})`} />
                 <polyline
-                  className="survey-line-draw text-secondary-green"
-                  pathLength={1}
+                  className="text-secondary-green"
                   points={linePoints}
                   fill="none"
                   stroke="currentColor"
@@ -220,15 +235,17 @@ function AssessmentDetail({
                     className="absolute -translate-x-1/2 -translate-y-1/2 p-3"
                     style={{ left: `${xPct(i)}%`, top: `${yPct(h.score)}%` }}
                   >
-                    <span
-                      className={cn(
-                        "absolute -translate-x-1/2 -translate-y-1/2 text-xs tabular-nums",
-                        isSelected ? "font-semibold text-white" : "text-white/60",
-                      )}
-                      style={{ left: "50%", top: "-10px" }}
-                    >
-                      {h.score}
-                    </span>
+                    {!isDimension && (
+                      <span
+                        className={cn(
+                          "absolute -translate-x-1/2 -translate-y-1/2 text-xs tabular-nums",
+                          isSelected ? "font-semibold text-white" : "text-white/60",
+                        )}
+                        style={{ left: "50%", top: "-10px" }}
+                      >
+                        {h.score}
+                      </span>
+                    )}
                     <span
                       className="survey-dot-pop relative block"
                       style={{ animationDelay: `${dotDelay(i)}ms` }}
@@ -262,7 +279,7 @@ function AssessmentDetail({
                 </span>
               ))}
             </div>
-          </Surface>
+          </div>
 
           {/* The selected dot's date sits as the eyebrow over Yuna's read of
               the trend — one combined block, no separate provenance card. */}
@@ -273,21 +290,24 @@ function AssessmentDetail({
             {a.reflection}
           </YunaExplains>
 
-          {/* Direct, editable cadence line. */}
-          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/75">
-            <CalendarClock size={15} strokeWidth={1.75} className="text-white/60" aria-hidden />
-            <span>Recommended again on {nextOn}</span>
-            <Button
-              surface={surface}
-              variant="link"
-              onClick={() => {
-                setEditOpen(true);
-                playSelectPop({ muted });
-              }}
-            >
-              Edit
-            </Button>
-          </div>
+          {/* Direct, editable cadence line. Omitted for custom dimensions,
+              which have no recommended instrument cadence. */}
+          {nextOn && (
+            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/75">
+              <CalendarClock size={15} strokeWidth={1.75} className="text-white/60" aria-hidden />
+              <span>Recommended again on {nextOn}</span>
+              <Button
+                surface={surface}
+                variant="link"
+                onClick={() => {
+                  setEditOpen(true);
+                  playSelectPop({ muted });
+                }}
+              >
+                Edit
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

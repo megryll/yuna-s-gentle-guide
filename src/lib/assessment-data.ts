@@ -3,6 +3,8 @@
 // administrations recorded over time. Shared by the check-ins hub (trend cards)
 // and the /assessment/$id detail view so the two never drift.
 
+import { dimensionTrend, getDimension } from "@/lib/progress-data";
+
 export type AssessmentEntry = {
   date: string; // short axis label
   longDate: string; // prose-friendly date
@@ -18,9 +20,10 @@ export type Band = { label: string; from: number; to: number };
 export type Assessment = {
   id: string; // route param, e.g. "gad-7"
   domain: string; // human title, e.g. "Anxiety"
-  instrument: string; // validated tool, e.g. "GAD-7"
-  questionCount: number;
-  durationLabel: string; // "2 min"
+  instrument: string; // validated tool, e.g. "GAD-7", or "Yuna check-in" for a custom dimension
+  // Clinical-instrument metadata; omitted for synthesized custom-dimension details.
+  questionCount?: number;
+  durationLabel?: string; // "2 min"
   max: number;
   bands: Band[];
   // Whether a higher score is the concerning direction. Anxiety/depression:
@@ -96,28 +99,34 @@ export const ASSESSMENTS: Assessment[] = [
     ],
     description: "Track low mood over time so small shifts are easier to notice and name.",
     reflection:
-      "Your mood scores have eased out of the moderate range since winter. You mentioned getting outside more in the mornings, and that lines up with what the check-ins show.",
+      "Your mood scores have eased out of the moderate range since early spring. You mentioned getting outside more in the mornings, and that lines up with what the check-ins show.",
     cadenceNote:
-      "Yuna offers this check-in every few weeks. Your next one is expected in late June, or sooner if low mood comes up in your sessions.",
-    nextOn: "June 30",
+      "Yuna offers this check-in every two weeks. Your next one is expected in late June, or sooner if low mood comes up in your sessions.",
+    nextOn: "June 26",
     history: [
       {
-        date: "Feb 20",
-        longDate: "February 20",
-        score: 14,
+        date: "Apr 14",
+        longDate: "April 14",
+        score: 12,
         note: "You had described a string of flat, heavy days, so Yuna suggested a first mood check-in to ground it in something concrete.",
       },
       {
-        date: "Apr 2",
-        longDate: "April 2",
-        score: 11,
+        date: "Apr 28",
+        longDate: "April 28",
+        score: 9,
         note: "A follow-up after you started getting outside on your morning walks again.",
       },
       {
-        date: "May 18",
-        longDate: "May 18",
-        score: 7,
+        date: "May 12",
+        longDate: "May 12",
+        score: 8,
         note: "Things had felt lighter for a couple of weeks, and Yuna checked whether the lift was holding.",
+      },
+      {
+        date: "Jun 12",
+        longDate: "June 12",
+        score: 6,
+        note: "The steadier stretch had held, and Yuna checked in to see it land firmly in the mild range.",
       },
     ],
   },
@@ -165,6 +174,64 @@ export const ASSESSMENTS: Assessment[] = [
 
 export const getAssessment = (id: string): Assessment | undefined =>
   ASSESSMENTS.find((a) => a.id === id);
+
+// Generic wellness geography for custom dimensions: a 0–100 axis where higher is
+// healthier (so the darkest band is the bottom). Reused by every synthesized
+// dimension detail so they read as one system.
+const WELLNESS_BANDS: Band[] = [
+  { label: "Thriving", from: 75, to: 100 },
+  { label: "Steady", from: 50, to: 75 },
+  { label: "Finding footing", from: 25, to: 50 },
+  { label: "Struggling", from: 0, to: 25 },
+];
+
+const MONTHS: Record<string, string> = {
+  January: "Jan", February: "Feb", March: "Mar", April: "Apr", May: "May", June: "Jun",
+  July: "Jul", August: "Aug", September: "Sep", October: "Oct", November: "Nov", December: "Dec",
+};
+const shortDate = (longDate: string): string =>
+  longDate.replace(/^(\w+)/, (m) => MONTHS[m] ?? m);
+
+// A custom dimension (no validated instrument) rendered through the same detail
+// view: its real 0–100 wellness history, generic wellness bands, and a short
+// reflection drawn from the trend so the screen needs no per-dimension copy.
+function synthFromDimension(id: string): Assessment | undefined {
+  const d = getDimension(id);
+  if (!d || d.history.length === 0) return undefined;
+  const trend = dimensionTrend(d);
+  const area = d.label.toLowerCase();
+  const reflection = !trend
+    ? `This is your baseline for ${area}. Each check-in from here gives it a line to move along.`
+    : trend.dir === "up"
+      ? `Your sense of ${area} has been trending up since ${trend.sinceLong}. Whatever you have been leaning on lately, it is showing here.`
+      : trend.dir === "down"
+        ? `Your sense of ${area} has eased down since ${trend.sinceLong}. It might be worth noticing what has felt heavier in that stretch.`
+        : `Your sense of ${area} has held fairly steady since ${trend.sinceLong}.`;
+  return {
+    id: d.id,
+    domain: d.label,
+    instrument: d.instrument ?? "Yuna check-in",
+    max: 100,
+    higherIsWorse: false,
+    bands: WELLNESS_BANDS,
+    description: "",
+    reflection,
+    cadenceNote: "",
+    nextOn: "",
+    history: d.history.map((m) => ({
+      date: shortDate(m.longDate),
+      longDate: m.longDate,
+      score: m.score,
+      note: "",
+    })),
+  };
+}
+
+// The detail view's resolver: a validated instrument when one exists, otherwise a
+// custom dimension synthesized from its wellness trend. Lets every tracked
+// dimension reach a real detail screen instead of bouncing to the baseline quiz.
+export const getAssessmentOrDimension = (id: string): Assessment | undefined =>
+  getAssessment(id) ?? synthFromDimension(id);
 
 // Classify a score into its band (to is exclusive except the top band).
 export const bandFor = (a: Assessment, score: number): Band =>

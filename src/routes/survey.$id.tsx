@@ -12,6 +12,8 @@ import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { Slider } from "@/components/Slider";
 import { TileChoice } from "@/components/TileChoice";
 import { YunaAvatar } from "@/components/YunaAvatar";
+import { IconMedallion } from "@/components/IconMedallion";
+import { Surface } from "@/components/Surface";
 import { QuestionCard, CardLead } from "@/components/SurveyCard";
 import { PlacedForYou } from "@/components/SessionReflection";
 import { useYunaIdentity } from "@/lib/yuna-session";
@@ -171,19 +173,44 @@ function SurveyRoute() {
     );
   };
 
-  // The completion payoff is its own moment — no header, progress, or card.
+  // The completion payoff is its own moment — same structure as the "Your
+  // starting point" finish: eyebrow + close, Yuna's avatar reflecting back
+  // inside a frosted card, the activities placed for them, then the exits.
   if (onCompletion) {
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0 text-white">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-16 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex-1 flex flex-col gap-10 overflow-y-auto overflow-x-hidden px-8 pb-6 yuna-fade-in min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="pt-14">
+              <div className="relative flex items-center justify-center">
+                <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
+                  Survey complete
+                </p>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <Button
+                    surface={surface}
+                    variant="plain"
+                    size="icon"
+                    onClick={() => navigate({ to: "/home" })}
+                    aria-label="Close"
+                  >
+                    <X strokeWidth={1.6} aria-hidden />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <CompletionPane survey={survey} />
+
+            <div className="pt-2 flex flex-col gap-3">
+              <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/home" })}>
+                Return home
+              </Button>
+              <Button surface={surface} variant="secondary" fullWidth onClick={() => navigate({ to: "/you" })}>
+                See your progress
+              </Button>
+            </div>
           </div>
-          <footer className="shrink-0 px-6 pb-10 pt-3">
-            <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/home" })}>
-              Continue
-            </Button>
-          </footer>
           {completedForReal && <Confetti />}
         </div>
       </PhoneFrame>
@@ -537,33 +564,26 @@ function CompletionPane({
 }) {
   const { avatar } = useYunaIdentity();
   return (
-    <div className="flex flex-col gap-10 pt-2">
-      <div className="flex flex-col items-center text-center">
-        <div className="yuna-rise">
-          <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={88} />
-        </div>
-        <h1
-          className="mt-5 font-display text-3xl leading-tight tracking-tight text-white yuna-rise"
-          style={{ animationDelay: "80ms" }}
-        >
-          {survey.conclusion.title}
-        </h1>
-        <div className="mt-3 flex flex-col gap-3">
+    <>
+      <Surface className="px-6 pt-7 pb-7 flex flex-col items-center text-center gap-4">
+        <IconMedallion size="lg" label="Yuna">
+          <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
+        </IconMedallion>
+        {survey.conclusion.title && (
+          <h1 className="font-display text-2xl leading-tight tracking-tight text-white">
+            {survey.conclusion.title}
+          </h1>
+        )}
+        <div className="flex flex-col gap-3">
           {survey.conclusion.reflection.map((line, i) => (
-            <p
-              key={i}
-              className="text-sm leading-snug text-white/85 yuna-rise"
-              style={{ animationDelay: `${160 + i * 90}ms` }}
-            >
+            <p key={i} className="text-base leading-relaxed text-white/90">
               {line}
             </p>
           ))}
         </div>
-      </div>
+      </Surface>
 
-      <div className="yuna-rise" style={{ animationDelay: "400ms" }}>
-        <PlacedForYou items={PLACED_FOR_YOU} />
-      </div>
-    </div>
+      <PlacedForYou items={PLACED_FOR_YOU} />
+    </>
   );
 }

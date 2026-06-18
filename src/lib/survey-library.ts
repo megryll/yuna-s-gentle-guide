@@ -62,4 +62,37 @@ const CLINICAL: LibrarySurvey[] = ASSESSMENTS.map((a) => ({
   assessmentId: a.id,
 }));
 
-export const SURVEY_LIBRARY: LibrarySurvey[] = [...DISCOVERY, ...CLINICAL];
+// Non-validated custom quizzes Yuna offers — no clinical instrument behind them.
+// A mix of one-time and periodic so the library shows every cadence + taken
+// state. None are taken in the demo, so they read as "Not taken yet".
+const CUSTOM: LibrarySurvey[] = [
+  {
+    id: "sleep-patterns",
+    title: "Discover your sleep patterns",
+    description: "A short look at what's helping and hurting your rest.",
+    duration: "4 min",
+    cadence: "One-time",
+    to: "/questionnaire/$id",
+    params: { id: "your-starting-point" },
+  },
+  {
+    id: "drains-restores",
+    title: "What drains and restores you",
+    description: "Map where your energy goes, and where it comes back.",
+    duration: "5 min",
+    cadence: "One-time",
+    to: "/questionnaire/$id",
+    params: { id: "your-starting-point" },
+  },
+  {
+    id: "relationship-check",
+    title: "Your relationship check-in",
+    description: "Reflect on how connected and supported you've felt lately.",
+    duration: "4 min",
+    cadence: "Monthly",
+    to: "/questionnaire/$id",
+    params: { id: "your-starting-point" },
+  },
+];
+
+export const SURVEY_LIBRARY: LibrarySurvey[] = [...DISCOVERY, ...CLINICAL, ...CUSTOM];

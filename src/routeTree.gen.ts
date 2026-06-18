@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YourInsightsRouteImport } from './routes/your-insights'
 import { Route as YouRouteImport } from './routes/you'
 import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
@@ -31,6 +32,7 @@ import { Route as CompletedTasksRouteImport } from './routes/completed-tasks'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnimationSpecsRouteImport } from './routes/animation-specs'
+import { Route as AllTasksRouteImport } from './routes/all-tasks'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TherapistScheduleIdRouteImport } from './routes/therapist-schedule.$id'
@@ -83,6 +85,11 @@ import { Route as DsAccordionRouteImport } from './routes/ds.accordion'
 import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as AssessmentIdRouteImport } from './routes/assessment.$id'
 
+const YourInsightsRoute = YourInsightsRouteImport.update({
+  id: '/your-insights',
+  path: '/your-insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const YouRoute = YouRouteImport.update({
   id: '/you',
   path: '/you',
@@ -192,6 +199,11 @@ const AuthRoute = AuthRouteImport.update({
 const AnimationSpecsRoute = AnimationSpecsRouteImport.update({
   id: '/animation-specs',
   path: '/animation-specs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AllTasksRoute = AllTasksRouteImport.update({
+  id: '/all-tasks',
+  path: '/all-tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptTermsRoute = AcceptTermsRouteImport.update({
@@ -454,6 +466,7 @@ const AssessmentIdRoute = AssessmentIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/all-tasks': typeof AllTasksRoute
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
@@ -476,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/your-insights': typeof YourInsightsRoute
   '/assessment/$id': typeof AssessmentIdRoute
   '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
@@ -529,6 +543,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/all-tasks': typeof AllTasksRoute
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
@@ -551,6 +566,7 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/your-insights': typeof YourInsightsRoute
   '/assessment/$id': typeof AssessmentIdRoute
   '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
@@ -605,6 +621,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accept-terms': typeof AcceptTermsRoute
+  '/all-tasks': typeof AllTasksRoute
   '/animation-specs': typeof AnimationSpecsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
@@ -627,6 +644,7 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/wrap-up': typeof WrapUpRoute
   '/you': typeof YouRoute
+  '/your-insights': typeof YourInsightsRoute
   '/assessment/$id': typeof AssessmentIdRoute
   '/book/$id': typeof BookIdRoute
   '/ds/accordion': typeof DsAccordionRoute
@@ -682,6 +700,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-terms'
+    | '/all-tasks'
     | '/animation-specs'
     | '/auth'
     | '/chat'
@@ -704,6 +723,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/your-insights'
     | '/assessment/$id'
     | '/book/$id'
     | '/ds/accordion'
@@ -757,6 +777,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-terms'
+    | '/all-tasks'
     | '/animation-specs'
     | '/auth'
     | '/chat'
@@ -779,6 +800,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/your-insights'
     | '/assessment/$id'
     | '/book/$id'
     | '/ds/accordion'
@@ -832,6 +854,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/accept-terms'
+    | '/all-tasks'
     | '/animation-specs'
     | '/auth'
     | '/chat'
@@ -854,6 +877,7 @@ export interface FileRouteTypes {
     | '/tools'
     | '/wrap-up'
     | '/you'
+    | '/your-insights'
     | '/assessment/$id'
     | '/book/$id'
     | '/ds/accordion'
@@ -908,6 +932,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptTermsRoute: typeof AcceptTermsRoute
+  AllTasksRoute: typeof AllTasksRoute
   AnimationSpecsRoute: typeof AnimationSpecsRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
@@ -930,6 +955,7 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   WrapUpRoute: typeof WrapUpRoute
   YouRoute: typeof YouRoute
+  YourInsightsRoute: typeof YourInsightsRoute
   AssessmentIdRoute: typeof AssessmentIdRoute
   BookIdRoute: typeof BookIdRoute
   DsAccordionRoute: typeof DsAccordionRoute
@@ -983,6 +1009,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/your-insights': {
+      id: '/your-insights'
+      path: '/your-insights'
+      fullPath: '/your-insights'
+      preLoaderRoute: typeof YourInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/you': {
       id: '/you'
       path: '/you'
@@ -1135,6 +1168,13 @@ declare module '@tanstack/react-router' {
       path: '/animation-specs'
       fullPath: '/animation-specs'
       preLoaderRoute: typeof AnimationSpecsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/all-tasks': {
+      id: '/all-tasks'
+      path: '/all-tasks'
+      fullPath: '/all-tasks'
+      preLoaderRoute: typeof AllTasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-terms': {
@@ -1500,6 +1540,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptTermsRoute: AcceptTermsRoute,
+  AllTasksRoute: AllTasksRoute,
   AnimationSpecsRoute: AnimationSpecsRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
@@ -1522,6 +1563,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   WrapUpRoute: WrapUpRoute,
   YouRoute: YouRoute,
+  YourInsightsRoute: YourInsightsRoute,
   AssessmentIdRoute: AssessmentIdRoute,
   BookIdRoute: BookIdRoute,
   DsAccordionRoute: DsAccordionRoute,

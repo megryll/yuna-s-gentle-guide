@@ -5,12 +5,18 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
+import { IconMedallion } from "@/components/IconMedallion";
 import { MultipleChoice } from "@/components/MultipleChoice";
+import { PlacedForYou } from "@/components/SessionReflection";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Slider } from "@/components/Slider";
+import { Surface } from "@/components/Surface";
 import { QuestionCard, CardLead } from "@/components/SurveyCard";
 import { Tag } from "@/components/Tag";
-import { YunaExplains } from "@/components/YunaExplains";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
+import { useYunaIdentity } from "@/lib/yuna-session";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
@@ -39,6 +45,13 @@ const TOTAL_STEPS = 5;
 const COMPLETION_STEP = 5;
 const MAX_PRIORITIES = 3;
 
+// A small starting set Yuna "places" on completion — a daily practice, a skill,
+// and a goal — surfaced as the New activities payoff (same section the session
+// wrap-up uses). Curated by id so the screen reads as a deliberate first step.
+const COMPLETION_ACTIVITIES: HomeCard[] = ["midday-reset", "please-technique", "daily-agenda"]
+  .map((id) => HOME_CARDS.find((c) => c.id === id))
+  .filter((c): c is HomeCard => !!c);
+
 type StepSearch = { step?: number };
 
 export const Route = createFileRoute("/questionnaire/$id")({
@@ -61,6 +74,7 @@ function QuestionnaireRoute() {
   const router = useRouter();
   const muted = usePrototypeMute();
   const surface = useAppMode() === "light" ? "light" : "dark";
+  const { avatar } = useYunaIdentity();
 
   // Focus-area ids in tap order = priority order; the top one drives the rest.
   const [focus, setFocus] = useState<string[]>([]);
@@ -221,35 +235,60 @@ function QuestionnaireRoute() {
       focusLabels.length <= 1
         ? focusLabels.join("")
         : `${focusLabels.slice(0, -1).join(", ")} and ${focusLabels[focusLabels.length - 1]}`;
+    const bridge = "I've added a few activities to your home to begin with.";
     const reflection = !top
-      ? "Thank you for sharing this with me. You told me stress and sleep & energy are weighing on you most right now, and that stress comes first. We'll start there, one small step at a time."
+      ? `Thank you for sharing this with me. You told me stress and sleep & energy are weighing on you most right now, and that stress comes first. We'll start there, one small step at a time. ${bridge}`
       : focusLabels.length === 1
-        ? `Thank you for sharing this with me. You told me ${top} is where you'd like support right now. We'll take it gently, one small step at a time.`
-        : `Thank you for sharing this with me. You told me ${list} matter to you, and that ${top} comes first. We'll start there, one small step at a time.`;
+        ? `Thank you for sharing this with me. You told me ${top} is where you'd like support right now. We'll take it gently, one small step at a time. ${bridge}`
+        : `Thank you for sharing this with me. You told me ${list} matter to you, and that ${top} comes first. We'll start there, one small step at a time. ${bridge}`;
 
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0 text-white">
-          <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
-              <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
-                <span className="text-5xl" aria-hidden>
-                  🎉
-                </span>
+          <div className="flex-1 flex flex-col gap-10 overflow-y-auto overflow-x-hidden px-8 pb-6 yuna-fade-in min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Header: eyebrow + close. No title or completion mark — Yuna's
+                centered avatar and reflection below are the moment. */}
+            <div className="pt-14">
+              <div className="relative flex items-center justify-center">
+                <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
+                  Questionnaire complete
+                </p>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <Button
+                    surface={surface}
+                    variant="plain"
+                    size="icon"
+                    onClick={exitFlow}
+                    aria-label="Close"
+                  >
+                    <X strokeWidth={1.6} aria-hidden />
+                  </Button>
+                </div>
               </div>
-
-              <h1 className="font-display text-3xl leading-tight tracking-tight text-white max-w-[16rem]">
-                Great job sharing your starting point.
-              </h1>
-
-              <YunaExplains surface={surface} className="w-full text-left">
-                {reflection}
-              </YunaExplains>
             </div>
 
-            <div className="shrink-0">
-              <Button surface={surface} variant="primary" fullWidth onClick={exitFlow}>
-                Close
+            {/* Yuna reflects back the priorities — avatar centered above the
+                text, like the wrap-up keepsake card but without the photo. */}
+            <Surface className="px-6 pt-7 pb-7 flex flex-col items-center text-center gap-4">
+              <IconMedallion size="lg" label="Yuna">
+                <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
+              </IconMedallion>
+              <p className="text-base leading-relaxed text-white/90">{reflection}</p>
+            </Surface>
+
+            <PlacedForYou items={COMPLETION_ACTIVITIES} />
+
+            <div className="pt-2 flex flex-col gap-3">
+              <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/home" })}>
+                Return home
+              </Button>
+              <Button
+                surface={surface}
+                variant="secondary"
+                fullWidth
+                onClick={() => navigate({ to: "/you" })}
+              >
+                See your progress
               </Button>
             </div>
           </div>

@@ -18,12 +18,14 @@ function Demo<V extends string>({
   surface,
   options,
   size,
+  initial = null,
 }: {
   surface: "dark" | "light";
   options: ReadonlyArray<RatingScaleOption<V>>;
   size?: "md" | "lg";
+  initial?: V | null;
 }) {
-  const [value, setValue] = useState<V | null>(null);
+  const [value, setValue] = useState<V | null>(initial);
   return (
     <RatingScale
       surface={surface}
@@ -65,9 +67,10 @@ function DSRatingScale() {
   return (
     <DSPage title="Rating Scale">
       <p className="mb-12 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        A single-choice row. The chosen option scales up and the rest shrink
-        back, so the pick reads at a glance. Options can hold an emoji, a number,
-        a word, or an icon — choose the count that fits the question.
+        A single-choice row. The chosen option scales up and gains a circular
+        ring + surface fill while the rest shrink back, so the pick reads at a
+        glance. Options can hold an emoji, a number, a word, or an icon — choose
+        the count that fits the question.
       </p>
 
       <Section title="Variants">
@@ -77,6 +80,18 @@ function DSRatingScale() {
             { label: "Icon", render: (s) => <Demo surface={s} options={THUMBS} /> },
             { label: "Number", render: (s) => <Demo surface={s} options={NUMBERS} size="md" /> },
             { label: "Word", render: (s) => <Demo surface={s} options={WORDS} size="md" /> },
+          ]}
+        />
+      </Section>
+
+      <Section title="States">
+        <SurfaceMatrix
+          rows={[
+            { label: "Default", render: (s) => <Demo surface={s} options={FACES} /> },
+            {
+              label: "Selected",
+              render: (s) => <Demo surface={s} options={FACES} initial="good" />,
+            },
           ]}
         />
       </Section>

@@ -1,17 +1,61 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  ClipboardList,
+  Flower2,
+  GraduationCap,
+  MessageCircle,
+  NotebookPen,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
-import { Badge } from "@/components/Badge";
-import { CardRow, MetaDot } from "@/components/Card";
 import { IconMedallion } from "@/components/IconMedallion";
 import { Surface } from "@/components/Surface";
+import { DimensionTrends } from "@/components/DimensionTrends";
+import { useAppMode } from "@/lib/theme-prefs";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
-import { getProfileData, getInsightCategory } from "@/lib/profile-data";
-import { SURVEY_LIBRARY, type LibrarySurvey } from "@/lib/survey-library";
-import { FocusAreaBentoCard, InsightCategoryTile } from "@/components/profile-components";
+import {
+  getProfileData,
+  type Insight,
+  type ProfileStats,
+} from "@/lib/profile-data";
 
-const INSIGHT_CATEGORIES = ["breakthroughs", "beliefs", "basics"] as const;
+// The activity stat grid, in display order. "Skills Learned" sits second; the
+// rest follow in sequence. Each key reads its tally off ProfileData.stats, and
+// `to` deep-links the tile to its destination screen.
+const STAT_CARDS: {
+  key: keyof ProfileStats;
+  label: string;
+  icon: LucideIcon;
+  to: string;
+  search?: Record<string, unknown>;
+}[] = [
+  { key: "chats", label: "Chats", icon: MessageCircle, to: "/sessions", search: { from: "you" } },
+  { key: "skills", label: "Skills", icon: GraduationCap, to: "/all-tasks", search: { type: "skill" } },
+  { key: "questionnaires", label: "Questionnaires", icon: ClipboardList, to: "/all-tasks", search: { type: "questionnaire" } },
+  { key: "gratitude", label: "Days of Gratitude", icon: NotebookPen, to: "/all-tasks", search: { type: "gratitude" } },
+  { key: "meditations", label: "Meditations", icon: Flower2, to: "/all-tasks", search: { type: "meditation" } },
+  { key: "goals", label: "Goals", icon: Target, to: "/all-tasks", search: { type: "goal" } },
+];
+import {
+  EmptyStateCard,
+  FocusAreaBentoCard,
+  InsightCard,
+  ProgressRing,
+} from "@/components/profile-components";
+
+// Round-robin merge: take the first of each list, then the second of each, …
+// so a fixed-length slice spans categories instead of draining the first list.
+function interleave<T>(...lists: T[][]): T[] {
+  const out: T[] = [];
+  const max = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < max; i++) {
+    for (const list of lists) if (i < list.length) out.push(list[i]);
+  }
+  return out;
+}
 
 export const Route = createFileRoute("/you")({
   head: () => ({
@@ -26,43 +70,58 @@ export const Route = createFileRoute("/you")({
 function YouRoute() {
   const userType = useUserType();
   const navigate = useNavigate();
+  const surface = useAppMode() === "light" ? "light" : "dark";
 
   if (userType === "new") return <YouEmptyState />;
   const data = getProfileData(userType);
-  // Returning users have history, so their clinical measures read as "taken"
-  // (trend + history link); everyone else sees the baseline framing.
-  const taken = userType === "returning";
 
-  const openSurvey = (s: LibrarySurvey) => {
-    if (s.assessmentId && taken) {
-      navigate({ to: "/assessment/$id", params: { id: s.assessmentId } });
-      return;
-    }
-    navigate({ to: s.to, params: s.params });
-  };
-
-  // Suggested surveys lead the list; a Suggested badge (not a section header)
-  // is what sets them apart. Returning users have already set their baseline, so
-  // the onboarding starting-point survey drops off their list.
-  const surveys = [
-    ...SURVEY_LIBRARY.filter((s) => s.suggested),
-    ...SURVEY_LIBRARY.filter((s) => !s.suggested),
-  ].filter((s) => !(taken && s.id === "your-starting-point"));
+  // A mix of recently surfaced insights — one from each category in turn
+  // (breakthrough, belief, basic, …) so the preview spans the picture rather
+  // than showing three of one kind. The full set lives on /your-insights.
+  const recent = interleave(
+    data.breakthroughs ?? [],
+    data.beliefs ?? [],
+    data.basics,
+  ).slice(0, 3);
+  const totalInsights =
+    (data.breakthroughs?.length ?? 0) + (data.beliefs?.length ?? 0) + data.basics.length;
 
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center pt-4">
-          <h1 className="font-display text-2xl leading-tight tracking-tight">
-            What Yuna knows about you
-          </h1>
-          <p className="mt-2 text-sm font-medium text-white/60">
-            {data.conversations} conversations · {data.messages} messages
-          </p>
+        <div className="flex items-center justify-center gap-4 pt-4">
+          <ProgressRing progress={data.progress} icon={data.ringIcon} size={64} />
+          <div className="flex flex-col gap-1">
+            <h1 className="font-display text-2xl leading-none text-white">{data.name}</h1>
+            <p className="text-sm leading-none text-white/75">
+              Profile Stage: <span className="text-white/90">{data.stage}</span>
+            </p>
+          </div>
         </div>
 
-        <div className="mt-8">
-          <Section heading="Your Focus Areas">
+        <div className="grid grid-cols-2 gap-2 mt-6">
+          {STAT_CARDS.map(({ key, label, icon: Icon, to, search }) => (
+            <Link
+              key={key}
+              to={to}
+              search={search as never}
+              className="block active:opacity-90 transition-opacity"
+            >
+              <Surface radius="xl" className="h-full flex items-center gap-2.5 px-3 py-2.5">
+                <Icon size={26} strokeWidth={1.5} className="shrink-0 text-white/85" aria-hidden />
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-display font-normal text-2xl leading-none text-white">
+                    {data.stats[key]}
+                  </span>
+                  <span className="text-[13px] leading-[16px] text-white/75">{label}</span>
+                </div>
+              </Surface>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-8 mt-10">
+          <Section heading="Focus Areas">
             <div className="flex gap-2">
               <FocusAreaBentoCard
                 num={1}
@@ -76,47 +135,33 @@ function YouRoute() {
               />
             </div>
           </Section>
-        </div>
 
-        <div className="mt-10">
-          <Section heading="Insights">
-            <div className="flex gap-2">
-              {INSIGHT_CATEGORIES.map((cat) => {
-                const { title, insights } = getInsightCategory(userType, cat);
-                return (
-                  <InsightCategoryTile
-                    key={cat}
-                    category={cat}
-                    label={title}
-                    count={insights.length}
-                  />
-                );
-              })}
-            </div>
+          <Section heading="Progress">
+            <DimensionTrends surface={surface} navigate={navigate} />
           </Section>
-        </div>
 
-        <div className="mt-10">
-          <Section heading="Try A Questionnaire">
-            <div className="flex flex-col gap-4 mt-1">
-              {surveys.map((s) => (
-                <SurveyLibraryCard key={s.id} survey={s} onOpen={() => openSurvey(s)} />
-              ))}
-            </div>
+          <Section heading="Recent Insights">
+            {recent.length > 0 ? (
+              <>
+                <ListOfInsights insights={recent} />
+                <Button
+                  surface="dark"
+                  variant="secondary"
+                  fullWidth
+                  className="mt-1"
+                  onClick={() => navigate({ to: "/your-insights" })}
+                >
+                  View all {totalInsights} insights
+                </Button>
+              </>
+            ) : (
+              <EmptyStateCard
+                heading="None yet, keep chatting"
+                body="As your conversations deepen, Yuna will surface what she's noticing about you here."
+                leafSrc="/assets/profile/empty-leaf-1.svg"
+              />
+            )}
           </Section>
-        </div>
-
-        <div className="flex flex-col items-center gap-3 mt-10">
-          <p className="font-display text-xl leading-7 text-white/90 text-center">
-            Something feel off?
-          </p>
-          <p className="text-sm leading-[22px] text-white/75 text-center max-w-[20rem]">
-            Yuna's understanding grows over time. If anything here doesn't feel right, you can help
-            refine it.
-          </p>
-          <Button surface="dark" variant="secondary" size="md" className="mt-1">
-            Help Yuna understand you better
-          </Button>
         </div>
       </div>
     </ScreenChrome>
@@ -132,35 +177,12 @@ function Section({ heading, children }: { heading: string; children: React.React
   );
 }
 
-// ─── Survey library ─────────────────────────────────────────────────────────
-// Each entry is the compact (list-row) form of the Questionnaire content card
-// (green fill + Yuna watermark). A cadence Tag — not a section header — is what
-// separates a one-time discovery quiz from a repeating clinical measure; a
-// Suggested Badge sits in the card's top-left corner-flag slot. Tapping a row
-// opens the survey (or, for a taken clinical measure, its history).
-
-function SurveyLibraryCard({ survey, onOpen }: { survey: LibrarySurvey; onOpen: () => void }) {
+function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentLeft?: boolean }) {
   return (
-    // Suggested cards reserve top padding equal to the badge's overhang so the
-    // badge sits inside this wrapper's box — the flex gap then separates the
-    // full card+badge height instead of letting the badge crowd the card above.
-    <div className={`relative ${survey.suggested ? "pt-3" : ""}`}>
-      {survey.suggested && <Badge className="absolute z-10 top-0 left-4">Suggested</Badge>}
-      <CardRow
-        title={survey.title}
-        tone="dark"
-        solidFill="var(--primary-green)"
-        watermark="/yuna-mark.svg"
-        onClick={onOpen}
-        meta={
-          <>
-            <span className="text-xs font-medium tracking-[0.08em] uppercase text-white">
-              Questionnaire
-            </span>
-            <MetaDot tone="dark">{survey.cadence}</MetaDot>
-          </>
-        }
-      />
+    <div className="flex flex-col gap-2">
+      {insights.map((insight, i) => (
+        <InsightCard key={i} insight={insight} accentLeft={accentLeft} />
+      ))}
     </div>
   );
 }
@@ -169,15 +191,6 @@ function SurveyLibraryCard({ survey, onOpen }: { survey: LibrarySurvey; onOpen: 
 
 function YouEmptyState() {
   const startChat = useStartChat();
-  const navigate = useNavigate();
-  // Suggested surveys lead; everything's available from day one (nothing taken).
-  // For a brand-new user the only thing worth suggesting is the starting point —
-  // a clinical measure flagged "Suggested" before they've begun reads wrong, so
-  // clear the flag on everything else here.
-  const surveys = [
-    ...SURVEY_LIBRARY.filter((s) => s.suggested),
-    ...SURVEY_LIBRARY.filter((s) => !s.suggested),
-  ].map((s) => ({ ...s, suggested: s.id === "your-starting-point" }));
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -186,37 +199,21 @@ function YouEmptyState() {
           <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-6">
             Your space, just beginning
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-white/75 max-w-[18rem]">
-            As we talk, this space fills with what I come to understand about you.
-          </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2.5">
-          <PreviewRow heading="Your Focus Areas" body="Where we focus our work together" />
+        <div className="mt-6 flex flex-col gap-2.5">
+          <PreviewRow heading="Focus Areas" body="Where we'll be working together" />
+          <PreviewRow heading="Breakthroughs" body="Real shifts in your thinking, as they emerge" />
           <PreviewRow
-            heading="Insights"
-            body="The breakthroughs, beliefs, and basics I pick up as we talk"
+            heading="Beliefs & Behaviors"
+            body="Patterns I'll start to notice as we talk"
           />
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-10 flex justify-center">
           <Button surface="dark" variant="primary" onClick={() => startChat()}>
             Start your first conversation
           </Button>
-        </div>
-
-        <div className="mt-12">
-          <Section heading="Try A Questionnaire">
-            <div className="flex flex-col gap-4 mt-1">
-              {surveys.map((s) => (
-                <SurveyLibraryCard
-                  key={s.id}
-                  survey={s}
-                  onOpen={() => navigate({ to: s.to, params: s.params })}
-                />
-              ))}
-            </div>
-          </Section>
         </div>
       </div>
     </ScreenChrome>
