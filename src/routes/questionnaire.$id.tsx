@@ -100,10 +100,19 @@ function QuestionnaireRoute() {
   const exitFlow = () =>
     router.history.canGoBack() ? router.history.back() : router.navigate({ to: "/home" });
 
-  // Discrete picks record with a soft pop; the user advances with Next.
+  // Single-select picks record with a soft pop, then auto-advance after a beat
+  // so the selection's settle-pulse registers before the screen moves. Scales
+  // (sliders) and the multi-select focus picker still advance with Next.
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+  }, []);
   const onPick = (q: LikertItem, v: string) => {
     setAnswers((prev) => ({ ...prev, [q.id]: v }));
     playSelectPop({ muted });
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    const fromStep = step;
+    advanceTimer.current = setTimeout(() => goto(fromStep + 1), 280);
   };
 
   const onMoveScale = (q: ScaleItem, v: number) => {
@@ -130,6 +139,7 @@ function QuestionnaireRoute() {
   };
 
   const onBack = () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
     if (step > 0) goto(step - 1);
   };
   const onNext = () => {
@@ -207,6 +217,9 @@ function QuestionnaireRoute() {
 
   const onCompletion = step === COMPLETION_STEP;
   const nextDisabled = !isStepAnswered(step);
+  // Single-select picks auto-advance, so the Next button is redundant on those
+  // steps; the multi-select picker and scale steps still need it.
+  const autoAdvanceStep = itemFor(step)?.kind === "likert";
 
   // The completion payoff is its own moment — no header, progress, or card.
   // Mirrors the meditation complete screen: a frosted celebration badge, a
@@ -342,9 +355,11 @@ function QuestionnaireRoute() {
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
-          <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
-            Next
-          </Button>
+          {!autoAdvanceStep && (
+            <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
+              Next
+            </Button>
+          )}
         </footer>
       </div>
     </PhoneFrame>
