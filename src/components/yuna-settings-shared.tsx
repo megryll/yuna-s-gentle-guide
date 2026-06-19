@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/Button";
 import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { VOICES, VOICE_IDS, type VoiceId } from "@/lib/voices";
-import { avatarSrc, type AvatarVariant } from "@/components/YunaAvatar";
+import { voicePhotoSrc, type AvatarVariant } from "@/components/YunaAvatar";
 
 // ── Shared data ──────────────────────────────────────────────────────────────
 
@@ -25,23 +25,15 @@ export type IntroVoice = {
 };
 
 const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
-  iris: "A warm, confident voice that grounds the room as it speaks.",
-  marcus: "Steady and resonant, a calm authority that helps you settle in.",
-  mei: "Soft and thoughtful, gentle enough to hold what's underneath.",
-  arun: "Articulate and unhurried, like a trusted friend taking their time.",
-  rosa: "Bright and warm, lifting the conversation without rushing it.",
-  theo: "Easy-going and approachable, like someone who really gets you.",
-  sage: "Clear and supportive, attentive to every word you offer.",
-  felix: "Casual and conversational, with an open, friendly warmth.",
-  aura: "A soft, mysterious presence that holds space for stillness.",
-  ember: "Warm and steadying, like firelight on a quiet evening.",
-  tide: "Cool and rhythmic, easing in and out like a slow breath.",
-  cloud: "Light and airy, soft enough to land softly into the next moment.",
+  maya: "A warm, reassuring voice with a grounded tone, offering steady comfort and gentle encouragement in a clear American accent.",
+  kai: "A warm, easygoing voice with a soft tone, providing patient guidance and quiet reassurance with a subtle Asian accent.",
+  arun: "A calm, articulate voice with an unhurried tone, offering thoughtful guidance and steady support in a gentle British accent.",
+  vivian: "A poised, graceful voice with a gentle tone, offering reassurance and quiet encouragement in a warm British accent.",
 };
 
 export const INTRO_VOICES: IntroVoice[] = VOICE_IDS.map((id) => ({
   id,
-  photo: avatarSrc(id as AvatarVariant),
+  photo: voicePhotoSrc(id as AvatarVariant),
   desc: VOICE_DESCRIPTIONS[id],
 }));
 
@@ -274,7 +266,7 @@ export function IntroVoicePicker({
   };
 
   // On mount only: jump to the pre-selected voice (e.g. when the drawer opens
-  // with iris already chosen). Re-running on every selectedIdx change would
+  // with maya already chosen). Re-running on every selectedIdx change would
   // hijack the smooth scroll initiated by snapTo and make tap-to-select feel
   // broken, so this is intentionally mount-once.
   useEffect(() => {

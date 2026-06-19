@@ -1,7 +1,7 @@
 type Props = {
   size?: number;
   className?: string;
-  /** One of the 12 photo avatars. Omit to render the Yuna brand mark
+  /** One of the 4 photo avatars. Omit to render the Yuna brand mark
    *  (`/avatar.png`) — used by Welcome and the intro flow. */
   variant?: AvatarVariant;
   /** Wrap the avatar in the animated aura (breathing halo + drifting glow +
@@ -9,56 +9,37 @@ type Props = {
   glow?: boolean;
 };
 
-export type AvatarVariant =
-  | "iris"
-  | "marcus"
-  | "mei"
-  | "arun"
-  | "rosa"
-  | "theo"
-  | "sage"
-  | "felix"
-  | "aura"
-  | "ember"
-  | "tide"
-  | "cloud";
+export type AvatarVariant = "maya" | "kai" | "arun" | "vivian";
 
-export const AVATAR_VARIANTS: AvatarVariant[] = [
-  "iris",
-  "marcus",
-  "mei",
-  "arun",
-  "rosa",
-  "theo",
-  "sage",
-  "felix",
-  "aura",
-  "ember",
-  "tide",
-  "cloud",
-];
+export const AVATAR_VARIANTS: AvatarVariant[] = ["maya", "kai", "arun", "vivian"];
 
 const AVATAR_SRC: Record<AvatarVariant, string> = {
-  iris: "/avatars/avatar-1.png",
-  marcus: "/avatars/avatar-2.png",
-  mei: "/avatars/avatar-3.png",
+  maya: "/avatars/avatar-2.png",
+  kai: "/avatars/avatar-3.png",
   arun: "/avatars/avatar-4.png",
-  rosa: "/avatars/avatar-5.png",
-  theo: "/avatars/avatar-6.png",
-  sage: "/avatars/avatar-7.png",
-  felix: "/avatars/avatar-8.png",
-  aura: "/avatars/avatar-9.png",
-  ember: "/avatars/avatar-10.png",
-  tide: "/avatars/avatar-11.png",
-  cloud: "/avatars/avatar-12.png",
+  vivian: "/avatars/avatar-13.png",
+};
+
+// Full-body portraits (proper 3:4 aspect) for the voice picker card. The
+// `AVATAR_SRC` files above are square face crops of these same shots, framed
+// tight for the circular avatar.
+const VOICE_PHOTO_SRC: Record<AvatarVariant, string> = {
+  maya: "/avatars/voice-maya.jpg",
+  kai: "/avatars/voice-kai.jpg",
+  arun: "/avatars/voice-arun.jpg",
+  vivian: "/avatars/voice-vivian.jpg",
 };
 
 export function avatarSrc(variant: AvatarVariant): string {
   return AVATAR_SRC[variant];
 }
 
+export function voicePhotoSrc(variant: AvatarVariant): string {
+  return VOICE_PHOTO_SRC[variant];
+}
+
 /**
- * Yuna avatar. With `variant`, renders one of the 12 photo avatars inside a
+ * Yuna avatar. With `variant`, renders one of the 4 photo avatars inside a
  * circular crop; without it, the Yuna brand mark. Width and height match
  * `size` so the image stays square at the requested px. Pass `glow` for the
  * animated-aura presence treatment on hero screens.

@@ -38,7 +38,7 @@ const SIZE_ROWS: MatrixRow[] = [
   {
     label: "Default (32)",
     render: (s) => (
-      <YunaExplains surface={s} avatar="iris">
+      <YunaExplains surface={s} avatar="maya">
         {NOTE}
       </YunaExplains>
     ),
@@ -46,7 +46,7 @@ const SIZE_ROWS: MatrixRow[] = [
   {
     label: "Large (40)",
     render: (s) => (
-      <YunaExplains surface={s} avatar="iris" size={40}>
+      <YunaExplains surface={s} avatar="maya" size={40}>
         {NOTE}
       </YunaExplains>
     ),

@@ -38,13 +38,13 @@ function DSAvatars() {
 }
 
 const VARIANT_ROWS: MatrixRow[] = [
-  { label: "Photo", render: () => <YunaAvatar variant="iris" size={40} /> },
+  { label: "Photo", render: () => <YunaAvatar variant="maya" size={40} /> },
   { label: "Mark", render: () => <YunaAvatar size={40} /> },
   {
     label: "Glow",
     render: () => (
       <div className="h-40 flex items-center">
-        <YunaAvatar glow variant="iris" size={40} />
+        <YunaAvatar glow variant="maya" size={40} />
       </div>
     ),
   },
@@ -56,7 +56,7 @@ const SIZE_ROWS: MatrixRow[] = [
     render: () => (
       <Row className="gap-4">
         {SIZES.map((s) => (
-          <YunaAvatar key={s} variant="iris" size={s} />
+          <YunaAvatar key={s} variant="maya" size={s} />
         ))}
       </Row>
     ),
