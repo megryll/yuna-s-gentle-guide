@@ -1,6 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bookmark, SlidersHorizontal, Clock, Sprout } from "lucide-react";
+import { Bookmark, SlidersHorizontal, Clock, Sprout, MoveHorizontal } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
@@ -124,15 +132,24 @@ function RecommendationsRoute() {
         ) : !preferencesApplied ? (
           <Teaser surface={surface} onStart={() => navigate({ to: "/therapist-preferences" })} />
         ) : (
-          <>
+          // One vertical scroll owns the title, hint, card, and buttons, so on a
+          // short frame (SE) everything scrolls together and nothing is clipped
+          // or sits under a fixed footer. The carousel inside only scrolls
+          // horizontally for swiping.
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <h1
               className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
-                isSE ? "pt-4" : "pt-6 pb-2"
+                isSE ? "pt-4" : "pt-6"
               }`}
             >
               Therapist Recommendations
             </h1>
-            <Deck
+            {matched.length > 1 && (
+              <p className="shrink-0 flex items-center justify-center gap-2 px-6 pt-3 pb-2 text-sm font-medium text-white/75">
+                <MoveHorizontal size={16} strokeWidth={2} aria-hidden /> Swipe to browse therapists
+              </p>
+            )}
+            <Carousel
               surface={surface}
               therapists={matched}
               savedIds={savedIds}
@@ -143,7 +160,7 @@ function RecommendationsRoute() {
                 flashToast("Preferences cleared. Showing more matches.");
               }}
             />
-          </>
+          </div>
         )}
 
         {toast && (
@@ -245,11 +262,15 @@ function SavedView({
   );
 }
 
-// ─── Swipe deck ──────────────────────────────────────────────────────────────
+// ─── Carousel ────────────────────────────────────────────────────────────────
 
-const SWIPE_THRESHOLD = 90;
+// Carousel geometry: each slide is the scroller's full content width (`w-full`),
+// so a centred card shows the `px-9` gutter (36px) on each side and the
+// neighbour peeks ~32px (gutter 36px − the 4px `gap-1`). The gutter is real
+// scrollable padding, so snap-center can bring even the first/last card to the
+// middle. Gutter and gap are the two dials — change the `px-9` / `gap-1` pair.
 
-function Deck({
+function Carousel({
   surface,
   therapists,
   savedIds,
@@ -264,101 +285,211 @@ function Deck({
   onView: (id: string) => void;
   onClearFilters: () => void;
 }) {
-  const [index, setIndex] = useState(0);
-  const [dragX, setDragX] = useState(0);
-  // The card currently flying off-screen, rendered as its own element so the
-  // dismissed card leaves while the next one grows into place underneath.
-  const [exit, setExit] = useState<{ t: Therapist; dir: "left" | "right"; fromX: number } | null>(null);
-  const dragging = useRef(false);
-  const startX = useRef(0);
-
-  const atEnd = index >= therapists.length;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const ticking = useRef(false);
+  const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
+  const snapTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Set when a dismissal is about to remove a card: the index (in the trimmed
+  // list) of the card we glided to, so the layout effect can re-anchor scroll
+  // to it before the browser paints the shorter list — no visible jump.
+  const reanchorTo = useRef<number | null>(null);
   const hasFilters = countFilters(filters) > 0;
 
-  const advance = (dir: "left" | "right") => {
-    const t = therapists[index];
-    if (!t) return;
-    setExit({ t, dir, fromX: dragX });
-    dragging.current = false;
-    setDragX(0);
-    setIndex((i) => i + 1);
+  // "Not interested" removes a card from the deck for this visit (ephemeral —
+  // not persisted; Start over brings them back). Filter the matched set down to
+  // what's still in play.
+  const visible = useMemo(
+    () => therapists.filter((t) => !dismissed.has(t.id)),
+    [therapists, dismissed],
+  );
+
+  // When the matched set changes (filters applied/cleared), jump back to the
+  // first card and forget dismissals so the indicator and scroll position stay
+  // in sync with the fresh list.
+  useEffect(() => {
+    setActive(0);
+    setDismissed(new Set());
+    scrollerRef.current?.scrollTo({ left: 0 });
+  }, [therapists]);
+
+  useEffect(() => () => clearTimeout(snapTimer.current), []);
+
+  // After a dismissal trims the list, re-anchor scroll (pre-paint) to the card
+  // we glided to. Removing a card to its left shifts everything left one pitch,
+  // so we'd otherwise see the kept card jump; setting scrollLeft here, before
+  // paint, makes the removal invisible. Snap is restored for subsequent swipes.
+  useLayoutEffect(() => {
+    const kept = reanchorTo.current;
+    if (kept == null) return;
+    reanchorTo.current = null;
+    const el = scrollerRef.current;
+    const step = slidePitch();
+    if (el) {
+      if (step > 0) el.scrollLeft = kept * step;
+      el.style.scrollSnapType = "";
+    }
+    setActive(Math.min(kept, Math.max(0, visible.length - 1)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  // Distance between adjacent slide centres (equal-width slides + gap). The
+  // centred card's index is scrollLeft / pitch.
+  const slidePitch = () => {
+    const el = scrollerRef.current;
+    if (!el || el.children.length < 2) return 0;
+    const a = el.children[0] as HTMLElement;
+    const b = el.children[1] as HTMLElement;
+    return b.offsetLeft - a.offsetLeft;
+  };
+  const nearestIndex = (scrollLeft: number, step: number) =>
+    Math.min(visible.length - 1, Math.max(0, Math.round(scrollLeft / step)));
+
+  // Read the centred card off the scroll position (rAF-throttled).
+  const onScroll = () => {
+    if (ticking.current) return;
+    ticking.current = true;
+    requestAnimationFrame(() => {
+      ticking.current = false;
+      const el = scrollerRef.current;
+      const step = slidePitch();
+      if (!el || step <= 0) return;
+      setActive(nearestIndex(el.scrollLeft, step));
+    });
   };
 
+  // Mouse drag-to-swipe (desktop). Touch/trackpad already pan a scroll-snap
+  // container natively, so we only hijack mouse pointers: snap is switched off
+  // during the drag, then we glide to the nearest card and switch it back on.
   const onPointerDown = (e: ReactPointerEvent) => {
-    if (exit) return; // ignore input mid-exit
-    dragging.current = true;
-    startX.current = e.clientX;
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    if (e.pointerType !== "mouse") return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    drag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false };
+    el.style.scrollSnapType = "none";
   };
   const onPointerMove = (e: ReactPointerEvent) => {
-    if (!dragging.current) return;
-    setDragX(e.clientX - startX.current);
+    if (!drag.current.active) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const dx = e.clientX - drag.current.startX;
+    if (Math.abs(dx) > 3) drag.current.moved = true;
+    el.scrollLeft = drag.current.startLeft - dx;
   };
-  const onPointerUp = () => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    if (dragX <= -SWIPE_THRESHOLD) advance("left");
-    else if (dragX >= SWIPE_THRESHOLD) advance("right");
-    else setDragX(0);
+  const endDrag = () => {
+    const el = scrollerRef.current;
+    if (!drag.current.active || !el) return;
+    drag.current.active = false;
+    const step = slidePitch();
+    if (step > 0) el.scrollTo({ left: nearestIndex(el.scrollLeft, step) * step, behavior: "smooth" });
+    // Re-enable snapping once the glide settles, so it doesn't fight the scroll.
+    clearTimeout(snapTimer.current);
+    snapTimer.current = setTimeout(() => {
+      if (scrollerRef.current) scrollerRef.current.style.scrollSnapType = "";
+    }, 400);
+  };
+  // A drag ends in a click on whatever card was under the cursor; swallow it so
+  // a swipe doesn't also open a profile. A genuine tap (no move) passes through.
+  const onClickCapture = (e: ReactMouseEvent) => {
+    if (drag.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      drag.current.moved = false;
+    }
   };
 
-  if (atEnd && !exit) {
+  // "Not interested": glide to the neighbour like a swipe, then drop the
+  // dismissed card once the glide settles (re-anchored in the layout effect so
+  // it doesn't pop). Prefer the card to the right; fall back to the left when
+  // dismissing the last one. With no neighbour, just remove it (done state).
+  const dismiss = (id: string, index: number) => {
+    const el = scrollerRef.current;
+    const step = slidePitch();
+    if (!el || step <= 0 || visible.length <= 1) {
+      setDismissed((prev) => new Set(prev).add(id));
+      return;
+    }
+    const goingRight = index < visible.length - 1;
+    const target = goingRight ? index + 1 : index - 1;
+    el.scrollTo({ left: target * step, behavior: "smooth" });
+    clearTimeout(snapTimer.current);
+    snapTimer.current = setTimeout(() => {
+      // Index of the kept (glided-to) card once `id` leaves the list.
+      reanchorTo.current = goingRight ? index : index - 1;
+      setDismissed((prev) => new Set(prev).add(id));
+    }, 360);
+  };
+
+  if (therapists.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center px-8 yuna-fade-in">
         <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
           <Sprout size={28} className="text-white" aria-hidden />
         </span>
-        <h2 className="mt-5 font-display text-2xl tracking-tight text-white">You've seen them all</h2>
+        <h2 className="mt-5 font-display text-2xl tracking-tight text-white">No matches right now</h2>
         <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
-          {hasFilters
-            ? "Those fit your current preferences. Clear a few to see more options."
-            : "Those were all of the therapists Yuna matched to you for now."}
+          Your current preferences are narrowing things down. Clear a few to see more options.
         </p>
-        <div className="mt-7 flex flex-col items-center gap-3">
-          {hasFilters && (
-            <Button surface={surface} variant="secondary" onClick={onClearFilters}>
-              Clear preferences
-            </Button>
-          )}
-          <Button surface={surface} variant="primary" onClick={() => setIndex(0)}>
-            Review again
+        {hasFilters && (
+          <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-7">
+            Clear preferences
           </Button>
-        </div>
+        )}
       </div>
     );
   }
 
-  // Up to 3 cards, front to back. Each is keyed by id and positioned purely by
-  // its depth, so when the deck advances the card behind keeps the same element
-  // and its transform transitions from the peek pose to the front pose — it
-  // grows into view instead of a fresh card sliding in. All cards are opaque so
-  // none bleed through during the move.
-  const stack = therapists.slice(index, index + 3);
+  // Everyone was passed on. Offer a fresh start (un-dismiss) and, if filters are
+  // narrowing the pool, a way to widen it.
+  if (visible.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-8 yuna-fade-in">
+        <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
+          <Sprout size={28} className="text-white" aria-hidden />
+        </span>
+        <h2 className="mt-5 font-display text-2xl tracking-tight text-white">That&apos;s everyone for now</h2>
+        <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
+          You&apos;ve gone through all your matches. Start over to revisit them
+          {hasFilters ? ", or clear your preferences to see more." : "."}
+        </p>
+        <Button surface={surface} variant="primary" onClick={() => setDismissed(new Set())} className="mt-7">
+          Start over
+        </Button>
+        {hasFilters && (
+          <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-3">
+            Clear preferences
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 min-h-0 relative px-6 pt-5 pb-8">
-      <div className="relative h-full">
-        {stack.map((t, depth) => {
-          const isTop = depth === 0;
-          const transform = isTop
-            ? `translateX(${dragX}px) rotate(${dragX / 22}deg)`
-            : `translateY(${depth * -14}px) scale(${1 - depth * 0.05})`;
-          return (
+    // shrink-0: keep full content height so the parent vertical scroll engages
+    // instead of the flex column squeezing this down and clipping the card.
+    <div className="shrink-0 pt-4 pb-6">
+      <div
+        ref={scrollerRef}
+        onScroll={onScroll}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        onClickCapture={onClickCapture}
+        className="flex items-start gap-1 px-9 overflow-x-auto snap-x snap-mandatory overscroll-x-contain select-none cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {visible.map((t, i) => (
+          <div
+            key={t.id}
+            className="snap-center shrink-0 w-full flex items-start"
+          >
             <div
-              key={t.id}
-              aria-hidden={!isTop}
-              className={"absolute inset-x-0 top-0 " + (isTop ? "touch-none" : "pointer-events-none")}
-              style={{
-                transform,
-                transition: isTop && dragging.current ? "none" : "transform 0.34s ease",
-                zIndex: 20 - depth,
-              }}
-              onPointerDown={isTop ? onPointerDown : undefined}
-              onPointerMove={isTop ? onPointerMove : undefined}
-              onPointerUp={isTop ? onPointerUp : undefined}
-              onPointerCancel={isTop ? onPointerUp : undefined}
+              className="w-full flex transition-transform duration-300 ease-out"
+              style={{ transform: active === i ? "scale(1)" : "scale(0.93)" }}
             >
               <TherapistCard
+                className="w-full"
                 surface={surface}
                 name={t.name}
                 credentials={t.credentials}
@@ -369,96 +500,21 @@ function Deck({
                 description={t.bio}
                 saved={savedIds.includes(t.id)}
                 onToggleSave={() => toggleSaved(t.id)}
-                onDismiss={() => advance("left")}
                 onView={() => onView(t.id)}
+                onDismiss={() => dismiss(t.id, i)}
               />
             </div>
-          );
-        })}
-
-        {exit && (
-          <ExitingCard
-            key={`exit-${exit.t.id}`}
-            therapist={exit.t}
-            dir={exit.dir}
-            fromX={exit.fromX}
-            surface={surface}
-            saved={savedIds.includes(exit.t.id)}
-            onDone={() => setExit(null)}
-          />
-        )}
+          </div>
+        ))}
       </div>
 
-      {/* Active filter chips, removable */}
       {hasFilters && (
-        <div className="absolute bottom-2 inset-x-6 flex flex-wrap justify-center gap-2">
+        <div className="flex justify-center pt-4">
           <Tag surface={surface} variant="informational">
             {countFilters(filters)} preference{countFilters(filters) === 1 ? "" : "s"} applied
           </Tag>
         </div>
       )}
-    </div>
-  );
-}
-
-// The just-dismissed card: mounts at the release position, then on the next
-// frame transitions off-screen in the swipe direction and unmounts. Separate
-// from the stack so it can leave while the next card grows into place.
-function ExitingCard({
-  therapist,
-  dir,
-  fromX,
-  surface,
-  saved,
-  onDone,
-}: {
-  therapist: Therapist;
-  dir: "left" | "right";
-  fromX: number;
-  surface: "dark" | "light";
-  saved: boolean;
-  onDone: () => void;
-}) {
-  const [off, setOff] = useState(false);
-  const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setOff(true));
-    const timer = setTimeout(() => onDoneRef.current(), 360);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-    };
-  }, []);
-
-  const x = off ? (dir === "left" ? -640 : 640) : fromX;
-  const rotate = off ? (dir === "left" ? -16 : 16) : fromX / 22;
-
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-x-0 top-0 pointer-events-none"
-      style={{
-        transform: `translateX(${x}px) rotate(${rotate}deg)`,
-        opacity: off ? 0 : 1,
-        transition: "transform 0.36s ease, opacity 0.36s ease",
-        zIndex: 30,
-      }}
-    >
-      <TherapistCard
-        surface={surface}
-        name={therapist.name}
-        credentials={therapist.credentials}
-        location={therapist.location}
-        photo={therapist.photo}
-        tags={therapist.tags}
-        virtual={therapist.sessionFormats.includes("Video")}
-        description={therapist.bio}
-        saved={saved}
-        onToggleSave={() => {}}
-        onDismiss={() => {}}
-        onView={() => {}}
-      />
     </div>
   );
 }

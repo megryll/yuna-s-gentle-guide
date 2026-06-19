@@ -1,9 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Bookmark, MapPin, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
-import { modeImage } from "@/lib/theme-prefs";
+import { useFrameSize } from "@/lib/frame-size";
 
 /**
  * TherapistCard — a frosted content card for a recommended therapist. Two
@@ -54,12 +54,15 @@ export type TherapistCardProps = {
  * Frosted panel classes for a card/tile sitting on the themed photo. Chosen by
  * surface directly (the `.theme-light` shim doesn't remap `bg-white/*`) and
  * pairs blur with a liftable white-alpha fill so it survives Android's blur
- * kill. Shared by TherapistCard and the therapist screens' inline panels.
+ * kill. Uses a real `border` (not a `ring`) — like `Surface` — so the hairline
+ * sits over the frosted fill and reads consistently over a bright photo, rather
+ * than a ring painted on the raw background that washes out. Shared by
+ * TherapistCard and the therapist screens' inline panels.
  */
 export function frostedPanel(surface: "dark" | "light"): string {
   return surface === "dark"
-    ? "bg-white/10 ring-1 ring-white/15 backdrop-blur-md"
-    : "bg-white/60 ring-1 ring-black/[0.06] backdrop-blur-md";
+    ? "bg-white/10 border border-white/15 backdrop-blur-md"
+    : "bg-white/60 border border-black/[0.06] backdrop-blur-md";
 }
 
 /**
@@ -84,32 +87,6 @@ export function TherapistPhoto({
       className={cn("rounded-full object-cover shrink-0 bg-white/10", className)}
     />
   );
-}
-
-/**
- * Opaque panel for the recommendation deck. The deck stacks cards on top of one
- * another, so a translucent frosted fill would let the cards behind bleed
- * through and the text overlap — each card must read as one clean, floating
- * sheet. In dark mode the fill is the screen's own photo (the same themed image)
- * with a 10% white tint over it (see `deckBgStyle`), so the card sits a touch
- * lighter than its background; in light mode it's a solid `card` fill. Border +
- * drop shadow in both. Deck-only — list rows and inline panels keep `frostedPanel`.
- */
-function solidPanel(surface: "dark" | "light"): string {
-  return surface === "dark"
-    ? "ring-1 ring-white/15 shadow-lg shadow-black/30"
-    : "bg-card ring-1 ring-black/[0.06] shadow-lg shadow-black/[0.08]";
-}
-
-/** Dark deck fill: the screen's themed photo under a 10% white tint. Light mode
- *  uses solidPanel's `bg-card` instead, so this only applies on the dark surface. */
-function deckBgStyle(surface: "dark" | "light"): CSSProperties | undefined {
-  if (surface !== "dark") return undefined;
-  return {
-    backgroundImage: `linear-gradient(rgba(255,255,255,0.10), rgba(255,255,255,0.10)), url(${modeImage("dark")})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  };
 }
 
 /** A quiet meta entry (location, Virtual) — a small icon + label, no fill. */
@@ -177,6 +154,9 @@ export function TherapistCard({
 }: TherapistCardProps) {
   const dark = surface === "dark";
   const sub = dark ? "text-white/75" : "text-foreground/75";
+  // On the short SE frame two full-width md buttons overflow the narrow card,
+  // so the deck actions drop to the next size down.
+  const actionSize = useFrameSize().id === "se" ? "sm" : "md";
 
   if (variant === "list") {
     return (
@@ -205,16 +185,17 @@ export function TherapistCard({
     );
   }
 
-  // Deck card
+  // Deck card. It sizes to its own content — no height cap — so nothing inside
+  // is clipped; on a short frame (e.g. iPhone SE) the carousel scrolls
+  // vertically to reach the parts that run past the viewport.
   return (
     <div
       className={cn(
         "relative rounded-[2rem] p-6 flex flex-col gap-5 overflow-hidden",
         dark ? "text-white" : "text-foreground",
-        solidPanel(surface),
+        frostedPanel(surface),
         className,
       )}
-      style={deckBgStyle(surface)}
     >
       {/* Save pins to the content corner so the name/credential/meta column can
           run the full content width (its right edge aligns with the bookmark's
@@ -222,7 +203,7 @@ export function TherapistCard({
       <div className="absolute top-6 right-6 z-10">
         <SaveButton saved={saved} onToggleSave={onToggleSave} surface={surface} />
       </div>
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 shrink-0">
         <TherapistPhoto src={photo} size={64} />
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div>
@@ -246,16 +227,21 @@ export function TherapistCard({
         </div>
       </div>
 
+      {/* Nothing is height-pressured (the card grows to fit), so the bio just
+          clamps to four lines for rhythm and the tags render in full. */}
       {description && (
-        <p className={cn("text-sm leading-relaxed", sub)}>{description}</p>
+        <p className={cn("text-sm leading-relaxed line-clamp-4 shrink-0", sub)}>{description}</p>
       )}
 
       {tags.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 shrink-0">
           <p className={cn("text-sm font-semibold", dark ? "text-white" : "text-foreground")}>
             Suggested for you
           </p>
-          <div className="flex flex-wrap gap-2">
+          {/* Clamp to two rows of `h-8` tags (2 × 32px + one 8px gap = 72px);
+              any overflow stays on the profile. Keeps the card from growing a
+              third tag row on a narrow carousel slide. */}
+          <div className="flex flex-wrap gap-2 max-h-[4.5rem] overflow-hidden">
             {tags.map((t) => (
               <Tag key={t} surface={surface} variant="informational">
                 {t}
@@ -266,14 +252,14 @@ export function TherapistCard({
       )}
 
       {(onView || onDismiss) && (
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-3 shrink-0">
           {onDismiss && (
-            <Button surface={surface} variant="secondary" fullWidth onClick={onDismiss}>
+            <Button surface={surface} variant="secondary" size={actionSize} fullWidth onClick={onDismiss}>
               Not interested
             </Button>
           )}
           {onView && (
-            <Button surface={surface} variant="primary" fullWidth onClick={onView}>
+            <Button surface={surface} variant="primary" size={actionSize} fullWidth onClick={onView}>
               View profile
             </Button>
           )}
