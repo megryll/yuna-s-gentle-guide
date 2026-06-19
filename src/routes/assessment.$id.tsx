@@ -4,8 +4,6 @@ import { CalendarClock } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
-import { CalendarPicker } from "@/components/CalendarPicker";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { YunaExplains } from "@/components/YunaExplains";
 import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
@@ -96,15 +94,8 @@ function AssessmentDetail({
   // Validated instruments (PHQ-9, GAD-7, …) keep their real, interpretable score.
   const isDimension = !a.questionCount;
 
-  // Editable next-recommended date. Prototype-local: the drawer's CalendarPicker
-  // sets it; nothing is persisted.
-  const [nextOn, setNextOn] = useState(a.nextOn);
-  const [editOpen, setEditOpen] = useState(false);
-  const [pickDate, setPickDate] = useState<Date | null>(null);
-  const saveNext = () => {
-    if (pickDate) setNextOn(pickDate.toLocaleDateString("en-US", { month: "long", day: "numeric" }));
-    setEditOpen(false);
-  };
+  // Next recommended check-in date (read-only display).
+  const nextOn = a.nextOn;
 
   // Chart geometry, in percentages of the plot area. Y runs top-down from the
   // max score; X spreads administrations evenly with edge padding.
@@ -290,51 +281,16 @@ function AssessmentDetail({
             {a.reflection}
           </YunaExplains>
 
-          {/* Direct, editable cadence line — the next recommended check-in.
-              Validated instruments carry an authored date; custom dimensions get
-              Yuna's regular check-in rhythm. */}
+          {/* The next recommended check-in. Validated instruments carry an
+              authored date; custom dimensions get Yuna's regular check-in rhythm. */}
           {nextOn && (
             <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/75">
               <CalendarClock size={15} strokeWidth={1.75} className="text-white/60" aria-hidden />
               <span>Recommended again on {nextOn}</span>
-              <Button
-                surface={surface}
-                variant="link"
-                onClick={() => {
-                  setEditOpen(true);
-                  playSelectPop({ muted });
-                }}
-              >
-                Edit
-              </Button>
             </div>
           )}
         </div>
       </div>
-
-      <Drawer open={editOpen} onOpenChange={setEditOpen}>
-        <DrawerContent>
-          <div className="px-6 pt-10 pb-10">
-            <DrawerTitle className="text-center">When should Yuna check in next?</DrawerTitle>
-            <p className="mt-2 text-center text-sm text-white/75">
-              Pick the day for your next {a.domain.toLowerCase()} check-in.
-            </p>
-            <div className="mt-6">
-              <CalendarPicker surface={surface} value={pickDate} onChange={setPickDate} />
-            </div>
-            <Button
-              surface={surface}
-              variant="primary"
-              fullWidth
-              className="mt-8"
-              disabled={!pickDate}
-              onClick={saveNext}
-            >
-              Save
-            </Button>
-          </div>
-        </DrawerContent>
-      </Drawer>
     </PhoneFrame>
   );
 }

@@ -33,6 +33,10 @@ type Nav = ReturnType<typeof useNavigate>;
 export const startMeasure = (navigate: Nav) =>
   navigate({ to: "/questionnaire/$id", params: { id: "your-starting-point" } });
 
+// The demo dimension seeded with a single baseline, so the returning dashboard
+// always shows the "taken once, no recheck yet" trend-row state.
+const DEMO_SINGLE_ID = "relationships";
+
 // Fisher–Yates pick of n distinct items — used to seed a fresh set of dimensions
 // when a returning user arrives without having completed the starting point.
 function pickRandom<T>(arr: T[], n: number): T[] {
@@ -74,7 +78,11 @@ export function DimensionTrends({
     const chosen = (getQuestionnaireResult("your-starting-point")?.priorities ?? []).filter((id) =>
       TRACKABLE_IDS.includes(id),
     );
-    setTracked(chosen.length ? chosen.slice(0, 3) : pickRandom(TRACKABLE_IDS, 3));
+    // No real picks (e.g. arriving via the admin toggles): seed the single-
+    // baseline demo dimension plus two random others, so the "taken once" row
+    // always appears alongside established trends.
+    const others = TRACKABLE_IDS.filter((id) => id !== DEMO_SINGLE_ID);
+    setTracked(chosen.length ? chosen.slice(0, 3) : [DEMO_SINGLE_ID, ...pickRandom(others, 2)]);
   }, []);
 
   const dims = tracked.map(getDimension).filter(Boolean) as Dimension[];
@@ -131,7 +139,7 @@ export function DimensionTrends({
         {available.length > 0 && (
           <Button surface={surface} variant="secondary" fullWidth onClick={() => setAddOpen(true)}>
             <Plus strokeWidth={2} aria-hidden />
-            Add another dimension
+            Track Something Else
           </Button>
         )}
       </section>
@@ -256,6 +264,9 @@ function DimensionRow({
 }) {
   const trend = fresh ? null : dimensionTrend(d);
   const last = fresh ? null : latestMeasurement(d);
+  // Measured exactly once: a baseline reading is on record but there's no second
+  // administration yet, so there's no trend to show.
+  const single = !fresh && d.history.length === 1;
 
   return (
     <Surface className="overflow-hidden p-0">
@@ -266,7 +277,9 @@ function DimensionRow({
         triggerLabel={
           fresh
             ? `${d.label}, no baseline yet — tap to expand`
-            : `${d.label}, ${trendDescription(trend)} — tap to expand`
+            : single
+              ? `${d.label}, baseline ${last?.score ?? ""} out of 100, awaiting recheck — tap to expand`
+              : `${d.label}, ${trendDescription(trend)} — tap to expand`
         }
         header={
           <span className="flex-1 min-w-0 flex items-center gap-3">
@@ -280,7 +293,18 @@ function DimensionRow({
               </span>
             </span>
             <span className="shrink-0">
-              <CompactTrend trend={trend} />
+              {single ? (
+                last && (
+                  <span className="inline-flex items-baseline gap-0.5">
+                    <span className="font-display text-2xl leading-none text-white tabular-nums">
+                      {last.score}
+                    </span>
+                    <span className="text-xs text-white/55">/100</span>
+                  </span>
+                )
+              ) : (
+                <CompactTrend trend={trend} />
+              )}
             </span>
           </span>
         }
@@ -299,6 +323,39 @@ function DimensionRow({
               onClick={() => startMeasure(navigate)}
             >
               Set baseline
+            </Button>
+          </div>
+        ) : single ? (
+          <div className="px-4 pb-4 pt-1">
+            {last && (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-3xl leading-none text-white tabular-nums">
+                    {last.score}
+                  </span>
+                  <span className="text-sm text-white/55">/ 100</span>
+                </div>
+                <ProgressBar
+                  surface={surface}
+                  value={last.score / 100}
+                  aria-label={`${d.label} baseline`}
+                  className="mt-2.5"
+                />
+              </>
+            )}
+            <p className="mt-3 text-sm leading-snug text-white/75">
+              One check-in so far{last ? `, on ${last.longDate}` : ""}. Take it again to start
+              seeing your trend.
+            </p>
+            <Button
+              surface={surface}
+              variant="primary"
+              fullWidth
+              size="sm"
+              className="mt-4"
+              onClick={() => startMeasure(navigate)}
+            >
+              Add measurement
             </Button>
           </div>
         ) : (
@@ -452,10 +509,7 @@ function AddDimensionDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="px-6 pt-8 pb-8">
-          <DrawerTitle>Add a dimension</DrawerTitle>
-          <p className="mt-2 text-sm leading-snug text-white/70">
-            Choose something else to start tracking. Each one begins with a short baseline.
-          </p>
+          <DrawerTitle>Track Something Else</DrawerTitle>
           <ul className="mt-6 flex flex-col gap-2.5 max-h-[46vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {available.map((id) => {
               const d = getDimension(id);

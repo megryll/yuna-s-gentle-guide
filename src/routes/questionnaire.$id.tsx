@@ -265,9 +265,6 @@ function QuestionnaireRoute() {
 
   const onCompletion = step >= completionStep;
   const nextDisabled = !isStepAnswered(step);
-  // Single-select picks auto-advance, so the Next button is redundant on those
-  // steps; the multi-select picker and scale steps still need it.
-  const autoAdvanceStep = entryFor(step)?.item.kind === "likert";
 
   // The completion payoff is its own moment: an eyebrow + close, Yuna's avatar
   // over a short uncontained reflection, the progress recap comparing the
@@ -413,11 +410,9 @@ function QuestionnaireRoute() {
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
-          {!autoAdvanceStep && (
-            <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
-              Next
-            </Button>
-          )}
+          <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
+            Next
+          </Button>
         </footer>
       </div>
     </PhoneFrame>

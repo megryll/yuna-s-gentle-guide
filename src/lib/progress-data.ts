@@ -61,8 +61,10 @@ const DIM_DATA: Record<string, DimData> = {
     history: h([["April 1", 65], ["April 22", 64], ["May 20", 63], ["June 17", 61]]),
   },
   relationships: {
+    // A single baseline on record — demonstrates the "taken once, no recheck
+    // yet" trend-row state (no second administration, so no trend to show).
     lastMeasured: "9 days ago",
-    history: h([["April 5", 64], ["April 26", 66], ["May 24", 68], ["June 8", 69]]),
+    history: h([["June 8", 67]]),
   },
   lifeChanges: {
     lastMeasured: "1 week ago",
