@@ -28,6 +28,7 @@ import {
   type ScaleItem,
 } from "@/lib/questionnaire-data";
 import { setQuestionnaireResult } from "@/lib/questionnaire-state";
+import { setUserType } from "@/lib/user-type";
 
 // ─── The "Your starting point" questionnaire flow ────────────────────────────
 // Shares the survey runner's shell (/survey/$id): audio·label·close header, a
@@ -142,10 +143,19 @@ function QuestionnaireRoute() {
       ? router.history.back()
       : router.navigate({ to: "/home" });
 
-  // Discrete picks record with a soft pop; the user advances with Next.
+  // Single-select picks record with a soft pop, then auto-advance after a beat
+  // so the selection's settle-pulse registers before the screen moves. Scales
+  // (sliders) and the multi-select focus picker still advance with Next.
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+  }, []);
   const onPick = (q: LikertItem, v: string) => {
     setAnswers((prev) => ({ ...prev, [q.id]: v }));
     playSelectPop({ muted });
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    const fromStep = step;
+    advanceTimer.current = setTimeout(() => goto(fromStep + 1), 280);
   };
 
   const onMoveScale = (q: ScaleItem, v: number) => {
@@ -172,6 +182,7 @@ function QuestionnaireRoute() {
   };
 
   const onBack = () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
     if (step > 0) goto(step - 1);
   };
   const onNext = () => {
@@ -192,6 +203,10 @@ function QuestionnaireRoute() {
       priorities: focus,
       answers,
     });
+    // Finishing the starting-point survey flips the You tab into its returning
+    // state. Fires once (the celebrated guard), so a later manual toggle back to
+    // "new" via the admin control sticks until the survey is completed again.
+    if (id === "your-starting-point") setUserType("returning");
     playCompleteSwell({ muted });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedForReal]);
@@ -250,6 +265,9 @@ function QuestionnaireRoute() {
 
   const onCompletion = step >= completionStep;
   const nextDisabled = !isStepAnswered(step);
+  // Single-select picks auto-advance, so the Next button is redundant on those
+  // steps; the multi-select picker and scale steps still need it.
+  const autoAdvanceStep = entryFor(step)?.item.kind === "likert";
 
   // The completion payoff is its own moment: an eyebrow + close, Yuna's avatar
   // over a short uncontained reflection, the progress recap comparing the
@@ -395,9 +413,11 @@ function QuestionnaireRoute() {
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
-          <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
-            Next
-          </Button>
+          {!autoAdvanceStep && (
+            <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
+              Next
+            </Button>
+          )}
         </footer>
       </div>
     </PhoneFrame>

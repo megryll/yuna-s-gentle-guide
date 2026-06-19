@@ -56,7 +56,7 @@ const GROUP_ONE: Row[] = [
 ];
 
 const GROUP_TWO: Row[] = [
-  { id: "feedback", label: "Your Feedback", Icon: MessageSquare, kind: "link" },
+  { id: "feedback", label: "Your Feedback", Icon: MessageSquare, kind: "link", to: "/settings/feedback" },
   { id: "terms", label: "Terms and Conditions", Icon: FileText, kind: "link" },
   { id: "privacy", label: "Privacy Policy", Icon: FileText, kind: "link" },
   { id: "references", label: "References", Icon: FileText, kind: "link" },

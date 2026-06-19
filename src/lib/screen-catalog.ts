@@ -167,6 +167,7 @@ export const PAGES: ScreenEntry[] = [
       { label: "Customize Voice", to: "/settings/voice" },
       { label: "Session Language", to: "/settings/language" },
       { label: "Content Preferences", to: "/settings/content-preferences" },
+      { label: "Your Feedback", to: "/settings/feedback" },
     ],
   },
 ];

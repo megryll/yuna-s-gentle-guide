@@ -42,6 +42,7 @@ import { Route as SkillIdRouteImport } from './routes/skill.$id'
 import { Route as SettingsVoiceRouteImport } from './routes/settings_.voice'
 import { Route as SettingsSubscriptionRouteImport } from './routes/settings_.subscription'
 import { Route as SettingsLanguageRouteImport } from './routes/settings_.language'
+import { Route as SettingsFeedbackRouteImport } from './routes/settings_.feedback'
 import { Route as SettingsContentPreferencesRouteImport } from './routes/settings_.content-preferences'
 import { Route as SettingsAccountRouteImport } from './routes/settings_.account'
 import { Route as SessionsIdRouteImport } from './routes/sessions_.$id'
@@ -249,6 +250,11 @@ const SettingsSubscriptionRoute = SettingsSubscriptionRouteImport.update({
 const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
   id: '/settings_/language',
   path: '/settings/language',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsFeedbackRoute = SettingsFeedbackRouteImport.update({
+  id: '/settings_/feedback',
+  path: '/settings/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsContentPreferencesRoute =
@@ -532,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings/feedback': typeof SettingsFeedbackRoute
   '/settings/language': typeof SettingsLanguageRoute
   '/settings/subscription': typeof SettingsSubscriptionRoute
   '/settings/voice': typeof SettingsVoiceRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByTo {
   '/sessions/$id': typeof SessionsIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings/feedback': typeof SettingsFeedbackRoute
   '/settings/language': typeof SettingsLanguageRoute
   '/settings/subscription': typeof SettingsSubscriptionRoute
   '/settings/voice': typeof SettingsVoiceRoute
@@ -687,6 +695,7 @@ export interface FileRoutesById {
   '/sessions_/$id': typeof SessionsIdRoute
   '/settings_/account': typeof SettingsAccountRoute
   '/settings_/content-preferences': typeof SettingsContentPreferencesRoute
+  '/settings_/feedback': typeof SettingsFeedbackRoute
   '/settings_/language': typeof SettingsLanguageRoute
   '/settings_/subscription': typeof SettingsSubscriptionRoute
   '/settings_/voice': typeof SettingsVoiceRoute
@@ -766,6 +775,7 @@ export interface FileRouteTypes {
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
+    | '/settings/feedback'
     | '/settings/language'
     | '/settings/subscription'
     | '/settings/voice'
@@ -843,6 +853,7 @@ export interface FileRouteTypes {
     | '/sessions/$id'
     | '/settings/account'
     | '/settings/content-preferences'
+    | '/settings/feedback'
     | '/settings/language'
     | '/settings/subscription'
     | '/settings/voice'
@@ -920,6 +931,7 @@ export interface FileRouteTypes {
     | '/sessions_/$id'
     | '/settings_/account'
     | '/settings_/content-preferences'
+    | '/settings_/feedback'
     | '/settings_/language'
     | '/settings_/subscription'
     | '/settings_/voice'
@@ -998,6 +1010,7 @@ export interface RootRouteChildren {
   SessionsIdRoute: typeof SessionsIdRoute
   SettingsAccountRoute: typeof SettingsAccountRoute
   SettingsContentPreferencesRoute: typeof SettingsContentPreferencesRoute
+  SettingsFeedbackRoute: typeof SettingsFeedbackRoute
   SettingsLanguageRoute: typeof SettingsLanguageRoute
   SettingsSubscriptionRoute: typeof SettingsSubscriptionRoute
   SettingsVoiceRoute: typeof SettingsVoiceRoute
@@ -1238,6 +1251,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/language'
       fullPath: '/settings/language'
       preLoaderRoute: typeof SettingsLanguageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/feedback': {
+      id: '/settings_/feedback'
+      path: '/settings/feedback'
+      fullPath: '/settings/feedback'
+      preLoaderRoute: typeof SettingsFeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings_/content-preferences': {
@@ -1606,6 +1626,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsIdRoute: SessionsIdRoute,
   SettingsAccountRoute: SettingsAccountRoute,
   SettingsContentPreferencesRoute: SettingsContentPreferencesRoute,
+  SettingsFeedbackRoute: SettingsFeedbackRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsSubscriptionRoute: SettingsSubscriptionRoute,
   SettingsVoiceRoute: SettingsVoiceRoute,
