@@ -29,6 +29,7 @@ const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
   marcus: "Steady and resonant, a calm authority that helps you settle in.",
   mei: "Soft and thoughtful, gentle enough to hold what's underneath.",
   arun: "Articulate and unhurried, like a trusted friend taking their time.",
+  vivian: "Poised and graceful, a gentle elegance that puts you at ease.",
   rosa: "Bright and warm, lifting the conversation without rushing it.",
   theo: "Easy-going and approachable, like someone who really gets you.",
   sage: "Clear and supportive, attentive to every word you offer.",

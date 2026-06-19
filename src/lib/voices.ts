@@ -50,6 +50,12 @@ export const VOICES: Record<VoiceId, VoiceConfig> = {
     elevenlabsId: "onwK4e9ZLuTAKqWW03F9",
     sampleText: "Hi there. There's no right place to begin. Just start where you are.",
   },
+  vivian: {
+    id: "vivian",
+    // ElevenLabs library voice — poised, elegant mature female
+    elevenlabsId: "2qQJWjw5XdG80GreshqG",
+    sampleText: "Hello. I'm so glad you're here. Whenever you're ready, we'll begin.",
+  },
   // ── Illustrated women ──────────────────────────────────────────────────────
   rosa: {
     id: "rosa",

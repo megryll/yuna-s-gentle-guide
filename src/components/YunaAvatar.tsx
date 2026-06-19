@@ -1,7 +1,7 @@
 type Props = {
   size?: number;
   className?: string;
-  /** One of the 12 photo avatars. Omit to render the Yuna brand mark
+  /** One of the 13 photo avatars. Omit to render the Yuna brand mark
    *  (`/avatar.png`) — used by Welcome and the intro flow. */
   variant?: AvatarVariant;
   /** Wrap the avatar in the animated aura (breathing halo + drifting glow +
@@ -14,6 +14,7 @@ export type AvatarVariant =
   | "marcus"
   | "mei"
   | "arun"
+  | "vivian"
   | "rosa"
   | "theo"
   | "sage"
@@ -28,6 +29,7 @@ export const AVATAR_VARIANTS: AvatarVariant[] = [
   "marcus",
   "mei",
   "arun",
+  "vivian",
   "rosa",
   "theo",
   "sage",
@@ -43,6 +45,7 @@ const AVATAR_SRC: Record<AvatarVariant, string> = {
   marcus: "/avatars/avatar-2.png",
   mei: "/avatars/avatar-3.png",
   arun: "/avatars/avatar-4.png",
+  vivian: "/avatars/avatar-13.png",
   rosa: "/avatars/avatar-5.png",
   theo: "/avatars/avatar-6.png",
   sage: "/avatars/avatar-7.png",
@@ -58,7 +61,7 @@ export function avatarSrc(variant: AvatarVariant): string {
 }
 
 /**
- * Yuna avatar. With `variant`, renders one of the 12 photo avatars inside a
+ * Yuna avatar. With `variant`, renders one of the 13 photo avatars inside a
  * circular crop; without it, the Yuna brand mark. Width and height match
  * `size` so the image stays square at the requested px. Pass `glow` for the
  * animated-aura presence treatment on hero screens.
