@@ -26,8 +26,8 @@ export type IntroVoice = {
 
 const VOICE_DESCRIPTIONS: Record<VoiceId, string> = {
   maya: "A warm, reassuring voice with a grounded tone, offering steady comfort and gentle encouragement in a clear American accent.",
-  kai: "A warm, easygoing voice with a soft tone, providing patient guidance and quiet reassurance with a subtle Asian accent.",
-  arun: "A calm, articulate voice with an unhurried tone, offering thoughtful guidance and steady support in a gentle British accent.",
+  kai: "A warm, easygoing voice with a soft tone, providing patient guidance and quiet reassurance with a distinct Asian accent.",
+  arun: "A calm, articulate voice with an unhurried tone, offering thoughtful guidance and steady support in a gentle Indian accent.",
   vivian: "A poised, graceful voice with a gentle tone, offering reassurance and quiet encouragement in a warm British accent.",
 };
 
@@ -403,7 +403,7 @@ function VoiceIntroCard({
         }
       }}
       className={
-        "relative shrink-0 rounded-2xl overflow-hidden snap-start transition-all duration-200 cursor-pointer " +
+        "relative shrink-0 rounded-2xl overflow-hidden snap-start transition-[box-shadow,opacity,scale] duration-200 cursor-pointer " +
         (active
           ? `ring-2 ${ringActive} shadow-lg scale-100`
           : `ring-1 ${ringIdle} opacity-80 scale-[0.97]`)
