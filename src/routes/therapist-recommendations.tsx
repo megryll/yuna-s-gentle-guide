@@ -202,7 +202,7 @@ function Teaser({ surface, onStart }: { surface: "dark" | "light"; onStart: () =
       </div>
       <p className="mt-3 text-sm font-semibold text-white/85">500+ therapists to match with</p>
       <h1 className="mt-5 font-display text-3xl leading-tight tracking-tight text-white max-w-[18rem]">
-        Find a therapist who truly fits you
+        Find a therapist who truly fits you.
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-white/85 max-w-[17rem]">
         Answer a few questions about your focus, insurance, and preferences. Then meet the therapists Yuna matches to you.
