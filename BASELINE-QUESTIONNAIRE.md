@@ -45,6 +45,33 @@ Subcopy: *"Pick up to 3, starting with what matters most to you."*
 Scale 0–8: `Not at all impaired` · `Moderately impaired` (mid) · `Very severely impaired`.
 (The chosen top-priority label is shown as a chip above the question.)
 
+Each question card carries a footer attribution to the clinically validated
+instrument it's drawn from (the step-1 focus picker has none). Attributions
+below were researched 2026-06-22; best-guess where the mined bundle didn't name
+a source (stress NRS, loneliness, work-life balance). Stored as `source` on each
+bank item in `src/lib/questionnaire-data.ts`.
+
+| item | instrument (`source`) |
+|---|---|
+| workImpact | Sheehan Disability Scale |
+| globalMentalHealth | PROMIS Global Health scale |
+| anxiety | GAD-7 anxiety scale |
+| stressLevel | Stress Numerical Rating Scale |
+| loneliness | UCLA Loneliness Scale |
+| perceivedControl | Brief Resilient Coping Scale |
+| selfEsteem | Single-Item Self-Esteem Scale |
+| burnoutSingleItem | single-item burnout measure |
+| fatigue | Brief Fatigue Inventory |
+| emotionallyDrained | Maslach Burnout Inventory |
+| positiveSpirits | WHO-5 Well-Being Index |
+| sleepQuality | Pittsburgh Sleep Quality Index |
+| relationshipSatisfaction | WHOQOL-BREF quality-of-life scale |
+| workLifeBalance | WHOQOL-BREF quality-of-life scale |
+| griefInterference | Brief Grief Questionnaire |
+| substanceConfidence | Drug-Taking Confidence Questionnaire |
+| lifeMeaning | Meaning in Life Questionnaire |
+| cantrilLadder | Cantril Ladder |
+
 ## Question bank
 
 Two item types: `likert` (button list, one per option) and `scale` (slider with

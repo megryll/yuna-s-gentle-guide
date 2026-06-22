@@ -5,6 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
+import { Divider } from "@/components/Divider";
 import { ProgressRecap } from "@/components/DimensionTrends";
 import { IconMedallion } from "@/components/IconMedallion";
 import { MultipleChoice } from "@/components/MultipleChoice";
@@ -259,6 +260,14 @@ function QuestionnaireRoute() {
             surface={surface}
           />
         )}
+        {/* Footer attribution — names the clinically validated instrument the
+            question is drawn from. Fine print, hint-level contrast. */}
+        <div className="mt-7">
+          <Divider surface={surface} />
+          <p className="mt-3 text-xs leading-snug text-white/60">
+            Based on the {q.source}, a clinically validated survey.
+          </p>
+        </div>
       </>
     );
   };

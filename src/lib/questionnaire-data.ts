@@ -26,11 +26,14 @@ export const FOCUS_AREAS: FocusArea[] = [
 // ("high" = top of the range, "low" = bottom) — the survey colors its slider
 // fill against it: green on the positive side, orange once the answer crosses
 // into the struggling half.
+// `source` names the clinically validated instrument an item is drawn from,
+// shown as a footer attribution on the question card (the focus picker has none).
 export type LikertItem = {
   kind: "likert";
   id: string;
   prompt: string;
   options: { value: string; label: string }[];
+  source: string;
   distress?: "high" | "low";
 };
 export type ScaleItem = {
@@ -40,6 +43,7 @@ export type ScaleItem = {
   points: number; // discrete points on the rail (11 for 0–10)
   minLabel: string;
   maxLabel: string;
+  source: string;
   midLabel?: string; // when present, a live descriptor accompanies the value
   // Per-value descriptor (length === points). When present it names every step,
   // so the chosen label shows below the number for any choice — preferred over
@@ -58,6 +62,7 @@ export const IMPACT_ITEM: ScaleItem = {
   minLabel: "Not at all impaired",
   midLabel: "Moderately impaired",
   maxLabel: "Very severely impaired",
+  source: "Sheehan Disability Scale",
   distress: "high",
 };
 
@@ -65,6 +70,7 @@ const likert = (
   id: string,
   prompt: string,
   labels: string[],
+  source: string,
   distress?: "high" | "low",
   firstValue = 1,
 ): LikertItem => ({
@@ -72,6 +78,7 @@ const likert = (
   id,
   prompt,
   options: labels.map((label, i) => ({ value: String(firstValue + i), label })),
+  source,
   distress,
 });
 
@@ -80,12 +87,14 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     "globalMentalHealth",
     "In general, how would you rate your mental health, including your mood and your ability to think?",
     ["Poor", "Fair", "Good", "Very good", "Excellent"],
+    "PROMIS Global Health scale",
     "low",
   ),
   anxiety: likert(
     "anxiety",
     "Over the last two weeks, how often have you been bothered by feeling nervous, anxious, or on edge?",
     ["Not at all", "Several days", "More than half the days", "Nearly every day"],
+    "GAD-7 anxiety scale",
     "high",
     0,
   ),
@@ -96,6 +105,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     points: 11,
     minLabel: "No stress",
     maxLabel: "Worst possible",
+    source: "Stress Numerical Rating Scale",
     distress: "high",
   },
   loneliness: {
@@ -118,6 +128,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "Severely lonely",
       "Extremely lonely",
     ],
+    source: "UCLA Loneliness Scale",
     distress: "high",
   },
   perceivedControl: likert(
@@ -130,6 +141,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "Describes me",
       "Describes me very well",
     ],
+    "Brief Resilient Coping Scale",
     "low",
   ),
   selfEsteem: likert(
@@ -142,6 +154,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "Mostly true of me",
       "Very true of me",
     ],
+    "Single-Item Self-Esteem Scale",
     "low",
   ),
   burnoutSingleItem: likert(
@@ -154,6 +167,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "The symptoms of burnout that I'm experiencing won't go away. I think about frustration at work a lot.",
       "I feel completely burned out and often wonder if I can go on. I am at the point where I may need some changes or may need to seek some sort of help.",
     ],
+    "single-item burnout measure",
     "high",
   ),
   fatigue: {
@@ -176,24 +190,28 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "Severely fatigued",
       "Worst possible",
     ],
+    source: "Brief Fatigue Inventory",
     distress: "high",
   },
   emotionallyDrained: likert(
     "emotionallyDrained",
     "How often do you feel emotionally drained by your work?",
     ["Never or almost never", "Seldom", "Sometimes", "Often", "Always"],
+    "Maslach Burnout Inventory",
     "high",
   ),
   positiveSpirits: likert(
     "positiveSpirits",
     "In the past week, I felt positive and in good spirits.",
     ["Never", "Rarely", "Sometimes", "Often", "Always"],
+    "WHO-5 Well-Being Index",
     "low",
   ),
   sleepQuality: likert(
     "sleepQuality",
     "My sleep quality was…",
     ["Very poor", "Poor", "Fair", "Good", "Very good"],
+    "Pittsburgh Sleep Quality Index",
     "low",
   ),
   relationshipSatisfaction: likert(
@@ -206,6 +224,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
       "Satisfied",
       "Very satisfied",
     ],
+    "WHOQOL-BREF quality-of-life scale",
     "low",
   ),
   workLifeBalance: {
@@ -215,12 +234,14 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     points: 11,
     minLabel: "Very dissatisfied",
     maxLabel: "Very satisfied",
+    source: "WHOQOL-BREF quality-of-life scale",
     distress: "low",
   },
   griefInterference: likert(
     "griefInterference",
     "My grief has interfered with my ability to function in daily life.",
     ["Not at all", "A little", "Somewhat", "Quite a bit", "Extremely"],
+    "Brief Grief Questionnaire",
     "high",
     0,
   ),
@@ -232,12 +253,14 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     points: 11,
     minLabel: "Not at all confident",
     maxLabel: "Completely confident",
+    source: "Drug-Taking Confidence Questionnaire",
     distress: "low",
   },
   lifeMeaning: likert(
     "lifeMeaning",
     "My life has meaning.",
     ["Never", "Rarely", "Sometimes", "Often", "Always"],
+    "Meaning in Life Questionnaire",
     "low",
   ),
   cantrilLadder: {
@@ -248,6 +271,7 @@ export const QUESTION_BANK: Record<string, BankItem> = {
     points: 11,
     minLabel: "Worst possible life",
     maxLabel: "Best possible life",
+    source: "Cantril Ladder",
     distress: "low",
   },
 };
