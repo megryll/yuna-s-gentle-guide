@@ -85,7 +85,7 @@ export const PAGES: ScreenEntry[] = [
   },
   { label: "Wrap-up", to: "/wrap-up" },
   {
-    label: "Profile",
+    label: "You",
     to: "/you",
     children: [
       { label: "Focus area 1", to: "/focus-area/1" },

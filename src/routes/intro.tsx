@@ -106,7 +106,7 @@ const POST_NAME_DELAY_MS = 500;
 const REACTION_AMAZING = {
   userText: "Tell me more about Yuna \u{1F440}",
   yunaReply:
-    "I'm trained in proven therapy methods. I can help you notice unhelpful thoughts, work through emotions, and live by what matters most to you.",
+    "I'll help you notice unhelpful thoughts, work through hard emotions, and live by what matters most to you by teaching skills supported by decades of research.",
 };
 // Stress check-in options offered after the mood-stats card. Replies are
 // tiered by intensity so a low-stress choice doesn't get an "I'm sorry"
@@ -149,7 +149,7 @@ const initialRevealsForStep = (
   if (stepIdx === 2) {
     return [
       {
-        text: "I'll check in once in a while, want to set up notifications?",
+        text: "Can I check in once in a while? It's shown to help people feel better.",
         card: { kind: "push-preview" },
       },
     ];
