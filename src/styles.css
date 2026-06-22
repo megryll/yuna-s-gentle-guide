@@ -311,6 +311,20 @@
        relies on a 400 that silently snaps up. */
     font-weight: 500;
     font-feature-settings: "ss01", "kern";
+    /* macOS renders text heavier than intended by default; antialiased on the
+       root keeps Stara crisp on the noisy photo bg (other platforms ignore it). */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Text wrapping defaults: balance short headings for even line lengths
+     (silently ignored past ~6 lines, so safe to apply broadly); pretty on
+     body copy to avoid orphaned last-line words. */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+  p, li, figcaption, blockquote {
+    text-wrap: pretty;
   }
 
   /* Fraunces (variable) and the system UI font both have a true 400, so they

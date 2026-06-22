@@ -50,7 +50,7 @@ export function StepDots({
             key={i}
             aria-hidden
             className={cn(
-              "h-1.5 rounded-full transition-all duration-200 ease-out",
+              "h-1.5 rounded-full transition-[width,background-color] duration-200 ease-out",
               isCurrent ? "w-5" : "w-1.5",
               reached ? on : off,
             )}

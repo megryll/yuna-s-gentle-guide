@@ -146,7 +146,7 @@ function ScheduleConfirmToast({ open }: { open: boolean }) {
     <ToastViewport>
       <div
         className={
-          "transition-all duration-300 ease-out " +
+          "transition-[opacity,translate] duration-300 ease-out " +
           (open ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2")
         }
       >

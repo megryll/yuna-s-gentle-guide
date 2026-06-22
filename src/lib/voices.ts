@@ -29,14 +29,15 @@ export const VOICES: Record<VoiceId, VoiceConfig> = {
   },
   kai: {
     id: "kai",
-    // Jin — warm, casual male with a subtle Taiwanese accent
-    elevenlabsId: "vZZLclMx4wouUtKBRfZn",
-    sampleText: "Hello. Take your time. I'll be right here when you want to talk.",
+    // ElevenLabs library voice — warm, mature male; matches the older,
+    // professorial avatar.
+    elevenlabsId: "Ih5c9jfzl0g5jmK1Z2Nq",
+    sampleText: "Hello. It's good to have you here. We can take this as slowly as you'd like.",
   },
   arun: {
     id: "arun",
-    // Daniel — articulate British male, professional warmth
-    elevenlabsId: "onwK4e9ZLuTAKqWW03F9",
+    // ElevenLabs library voice — matches the articulate male avatar
+    elevenlabsId: "hU1ickYwpgncnNFbbXQ1",
     sampleText: "Hi there. There's no right place to begin. Just start where you are.",
   },
   vivian: {
