@@ -149,7 +149,7 @@ const initialRevealsForStep = (
   if (stepIdx === 2) {
     return [
       {
-        text: "I'll check in once in a while, want to set up notifications?",
+        text: "Can I check in once in a while? It's shown to help people feel better.",
         card: { kind: "push-preview" },
       },
     ];
