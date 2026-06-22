@@ -364,7 +364,7 @@ export const SPECIALTY_OPTIONS = [
   "Couples", "Eating disorders", "Boundaries", "Parenting", "Perfectionism",
 ];
 export const APPROACH_OPTIONS = [
-  "CBT", "ACT", "EMDR", "Internal Family Systems (IFS)", "Somatic Therapy",
+  "CBT", "ACT", "EMDR", "Somatic Therapy",
   "Mindfulness-Based", "Narrative Therapy", "EFT (Emotionally Focused)",
   "Compassion-Focused Therapy", "Family Systems", "DBT", "Psychodynamic",
 ];
