@@ -24,8 +24,9 @@ import { cn } from "@/lib/utils";
  *                   size; pressed flips it to the filled primary look.
  *   - "card"      — full-width rounded-2xl bordered block with a title
  *                   (children, text-base semibold — kept to one line),
- *                   optional `subtitle`, and optional `trailing` element
- *                   (e.g. a chevron). The list-row "card-as-button".
+ *                   optional `subtitle`, an optional `leading` element
+ *                   (e.g. an IconMedallion), and an optional `trailing`
+ *                   element (e.g. a chevron). The list-row "card-as-button".
  *                   Ignores `size` — it's always a full-width block.
  *   - "link"      — inline text link, no border/fill/padding. For footer
  *                   actions (Referral Code, Login, Forgot password).
@@ -40,6 +41,7 @@ import { cn } from "@/lib/utils";
  *
  * label (icon sizes only): renders a small text caption below the icon circle.
  * subtitle (card variant only): secondary line under the title.
+ * leading (card variant only): node rendered at the row's leading edge.
  * trailing (card variant only): node rendered at the row's trailing edge.
  * selected (card variant only): selected/checked state for a list-row choice —
  *   adds a filled highlight + an auto checkmark (unless `trailing` is set) and
@@ -138,6 +140,7 @@ export interface ButtonProps
   selected?: boolean;
   label?: string;
   subtitle?: string;
+  leading?: React.ReactNode;
   trailing?: React.ReactNode;
 }
 
@@ -155,6 +158,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       selected,
       label,
       subtitle,
+      leading,
       trailing,
       asChild = false,
       children,
@@ -194,6 +198,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           aria-pressed={selected !== undefined ? isSelected : ariaPressed}
           {...props}
         >
+          {leading && <span className="shrink-0">{leading}</span>}
           <span className="flex-1 min-w-0">
             <span className="block text-base font-semibold leading-tight">{children}</span>
             {subtitle && (

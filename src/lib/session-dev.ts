@@ -40,6 +40,7 @@ let recoKind: CardKind | null = null;
 let escalationTier: EscalationTier | null = null;
 let suicidalityOn = false;
 let illinoisOn = false;
+let scheduleSessionOn = false;
 let guidedTitle: string | null = null;
 
 function emit() {
@@ -70,6 +71,10 @@ export function setSessionSuicidality(next: boolean) {
 }
 export function setSessionIllinois(next: boolean) {
   illinoisOn = next;
+  emit();
+}
+export function setSessionScheduleSession(next: boolean) {
+  scheduleSessionOn = next;
   emit();
 }
 export function setSessionGuided(next: string | null) {
@@ -110,6 +115,13 @@ export function useSessionIllinois(): boolean {
     subscribe,
     () => illinoisOn,
     () => illinoisOn,
+  );
+}
+export function useSessionScheduleSession(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => scheduleSessionOn,
+    () => scheduleSessionOn,
   );
 }
 export function useSessionGuided(): string | null {

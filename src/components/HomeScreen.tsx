@@ -15,7 +15,11 @@ import {
   DrawerFooter,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { setSessionIllinois, useSessionIllinois } from "@/lib/session-dev";
+import {
+  setSessionIllinois,
+  useSessionIllinois,
+  useSessionScheduleSession,
+} from "@/lib/session-dev";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
@@ -32,6 +36,7 @@ import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
 import { SchedulePrioritizeGate } from "@/components/SchedulePrioritizeDrawer";
+import { ScheduleSessionDrawer } from "@/components/ScheduleSessionDrawer";
 
 const WELCOME_AUDIO_TEXT =
   "Welcome in. Take a look around. I'll be here when you're ready to chat.";
@@ -131,6 +136,15 @@ export function HomeScreen({
   useEffect(() => {
     if (illinois) setVerifyLocationOpen(false);
   }, [illinois]);
+
+  // "Schedule a session" dev state: relabels the top Upgrade pill and opens a
+  // scheduling drawer. The drawer auto-opens when the state turns on; dismissing
+  // it leaves the relabeled pill, which reopens it.
+  const scheduleSessionState = useSessionScheduleSession();
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  useEffect(() => {
+    if (scheduleSessionState) setScheduleOpen(true);
+  }, [scheduleSessionState]);
 
   // Top-pinned confirmation toast — a neutral "stop seeing" confirmation, or a
   // success congratulation when a goal is marked done.
@@ -232,9 +246,13 @@ export function HomeScreen({
               surface="dark"
               variant="secondary"
               size="xs"
-              onClick={() => navigate({ to: "/design-your-trial" })}
+              onClick={() =>
+                scheduleSessionState
+                  ? setScheduleOpen(true)
+                  : navigate({ to: "/design-your-trial" })
+              }
             >
-              Upgrade
+              {scheduleSessionState ? "Schedule a session" : "Upgrade"}
             </Button>
             <Button
               surface="dark"
@@ -327,6 +345,14 @@ export function HomeScreen({
       </div>
       <FirstSessionDisclaimerGate />
       <SchedulePrioritizeGate />
+      <ScheduleSessionDrawer
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        onSchedule={() => {
+          setScheduleOpen(false);
+          showToast("You scheduled a session.", "success");
+        }}
+      />
       <CardActionsDrawer
         card={menuCard}
         completed={!!menuCard && completedIds.has(menuCard.id)}

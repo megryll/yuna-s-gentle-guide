@@ -26,11 +26,13 @@ import {
   setSessionGuided,
   setSessionIllinois,
   setSessionReco,
+  setSessionScheduleSession,
   setSessionStatus,
   setSessionSuicidality,
   useSessionEscalation,
   useSessionGuided,
   useSessionIllinois,
+  useSessionScheduleSession,
   useSessionReco,
   useSessionStatus,
   useSessionSuicidality,
@@ -624,6 +626,7 @@ function YunaStatesSection() {
 
 function HomeStatesSection() {
   const illinois = useSessionIllinois();
+  const scheduleSession = useSessionScheduleSession();
   return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
@@ -631,6 +634,11 @@ function HomeStatesSection() {
           active={illinois}
           label="Illinois Limitations"
           onClick={() => setSessionIllinois(!illinois)}
+        />
+        <Chip
+          active={scheduleSession}
+          label="Schedule a session"
+          onClick={() => setSessionScheduleSession(!scheduleSession)}
         />
       </div>
     </Section>
