@@ -6,7 +6,7 @@ import { getNatureSoundsOn } from "./nature-sounds-prefs";
 
 const AMBIENT_SRC = "/ambient-nature-bed.mp3";
 
-export const AMBIENT_VOLUME = 0.35;
+export const AMBIENT_VOLUME = 0.7;
 const FADE_IN_MS = 1000;
 
 let audio: HTMLAudioElement | null = null;
