@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bookmark, ChevronRight, LayoutGrid, List, Menu } from "lucide-react";
+import { Ban, Bookmark, ChevronRight, LayoutGrid, List, Menu } from "lucide-react";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
 import { DEFAULT_VOICE, VOICES } from "@/lib/voices";
@@ -8,7 +8,18 @@ import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
-import { useSessionScheduleSession } from "@/lib/session-dev";
+import { IconMedallion } from "@/components/IconMedallion";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
+  setSessionIllinois,
+  useSessionIllinois,
+  useSessionScheduleSession,
+} from "@/lib/session-dev";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
@@ -123,6 +134,15 @@ export function HomeScreen({
   }, []);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
   const [menuCard, setMenuCard] = useState<HomeCard | null>(null);
+
+  // Dev state (EngineerSidebar "States"): the Illinois service-limitation
+  // takeover, with a secondary "verify your location" step layered over it.
+  const illinois = useSessionIllinois();
+  const [verifyLocationOpen, setVerifyLocationOpen] = useState(false);
+  // Each fresh open starts on the takeover; leave the flag alone while closing.
+  useEffect(() => {
+    if (illinois) setVerifyLocationOpen(false);
+  }, [illinois]);
 
   // "Schedule a session" dev state: relabels the top Upgrade pill and opens a
   // scheduling drawer. The drawer auto-opens when the state turns on; dismissing
@@ -349,6 +369,98 @@ export function HomeScreen({
         onStopSeeing={stopSeeing}
         onManagePreferences={managePreferences}
       />
+
+      {/* Illinois service-limitation takeover (EngineerSidebar "Illinois
+          Limitations" dev state): a full-height drawer explaining Yuna is
+          unavailable in Illinois, with a secondary "verify your location" step
+          layered over it. Authored white-on-dark; the drawer paints the mode
+          photo and the shims invert it for light mode. */}
+      <Drawer
+        open={illinois}
+        onOpenChange={(open) => {
+          if (!open) setSessionIllinois(false);
+        }}
+      >
+        <DrawerContent className="min-h-[92%]">
+          <div className="flex flex-1 flex-col min-h-0 px-8 pt-8 pb-10">
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center text-center gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <IconMedallion size="xl">
+                <Ban size={30} strokeWidth={1.8} className="text-alert-orange" aria-hidden />
+              </IconMedallion>
+              <DrawerTitle className="text-center text-balance">
+                Yuna is unavailable in Illinois
+              </DrawerTitle>
+              <div className="flex flex-col gap-4 text-base leading-relaxed text-white/85">
+                <p>
+                  Because of new legislation in Illinois banning AI mental health
+                  support, we've been forced to end service and close off your
+                  access to sessions with Yuna here.
+                </p>
+                <p>
+                  Although sessions in any form are no longer available, you can
+                  still explore and use other parts of the product, such as our
+                  guided meditations and mindfulness resources.
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex flex-col gap-3 pt-6">
+              <Button
+                surface={surface}
+                variant="primary"
+                fullWidth
+                onClick={() => setSessionIllinois(false)}
+              >
+                Go to wellness feed
+              </Button>
+              <Button
+                surface={surface}
+                variant="link"
+                className="self-center text-center"
+                onClick={() => setVerifyLocationOpen(true)}
+              >
+                Not in Illinois? Verify my location
+              </Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Verify-location step — a compact drawer layered over the takeover. */}
+      <Drawer
+        open={verifyLocationOpen}
+        onOpenChange={(open) => {
+          if (!open) setVerifyLocationOpen(false);
+        }}
+      >
+        <DrawerContent>
+          <div className="px-8 pt-6 flex flex-col items-center text-center gap-3">
+            <DrawerTitle className="text-center text-balance">
+              Verify your{" "}
+              <span className={surface === "light" ? "text-primary-green" : "text-secondary-green"}>
+                location
+              </span>
+            </DrawerTitle>
+            <p className="text-base text-white/80">
+              Use your device location services to verify your current location.
+              We will not store your location data.
+            </p>
+          </div>
+          <DrawerFooter className="px-8 pb-8 pt-6">
+            <Button
+              surface={surface}
+              variant="primary"
+              fullWidth
+              onClick={() => {
+                setVerifyLocationOpen(false);
+                setSessionIllinois(false);
+              }}
+            >
+              Verify my location
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </PhoneFrame>
   );
 }

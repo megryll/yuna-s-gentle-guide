@@ -24,11 +24,13 @@ import {
   GUIDED_SAMPLE_TITLE,
   setSessionEscalation,
   setSessionGuided,
+  setSessionIllinois,
   setSessionReco,
   setSessionScheduleSession,
   setSessionStatus,
   useSessionEscalation,
   useSessionGuided,
+  useSessionIllinois,
   useSessionScheduleSession,
   useSessionReco,
   useSessionStatus,
@@ -606,14 +608,20 @@ function YunaStatesSection() {
 }
 
 // ─── Home states (screen trigger) ────────────────────────────────────────────
-// Pushes the Home screen into a given state for review. One chip for now: the
-// "Schedule a session" drawer.
+// Pushes the Home screen into a given state for review: the Illinois
+// service-limitation takeover and the "Schedule a session" drawer.
 
 function HomeStatesSection() {
+  const illinois = useSessionIllinois();
   const scheduleSession = useSessionScheduleSession();
   return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
+        <Chip
+          active={illinois}
+          label="Illinois Limitations"
+          onClick={() => setSessionIllinois(!illinois)}
+        />
         <Chip
           active={scheduleSession}
           label="Schedule a session"
