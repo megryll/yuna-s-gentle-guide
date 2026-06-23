@@ -1160,7 +1160,7 @@ function Chat() {
                 <X strokeWidth={1.8} aria-hidden />
               </Button>
               <div className="flex flex-1 flex-col min-h-0 px-8 pt-8 pb-10">
-                <div className="flex flex-col items-center gap-5 text-center">
+                <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
                   <IconMedallion size="xl">
                     <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={80} />
                   </IconMedallion>
@@ -1173,9 +1173,6 @@ function Chat() {
                     It sounds like you are going through something really hard
                     right now, and that is beyond Yuna's capacity to help.
                   </ChatBubble>
-                </div>
-
-                <div className="flex flex-1 items-center justify-center">
                   <DrawerTitle className="text-center text-balance">
                     If you are in need of immediate support, tap below.
                   </DrawerTitle>
