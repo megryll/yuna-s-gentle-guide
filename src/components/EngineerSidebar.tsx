@@ -25,9 +25,11 @@ import {
   setSessionEscalation,
   setSessionGuided,
   setSessionReco,
+  setSessionScheduleSession,
   setSessionStatus,
   useSessionEscalation,
   useSessionGuided,
+  useSessionScheduleSession,
   useSessionReco,
   useSessionStatus,
 } from "@/lib/session-dev";
@@ -139,6 +141,7 @@ export function EngineerSidebar() {
       {/* Session-only: drive the live session into a given state for review.
           Last in the panel, and only where these states actually live. */}
       {path === "/chat" && <YunaStatesSection />}
+      {path === "/home" && <HomeStatesSection />}
     </aside>
   );
 }
@@ -596,6 +599,25 @@ function YunaStatesSection() {
           active={!!guided}
           label="Guided Session"
           onClick={() => setSessionGuided(guided ? null : GUIDED_SAMPLE_TITLE)}
+        />
+      </div>
+    </Section>
+  );
+}
+
+// ─── Home states (screen trigger) ────────────────────────────────────────────
+// Pushes the Home screen into a given state for review. One chip for now: the
+// "Schedule a session" drawer.
+
+function HomeStatesSection() {
+  const scheduleSession = useSessionScheduleSession();
+  return (
+    <Section title="States" defaultOpen={true}>
+      <div className="flex flex-wrap gap-1">
+        <Chip
+          active={scheduleSession}
+          label="Schedule a session"
+          onClick={() => setSessionScheduleSession(!scheduleSession)}
         />
       </div>
     </Section>

@@ -44,6 +44,7 @@ const listeners = new Set<Listener>();
 let statusState: YunaState | null = null;
 let recoKind: CardKind | null = null;
 let escalationTier: EscalationTier | null = null;
+let scheduleSessionOn = false;
 let guidedTitle: string | null = null;
 
 function emit() {
@@ -66,6 +67,10 @@ export function setSessionReco(next: CardKind | null) {
 }
 export function setSessionEscalation(next: EscalationTier | null) {
   escalationTier = next;
+  emit();
+}
+export function setSessionScheduleSession(next: boolean) {
+  scheduleSessionOn = next;
   emit();
 }
 export function setSessionGuided(next: string | null) {
@@ -92,6 +97,13 @@ export function useSessionEscalation(): EscalationTier | null {
     subscribe,
     () => escalationTier,
     () => escalationTier,
+  );
+}
+export function useSessionScheduleSession(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => scheduleSessionOn,
+    () => scheduleSessionOn,
   );
 }
 export function useSessionGuided(): string | null {

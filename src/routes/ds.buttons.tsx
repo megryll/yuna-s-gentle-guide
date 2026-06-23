@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUp, Bookmark, ChevronDown, ChevronLeft, ChevronRight, Menu, MoreHorizontal, Volume2, X } from "lucide-react";
+import { ArrowUp, Bookmark, ChevronDown, ChevronLeft, ChevronRight, Clock, Menu, MoreHorizontal, Volume2, X } from "lucide-react";
 import { Button } from "@/components/Button";
+import { IconMedallion } from "@/components/IconMedallion";
 import { DSPage, PropsBlock, Row, Section, SurfaceMatrix, type MatrixRow } from "@/ds-docs/surface";
 
 export const Route = createFileRoute("/ds/buttons")({
@@ -42,6 +43,7 @@ function DSButtons() {
   pressed?:  boolean       // toggles into primary look; sets aria-pressed
   label?:    string        // icon sizes only — caption below the circle
   subtitle?: string        // card variant — secondary line under the title
+  leading?:  ReactNode     // card variant — leading element (e.g. an IconMedallion)
   trailing?: ReactNode     // card variant — trailing element (e.g. a chevron)
   selected?: boolean       // card variant — selected/checked row; adds highlight + auto check
   asChild?:  boolean       // wrap a <Link> with asChild
@@ -142,6 +144,18 @@ function CardRow({ surface }: { surface: "dark" | "light" }) {
         trailing={<ChevronRight size={20} strokeWidth={1.75} />}
       >
         Sign up through my employer
+      </Button>
+      <Button
+        surface={surface}
+        variant="card"
+        subtitle="Perfect for an evening wind-down"
+        leading={
+          <IconMedallion size="sm">
+            <Clock size={18} strokeWidth={1.8} className="text-white" aria-hidden />
+          </IconMedallion>
+        }
+      >
+        Today at 6:00 PM
       </Button>
     </div>
   );
