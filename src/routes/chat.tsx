@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUp, Copy, Mic, MessageCircle, Phone, Settings, ThumbsDown, Volume2, VolumeX, X } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
 import {
@@ -44,8 +43,10 @@ import {
   useSessionSuicidality,
 } from "@/lib/session-dev";
 import { TextField } from "@/components/TextField";
-import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
-import { useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { cn } from "@/lib/utils";
+import { usePlatform } from "@/lib/platform";
+import { useAdminChrome } from "@/lib/admin-chrome";
+import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -175,6 +176,9 @@ function Chat() {
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
+  const light = isLightMode(appMode);
+  const platform = usePlatform();
+  const adminChrome = useAdminChrome();
   // Dev override (EngineerSidebar "Yuna states"): surface a card recommendation
   // as Yuna's latest turn for review.
   const reco = useSessionReco();
@@ -858,11 +862,23 @@ function Chat() {
   const chatNowVoiceGreeting = isChatNowVoice ? [chatNowOpener(yunaUserName)] : undefined;
 
   return (
-    <PhoneFrame backgroundImage="/background.png" themed>
-      <div
-        className="relative flex-1 flex flex-col yuna-fade-in min-h-0 text-white transition-[padding-bottom] duration-200 ease-out"
-        style={inputFocused || keyboardLatched ? { paddingBottom: KEYBOARD_HEIGHT } : undefined}
-      >
+    <div
+      className={cn(
+        "relative h-[100dvh] w-full overflow-hidden bg-cover bg-center text-white",
+        adminChrome && "md:pl-72",
+        light && "theme-light",
+        platform === "android" && "platform-android",
+      )}
+      style={{
+        backgroundImage: light
+          ? `url(${blurBg})`
+          : `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${blurBg})`,
+      }}
+    >
+      {/* Focused-takeover conversation column — no nav rail; the conversation
+          owns the viewport. Centered to a readable measure on desktop, full
+          width on mobile-web. */}
+      <div className="relative mx-auto flex h-full w-full md:w-[60%] flex-col yuna-fade-in min-h-0 text-white">
         {/* Guided-session header strip — a full-width band at the very top
             that pushes the rest of the screen down, reminding the user which
             guided session they're in. Shown in both text and voice modes.
@@ -954,6 +970,7 @@ function Chat() {
           <VoiceSession
             onEndCall={endChat}
             initialGreetingLines={chatNowVoiceGreeting}
+            messages={messages}
             onMessageAppended={(msg) => {
               setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]));
             }}
@@ -1190,7 +1207,7 @@ function Chat() {
           )}
         </DrawerContent>
       </Drawer>
-    </PhoneFrame>
+    </div>
   );
 }
 

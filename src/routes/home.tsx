@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HomeScreen } from "@/components/HomeScreen";
+import { WebHomeScreen } from "@/components/WebHomeScreen";
 import { useUserType } from "@/lib/user-type";
 
 export const Route = createFileRoute("/home")({
@@ -15,12 +15,8 @@ export const Route = createFileRoute("/home")({
 function HomeRoute() {
   const userType = useUserType();
 
-  // The card feed is identical for both user types (see HomeScreen); only the
-  // greeting and the welcome audio differ for new users.
-  return (
-    <HomeScreen
-      variant={userType}
-      showWelcome={userType === "new"}
-    />
-  );
+  // First screen of the responsive web conversion (feature/web). Phone Home
+  // (HomeScreen) is preserved in the component tree for reference until the
+  // rest of the screens follow.
+  return <WebHomeScreen variant={userType} />;
 }

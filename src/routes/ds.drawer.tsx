@@ -25,7 +25,7 @@ function DSDrawer() {
           bottom position and dimmed scrim read in context on both modes. */}
       <Section
         title="Display"
-        subtitle="Bottom sheet anchored to the screen's bottom edge (it slides up over a dimmed scrim in use). mode picks the photo + ink; the title is the one drawer-title size (text-3xl, Fraunces)."
+        subtitle="Bottom sheet anchored to the screen's bottom edge (it slides up over a dimmed scrim in use). mode picks the photo + ink; the title is the one drawer-title size (text-3xl, Fraunces). Inside a device frame it stays edge-to-edge as shown; on a body-mounted responsive web screen it caps to ~28rem and centers as a floating card at md+."
       >
         <DevicePair
           renderRow={(surface) => (
@@ -63,7 +63,12 @@ function DSDrawer() {
 
 // Portals into the PhoneFrame container automatically; adds .overlay-on-dark in
 // dark mode so bg tokens repoint to white-alpha. DrawerTrigger / DrawerClose are
-// available for uncontrolled use.`}</PropsBlock>
+// available for uncontrolled use.
+//
+// Responsive: in-frame → edge-to-edge bottom sheet. Body-mounted (web) → at md+
+// it caps to max-w-md and centers as a floating card (mx-auto, bottom-4, fully
+// rounded). Centered via auto margins, not translate-x, so vaul's drag/open
+// transform isn't clobbered.`}</PropsBlock>
       </Section>
     </DSPage>
   );

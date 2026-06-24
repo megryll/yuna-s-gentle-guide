@@ -1,7 +1,9 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import appCss from "../styles.css?url";
+import { useAdminChrome, setAdminChrome } from "@/lib/admin-chrome";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { EngineerSidebar } from "@/components/EngineerSidebar";
 import { UserTypeToggle } from "@/components/UserTypeToggle";
@@ -127,6 +129,10 @@ function RootComponent() {
   }, [natureSoundsOn, bare]);
 
   const commentsEnabled = useCommentsEnabled();
+  // All dev chrome (page-index sidebar, engineer panel, top toggles) hides
+  // together via this flag so the responsive web app can be previewed
+  // full-bleed. A small always-present tab flips it back.
+  const adminChrome = useAdminChrome();
 
   if (bare) {
     return <Outlet />;
@@ -134,18 +140,44 @@ function RootComponent() {
 
   return (
     <>
-      <AdminSidebar />
-      {!onGallery && <EngineerSidebar />}
-      <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
-        <PlatformToggle />
-        <ModeToggle />
-        <FrameSizeToggle />
-        <UserTypeToggle />
-        <PrototypeMuteToggle />
-        <CommentsToggle />
-      </div>
+      {adminChrome && (
+        <>
+          <AdminSidebar />
+          {!onGallery && <EngineerSidebar />}
+          <div className="hidden md:flex fixed left-1/2 -translate-x-1/2 top-3 z-50 items-center gap-2">
+            <PlatformToggle />
+            <ModeToggle />
+            <FrameSizeToggle />
+            <UserTypeToggle />
+            <PrototypeMuteToggle />
+            <CommentsToggle />
+          </div>
+        </>
+      )}
+      <AdminChromeTab visible={adminChrome} />
       <Outlet />
       {commentsEnabled && <CommentLayer />}
     </>
+  );
+}
+
+// Always-present toggle for the dev chrome. Sits top-right, out of the center
+// toggle cluster's way, so it's reachable whether the chrome is shown or hidden.
+function AdminChromeTab({ visible }: { visible: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={() => setAdminChrome(!visible)}
+      aria-pressed={!visible}
+      aria-label={visible ? "Hide admin chrome" : "Show admin chrome"}
+      title={visible ? "Hide admin chrome" : "Show admin chrome"}
+      className="hidden md:flex fixed top-3 right-3 z-[60] items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur-md p-2 text-muted-foreground shadow-sm active:text-foreground"
+    >
+      {visible ? (
+        <PanelLeftClose size={16} strokeWidth={1.8} aria-hidden />
+      ) : (
+        <PanelLeftOpen size={16} strokeWidth={1.8} aria-hidden />
+      )}
+    </button>
   );
 }

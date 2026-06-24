@@ -69,6 +69,20 @@ const DrawerContent = React.forwardRef<
   const pos = inFrame ? "absolute" : "fixed";
   const appMode = useAppMode();
   const mode = modeProp ?? appMode;
+  // Body-mounted (responsive web) drawers: at md+ a full-width bottom band
+  // reads as an awkward slab, so cap the width and center it into a floating
+  // card lifted off the bottom edge. Keeps `left/right:0` and centers via auto
+  // margins — NOT translate-x — because vaul drives the open/drag animation
+  // through an inline `transform`, which would clobber a translate-based
+  // centering. Phone-frame drawers (DS page, un-migrated screens) keep the
+  // edge-to-edge sheet untouched.
+  // `md:[&::after]:hidden` kills vaul's overscroll bleed — the ::after it paints
+  // below the sheet (the slab the in-frame `container` prop otherwise
+  // suppresses). With the lifted `bottom-4` float, its top sliver would
+  // otherwise peek through the gap as a thin bar under the card.
+  const desktopCard = inFrame
+    ? ""
+    : "md:mx-auto md:max-w-md md:bottom-4 md:rounded-b-[1.5rem] md:[&::after]:hidden";
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -85,6 +99,7 @@ const DrawerContent = React.forwardRef<
         className={cn(
           pos +
             " inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[1.5rem] border text-popover-foreground",
+          desktopCard,
           mode === "dark" && "overlay-on-dark",
           className,
         )}

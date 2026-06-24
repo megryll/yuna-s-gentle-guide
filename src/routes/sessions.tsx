@@ -1,16 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MessageCircle } from "lucide-react";
-import { ScreenChrome } from "@/components/ScreenChrome";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
 import { PastSessionCard } from "@/components/PastSessionCard";
-import { Toast, ToastViewport } from "@/components/Toast";
+import { Toast } from "@/components/Toast";
 import { useSessions } from "@/lib/sessions";
 import { consumeSessionToast } from "@/lib/session-toast";
 import { useTransientToast } from "@/lib/use-transient-toast";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
+import { useAppMode } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/sessions")({
   head: () => ({ meta: [{ title: "Sessions — Yuna" }] }),
@@ -26,9 +27,9 @@ function SessionsRoute() {
 function SessionsNew() {
   const startChat = useStartChat();
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col justify-center px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center">
+    <WebShell>
+      <WebContent width="max-w-xl" className="min-h-[60vh] flex flex-col justify-center">
+        <div className="flex flex-col items-center text-center yuna-fade-in">
           <IconMedallion size="xl">
             <MessageCircle size={32} strokeWidth={1.4} className="text-white/70" aria-hidden />
           </IconMedallion>
@@ -42,14 +43,15 @@ function SessionsNew() {
             Start your first conversation
           </Button>
         </div>
-      </div>
-    </ScreenChrome>
+      </WebContent>
+    </WebShell>
   );
 }
 
 function SessionsReturning() {
   const navigate = useNavigate();
   const sessions = useSessions();
+  const surface = useAppMode() === "light" ? "light" : "dark";
   const { message: toast, show, dismiss } = useTransientToast();
 
   // Pick up a one-shot confirmation handed off from a detail screen (e.g. after
@@ -60,22 +62,19 @@ function SessionsReturning() {
   }, [show]);
 
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <ToastViewport>
-        {toast && (
-          <Toast
-            surface="dark"
-            variant="success"
-            message={toast}
-            onDismiss={dismiss}
-          />
-        )}
-      </ToastViewport>
+    <WebShell>
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-[min(92vw,420px)]">
+          <Toast surface={surface} variant="success" message={toast} onDismiss={dismiss} />
+        </div>
+      )}
 
-      <div className="flex-1 flex flex-col px-6 pb-8 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Past sessions</h1>
+      <WebContent width="max-w-4xl">
+        <h1 className="font-display text-3xl lg:text-4xl tracking-tight text-white">
+          Past sessions
+        </h1>
 
-        <ul className="mt-6 flex flex-col gap-4">
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
           {sessions.map((s, i) => (
             <li key={s.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
               <PastSessionCard
@@ -86,7 +85,7 @@ function SessionsReturning() {
             </li>
           ))}
         </ul>
-      </div>
-    </ScreenChrome>
+      </WebContent>
+    </WebShell>
   );
 }

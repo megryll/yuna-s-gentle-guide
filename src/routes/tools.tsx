@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ScreenChrome } from "@/components/ScreenChrome";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
 
@@ -67,11 +67,11 @@ function ToolsRoute() {
   const captionClass = isLight ? "text-foreground/80" : "text-white/90";
 
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col px-6 pb-6 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Tools</h1>
+    <WebShell>
+      <WebContent width="max-w-4xl">
+        <h1 className="font-display text-3xl lg:text-4xl tracking-tight text-white">Tools</h1>
 
-        <ul className="mt-5 flex flex-col gap-3">
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
           {TOOLS.map((t, i) => (
             <li key={t.id}>
               <div
@@ -122,7 +122,7 @@ function ToolsRoute() {
             </li>
           ))}
         </ul>
-      </div>
-    </ScreenChrome>
+      </WebContent>
+    </WebShell>
   );
 }

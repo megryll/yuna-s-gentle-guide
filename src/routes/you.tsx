@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ScreenChrome } from "@/components/ScreenChrome";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
 import { Surface } from "@/components/Surface";
@@ -40,9 +40,9 @@ function YouRoute() {
     navigate({ to: "/insights/$category", params: { category } });
 
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex justify-center pt-4">
+    <WebShell>
+      <WebContent width="max-w-2xl" className="text-white yuna-fade-in">
+        <div className="flex justify-center">
           <ProgressRing progress={data.progress} icon={data.ringIcon} />
         </div>
 
@@ -137,8 +137,8 @@ function YouRoute() {
             Help Yuna understand you better
           </Button>
         </div>
-      </div>
-    </ScreenChrome>
+      </WebContent>
+    </WebShell>
   );
 }
 
@@ -166,9 +166,9 @@ function ListOfInsights({ insights, accentLeft }: { insights: Insight[]; accentL
 function YouEmptyState() {
   const startChat = useStartChat();
   return (
-    <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center pt-10">
+    <WebShell>
+      <WebContent width="max-w-xl" className="text-white yuna-fade-in">
+        <div className="flex flex-col items-center text-center pt-6">
           <EmptyHeroGlow />
           <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-6">
             Your space, just beginning
@@ -189,8 +189,8 @@ function YouEmptyState() {
             Start your first conversation
           </Button>
         </div>
-      </div>
-    </ScreenChrome>
+      </WebContent>
+    </WebShell>
   );
 }
 

@@ -3,6 +3,7 @@ import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { YunaStatus, type YunaState } from "@/components/YunaStatus";
 import { CardSuggestion } from "@/components/CardSuggestion";
+import { ChatBubble } from "@/components/ChatBubble";
 import {
   RECO_SAMPLES,
   setSessionEscalation,
@@ -88,6 +89,12 @@ type VoiceSessionProps = {
    */
   onMessageAppended?: (msg: ChatMsg) => void;
   /**
+   * The full conversation thread (owned by the parent). Rendered as a quiet
+   * caption feed in the pad's lower half — newest at the bottom, older lines
+   * rising and fading out under the controls.
+   */
+  messages?: ChatMsg[];
+  /**
    * Whether the user has granted mic permission. When false the hold-to-talk
    * button still renders, but pressing it routes through
    * `onRequestMicPermission` (the parent owns the permission dialog) instead
@@ -107,6 +114,7 @@ export function VoiceSession({
   onEndCall,
   initialGreetingLines,
   onMessageAppended,
+  messages = [],
   micEnabled = true,
   onRequestMicPermission,
 }: VoiceSessionProps) {
@@ -709,6 +717,7 @@ export function VoiceSession({
           onPressEnd={endHold}
           onToggleMic={toggleHandsFreeMic}
           onOpenModeDrawer={() => setModeDrawerOpen(true)}
+          messages={messages}
         />
       </div>
 
@@ -773,6 +782,7 @@ function VoicePad({
   onPressEnd,
   onToggleMic,
   onOpenModeDrawer,
+  messages,
 }: {
   phase: Phase;
   phaseLabel: string;
@@ -786,6 +796,7 @@ function VoicePad({
   onPressEnd: () => void;
   onToggleMic: () => void;
   onOpenModeDrawer: () => void;
+  messages: ChatMsg[];
 }) {
   const listening = phase === "listening";
   const muted = phase === "muted";
@@ -848,6 +859,7 @@ function VoicePad({
         }}
       />
       <VoiceWaveform active={listening} analyser={analyser} />
+      <VoiceTranscript messages={messages} />
       <div className="relative z-10 h-full w-full flex flex-col items-center justify-center gap-5 px-5 py-8">
         {/* Idle hold-mode hides the label — "HOLD TO TALK" below the avatar
             already states the affordance, so doubling it is just noise. Slot
@@ -1069,6 +1081,46 @@ function MicGlyph() {
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />
     </svg>
+  );
+}
+
+// Quiet caption feed in the pad's lower half. Sits behind the z-10 controls
+// (pointer-events-none so it never steals the press-to-talk gesture) and
+// justify-end keeps the newest turn pinned to the bottom; older lines rise and
+// are clipped by the pad's overflow, with the top fade mask dissolving them as
+// they pass under the hold-to-talk control. Authored white-on-dark so
+// `.theme-light` inverts the ink for light mode.
+function VoiceTranscript({ messages }: { messages: ChatMsg[] }) {
+  const frosted = useModeImage();
+  const turns = messages.filter(
+    (m): m is Extract<ChatMsg, { kind: "text" }> => m.kind === "text",
+  );
+  if (turns.length === 0) return null;
+
+  const fade = "linear-gradient(to bottom, transparent 0%, transparent 32%, #000 62%)";
+
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 top-1/2 z-[1] flex justify-center">
+      <div
+        className="flex w-full max-w-md flex-col justify-end gap-2 overflow-hidden px-6 pb-5"
+        style={{ maskImage: fade, WebkitMaskImage: fade }}
+      >
+        {turns.map((m) => {
+          const mine = m.from === "you";
+          return (
+            <div key={m.id} className={"yuna-fade-in w-full flex " + (mine ? "justify-end" : "justify-start")}>
+              <ChatBubble
+                from={mine ? "user" : "yuna"}
+                frostedImage={mine ? undefined : frosted}
+                className="max-w-[85%]"
+              >
+                {m.text}
+              </ChatBubble>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
