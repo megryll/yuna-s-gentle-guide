@@ -20,6 +20,9 @@ import {
  *   • has text    — an X; tap to clear (or `onClear`, when the caller owns it).
  * The field auto-grows with its content, so a long answer reads in full.
  *
+ * Pass `textOnly` to drop dictation entirely: no Mic, no Waveform — just a
+ * typed field whose trailing button is an X to clear (shown only with text).
+ *
  * Controlled: pass `value` / `onChange` for the text. Used standalone, and as
  * the expanded form of a MultipleChoice `other` option.
  *
@@ -27,6 +30,9 @@ import {
  * onChange:     next text (typing or live transcript)
  * onClear?:     overrides the X button's default (clear to ""), e.g. to let a
  *               container collapse the field when it's already empty
+ * onBlur?:      fires when the text field loses focus (not while recording) —
+ *               e.g. to let a container commit/collapse the field
+ * textOnly?:    disable dictation — typed input only (default false)
  * surface?:     "dark" | "light" (default "dark")
  * placeholder?: idle hint (default "Type or record your answer")
  * autoFocus?:   focus the field on mount
@@ -35,6 +41,8 @@ type Props = {
   value: string;
   onChange: (v: string) => void;
   onClear?: () => void;
+  onBlur?: () => void;
+  textOnly?: boolean;
   surface?: "dark" | "light";
   placeholder?: string;
   autoFocus?: boolean;
@@ -45,6 +53,8 @@ export function DictationTextArea({
   value,
   onChange,
   onClear,
+  onBlur,
+  textOnly = false,
   surface = "dark",
   placeholder = "Type or record your answer",
   autoFocus,
@@ -57,6 +67,7 @@ export function DictationTextArea({
   const ctxRef = useRef<AudioContext | null>(null);
   const baseRef = useRef("");
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const dark = surface === "dark";
   const hasText = value.trim().length > 0;
 
@@ -146,6 +157,7 @@ export function DictationTextArea({
 
   return (
     <div
+      ref={rootRef}
       className={cn(
         "rounded-2xl border pl-4 pr-2 py-2 flex items-center gap-2 transition-colors backdrop-blur-sm",
         dark ? "bg-black/20" : "bg-white/40",
@@ -173,6 +185,12 @@ export function DictationTextArea({
           rows={1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={(e) => {
+            // Ignore focus moving to the field's own controls (mic, clear);
+            // only a tap genuinely outside the field commits/collapses it.
+            if (recording || rootRef.current?.contains(e.relatedTarget as Node | null)) return;
+            onBlur?.();
+          }}
           placeholder={placeholder}
           autoFocus={autoFocus}
           className={cn(
@@ -207,7 +225,7 @@ export function DictationTextArea({
         >
           <X strokeWidth={2} aria-hidden />
         </Button>
-      ) : (
+      ) : textOnly ? null : (
         <Button
           surface={surface}
           variant="primary"

@@ -17,6 +17,7 @@ import { YunaAvatar } from "@/components/YunaAvatar";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { DEFAULT_VOICE } from "@/lib/voices";
 import { useAppMode } from "@/lib/theme-prefs";
+import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
 import {
@@ -44,6 +45,10 @@ import { setUserType } from "@/lib/user-type";
 // dynamic (driven by how many areas were picked), computed from `buildFlow`.
 
 const MAX_PRIORITIES = 3;
+// How far to lift the flow when the "Something Else" field is focused so it
+// clears the simulated keyboard, keeping ~70px of breathing room above it
+// (mirrors the employer-access screen). Only step 0 has a text field.
+const FOCUS_SHIFT = KEYBOARD_HEIGHT - 70;
 // URL sanity bound only — the real completion index is derived from the picks
 // (picker + impact + up to 3×3 deduped branch items). The component treats any
 // step at or past the computed completion index as the completion screen.
@@ -105,6 +110,9 @@ function QuestionnaireRoute() {
   const [answers, setAnswers] = useState<Answers>({});
   // Prototype audio-readout toggle — swaps the icon, doesn't drive real TTS.
   const [audioOn, setAudioOn] = useState(true);
+  // Lift the flow when the open-ended "Something Else" field (the only text
+  // input in the flow) is focused, so the keyboard doesn't cover it.
+  const [inputFocused, setInputFocused] = useState(false);
 
   // The whole question flow (impact + every pick's branch items), and the step
   // index that lands on completion. Both are derived from the picks, so the flow
@@ -338,7 +346,16 @@ function QuestionnaireRoute() {
 
   return (
     <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0 text-white">
+      <div
+        className="flex-1 flex flex-col min-h-0 text-white transition-transform duration-200 ease-out"
+        style={inputFocused ? { transform: `translateY(-${FOCUS_SHIFT}px)` } : undefined}
+        onFocusCapture={(e) => {
+          if ((e.target as HTMLElement).tagName === "TEXTAREA") setInputFocused(true);
+        }}
+        onBlurCapture={(e) => {
+          if ((e.target as HTMLElement).tagName === "TEXTAREA") setInputFocused(false);
+        }}
+      >
         {/* Header: audio toggle · label · close. */}
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
           <div className="justify-self-start">
@@ -456,7 +473,7 @@ function FocusPane({
           ariaLabel="What would you like support with right now?"
           otherValue={otherValue}
           onOtherChange={onOtherChange}
-          otherPlaceholder="Type or record your answer"
+          otherPlaceholder="Type your answer"
           options={FOCUS_AREAS.map((a) => {
             const rank = value.indexOf(a.id);
             return {

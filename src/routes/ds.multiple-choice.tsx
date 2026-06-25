@@ -113,7 +113,7 @@ function SelectedDemo({ surface }: { surface: "dark" | "light" }) {
 
 function OtherDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState<string[]>(["custom"]);
-  const [other, setOther] = useState("");
+  const [other, setOther] = useState("Navigating a recent move");
   return (
     <MultipleChoice
       surface={surface}
