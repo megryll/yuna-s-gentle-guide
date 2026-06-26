@@ -252,6 +252,22 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
         )}
       </div>
 
+      {/* Upgrade promo — pinned to the foot of the expanded rail (lg only; the
+          collapsed md rail has no room). Content-card shell + a DS primary
+          Button as the CTA. */}
+      <div className="hidden lg:block mt-4 rounded-2xl border border-white/12 bg-white/8 p-4">
+        <div className="flex items-center gap-2 text-white">
+          <Sparkles size={18} strokeWidth={1.8} aria-hidden />
+          <span className="font-display text-lg leading-none">Yuna Plus</span>
+        </div>
+        <p className="mt-2 text-[13px] leading-snug text-white/75">
+          Unlimited sessions, deeper guidance, and your full history.
+        </p>
+        <Button asChild surface="dark" variant="primary" size="sm" fullWidth className="mt-3">
+          <Link to="/design-your-trial">Upgrade</Link>
+        </Button>
+      </div>
+
     </aside>
   );
 }

@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Copy, Mic, MessageCircle, Phone, Settings, ThumbsDown, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, Copy, Mic, MessageCircle, Phone, Settings, Shield, ThumbsDown, Volume2, VolumeX, X } from "lucide-react";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { IconMedallion } from "@/components/IconMedallion";
 import {
@@ -1106,6 +1106,36 @@ function Chat() {
           </>
         )}
       </div>
+
+      {/* Wide-viewport reassurance — fills the right gutter beside the
+          conversation column when the screen is wide enough to spare it (2xl+).
+          Content-card shell authored white-on-dark; the green accent flips its
+          token per app mode since .theme-light can't remap a brand color. */}
+      <aside className="hidden 2xl:flex absolute right-10 top-1/2 -translate-y-1/2 w-64 flex-col rounded-2xl border border-white/12 bg-white/8 p-5 backdrop-blur-md text-white">
+        <div className="flex items-center gap-2">
+          <Shield
+            size={16}
+            strokeWidth={1.9}
+            className={appMode === "light" ? "text-primary-green" : "text-secondary-green"}
+            aria-hidden
+          />
+          <span
+            className={
+              "text-[11px] font-semibold uppercase tracking-[0.16em] " +
+              (appMode === "light" ? "text-primary-green" : "text-secondary-green")
+            }
+          >
+            Human in the loop
+          </span>
+        </div>
+        <p className="mt-3 text-sm leading-snug text-white/85">
+          I'm not a replacement for a human clinician. If things start to feel
+          like too much, I'll help you reach a licensed one.
+        </p>
+        <Button asChild surface="dark" variant="secondary" size="sm" className="mt-4 self-start">
+          <Link to="/therapist-recommendations">Talk to a person</Link>
+        </Button>
+      </aside>
 
       <YunaSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
 

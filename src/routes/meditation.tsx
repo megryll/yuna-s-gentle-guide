@@ -284,7 +284,7 @@ function MeditationRoute() {
                   setSaved(true);
                   showToast("The meditation has been saved!", "success");
                 }}
-                onClose={() => navigate({ to: "/tools" })}
+                onClose={() => navigate({ to: "/home" })}
               />
             )}
           </div>

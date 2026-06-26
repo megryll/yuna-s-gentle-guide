@@ -93,8 +93,8 @@ function PreferencesRoute() {
     if (!q) return null;
     return (
       <>
-        <h2 className="font-display text-2xl leading-tight tracking-tight text-white">{q.title}</h2>
-        <p className="mt-2 text-sm leading-snug text-white/85">{q.prompt}</p>
+        <h2 className="font-display text-2xl md:text-[28px] leading-tight tracking-tight text-white">{q.title}</h2>
+        <p className="mt-2 text-sm md:text-base leading-snug text-white/85">{q.prompt}</p>
         <div className="mt-6">
           <QuestionBody
             question={q}
@@ -127,13 +127,16 @@ function PreferencesRoute() {
 
   return (
     <WebShell>
-      {/* Immersive survey: the card-transition stage is absolutely positioned, so
-          it needs a definite-height container. Keep it as a phone-shaped column
-          centered on the desktop photo (rail stays for escape). */}
-      <div className="flex items-center justify-center min-h-[100svh] md:min-h-screen">
-      <div className="flex flex-col w-full max-w-md h-[680px] max-h-[88svh] text-white">
-        {/* Header: audio toggle · label · close. */}
-        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
+      {/* Responsive survey flow: a full-height column with the header pinned to
+          the top, the question centered in a readable measure, and the nav
+          pinned to the bottom — the standard web wizard shape. The column caps
+          at a comfortable desktop width (wider than the old phone card) and
+          centers, so the chrome aligns to the content edges instead of floating
+          in a tiny box. The card stage is still a definite-height flex child,
+          which the absolutely-positioned transition needs. */}
+      <div className="mx-auto flex min-h-[100svh] md:min-h-screen w-full max-w-md md:max-w-2xl flex-col px-6 md:px-8 text-white">
+        {/* Header: audio toggle · label · close, spanning the column width. */}
+        <header className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-14 md:pt-10 pb-1">
           <div className="justify-self-start">
             <Button
               surface={surface}
@@ -165,31 +168,29 @@ function PreferencesRoute() {
           </div>
         </header>
 
-        {/* Persistent screen title. */}
-        <div className="px-6 pt-2 text-center">
-          <h1 className="font-display text-2xl leading-snug tracking-tight text-white">
+        {/* Persistent screen title + progress, centered as a group. */}
+        <div className="shrink-0 pt-2 md:pt-6 text-center">
+          <h1 className="font-display text-2xl md:text-4xl leading-snug tracking-tight text-white">
             Find your therapist
           </h1>
-        </div>
-
-        {/* Partial progress bar + question counter, centered as a group. */}
-        <div className="flex items-center justify-center gap-3 px-6 pt-4">
-          <div className="w-[42%]">
-            <ProgressBar
-              surface={surface}
-              value={(step + 1) / total}
-              aria-label={`Question ${step + 1} of ${total}`}
-            />
+          <div className="mt-4 md:mt-5 flex items-center justify-center gap-3">
+            <div className="w-[42%] md:w-52">
+              <ProgressBar
+                surface={surface}
+                value={(step + 1) / total}
+                aria-label={`Question ${step + 1} of ${total}`}
+              />
+            </div>
+            <span className="text-sm text-white/75">
+              Question {step + 1} of {total}
+            </span>
           </div>
-          <span className="text-sm text-white/75">
-            Question {step + 1} of {total}
-          </span>
         </div>
 
-        {/* Card stage — the current card sits top-aligned; the leaving card
-            overlays it during the tilt-and-slide transition. */}
-        <div className="relative flex-1 min-h-0">
-          <div key={step} className="absolute inset-0 flex items-start px-6 pt-5 pb-2">
+        {/* Card stage — the current card is vertically centered in the stage;
+            the leaving card overlays it during the tilt-and-slide transition. */}
+        <main className="relative flex-1 min-h-0">
+          <div key={step} className="absolute inset-0 flex items-center pt-6 pb-2">
             <QuestionCard
               surface={surface}
               className={leaving ? (leaving.dir === "fwd" ? "survey-card-in-fwd" : "survey-card-in-back") : ""}
@@ -201,7 +202,7 @@ function PreferencesRoute() {
             <div
               key={`leaving-${leaving.step}`}
               aria-hidden
-              className="absolute inset-0 flex items-start px-6 pt-5 pb-2 pointer-events-none"
+              className="absolute inset-0 flex items-center pt-6 pb-2 pointer-events-none"
             >
               <QuestionCard
                 surface={surface}
@@ -211,10 +212,10 @@ function PreferencesRoute() {
               </QuestionCard>
             </div>
           )}
-        </div>
+        </main>
 
-        {/* Previous / Next. */}
-        <footer className="flex items-center justify-between px-6 pb-10 pt-3">
+        {/* Previous / Next pinned to the bottom of the flow. */}
+        <footer className="shrink-0 flex items-center justify-between pb-10 md:pb-10 pt-3">
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
@@ -222,7 +223,6 @@ function PreferencesRoute() {
             {isLast ? "See matches" : "Next"}
           </Button>
         </footer>
-      </div>
       </div>
     </WebShell>
   );

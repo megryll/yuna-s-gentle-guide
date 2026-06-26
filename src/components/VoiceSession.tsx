@@ -169,8 +169,10 @@ export function VoiceSession({
   const speak = useCallback(async (text: string): Promise<void> => {
     if (!text.trim()) return;
     if (!speakerOnRef.current) return;
-    const voiceId = getVoice();
-    if (!voiceId) return;
+    // Fall back to the default voice when none is stored — mirrors the avatar
+    // fallback so a session entered without picking a voice still speaks
+    // instead of going silent.
+    const voiceId = getVoice() ?? DEFAULT_VOICE;
     const cfg = VOICES[voiceId];
 
     const prior = ttsAudioRef.current;
