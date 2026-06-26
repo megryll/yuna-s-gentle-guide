@@ -72,7 +72,7 @@ export function EngineerSidebar() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open implementation panel"
-        className="hidden lg:flex fixed right-0 top-24 z-50 items-center gap-1 rounded-l-md border border-r-0 border-border bg-background/80 backdrop-blur-sm px-2 py-2 text-[9px] tracking-[0.3em] uppercase text-muted-foreground active:text-foreground [writing-mode:vertical-rl]"
+        className="hidden lg:flex fixed right-0 top-24 z-50 items-center gap-1 rounded-l-md border border-r-0 border-border bg-background px-2 py-2 text-[9px] tracking-[0.3em] uppercase text-muted-foreground active:text-foreground [writing-mode:vertical-rl]"
       >
         Implementation
       </button>
@@ -81,7 +81,7 @@ export function EngineerSidebar() {
 
   return (
     <aside
-      className="hidden lg:flex fixed right-0 top-0 h-screen w-72 flex-col px-4 py-6 border-l border-border bg-background/60 backdrop-blur-sm z-50 overflow-y-auto"
+      className="hidden lg:flex fixed right-0 top-0 h-screen w-72 flex-col px-4 py-6 border-l border-border bg-background z-50 overflow-y-auto"
       aria-label="Implementation notes"
     >
       <div className="flex items-center justify-between mb-5 px-2">
