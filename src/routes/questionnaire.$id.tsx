@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { MessageCircle, Pause, Play, X } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell } from "@/components/WebShell";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
@@ -241,42 +241,45 @@ function QuestionnaireRoute() {
         : `Thank you for sharing this with me. You told me ${list} matter to you, and that ${top} comes first. We'll start there, one small step at a time.`;
 
     return (
-      <PhoneFrame themed>
-        <div className="flex-1 flex flex-col min-h-0 text-white">
-          <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
-              <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
-                <span className="text-5xl" aria-hidden>
-                  🎉
-                </span>
-              </div>
-
-              <h1 className="font-display text-3xl leading-tight tracking-tight text-white max-w-[16rem]">
-                Great job sharing your starting point.
-              </h1>
-
-              <YunaExplains surface={surface} className="w-full text-left">
-                {reflection}
-              </YunaExplains>
+      <WebShell>
+        <div className="mx-auto flex min-h-[100svh] md:min-h-screen w-full max-w-md md:max-w-2xl flex-col px-6 md:px-8 pt-14 pb-10 yuna-fade-in text-white">
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+            <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
+              <span className="text-5xl" aria-hidden>
+                🎉
+              </span>
             </div>
 
-            <div className="shrink-0">
-              <Button surface={surface} variant="primary" fullWidth onClick={exitFlow}>
-                Close
-              </Button>
-            </div>
+            <h1 className="font-display text-3xl md:text-4xl leading-tight tracking-tight text-white max-w-[16rem] md:max-w-md">
+              Great job sharing your starting point.
+            </h1>
+
+            <YunaExplains surface={surface} className="w-full text-left">
+              {reflection}
+            </YunaExplains>
+          </div>
+
+          <div className="shrink-0">
+            <Button surface={surface} variant="primary" fullWidth onClick={exitFlow}>
+              Close
+            </Button>
           </div>
           {completedForReal && <Confetti />}
         </div>
-      </PhoneFrame>
+      </WebShell>
     );
   }
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0 text-white">
+    <WebShell>
+      {/* Responsive survey flow: a full-height column with the header pinned to
+          the top, the question centered in a readable measure, and the nav
+          pinned to the bottom — the standard web wizard shape, widening past
+          phone width on desktop. The card stage stays a definite-height flex
+          child, which the absolutely-positioned transition needs. */}
+      <div className="mx-auto flex min-h-[100svh] md:min-h-screen w-full max-w-md md:max-w-2xl flex-col px-6 md:px-8 text-white">
         {/* Header: audio toggle · label · close. */}
-        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
+        <header className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-14 md:pt-10 pb-1">
           <div className="justify-self-start">
             <Button
               surface={surface}
@@ -302,31 +305,29 @@ function QuestionnaireRoute() {
           </div>
         </header>
 
-        {/* Persistent screen title. */}
-        <div className="px-6 pt-2 text-center">
-          <h1 className="font-display text-2xl leading-snug tracking-tight text-white">
+        {/* Persistent screen title + progress, centered as a group. */}
+        <div className="shrink-0 pt-2 md:pt-6 text-center">
+          <h1 className="font-display text-2xl md:text-4xl leading-snug tracking-tight text-white">
             Your starting point
           </h1>
-        </div>
-
-        {/* Partial progress bar + question counter, centered as a group. */}
-        <div className="flex items-center justify-center gap-3 px-6 pt-4">
-          <div className="w-[42%]">
-            <ProgressBar
-              surface={surface}
-              value={(step + 1) / TOTAL_STEPS}
-              aria-label="Your starting point progress"
-            />
+          <div className="mt-4 md:mt-5 flex items-center justify-center gap-3">
+            <div className="w-[42%] md:w-52">
+              <ProgressBar
+                surface={surface}
+                value={(step + 1) / TOTAL_STEPS}
+                aria-label="Your starting point progress"
+              />
+            </div>
+            <span className="text-sm text-white/75">
+              Question {step + 1} of {TOTAL_STEPS}
+            </span>
           </div>
-          <span className="text-sm text-white/75">
-            Question {step + 1} of {TOTAL_STEPS}
-          </span>
         </div>
 
-        {/* Card stage — the current card sits top-aligned; the leaving card
-            overlays it during the tilt-and-slide transition. */}
-        <div className="relative flex-1 min-h-0">
-          <div key={step} className="absolute inset-0 flex items-start px-6 pt-5 pb-2">
+        {/* Card stage — the current card is vertically centered in the stage;
+            the leaving card overlays it during the tilt-and-slide transition. */}
+        <main className="relative flex-1 min-h-0">
+          <div key={step} className="absolute inset-0 flex items-center pt-6 pb-2">
             <QuestionCard
               surface={surface}
               className={leaving ? (leaving.dir === "fwd" ? "survey-card-in-fwd" : "survey-card-in-back") : ""}
@@ -338,7 +339,7 @@ function QuestionnaireRoute() {
             <div
               key={`leaving-${leaving.step}`}
               aria-hidden
-              className="absolute inset-0 flex items-start px-6 pt-5 pb-2 pointer-events-none"
+              className="absolute inset-0 flex items-center pt-6 pb-2 pointer-events-none"
             >
               <QuestionCard
                 surface={surface}
@@ -348,10 +349,10 @@ function QuestionnaireRoute() {
               </QuestionCard>
             </div>
           )}
-        </div>
+        </main>
 
-        {/* Previous / Next. */}
-        <footer className="flex items-center justify-between px-6 pb-10 pt-3">
+        {/* Previous / Next pinned to the bottom of the flow. */}
+        <footer className="shrink-0 flex items-center justify-between pb-10 pt-3">
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
@@ -362,7 +363,7 @@ function QuestionnaireRoute() {
           )}
         </footer>
       </div>
-    </PhoneFrame>
+    </WebShell>
   );
 }
 
