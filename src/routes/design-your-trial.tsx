@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { WebShell } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
@@ -71,19 +71,7 @@ function DesignYourTrial() {
           vertically, rather than the phone-frame's top-aligned, bottom-pushed
           layout. The close returns to Home. */}
       <div className="min-h-screen flex flex-col text-white yuna-fade-in">
-        <div className="flex justify-end px-6 md:px-10 pt-6 md:pt-8">
-          <Button
-            surface={surface}
-            variant="secondary"
-            size="icon"
-            onClick={close}
-            aria-label="Close"
-          >
-            <X strokeWidth={1.6} aria-hidden />
-          </Button>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-6 md:px-8 pb-16">
+        <div className="flex-1 flex items-center justify-center px-6 md:px-8 py-16">
           <div className="w-full max-w-md md:max-w-lg">
             <div className="yuna-rise">
               <h1 className="font-display text-3xl md:text-4xl leading-tight tracking-tight text-white">
