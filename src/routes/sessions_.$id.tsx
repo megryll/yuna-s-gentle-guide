@@ -93,7 +93,7 @@ function SessionDetailRoute() {
 
   return (
     <WebShell>
-      <WebContent width="max-w-6xl" className="text-white">
+      <WebContent width="max-w-2xl" className="text-white">
         <div className="flex flex-col gap-16">
           {/* Top cluster — header bar, title, and the Continue action stay tight;
               the wider section gap kicks in from the keepsake onward. */}
@@ -125,7 +125,13 @@ function SessionDetailRoute() {
             <h1 className="mt-4 font-display text-3xl leading-tight tracking-tight text-white text-center">
               {session.title}
             </h1>
-            <Button surface={surface} variant="primary" fullWidth onClick={onContinue}>
+            <Button
+              surface={surface}
+              variant="primary"
+              fullWidth
+              onClick={onContinue}
+              className="max-w-xs mx-auto"
+            >
               Continue session
             </Button>
           </div>
@@ -244,7 +250,7 @@ function MenuRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-4 p-4 text-left active:bg-foreground/[0.06] transition-colors",
+        "flex items-center gap-4 p-4 text-left hover:bg-foreground/[0.03] active:bg-foreground/[0.06] transition-colors",
         !last && "border-b border-border",
       )}
     >
