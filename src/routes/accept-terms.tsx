@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
-import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/accept-terms")({
   head: () => ({
@@ -29,7 +28,6 @@ const TERMS: string[] = [
 
 function AcceptTerms() {
   const navigate = useNavigate();
-  const darkBg = useDarkBlurImage();
   const [acceptedCount, setAcceptedCount] = useState(0);
 
   const allAccepted = acceptedCount >= TERMS.length;
@@ -44,7 +42,7 @@ function AcceptTerms() {
   };
 
   return (
-    <PhoneFrame backgroundImage={darkBg}>
+    <OnboardingFrame>
       <div className="flex-1 flex flex-col min-h-0 px-8 yuna-fade-in text-white">
         <div className="flex items-center justify-between pt-14">
           <Button
@@ -99,7 +97,7 @@ function AcceptTerms() {
           </Button>
         </div>
       </div>
-    </PhoneFrame>
+    </OnboardingFrame>
   );
 }
 

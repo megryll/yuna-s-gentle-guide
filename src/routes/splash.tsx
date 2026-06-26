@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-route
 import { useEffect, useState } from "react";
 import { Bookmark, Share } from "lucide-react";
 import { Button } from "@/components/Button";
-import { useDarkBlurImage } from "@/lib/theme-prefs";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 
 // Daily-affirmation splash: shows a reflection, then auto-advances into the app
 // while a progress line fills along the bottom of the Continue button. Locked
@@ -15,7 +15,6 @@ export const Route = createFileRoute("/splash")({
 
 function Splash() {
   const navigate = useNavigate();
-  const blurBg = useDarkBlurImage();
   const [progress, setProgress] = useState(0);
 
   // In the /gallery board (loaded with ?chrome=off) the splash thumbnail must
@@ -37,52 +36,47 @@ function Splash() {
   return (
     // Dark-locked immersive moment (no nav shell), centered full-screen on the
     // dark blur photo — the web analog to its PhoneFrame, scaling to any viewport.
-    <div
-      className="min-h-[100svh] w-full bg-cover bg-center text-white flex flex-col items-center px-8 pt-14 pb-10"
-      style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${blurBg})` }}
-    >
-      <div className="flex flex-1 flex-col w-full max-w-md">
-        <div className="flex justify-center pt-10">
-          <img src="/yuna-logo.svg" alt="Yuna" className="h-8 w-auto" />
-        </div>
+    <OnboardingFrame className="px-8 pt-14 pb-10">
+      <div className="flex justify-center pt-10">
+        <img src="/yuna-logo.svg" alt="Yuna" className="h-8 w-auto" />
+      </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center gap-7">
-          <div className="flex items-center gap-3">
-            <Button surface="dark" variant="secondary" size="icon-sm" aria-label="Share">
-              <Share strokeWidth={1.75} aria-hidden />
-            </Button>
-            <Button surface="dark" variant="secondary" size="icon-sm" aria-label="Save">
-              <Bookmark strokeWidth={1.75} aria-hidden />
-            </Button>
-          </div>
-
-          <p className="font-display text-2xl leading-[1.5] text-center text-white">
-            You are capable of creating a life filled with purpose and meaning,
-            despite your mental health challenges.
-          </p>
-        </div>
-
-        <div className="flex justify-center">
-          <Button
-            surface="dark"
-            variant="secondary"
-            onClick={() => navigate({ to: "/home" })}
-            className="relative overflow-hidden px-14"
-          >
-            {/* Auto-advance timer: fills left-to-right over AUTO_ADVANCE_MS,
-                width driven inline since it animates at runtime. */}
-            <span
-              aria-hidden
-              className="absolute left-0 bottom-0 h-[5px] rounded-full bg-secondary-green"
-              style={{
-                width: `${progress}%`,
-                transition: `width ${AUTO_ADVANCE_MS}ms linear`,
-              }}
-            />
-            <span className="relative">Continue</span>
+      <div className="flex-1 flex flex-col items-center justify-center gap-7">
+        <div className="flex items-center gap-3">
+          <Button surface="dark" variant="secondary" size="icon-sm" aria-label="Share">
+            <Share strokeWidth={1.75} aria-hidden />
+          </Button>
+          <Button surface="dark" variant="secondary" size="icon-sm" aria-label="Save">
+            <Bookmark strokeWidth={1.75} aria-hidden />
           </Button>
         </div>
+
+        <p className="font-display text-2xl leading-[1.5] text-center text-white">
+          You are capable of creating a life filled with purpose and meaning,
+          despite your mental health challenges.
+        </p>
       </div>
-    </div>
+
+      <div className="flex justify-center">
+        <Button
+          surface="dark"
+          variant="secondary"
+          onClick={() => navigate({ to: "/home" })}
+          className="relative overflow-hidden px-14"
+        >
+          {/* Auto-advance timer: fills left-to-right over AUTO_ADVANCE_MS,
+              width driven inline since it animates at runtime. */}
+          <span
+            aria-hidden
+            className="absolute left-0 bottom-0 h-[5px] rounded-full bg-secondary-green"
+            style={{
+              width: `${progress}%`,
+              transition: `width ${AUTO_ADVANCE_MS}ms linear`,
+            }}
+          />
+          <span className="relative">Continue</span>
+        </Button>
+      </div>
+    </OnboardingFrame>
   );
 }

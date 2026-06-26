@@ -1,12 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 import { Button } from "@/components/Button";
 import { TextField, FieldError } from "@/components/TextField";
 import { Divider } from "@/components/Divider";
 import { Toast, ToastViewport } from "@/components/Toast";
-import { useDarkBlurImage } from "@/lib/theme-prefs";
 
 // Basic shape check — enough to catch typos like a missing "@" without
 // rejecting valid-but-unusual addresses.
@@ -32,7 +31,6 @@ export const Route = createFileRoute("/login")({
 
 function LoginScreen() {
   const navigate = useNavigate();
-  const darkBg = useDarkBlurImage();
   // The URL is the source of truth for the step, so sidebar taps that only
   // change `?step=` (same route, no remount) actually switch the view.
   const { step: searchStep } = Route.useSearch();
@@ -74,7 +72,7 @@ function LoginScreen() {
   };
 
   return (
-    <PhoneFrame backgroundImage={darkBg}>
+    <OnboardingFrame>
       <div className="relative flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in text-white">
         {toast && (
           <ToastViewport>
@@ -241,6 +239,6 @@ function LoginScreen() {
           )}
         </div>
       </div>
-    </PhoneFrame>
+    </OnboardingFrame>
   );
 }
