@@ -1,12 +1,9 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
-import { Button } from "@/components/Button";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { TextField } from "@/components/TextField";
 import { GRATITUDE_PROMPTS } from "@/lib/home-cards";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useFrameSize } from "@/lib/frame-size";
 
 export const Route = createFileRoute("/gratitude")({
   head: () => ({ meta: [{ title: "Gratitude List — Yuna" }] }),
@@ -45,76 +42,59 @@ const PAST_DAYS: { date: string; entries: string[] }[] = [
 ];
 
 function GratitudeRoute() {
-  const router = useRouter();
   const mode = useAppMode();
   const surface = mode === "dark" ? "dark" : "light";
-  const isSE = useFrameSize().id === "se";
-  // Return to wherever the user came from (Tools, Home, …) rather than a fixed
-  // screen; fall back to Home on a direct deep-link with no history.
-  const close = () =>
-    router.history.canGoBack() ? router.history.back() : router.navigate({ to: "/home" });
 
   const [today, setToday] = useState<string[]>(() => Array(TODAY_SLOTS).fill(""));
 
   return (
-    <PhoneFrame themed>
-      <div className="relative flex-1 flex flex-col text-white min-h-0">
-        <header className="shrink-0 px-6 pt-14 flex items-center">
-          <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={close}>
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-        </header>
-        <h1
-          className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
-            isSE ? "pt-4" : "pt-6 pb-2"
-          }`}
-        >
+    <WebShell>
+      <WebContent className="text-white">
+        <h1 className="pb-2 font-display text-3xl lg:text-4xl leading-tight tracking-tight text-white text-center">
           Gratitude Journal
         </h1>
 
-        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <h2 className="font-display text-xl italic leading-snug tracking-tight text-white text-center">
-            I feel <span className="text-secondary-green">grateful</span> 🙏 because:
-          </h2>
+        <h2 className="mt-2 font-display text-xl italic leading-snug tracking-tight text-white text-center">
+          I feel <span className="text-secondary-green">grateful</span> 🙏 because:
+        </h2>
 
-          <div className="mt-6">
-            {/* Today — editable */}
-            <DayHeader date={TODAY_DATE} label="Today" />
-            {today.map((value, i) => (
-              <EntryRow key={i} num={i + 1}>
-                <TextField
-                  surface={surface}
-                  value={value}
-                  onChange={(e) =>
-                    setToday((prev) => {
-                      const next = [...prev];
-                      next[i] = e.target.value;
-                      return next;
-                    })
-                  }
-                  placeholder={GRATITUDE_PROMPTS[i] ?? "Enter your answer"}
-                  aria-label={`Today, gratitude ${i + 1}`}
-                />
-              </EntryRow>
-            ))}
+        <div className="mt-6 mx-auto max-w-3xl">
+          {/* Today — editable */}
+          <DayHeader date={TODAY_DATE} label="Today" />
+          {today.map((value, i) => (
+            <EntryRow key={i} num={i + 1}>
+              <TextField
+                surface={surface}
+                value={value}
+                onChange={(e) =>
+                  setToday((prev) => {
+                    const next = [...prev];
+                    next[i] = e.target.value;
+                    return next;
+                  })
+                }
+                placeholder={GRATITUDE_PROMPTS[i] ?? "Enter your answer"}
+                aria-label={`Today, gratitude ${i + 1}`}
+              />
+            </EntryRow>
+          ))}
 
-            {/* Past days — read-only */}
-            {PAST_DAYS.map((day) => (
-              <div key={day.date}>
-                <DayHeader date={day.date} />
-                {day.entries.map((entry, i) => (
-                  <EntryRow key={i} num={i + 1}>
-                    <p className="font-display text-base italic leading-snug text-white/85">
-                      {entry}
-                    </p>
-                  </EntryRow>
-                ))}
-              </div>
-            ))}
-          </div>
+          {/* Past days — read-only */}
+          {PAST_DAYS.map((day) => (
+            <div key={day.date}>
+              <DayHeader date={day.date} />
+              {day.entries.map((entry, i) => (
+                <EntryRow key={i} num={i + 1}>
+                  <p className="font-display text-base italic leading-snug text-white/85">
+                    {entry}
+                  </p>
+                </EntryRow>
+              ))}
+            </div>
+          ))}
         </div>
-      </div>
-    </PhoneFrame>
+      </WebContent>
+    </WebShell>
   );
 }
 

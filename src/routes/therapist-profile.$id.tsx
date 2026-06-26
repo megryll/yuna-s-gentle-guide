@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bookmark, MapPin, Clock, Video, Globe, Phone } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
@@ -52,11 +52,12 @@ function ProfileRoute() {
   ];
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <WebShell>
+      <WebContent width="max-w-2xl" className="text-white">
         {/* Hero */}
         <PageHeader
           surface={surface}
+          className="px-0 pt-0 pb-0"
           onBack={() => navigate({ to: "/therapist-recommendations" })}
           trailing={
             <Button
@@ -72,7 +73,7 @@ function ProfileRoute() {
           }
         />
 
-        <div className="flex flex-col items-center text-center px-8 pb-4">
+        <div className="mt-4 flex flex-col items-center text-center">
           <TherapistPhoto src={therapist.photo} size={128} />
           <h1 className="mt-4 font-display text-3xl tracking-tight text-white">{therapist.name}</h1>
           <p className="mt-1.5 text-sm text-white/85">{therapist.credentials}</p>
@@ -83,7 +84,7 @@ function ProfileRoute() {
           </div>
         </div>
 
-        <div className="px-6 pb-10 flex flex-col gap-6 yuna-fade-in">
+        <div className="mt-8 flex flex-col gap-6 yuna-fade-in">
           {/* About */}
           <section>
             <SectionTitle>About {firstName}</SectionTitle>
@@ -178,7 +179,7 @@ function ProfileRoute() {
             </Button>
           </section>
         </div>
-      </div>
+      </WebContent>
 
       {sentToast && (
         <ToastViewport>
@@ -202,7 +203,7 @@ function ProfileRoute() {
           showSentToast("Your message has been sent.");
         }}
       />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 

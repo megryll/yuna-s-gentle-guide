@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Slider } from "@/components/Slider";
 import { Surface } from "@/components/Surface";
@@ -18,6 +18,10 @@ import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
 import { requestSchedulePrompt } from "@/lib/schedule-prompt";
+import { cn } from "@/lib/utils";
+import { usePlatform } from "@/lib/platform";
+import { useAdminChrome } from "@/lib/admin-chrome";
+import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -85,6 +89,15 @@ function WrapUp() {
   const navigate = useNavigate();
   const { avatar } = useYunaIdentity();
   const idRef = useRef<string>(keepsakeUid());
+  // Focused-takeover theming (mirrors chat.tsx): no nav rail — the reflection
+  // owns the viewport. Paint the mode photo and apply the .theme-light /
+  // .platform-android shims so reused DS components read across all four
+  // mode × platform combos; md:pl-72 clears the admin sidebar while shown.
+  const appMode = useAppMode();
+  const light = isLightMode(appMode);
+  const bg = useModeImage();
+  const platform = usePlatform();
+  const adminChrome = useAdminChrome();
 
   const quotes = useMemo(() => extractQuotes(), []);
   const displayQuotes = quotes.length > 0 ? quotes : FALLBACK_QUOTES;
@@ -113,15 +126,24 @@ function WrapUp() {
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="flex-1 flex flex-col px-8 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-16 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div
+      className={cn(
+        "min-h-screen w-full bg-cover bg-center bg-fixed text-white",
+        adminChrome && "md:pl-72",
+        light && "theme-light",
+        platform === "android" && "platform-android",
+      )}
+      style={{
+        backgroundImage: light
+          ? `url(${bg})`
+          : `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${bg})`,
+      }}
+    >
+      <WebContent width="max-w-xl" className="yuna-fade-in">
+        <div className="flex flex-col gap-16">
           {/* Top cluster — the label/close bar and keepsake card stay tight;
-              the wider section gap only kicks in from the reflection onward.
-              pt-14 lives here (the first scroll child, like a back-arrow
-              header) rather than on the scroll wrapper, so it doesn't eat
-              viewport per the photo-bg-scrolling padding rule. */}
-          <div className="flex flex-col gap-6 pt-14">
+              the wider section gap only kicks in from the reflection onward. */}
+          <div className="flex flex-col gap-6">
             {/* ── Title bar: centered eyebrow, close button pinned right ──── */}
             <div className="relative flex items-center justify-center">
               <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
@@ -169,14 +191,12 @@ function WrapUp() {
           {/* ── New activities ──────────────────────────────────────────── */}
           <PlacedForYou items={PLACED_FOR_YOU} />
 
-          <div className="pt-2 pb-2">
-            <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
-              Finish session
-            </Button>
-          </div>
+          <Button surface="dark" variant="primary" fullWidth onClick={onDone}>
+            Finish session
+          </Button>
         </div>
-      </div>
-    </PhoneFrame>
+      </WebContent>
+    </div>
   );
 }
 

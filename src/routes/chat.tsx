@@ -878,7 +878,7 @@ function Chat() {
       {/* Focused-takeover conversation column — no nav rail; the conversation
           owns the viewport. Centered to a readable measure on desktop, full
           width on mobile-web. */}
-      <div className="relative mx-auto flex h-full w-full md:w-[60%] flex-col yuna-fade-in min-h-0 text-white">
+      <div className="relative mx-auto flex h-full w-full md:w-[60%] md:max-w-3xl flex-col yuna-fade-in min-h-0 text-white">
         {/* Guided-session header strip — a full-width band at the very top
             that pushes the rest of the screen down, reminding the user which
             guided session they're in. Shown in both text and voice modes.
@@ -970,7 +970,6 @@ function Chat() {
           <VoiceSession
             onEndCall={endChat}
             initialGreetingLines={chatNowVoiceGreeting}
-            messages={messages}
             onMessageAppended={(msg) => {
               setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]));
             }}

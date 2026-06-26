@@ -65,12 +65,6 @@ export function TherapistFiltersDrawer({
 }) {
   const surface = useAppMode();
 
-  const patch = (p: Partial<TherapistFilters>) => onChange({ ...filters, ...p });
-  const toggle = (key: "specialties" | "approaches" | "insurance", value: string) => {
-    const list = filters[key];
-    patch({ [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] });
-  };
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[88%]">
@@ -82,51 +76,7 @@ export function TherapistFiltersDrawer({
         </DrawerHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <LocationFilter
-            surface={surface}
-            value={filters.location}
-            onChange={(v) => patch({ location: v })}
-          />
-
-          <FilterSection title="Availability">
-            <div className="flex flex-wrap gap-2">
-              {["Online", "In person"].map((opt) => (
-                <Tag
-                  key={opt}
-                  surface={surface}
-                  selected={filters.format === opt}
-                  onClick={() => patch({ format: filters.format === opt ? null : opt })}
-                >
-                  {opt}
-                </Tag>
-              ))}
-            </div>
-          </FilterSection>
-
-          <ChipSection
-            title="Specialty"
-            surface={surface}
-            placeholder="Search specialities"
-            options={SPECIALTY_OPTIONS}
-            selected={filters.specialties}
-            onToggle={(v) => toggle("specialties", v)}
-          />
-          <ChipSection
-            title="Approaches"
-            surface={surface}
-            placeholder="Search approaches"
-            options={APPROACH_OPTIONS}
-            selected={filters.approaches}
-            onToggle={(v) => toggle("approaches", v)}
-          />
-          <ChipSection
-            title="Insurance"
-            surface={surface}
-            placeholder="Search providers"
-            options={INSURANCE_OPTIONS}
-            selected={filters.insurance}
-            onToggle={(v) => toggle("insurance", v)}
-          />
+          <TherapistFiltersPanel surface={surface} filters={filters} onChange={onChange} />
         </div>
 
         <DrawerFooter className="px-6 pb-8">
@@ -139,17 +89,104 @@ export function TherapistFiltersDrawer({
   );
 }
 
+/**
+ * The filter controls themselves — Location, Availability, and the Specialty /
+ * Approaches / Insurance chip groups. Edits `filters` live via `onChange` (the
+ * deck reflects changes immediately; the drawer's Apply just confirms + closes).
+ * Shared by the mobile bottom-sheet drawer and the desktop always-visible
+ * preferences sidebar, so the two stay identical.
+ */
+export function TherapistFiltersPanel({
+  surface,
+  filters,
+  onChange,
+  dividerClass = "border-border",
+}: {
+  surface: "dark" | "light";
+  filters: TherapistFilters;
+  onChange: (next: TherapistFilters) => void;
+  /**
+   * Section-divider border. Defaults to the `border-border` token (correct on
+   * the drawer's light card). The desktop rail sits on the photo, so it passes a
+   * white-alpha hairline (matching the DS Divider) instead — `border-border`
+   * resolves to the opaque light token there and reads far too bright.
+   */
+  dividerClass?: string;
+}) {
+  const patch = (p: Partial<TherapistFilters>) => onChange({ ...filters, ...p });
+  const toggle = (key: "specialties" | "approaches" | "insurance", value: string) => {
+    const list = filters[key];
+    patch({ [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] });
+  };
+
+  return (
+    <>
+      <LocationFilter
+        surface={surface}
+        value={filters.location}
+        onChange={(v) => patch({ location: v })}
+        borderClass={dividerClass}
+      />
+
+      <FilterSection title="Availability" borderClass={dividerClass}>
+        <div className="flex flex-wrap gap-2">
+          {["Online", "In person"].map((opt) => (
+            <Tag
+              key={opt}
+              surface={surface}
+              selected={filters.format === opt}
+              onClick={() => patch({ format: filters.format === opt ? null : opt })}
+            >
+              {opt}
+            </Tag>
+          ))}
+        </div>
+      </FilterSection>
+
+      <ChipSection
+        title="Specialty"
+        surface={surface}
+        placeholder="Search specialities"
+        options={SPECIALTY_OPTIONS}
+        selected={filters.specialties}
+        onToggle={(v) => toggle("specialties", v)}
+        borderClass={dividerClass}
+      />
+      <ChipSection
+        title="Approaches"
+        surface={surface}
+        placeholder="Search approaches"
+        options={APPROACH_OPTIONS}
+        selected={filters.approaches}
+        onToggle={(v) => toggle("approaches", v)}
+        borderClass={dividerClass}
+      />
+      <ChipSection
+        title="Insurance"
+        surface={surface}
+        placeholder="Search providers"
+        options={INSURANCE_OPTIONS}
+        selected={filters.insurance}
+        onToggle={(v) => toggle("insurance", v)}
+        borderClass={dividerClass}
+      />
+    </>
+  );
+}
+
 function FilterSection({
   title,
   count,
   children,
+  borderClass = "border-border",
 }: {
   title: string;
   count?: number;
   children: React.ReactNode;
+  borderClass?: string;
 }) {
   return (
-    <section className="border-t border-border py-4 first:border-t-0">
+    <section className={`border-t ${borderClass} py-4 first:border-t-0`}>
       <h3 className="font-display text-lg tracking-tight mb-3">
         {title}
         {count ? <span className="text-secondary-green"> · {count}</span> : null}
@@ -168,6 +205,7 @@ function ChipSection({
   options,
   selected,
   onToggle,
+  borderClass,
 }: {
   title: string;
   surface: "dark" | "light";
@@ -175,6 +213,7 @@ function ChipSection({
   options: string[];
   selected: string[];
   onToggle: (v: string) => void;
+  borderClass?: string;
 }) {
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -185,7 +224,7 @@ function ChipSection({
   const visible = q || showAll ? ordered : ordered.slice(0, SHOW_LIMIT);
 
   return (
-    <FilterSection title={title} count={selected.length}>
+    <FilterSection title={title} count={selected.length} borderClass={borderClass}>
       <div className="flex flex-col gap-3">
         <TextField
           surface={surface}
@@ -215,10 +254,12 @@ function LocationFilter({
   surface,
   value,
   onChange,
+  borderClass,
 }: {
   surface: "dark" | "light";
   value: string | null;
   onChange: (v: string | null) => void;
+  borderClass?: string;
 }) {
   const [query, setQuery] = useState("");
   const dark = surface === "dark";
@@ -230,7 +271,7 @@ function LocationFilter({
     : [];
 
   return (
-    <FilterSection title="Location">
+    <FilterSection title="Location" borderClass={borderClass}>
       {value ? (
         <Tag surface={surface} selected icon={<MapPin />} onClick={() => onChange(null)}>
           {value}

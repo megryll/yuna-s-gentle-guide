@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { X, Search, MapPin, Check, MessageCircle, Pause, Play } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
@@ -111,8 +111,8 @@ function PreferencesRoute() {
 
   if (loading) {
     return (
-      <PhoneFrame themed>
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 gap-6 text-white">
+      <WebShell>
+        <div className="flex flex-col items-center justify-center min-h-[100svh] md:min-h-screen text-center px-8 gap-6 text-white">
           <LeafSpinner size={88} surface={surface} />
           <div>
             <h1 className="font-display text-3xl tracking-tight">Finding your matches</h1>
@@ -121,13 +121,17 @@ function PreferencesRoute() {
             </p>
           </div>
         </div>
-      </PhoneFrame>
+      </WebShell>
     );
   }
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0 text-white">
+    <WebShell>
+      {/* Immersive survey: the card-transition stage is absolutely positioned, so
+          it needs a definite-height container. Keep it as a phone-shaped column
+          centered on the desktop photo (rail stays for escape). */}
+      <div className="flex items-center justify-center min-h-[100svh] md:min-h-screen">
+      <div className="flex flex-col w-full max-w-md h-[680px] max-h-[88svh] text-white">
         {/* Header: audio toggle · label · close. */}
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
           <div className="justify-self-start">
@@ -219,7 +223,8 @@ function PreferencesRoute() {
           </Button>
         </footer>
       </div>
-    </PhoneFrame>
+      </div>
+    </WebShell>
   );
 }
 

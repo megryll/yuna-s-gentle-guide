@@ -96,6 +96,23 @@ const VARIANTS: MatrixRow[] = [
       />
     ),
   },
+  {
+    // onBack omitted: leading slot renders empty. For screens with a persistent
+    // nav (the web rail) where an in-app back is redundant.
+    label: "No back",
+    render: (s) => (
+      <PageHeader
+        surface={s}
+        title="Recommendations"
+        className={DEMO_PAD}
+        trailing={
+          <IconButton surface={s} label="Save">
+            <Bookmark strokeWidth={1.75} />
+          </IconButton>
+        }
+      />
+    ),
+  },
 ];
 
 const STATES: MatrixRow[] = [
@@ -123,7 +140,7 @@ function DSPageHeader() {
   title?:        string              // centered title (Fraunces, text-3xl), stacked below the row
   center?:       ReactNode           // on-row centered slot (step dots, eyebrow…)
   trailing?:     ReactNode           // action(s) pinned to the trailing edge
-  onBack:        () => void
+  onBack?:       () => void          // omit where a persistent nav makes back redundant
   backDisabled?: boolean             // default false
   surface?:      "dark" | "light"    // back-button surface + title ink; default "light"
   tone?:         "photo" | "ink"     // title ink — "photo" derives from surface (default),

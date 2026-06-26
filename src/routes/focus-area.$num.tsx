@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Info } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
-import { Button } from "@/components/Button";
+import { Info } from "lucide-react";
+import { WebShell, WebContent } from "@/components/WebShell";
+import { PageHeader } from "@/components/PageHeader";
 import { HomeCardRow } from "@/components/HomeCards";
 import { useUserType } from "@/lib/user-type";
 import { getFocusAreaData } from "@/lib/profile-data";
@@ -24,23 +24,19 @@ function FocusAreaRoute() {
   const [infoOpen, setInfoOpen] = useState(false);
   const mode = useAppMode();
   const bgImage = useModeImage();
+  // Themed screen: controls flip surface with the Light/Dark toggle.
+  const surface = mode;
 
   return (
-    <PhoneFrame themed>
-      <div className="relative flex-1 flex flex-col text-white min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <header className="px-6 pt-14 pb-2 shrink-0">
-          <Button
-            surface="dark"
-            variant="secondary"
-            size="icon"
-            onClick={() => navigate({ to: "/you" })}
-            aria-label="Back"
-          >
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-        </header>
+    <WebShell>
+      <WebContent width="max-w-3xl" className="text-white">
+        <PageHeader
+          surface={surface}
+          className="px-0 pt-0 pb-0"
+          onBack={() => navigate({ to: "/you" })}
+        />
 
-        <div className="px-6 pt-6 flex flex-col items-center text-center gap-3">
+        <div className="mt-6 flex flex-col items-center text-center gap-3">
           <span className="text-uppercase tracking-[0.32em] uppercase text-white/75">
             {meta.eyebrow}
           </span>
@@ -53,7 +49,7 @@ function FocusAreaRoute() {
           <p className="text-sm leading-[22px] text-white/80">{meta.body}</p>
         </div>
 
-        <div className="px-6 mt-8">
+        <div className="mt-10">
           <h2 className="font-display text-xl leading-tight text-white text-center mb-3">
             Created For You
           </h2>
@@ -64,7 +60,7 @@ function FocusAreaRoute() {
           </div>
         </div>
 
-        <div className="px-6 mt-8 pb-12 relative">
+        <div className="mt-10 relative">
           <div className="relative mb-3 flex items-center justify-center gap-1.5">
             <h2 className="font-display text-xl leading-tight text-white">
               Coming Up Next
@@ -112,7 +108,7 @@ function FocusAreaRoute() {
             ))}
           </div>
         </div>
-      </div>
-    </PhoneFrame>
+      </WebContent>
+    </WebShell>
   );
 }

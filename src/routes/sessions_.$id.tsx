@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { TextArea } from "@/components/TextArea";
@@ -92,14 +92,12 @@ function SessionDetailRoute() {
   };
 
   return (
-    <PhoneFrame backgroundImage="/background.png" themed>
-      <div className="flex-1 flex flex-col px-8 text-white min-h-0">
-        <div className="flex-1 flex flex-col gap-16 overflow-y-auto overflow-x-hidden -mx-2 px-2 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <WebShell>
+      <WebContent width="max-w-6xl" className="text-white">
+        <div className="flex flex-col gap-16">
           {/* Top cluster — header bar, title, and the Continue action stay tight;
-              the wider section gap kicks in from the keepsake onward. pt-14 lives
-              on this first scroll child (like a back-arrow header) so it doesn't
-              eat viewport per the photo-bg-scrolling padding rule. */}
-          <div className="flex flex-col gap-6 pt-14">
+              the wider section gap kicks in from the keepsake onward. */}
+          <div className="flex flex-col gap-6">
             {/* ── Header: back arrow, date·length eyebrow, options menu ────── */}
             <PageHeader
               surface={surface}
@@ -173,7 +171,7 @@ function SessionDetailRoute() {
             <HighlightsSection quotes={session.highlights.map((h) => h.quote)} />
           )}
         </div>
-      </div>
+      </WebContent>
 
       {/* ── Options action sheet: Rename / Delete ─────────────────────────── */}
       <Drawer open={menuOpen} onOpenChange={setMenuOpen}>
@@ -211,7 +209,7 @@ function SessionDetailRoute() {
           setRenameOpen(false);
         }}
       />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 

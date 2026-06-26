@@ -20,7 +20,9 @@ import { cn } from "@/lib/utils";
  *          an eyebrow, etc. Independent of `title`: one stacks below, one rides
  *          the row, so a screen can use either or both.
  * trailing: action(s) pinned to the trailing edge of the button row.
- * onBack:  back-button handler.
+ * onBack:  back-button handler. Optional — omit it on screens where a
+ *          persistent nav (the web rail) makes an in-app back redundant; the
+ *          leading slot then renders empty and the row keeps its grid.
  * backDisabled: disables the back button (e.g. on the first step of a flow).
  * surface: which background the header sits on — "dark" | "light" (default
  *          "light"). Drives both the back-button surface AND the title ink, so
@@ -51,7 +53,7 @@ export function PageHeader({
   title?: string;
   center?: ReactNode;
   trailing?: ReactNode;
-  onBack: () => void;
+  onBack?: () => void;
   backDisabled?: boolean;
   surface?: "dark" | "light";
   tone?: "photo" | "ink";
@@ -69,16 +71,18 @@ export function PageHeader({
           rides this slot; a stacked one drops below the row. */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="justify-self-start">
-          <Button
-            surface={surface}
-            variant="secondary"
-            size="icon"
-            aria-label="Back"
-            disabled={backDisabled}
-            onClick={onBack}
-          >
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
+          {onBack && (
+            <Button
+              surface={surface}
+              variant="secondary"
+              size="icon"
+              aria-label="Back"
+              disabled={backDisabled}
+              onClick={onBack}
+            >
+              <ChevronLeft strokeWidth={1.5} />
+            </Button>
+          )}
         </div>
 
         <div className="justify-self-center min-w-0">

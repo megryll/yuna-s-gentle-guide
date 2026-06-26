@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { Badge } from "@/components/Badge";
@@ -52,10 +52,13 @@ function ScheduleRoute() {
 
   if (confirmed) {
     return (
-      <PhoneFrame themed>
-        <div className="flex-1 flex flex-col min-h-0">
-          <PageHeader surface={surface} onBack={() => navigate({ to: "/tools" })} />
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 text-white flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <WebShell>
+        <WebContent width="max-w-2xl" className="text-white">
+          <PageHeader
+            surface={surface}
+            className="px-0 pt-0 pb-0"
+            onBack={() => navigate({ to: "/tools" })}
+          />
           <div className="flex flex-col items-center text-center mt-8 yuna-fade-in">
             <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary-green">
               <Check size={34} strokeWidth={2.5} className="text-white" aria-hidden />
@@ -75,7 +78,7 @@ function ScheduleRoute() {
             </div>
           </div>
 
-          <div className="mt-auto pt-8 flex flex-col gap-2">
+          <div className="mt-8 flex flex-col gap-2">
             <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/tools" })}>
               Done
             </Button>
@@ -92,24 +95,24 @@ function ScheduleRoute() {
               Reschedule
             </Button>
           </div>
-          </div>
-        </div>
-      </PhoneFrame>
+        </WebContent>
+      </WebShell>
     );
   }
 
   const confirmLabel = !date ? "Pick a date" : !time ? "Pick a time" : `Confirm · ${time}`;
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0">
+    <WebShell>
+      <WebContent width="max-w-2xl" className="text-white">
         <PageHeader
           surface={surface}
+          className="px-0 pt-0 pb-0"
           onBack={() => navigate({ to: "/therapist-profile/$id", params: { id: therapist.id } })}
           center={<StepDots surface={surface} count={3} current={step} aria-label={`Step ${step + 1} of 3`} />}
         />
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-4 flex flex-col gap-6 yuna-fade-in [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-6 flex flex-col gap-6 yuna-fade-in">
           <div className="text-center">
             <h1 className="font-display text-3xl tracking-tight text-white">Schedule a call</h1>
             <p className="mt-1.5 text-sm text-white/85">Pick a time that works. We'll handle the rest.</p>
@@ -166,13 +169,18 @@ function ScheduleRoute() {
           )}
         </div>
 
-        <footer className="shrink-0 px-6 pb-10 pt-3">
-          <Button surface={surface} variant="primary" fullWidth disabled={!date || !time} onClick={() => setConfirmed(true)}>
-            {confirmLabel}
-          </Button>
-        </footer>
-      </div>
-    </PhoneFrame>
+        <Button
+          surface={surface}
+          variant="primary"
+          fullWidth
+          disabled={!date || !time}
+          onClick={() => setConfirmed(true)}
+          className="mt-8"
+        >
+          {confirmLabel}
+        </Button>
+      </WebContent>
+    </WebShell>
   );
 }
 

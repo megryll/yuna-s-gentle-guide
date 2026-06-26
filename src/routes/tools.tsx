@@ -2,52 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WebShell, WebContent } from "@/components/WebShell";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
-
-type Tool = {
-  id: string;
-  title: string;
-  caption: string;
-  image: string;
-  emoji: string;
-  isNew?: boolean;
-  /** Destination route when the tool is wired up; omit for inert tiles. */
-  to?: string;
-};
-
-const TOOLS: Tool[] = [
-  {
-    id: "therapist",
-    title: "Therapist Recommendation",
-    caption: "Discover licensed therapists",
-    image: "/tools/therapist.jpg",
-    emoji: "💬",
-    to: "/therapist-recommendations",
-  },
-  {
-    id: "guided-audio",
-    title: "Guided Audio",
-    caption: "Personalized meditations and breathing exercises",
-    image: "/tools/guided-audio.jpg",
-    emoji: "🎧",
-    to: "/meditation",
-  },
-  {
-    id: "gratitude",
-    title: "Gratitude Journal",
-    caption: "Reflect daily on the best things in your life",
-    image: "/tools/gratitude.jpg",
-    emoji: "💗",
-    to: "/gratitude",
-  },
-  {
-    id: "goal-setting",
-    title: "Goal Setting",
-    caption: "A partner to help you reach your goals",
-    image: "/tools/goal-setting.jpg",
-    emoji: "🚀",
-    to: "/goals",
-  },
-];
+import { TOOLS } from "@/lib/tools";
 
 export const Route = createFileRoute("/tools")({
   head: () => ({ meta: [{ title: "Tools — Yuna" }] }),
@@ -68,10 +23,10 @@ function ToolsRoute() {
 
   return (
     <WebShell>
-      <WebContent width="max-w-4xl">
+      <WebContent>
         <h1 className="font-display text-3xl lg:text-4xl tracking-tight text-white">Tools</h1>
 
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((t, i) => (
             <li key={t.id}>
               <div

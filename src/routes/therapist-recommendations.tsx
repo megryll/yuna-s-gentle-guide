@@ -8,22 +8,21 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bookmark, SlidersHorizontal, Clock, Sprout, MoveHorizontal } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { Bookmark, SlidersHorizontal, Clock, Sprout, MoveHorizontal, Loader2 } from "lucide-react";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
-import { PageHeader } from "@/components/PageHeader";
 import { Toast, ToastViewport } from "@/components/Toast";
 import { Surface } from "@/components/Surface";
 import { TherapistCard, TherapistPhoto, frostedPanel } from "@/components/TherapistCard";
 import {
   TherapistFiltersDrawer,
+  TherapistFiltersPanel,
   EMPTY_FILTERS,
   countFilters,
   type TherapistFilters,
 } from "@/components/TherapistFiltersDrawer";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useFrameSize } from "@/lib/frame-size";
 import { useTransientToast } from "@/lib/use-transient-toast";
 import {
   usePreferencesApplied,
@@ -52,10 +51,25 @@ function applyFilters(list: Therapist[], f: TherapistFilters): Therapist[] {
   });
 }
 
+// md breakpoint (768px): drives whether Preferences open as the docked right
+// rail (desktop) or the bottom sheet (mobile). Both are toggled by the same
+// header button via `filtersOpen`.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return isDesktop;
+}
+
 function RecommendationsRoute() {
   const navigate = useNavigate();
   const surface = useAppMode() === "light" ? "light" : "dark";
-  const isSE = useFrameSize().id === "se";
+  const isDesktop = useIsDesktop();
   const preferencesApplied = usePreferencesApplied();
   const savedIds = useSavedIds();
 
@@ -93,91 +107,139 @@ function RecommendationsRoute() {
 
   const openProfile = (id: string) =>
     navigate({ to: "/therapist-profile/$id", params: { id } });
+  const clearFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    flashToast("Preferences cleared. Showing more matches.");
+  };
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Top bar */}
-        <PageHeader
-          surface={surface}
-          onBack={() => navigate({ to: "/tools" })}
-          trailing={
-            <>
-              <Button
-                surface={surface}
-                variant={showSaved ? "primary" : "secondary"}
-                size="icon"
-                aria-label="Saved therapists"
-                aria-pressed={showSaved}
-                onClick={() => setShowSaved((v) => !v)}
-              >
-                <Bookmark strokeWidth={1.75} fill={savedIds.length && showSaved ? "currentColor" : "none"} />
-              </Button>
-              <Button
-                surface={surface}
-                variant={activeCount ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFiltersOpen(true)}
-              >
-                <SlidersHorizontal size={14} strokeWidth={2} aria-hidden className="mr-1" />
-                Preferences{activeCount ? ` · ${activeCount}` : ""}
-              </Button>
-            </>
-          }
-        />
+    <WebShell>
+      {/* md+ is a two-pane layout: the content column plus a right-edge
+          Preferences rail that expands/collapses via the header toggle. Mobile
+          opens the same filters in a bottom sheet instead. */}
+      <div className="md:flex">
+        <div className="flex flex-col items-center flex-1 min-w-0 min-h-[100svh] md:min-h-screen">
+          {!preferencesApplied ? (
+            <Teaser surface={surface} onStart={() => navigate({ to: "/therapist-preferences" })} />
+          ) : (
+            // Home-tab layout: WebContent well (max-w-6xl + px/py), a centered
+            // hero title, and a section row whose trailing edge holds the Saved
+            // toggle (mirrors home's "Created For You" + bookmark).
+            <WebContent>
+              <header className="text-center yuna-fade-in">
+                <h1 className="font-display text-3xl lg:text-4xl leading-tight tracking-tight text-white">
+                  {showSaved ? "Saved" : "Therapist Recommendations"}
+                </h1>
+              </header>
 
-        {/* Body */}
-        {showSaved ? (
-          <SavedView surface={surface} list={savedList} savedIds={savedIds} onView={openProfile} />
-        ) : !preferencesApplied ? (
-          <Teaser surface={surface} onStart={() => navigate({ to: "/therapist-preferences" })} />
-        ) : (
-          // One vertical scroll owns the title, hint, card, and buttons, so on a
-          // short frame (SE) everything scrolls together and nothing is clipped
-          // or sits under a fixed footer. The carousel inside only scrolls
-          // horizontally for swiping.
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <h1
-              className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
-                isSE ? "pt-4" : "pt-6"
-              }`}
-            >
-              Therapist Recommendations
-            </h1>
-            {matched.length > 1 && (
-              <p className="shrink-0 flex items-center justify-center gap-2 px-6 pt-3 pb-2 text-sm font-medium text-white/75">
-                <MoveHorizontal size={16} strokeWidth={2} aria-hidden /> Swipe to browse therapists
-              </p>
-            )}
-            <Carousel
+              <section className="mt-10 lg:mt-12">
+                <div className="flex items-center justify-between gap-3 mb-5">
+                  <p className="text-xs tracking-[0.25em] uppercase text-white/70">
+                    {showSaved ? "Saved therapists" : "Recommended for you"}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {!showSaved && (
+                      <Button
+                        surface={surface}
+                        variant={activeCount ? "primary" : "secondary"}
+                        size="sm"
+                        pressed={filtersOpen}
+                        aria-expanded={filtersOpen}
+                        onClick={() => setFiltersOpen((v) => !v)}
+                      >
+                        <SlidersHorizontal size={14} strokeWidth={2} aria-hidden className="mr-1" />
+                        Preferences{activeCount ? ` · ${activeCount}` : ""}
+                      </Button>
+                    )}
+                    <Button
+                      surface={surface}
+                      variant="secondary"
+                      size="icon-sm"
+                      pressed={showSaved}
+                      aria-label={showSaved ? "Show recommendations" : "Show saved therapists"}
+                      onClick={() => setShowSaved((v) => !v)}
+                    >
+                      <Bookmark strokeWidth={1.75} fill={savedIds.length && showSaved ? "currentColor" : "none"} aria-hidden />
+                    </Button>
+                  </div>
+                </div>
+
+                {showSaved ? (
+                  <SavedView surface={surface} list={savedList} savedIds={savedIds} onView={openProfile} />
+                ) : (
+                  <>
+                    {matched.length > 1 && (
+                      <p className="md:hidden flex items-center justify-center gap-2 pb-4 text-sm font-medium text-white/75">
+                        <MoveHorizontal size={16} strokeWidth={2} aria-hidden /> Swipe to browse therapists
+                      </p>
+                    )}
+                    {/* Mobile: swipe deck (screen-level by design). */}
+                    <div className="md:hidden">
+                      <Carousel
+                        surface={surface}
+                        therapists={matched}
+                        savedIds={savedIds}
+                        filters={filters}
+                        onView={openProfile}
+                        onClearFilters={clearFilters}
+                      />
+                    </div>
+                    {/* md+: browse grid. */}
+                    <div className="hidden md:block">
+                      <Grid
+                        surface={surface}
+                        therapists={matched}
+                        savedIds={savedIds}
+                        filters={filters}
+                        onView={openProfile}
+                        onClearFilters={clearFilters}
+                      />
+                    </div>
+                  </>
+                )}
+              </section>
+
+              {toast && (
+                <ToastViewport>
+                  <Toast
+                    surface={surface}
+                    variant="success"
+                    message={toast}
+                    onDismiss={dismiss}
+                    className="yuna-fade-in"
+                  />
+                </ToastViewport>
+              )}
+            </WebContent>
+          )}
+        </div>
+
+        {/* Right-edge Preferences rail (md+) — expands/collapses with the header
+            toggle. Mirrors the left nav: bordered, full-height, on the photo. */}
+        {preferencesApplied && !showSaved && filtersOpen && (
+          <aside
+            aria-label="Preferences"
+            className="hidden md:flex sticky top-0 h-screen w-72 shrink-0 flex-col border-l border-white/15 px-4 lg:px-5 py-6 text-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex items-center justify-between mb-1 px-1">
+              <h2 className="font-display text-2xl tracking-tight">Preferences</h2>
+              <Button surface={surface} variant="link" onClick={() => setFilters(EMPTY_FILTERS)}>
+                Reset
+              </Button>
+            </div>
+            <TherapistFiltersPanel
               surface={surface}
-              therapists={matched}
-              savedIds={savedIds}
               filters={filters}
-              onView={openProfile}
-              onClearFilters={() => {
-                setFilters(EMPTY_FILTERS);
-                flashToast("Preferences cleared. Showing more matches.");
-              }}
+              onChange={setFilters}
+              dividerClass="border-white/25"
             />
-          </div>
-        )}
-
-        {toast && (
-          <ToastViewport>
-            <Toast
-              surface={surface}
-              variant="success"
-              message={toast}
-              onDismiss={dismiss}
-              className="yuna-fade-in"
-            />
-          </ToastViewport>
+          </aside>
         )}
       </div>
 
+      {/* Mobile: the same filters as a bottom sheet (md+ uses the rail above). */}
       <TherapistFiltersDrawer
-        open={filtersOpen}
+        open={filtersOpen && !isDesktop}
         onOpenChange={setFiltersOpen}
         filters={filters}
         onChange={setFilters}
@@ -186,7 +248,7 @@ function RecommendationsRoute() {
           flashToast("Your preferences have been applied.");
         }}
       />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 
@@ -201,10 +263,10 @@ function Teaser({ surface, onStart }: { surface: "dark" | "light"; onStart: () =
         ))}
       </div>
       <p className="mt-3 text-sm font-semibold text-white/85">500+ therapists to match with</p>
-      <h1 className="mt-5 font-display text-3xl leading-tight tracking-tight text-white max-w-[18rem]">
+      <h1 className="mt-5 font-display text-3xl leading-tight tracking-tight text-white max-w-md">
         Find a therapist who truly fits you.
       </h1>
-      <p className="mt-3 text-sm leading-relaxed text-white/85 max-w-[17rem]">
+      <p className="mt-3 text-sm leading-relaxed text-white/85 max-w-md">
         Answer a few questions about your focus, insurance, and preferences. Then meet the therapists Yuna matches to you.
       </p>
       <Button surface={surface} variant="primary" fullWidth onClick={onStart} className="mt-8 max-w-xs">
@@ -232,7 +294,7 @@ function SavedView({
 }) {
   if (list.length === 0) {
     return (
-      <div className="flex-1 flex flex-col justify-center px-6 yuna-fade-in">
+      <div className="w-full max-w-md mx-auto yuna-fade-in">
         <Surface dashed surface={surface} className="px-4 py-6 text-center">
           <p className="text-sm text-white/80">No saved therapists yet</p>
           <p className="mt-1 text-xs text-white/60 leading-relaxed">
@@ -243,8 +305,7 @@ function SavedView({
     );
   }
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-8 flex flex-col gap-3 yuna-fade-in [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <h1 className="font-display text-3xl tracking-tight text-white">Saved</h1>
+    <div className="flex flex-col gap-3 w-full max-w-2xl yuna-fade-in">
       {list.map((t) => (
         <TherapistCard
           key={t.id}
@@ -258,6 +319,220 @@ function SavedView({
           onView={() => onView(t.id)}
         />
       ))}
+    </div>
+  );
+}
+
+// ─── Empty states (shared by Carousel + Grid) ───────────────────────────────
+
+function NoMatches({
+  surface,
+  hasFilters,
+  onClearFilters,
+}: {
+  surface: "dark" | "light";
+  hasFilters: boolean;
+  onClearFilters: () => void;
+}) {
+  return (
+    <>
+      <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
+        <Sprout size={28} className="text-white" aria-hidden />
+      </span>
+      <h2 className="mt-5 font-display text-2xl tracking-tight text-white">No matches right now</h2>
+      <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
+        Your current preferences are narrowing things down. Clear a few to see more options.
+      </p>
+      {hasFilters && (
+        <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-7">
+          Clear preferences
+        </Button>
+      )}
+    </>
+  );
+}
+
+function AllSeen({
+  surface,
+  hasFilters,
+  onStartOver,
+  onClearFilters,
+}: {
+  surface: "dark" | "light";
+  hasFilters: boolean;
+  onStartOver: () => void;
+  onClearFilters: () => void;
+}) {
+  return (
+    <>
+      <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
+        <Sprout size={28} className="text-white" aria-hidden />
+      </span>
+      <h2 className="mt-5 font-display text-2xl tracking-tight text-white">That&apos;s everyone for now</h2>
+      <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
+        You&apos;ve gone through all your matches. Start over to revisit them
+        {hasFilters ? ", or clear your preferences to see more." : "."}
+      </p>
+      <Button surface={surface} variant="primary" onClick={onStartOver} className="mt-7">
+        Start over
+      </Button>
+      {hasFilters && (
+        <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-3">
+          Clear preferences
+        </Button>
+      )}
+    </>
+  );
+}
+
+// End-of-list footer: once every match is on screen, echo the mobile deck's
+// "that's everyone" beat and nudge toward widening the filters.
+function EndOfList({
+  surface,
+  hasFilters,
+  onClearFilters,
+}: {
+  surface: "dark" | "light";
+  hasFilters: boolean;
+  onClearFilters: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-12">
+      <p className="text-sm leading-snug text-white/75 max-w-[22rem]">
+        {hasFilters
+          ? "That's everyone who matches your preferences. Try removing some to see more therapists."
+          : "That's everyone for now."}
+      </p>
+      {hasFilters && (
+        <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-5">
+          Clear preferences
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// ─── Grid (md+) ──────────────────────────────────────────────────────────────
+// The desktop browse view: a two-column card grid in the content well beside the
+// preferences sidebar (matching the home tab's width). "Not interested" removes a
+// card for this visit (ephemeral, mirroring the carousel). The list pages in as
+// you scroll — a spinner, a short beat, then the next batch — closing with the
+// end-of-list note.
+
+const INITIAL_VISIBLE = 6;
+const LOAD_BATCH = 6;
+
+function Grid({
+  surface,
+  therapists,
+  savedIds,
+  filters,
+  onView,
+  onClearFilters,
+}: {
+  surface: "dark" | "light";
+  therapists: Therapist[];
+  savedIds: string[];
+  filters: TherapistFilters;
+  onView: (id: string) => void;
+  onClearFilters: () => void;
+}) {
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [shown, setShown] = useState(INITIAL_VISIBLE);
+  const [loading, setLoading] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hasFilters = countFilters(filters) > 0;
+  const visible = useMemo(
+    () => therapists.filter((t) => !dismissed.has(t.id)),
+    [therapists, dismissed],
+  );
+
+  // Reset paging + dismissals when the matched set changes (filters applied/cleared).
+  useEffect(() => {
+    setDismissed(new Set());
+    setShown(INITIAL_VISIBLE);
+    setLoading(false);
+    clearTimeout(loadTimer.current);
+  }, [therapists]);
+  useEffect(() => () => clearTimeout(loadTimer.current), []);
+
+  const page = visible.slice(0, shown);
+  const hasMore = shown < visible.length;
+
+  // Load the next batch when the bottom sentinel scrolls into view, after a
+  // short delay so the spinner reads as a real fetch.
+  useEffect(() => {
+    if (!hasMore || loading) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setLoading(true);
+        clearTimeout(loadTimer.current);
+        loadTimer.current = setTimeout(() => {
+          setShown((n) => Math.min(n + LOAD_BATCH, visible.length));
+          setLoading(false);
+        }, 1800);
+      },
+      { rootMargin: "100px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, loading, visible.length, shown]);
+
+  if (therapists.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center px-8 py-20 yuna-fade-in">
+        <NoMatches surface={surface} hasFilters={hasFilters} onClearFilters={onClearFilters} />
+      </div>
+    );
+  }
+  if (visible.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center px-8 py-20 yuna-fade-in">
+        <AllSeen
+          surface={surface}
+          hasFilters={hasFilters}
+          onStartOver={() => setDismissed(new Set())}
+          onClearFilters={onClearFilters}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="yuna-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-5">
+        {page.map((t) => (
+          <TherapistCard
+            key={t.id}
+            surface={surface}
+            name={t.name}
+            credentials={t.credentials}
+            location={t.location}
+            photo={t.photo}
+            tags={t.tags}
+            virtual={t.sessionFormats.includes("Video")}
+            description={t.bio}
+            saved={savedIds.includes(t.id)}
+            onToggleSave={() => toggleSaved(t.id)}
+            onView={() => onView(t.id)}
+            onDismiss={() => setDismissed((prev) => new Set(prev).add(t.id))}
+          />
+        ))}
+      </div>
+
+      {hasMore && <div ref={sentinelRef} aria-hidden className="h-px w-full" />}
+      {loading && (
+        <div className="flex justify-center py-10" role="status" aria-label="Loading more therapists">
+          <Loader2 size={28} strokeWidth={2} aria-hidden className="animate-spin text-white/80" />
+        </div>
+      )}
+      {!hasMore && !loading && (
+        <EndOfList surface={surface} hasFilters={hasFilters} onClearFilters={onClearFilters} />
+      )}
     </div>
   );
 }
@@ -424,18 +699,7 @@ function Carousel({
   if (therapists.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center px-8 yuna-fade-in">
-        <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
-          <Sprout size={28} className="text-white" aria-hidden />
-        </span>
-        <h2 className="mt-5 font-display text-2xl tracking-tight text-white">No matches right now</h2>
-        <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
-          Your current preferences are narrowing things down. Clear a few to see more options.
-        </p>
-        {hasFilters && (
-          <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-7">
-            Clear preferences
-          </Button>
-        )}
+        <NoMatches surface={surface} hasFilters={hasFilters} onClearFilters={onClearFilters} />
       </div>
     );
   }
@@ -445,22 +709,12 @@ function Carousel({
   if (visible.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center px-8 yuna-fade-in">
-        <span className={`flex h-16 w-16 items-center justify-center rounded-full ${frostedPanel(surface)}`}>
-          <Sprout size={28} className="text-white" aria-hidden />
-        </span>
-        <h2 className="mt-5 font-display text-2xl tracking-tight text-white">That&apos;s everyone for now</h2>
-        <p className="mt-2 text-sm leading-snug text-white/85 max-w-[18rem]">
-          You&apos;ve gone through all your matches. Start over to revisit them
-          {hasFilters ? ", or clear your preferences to see more." : "."}
-        </p>
-        <Button surface={surface} variant="primary" onClick={() => setDismissed(new Set())} className="mt-7">
-          Start over
-        </Button>
-        {hasFilters && (
-          <Button surface={surface} variant="secondary" onClick={onClearFilters} className="mt-3">
-            Clear preferences
-          </Button>
-        )}
+        <AllSeen
+          surface={surface}
+          hasFilters={hasFilters}
+          onStartOver={() => setDismissed(new Set())}
+          onClearFilters={onClearFilters}
+        />
       </div>
     );
   }
@@ -468,7 +722,9 @@ function Carousel({
   return (
     // shrink-0: keep full content height so the parent vertical scroll engages
     // instead of the flex column squeezing this down and clipping the card.
-    <div className="shrink-0 pt-4 pb-6">
+    // max-w-md mx-auto: the deck stays a readable card width, centered in the
+    // wide (6xl) well so it matches the other screens' frame without ballooning.
+    <div className="shrink-0 pt-4 pb-6 w-full max-w-md mx-auto">
       <div
         ref={scrollerRef}
         onScroll={onScroll}

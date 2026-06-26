@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { SegmentedToggle } from "@/components/SegmentedToggle";
 import { TextArea } from "@/components/TextArea";
 import { Toast, ToastViewport } from "@/components/Toast";
-import { useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 import { useTransientToast } from "@/lib/use-transient-toast";
 
 type Tab = "feedback" | "bug";
@@ -32,7 +32,6 @@ export const Route = createFileRoute("/settings_/feedback")({
 function FeedbackRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
-  const bgImage = useModeImage();
 
   const [tab, setTab] = useState<Tab>("feedback");
   // Keep a separate draft per tab so switching doesn't lose what was typed.
@@ -50,19 +49,8 @@ function FeedbackRoute() {
   };
 
   return (
-    <PhoneFrame>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
-      />
-
-      <div
-        className={
-          "relative flex-1 flex flex-col text-foreground min-h-0 " +
-          (mode === "dark" ? "overlay-on-dark" : "")
-        }
-      >
+    <WebShell>
+      <div className={"text-foreground " + (mode === "dark" ? "overlay-on-dark" : "")}>
         {toast && (
           <ToastViewport>
             <Toast
@@ -75,52 +63,55 @@ function FeedbackRoute() {
           </ToastViewport>
         )}
 
-        <PageHeader
-          title="Your Feedback"
-          tone="ink"
-          layout="inline"
-          onBack={() => navigate({ to: "/settings" })}
-        />
-
-        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-10 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex justify-center shrink-0">
-            <SegmentedToggle
-              value={tab}
-              onChange={setTab}
-              surface={mode}
-              ariaLabel="Feedback type"
-              options={[
-                { value: "feedback", label: "Feedback" },
-                { value: "bug", label: "Report bug" },
-              ]}
-            />
-          </div>
-
-          <h2 className="font-display text-lg leading-snug tracking-tight text-foreground/85 shrink-0">
-            {copy.prompt}
-          </h2>
-
-          <TextArea
-            surface={mode}
-            rows={6}
-            value={text}
-            onChange={(e) => setDrafts((prev) => ({ ...prev, [tab]: e.target.value }))}
-            placeholder={copy.placeholder}
-            aria-label={tab === "bug" ? "Describe the bug" : "Your feedback"}
+        <WebContent width="max-w-2xl">
+          <PageHeader
+            title="Your Feedback"
+            tone="ink"
+            layout="inline"
+            className="px-0 pt-0 pb-0"
+            onBack={() => navigate({ to: "/settings" })}
           />
 
-          <Button
-            surface={mode}
-            variant="primary"
-            fullWidth
-            disabled={!canSend}
-            onClick={send}
-            className="mt-2 shrink-0"
-          >
-            Send
-          </Button>
-        </div>
+          <div className="mt-6 flex flex-col gap-6">
+            <div className="flex justify-center">
+              <SegmentedToggle
+                value={tab}
+                onChange={setTab}
+                surface={mode}
+                ariaLabel="Feedback type"
+                options={[
+                  { value: "feedback", label: "Feedback" },
+                  { value: "bug", label: "Report bug" },
+                ]}
+              />
+            </div>
+
+            <h2 className="font-display text-lg leading-snug tracking-tight text-foreground/85">
+              {copy.prompt}
+            </h2>
+
+            <TextArea
+              surface={mode}
+              rows={6}
+              value={text}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, [tab]: e.target.value }))}
+              placeholder={copy.placeholder}
+              aria-label={tab === "bug" ? "Describe the bug" : "Your feedback"}
+            />
+
+            <Button
+              surface={mode}
+              variant="primary"
+              fullWidth
+              disabled={!canSend}
+              onClick={send}
+              className="mt-2"
+            >
+              Send
+            </Button>
+          </div>
+        </WebContent>
       </div>
-    </PhoneFrame>
+    </WebShell>
   );
 }

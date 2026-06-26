@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Lock } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -24,40 +24,36 @@ export const Route = createFileRoute("/settings_/subscription")({
 function SubscriptionRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
-  const bgImage = useModeImage();
 
   const [plan, setPlan] = useState("Limited Access");
   const [codeOpen, setCodeOpen] = useState(false);
 
   return (
-    <PhoneFrame>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
-      />
+    <WebShell>
+      <div className={"text-foreground " + (mode === "dark" ? "overlay-on-dark" : "")}>
+        <WebContent width="max-w-2xl">
+          <PageHeader
+            title="Subscription"
+            tone="ink"
+            layout="inline"
+            className="px-0 pt-0 pb-0"
+            onBack={() => navigate({ to: "/settings" })}
+          />
 
-      <div
-        className={
-          "relative flex-1 flex flex-col text-foreground min-h-0 " +
-          (mode === "dark" ? "overlay-on-dark" : "")
-        }
-      >
-        <PageHeader title="Subscription" tone="ink" layout="inline" onBack={() => navigate({ to: "/settings" })} />
-
-        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md">
-            <div className="px-4 py-3.5">
-              <p className="text-xs leading-4 text-foreground/60">Subscription</p>
-              <p className="mt-0.5 text-base leading-6 text-foreground">{plan}</p>
+          <div className="mt-6 flex flex-col gap-6">
+            <div className="rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md">
+              <div className="px-4 py-3.5">
+                <p className="text-xs leading-4 text-foreground/60">Subscription</p>
+                <p className="mt-0.5 text-base leading-6 text-foreground">{plan}</p>
+              </div>
             </div>
-          </div>
 
-          <Button surface="light" variant="link" className="self-center" onClick={() => setCodeOpen(true)}>
-            <Lock size={15} strokeWidth={1.75} aria-hidden />
-            Apply your access code
-          </Button>
-        </div>
+            <Button surface="light" variant="link" className="self-center" onClick={() => setCodeOpen(true)}>
+              <Lock size={15} strokeWidth={1.75} aria-hidden />
+              Apply your access code
+            </Button>
+          </div>
+        </WebContent>
       </div>
 
       <AccessCodeDrawer
@@ -69,7 +65,7 @@ function SubscriptionRoute() {
           flagSettingsSaved("Your access code has been applied.");
         }}
       />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 

@@ -69,12 +69,12 @@ function SessionsReturning() {
         </div>
       )}
 
-      <WebContent width="max-w-4xl">
+      <WebContent>
         <h1 className="font-display text-3xl lg:text-4xl tracking-tight text-white">
           Past sessions
         </h1>
 
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sessions.map((s, i) => (
             <li key={s.id} className="yuna-rise" style={{ animationDelay: `${i * 60}ms` }}>
               <PastSessionCard

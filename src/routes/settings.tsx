@@ -3,11 +3,9 @@ import { useEffect, useState } from "react";
 import type { ComponentType, SVGProps } from "react";
 import {
   Bell,
-  ChevronLeft,
   ChevronRight,
   FileText,
   Globe,
-  Leaf,
   MessageSquare,
   ScanFace,
   SlidersHorizontal,
@@ -15,12 +13,11 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
 import { Toast, ToastViewport } from "@/components/Toast";
-import { useAppMode, useModeImage } from "@/lib/theme-prefs";
-import { setNatureSoundsOn, useNatureSoundsOn } from "@/lib/nature-sounds-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 import { consumeSettingsSaved } from "@/lib/settings-saved-toast";
 import { useTransientToast } from "@/lib/use-transient-toast";
 
@@ -45,7 +42,6 @@ type ToggleRow = {
 type Row = LinkRow | ToggleRow;
 
 const GROUP_ONE: Row[] = [
-  { id: "natureSounds", label: "Background sounds", Icon: Leaf, kind: "toggle", defaultOn: true },
   { id: "account", label: "Account Settings", Icon: User, kind: "link", to: "/settings/account" },
   { id: "subscription", label: "Subscription", Icon: Star, kind: "link", to: "/settings/subscription" },
   { id: "voice", label: "Customize Voice", Icon: Users, kind: "link", to: "/settings/voice" },
@@ -70,8 +66,6 @@ export const Route = createFileRoute("/settings")({
 function SettingsRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
-  const bgImage = useModeImage();
-  const natureSoundsOn = useNatureSoundsOn();
   const [toggles, setToggles] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       [...GROUP_ONE, ...GROUP_TWO]
@@ -88,35 +82,15 @@ function SettingsRoute() {
     if (message) show(message);
   }, [show]);
 
-  const readToggle = (id: string) =>
-    id === "natureSounds" ? natureSoundsOn : !!toggles[id];
+  const readToggle = (id: string) => !!toggles[id];
 
   const toggle = (id: string) => {
-    if (id === "natureSounds") {
-      setNatureSoundsOn(!natureSoundsOn);
-      return;
-    }
     setToggles((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
-    <PhoneFrame>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
-      <div
-        className={
-          "relative flex-1 flex flex-col text-foreground min-h-0 " +
-          (mode === "dark" ? "overlay-on-dark" : "")
-        }
-      >
+    <WebShell>
+      <div className={"text-foreground " + (mode === "dark" ? "overlay-on-dark" : "")}>
         {toast && (
           <ToastViewport>
             <Toast
@@ -129,64 +103,57 @@ function SettingsRoute() {
           </ToastViewport>
         )}
 
-        <header className="flex items-center justify-between px-6 pt-14 pb-6 shrink-0">
-          <div className="flex items-center gap-4">
+        <WebContent>
+          <header className="text-center">
+            <h1 className="font-display text-3xl lg:text-4xl leading-tight tracking-tight text-foreground">
+              Settings
+            </h1>
+          </header>
+
+          <div className="mx-auto mt-10 lg:mt-12 max-w-2xl flex flex-col gap-3">
+            <div className="flex justify-end">
+              <Button surface="light" variant="secondary" size="xs">
+                Share Yuna
+              </Button>
+            </div>
+            <CardGroup>
+              {GROUP_ONE.map((row, i) => (
+                <SettingsRowItem
+                  key={row.id}
+                  row={row}
+                  isLast={i === GROUP_ONE.length - 1}
+                  toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
+                  onToggle={() => toggle(row.id)}
+                  onNavigate={(to) => navigate({ to })}
+                />
+              ))}
+            </CardGroup>
+
+            <CardGroup>
+              {GROUP_TWO.map((row, i) => (
+                <SettingsRowItem
+                  key={row.id}
+                  row={row}
+                  isLast={i === GROUP_TWO.length - 1}
+                  toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
+                  onToggle={() => toggle(row.id)}
+                  onNavigate={(to) => navigate({ to })}
+                />
+              ))}
+            </CardGroup>
+
             <Button
               surface="light"
               variant="secondary"
-              size="icon"
-              onClick={() => navigate({ to: "/home" })}
-              aria-label="Back"
+              size="sm"
+              className="self-center mt-2"
             >
-              <ChevronLeft strokeWidth={1.5} />
+              Log Out
             </Button>
-            <h1 className="font-display text-2xl leading-8 tracking-tight text-foreground">
-              Settings
-            </h1>
           </div>
-          <Button surface="light" variant="secondary" size="xs">
-            Share Yuna
-          </Button>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-6 pb-10 flex flex-col gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <CardGroup>
-            {GROUP_ONE.map((row, i) => (
-              <SettingsRowItem
-                key={row.id}
-                row={row}
-                isLast={i === GROUP_ONE.length - 1}
-                toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
-                onToggle={() => toggle(row.id)}
-                onNavigate={(to) => navigate({ to })}
-              />
-            ))}
-          </CardGroup>
-
-          <CardGroup>
-            {GROUP_TWO.map((row, i) => (
-              <SettingsRowItem
-                key={row.id}
-                row={row}
-                isLast={i === GROUP_TWO.length - 1}
-                toggleOn={row.kind === "toggle" ? readToggle(row.id) : undefined}
-                onToggle={() => toggle(row.id)}
-                onNavigate={(to) => navigate({ to })}
-              />
-            ))}
-          </CardGroup>
-
-          <Button
-            surface="light"
-            variant="secondary"
-            size="sm"
-            className="self-center mt-2"
-          >
-            Log Out
-          </Button>
-        </div>
+        </WebContent>
       </div>
-    </PhoneFrame>
+    </WebShell>
   );
 }
 

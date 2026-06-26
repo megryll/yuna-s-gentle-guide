@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Slider } from "@/components/Slider";
 import { IntroVoicePicker, PACE_STEPS, useVoicePreview } from "@/components/yuna-settings-shared";
 import { setVoice as persistVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { VOICE_IDS } from "@/lib/voices";
-import { useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 import { flagSettingsSaved } from "@/lib/settings-saved-toast";
 
 const DEFAULT_PACE_IDX = 2; // "1.0x" — the centred default step
@@ -20,7 +20,6 @@ function CustomizeVoiceRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
   const surface = mode === "dark" ? "dark" : "light";
-  const bgImage = useModeImage();
   const voicePreview = useVoicePreview();
 
   const { voice: persistedVoice } = useYunaIdentity();
@@ -51,50 +50,47 @@ function CustomizeVoiceRoute() {
   };
 
   return (
-    <PhoneFrame>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
-      />
+    <WebShell>
+      <div className={"text-foreground " + (mode === "dark" ? "overlay-on-dark" : "")}>
+        <WebContent width="max-w-2xl">
+          <PageHeader
+            title="Customize Voice"
+            tone="ink"
+            layout="inline"
+            className="px-0 pt-0 pb-0"
+            onBack={back}
+          />
 
-      <div
-        className={
-          "relative flex-1 flex flex-col text-foreground min-h-0 " +
-          (mode === "dark" ? "overlay-on-dark" : "")
-        }
-      >
-        <PageHeader title="Customize Voice" tone="ink" layout="inline" onBack={back} />
+          <div className="mt-6 flex flex-col gap-8">
+            <section className="flex flex-col gap-3">
+              <p className="text-sm leading-relaxed text-foreground/75">
+                Pick the voice Yuna speaks with. Tap a card to preview it.
+              </p>
+              <IntroVoicePicker
+                surface={surface}
+                selectedIdx={voiceIdx}
+                onSelect={chooseVoice}
+                playingIdx={playingIdx}
+                onTogglePlay={(i) => {
+                  const id = VOICE_IDS[i];
+                  if (id) void voicePreview.toggle(id);
+                }}
+              />
+            </section>
 
-        <div className="flex-1 overflow-y-auto pt-4 pb-10 flex flex-col gap-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <section className="flex flex-col gap-3">
-            <p className="px-6 text-sm leading-relaxed text-foreground/75">
-              Pick the voice Yuna speaks with. Tap a card to preview it.
-            </p>
-            <IntroVoicePicker
-              surface={surface}
-              selectedIdx={voiceIdx}
-              onSelect={chooseVoice}
-              playingIdx={playingIdx}
-              onTogglePlay={(i) => {
-                const id = VOICE_IDS[i];
-                if (id) void voicePreview.toggle(id);
-              }}
-            />
-          </section>
-
-          <section className="px-6 flex flex-col gap-3">
-            <h2 className="font-display text-xl tracking-tight text-foreground">Voice pace</h2>
-            <Slider
-              surface={surface}
-              steps={PACE_STEPS}
-              value={paceIdx}
-              onChange={choosePace}
-              label="Voice pace"
-            />
-          </section>
-        </div>
+            <section className="flex flex-col gap-3">
+              <h2 className="font-display text-xl tracking-tight text-foreground">Voice pace</h2>
+              <Slider
+                surface={surface}
+                steps={PACE_STEPS}
+                value={paceIdx}
+                onChange={choosePace}
+                label="Voice pace"
+              />
+            </section>
+          </div>
+        </WebContent>
       </div>
-    </PhoneFrame>
+    </WebShell>
   );
 }

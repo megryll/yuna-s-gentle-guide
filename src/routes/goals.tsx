@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
@@ -15,7 +15,6 @@ import {
 import { Confetti } from "@/components/Confetti";
 import { NativeDatePicker } from "@/components/NativeDatePicker";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useFrameSize } from "@/lib/frame-size";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useUserType } from "@/lib/user-type";
 
@@ -185,9 +184,16 @@ function GoalsRoute() {
   const successGoal = newGoal ?? goals.find((g) => !g.completed) ?? DEMO_GOAL;
 
   return (
-    <PhoneFrame themed>
-      <div className="relative flex-1 flex flex-col text-white min-h-0">
-        {step === "list" && (
+    <WebShell>
+      {/* Immersive single-task flow: keep the rail for escape, center the
+          single column, and let each step flow naturally. Top-aligned (not
+          vertically centered) since the list step can grow tall. The wrapper
+          stays `relative` so the confetti cascade still spans it full-width. */}
+      <div className="relative flex flex-col items-center min-h-[100svh] md:min-h-screen text-white">
+        {/* The list browses many goals in the standard content well (wide, with
+            the header at the shared Y); the single-task flow steps stay in a
+            narrow, focused column. */}
+        {step === "list" ? (
           <ListView
             surface={surface}
             photo={photo}
@@ -196,52 +202,53 @@ function GoalsRoute() {
             onFilter={setFilter}
             savedIds={savedIds}
             onToggleSave={toggleSave}
-            onBack={() => navigate({ to: "/tools" })}
             onNew={startFlow}
             onMarkDone={markDone}
           />
-        )}
+        ) : (
+          <div className="w-full max-w-2xl">
+            {step === "name" && (
+              <NameView
+                surface={surface}
+                photo={photo}
+                draft={draft}
+                onDraft={setDraft}
+                onBack={() => go("list")}
+                onNext={() => go("timeframe")}
+              />
+            )}
 
-        {step === "name" && (
-          <NameView
-            surface={surface}
-            photo={photo}
-            draft={draft}
-            onDraft={setDraft}
-            onBack={() => go("list")}
-            onNext={() => go("timeframe")}
-          />
-        )}
+            {step === "timeframe" && (
+              <TimeframeView
+                surface={surface}
+                photo={photo}
+                goal={draft}
+                pickDate={pickerOpen}
+                onPickDate={() => setPickerOpen(true)}
+                onPreset={(days) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + days);
+                  createGoal(`till ${formatDate(d)}`);
+                }}
+                onBack={() => {
+                  setPickerOpen(false);
+                  go("name");
+                }}
+              />
+            )}
 
-        {step === "timeframe" && (
-          <TimeframeView
-            surface={surface}
-            photo={photo}
-            goal={draft}
-            pickDate={pickerOpen}
-            onPickDate={() => setPickerOpen(true)}
-            onPreset={(days) => {
-              const d = new Date();
-              d.setDate(d.getDate() + days);
-              createGoal(`till ${formatDate(d)}`);
-            }}
-            onBack={() => {
-              setPickerOpen(false);
-              go("name");
-            }}
-          />
-        )}
-
-        {step === "success" && (
-          <SuccessView
-            photo={photo}
-            goal={successGoal}
-            saved={savedIds.has(successGoal.id)}
-            onToggleSave={() => toggleSave(successGoal.id)}
-            onMarkDone={() => markDone(successGoal.id)}
-            onClose={closeToList}
-            surface={surface}
-          />
+            {step === "success" && (
+              <SuccessView
+                photo={photo}
+                goal={successGoal}
+                saved={savedIds.has(successGoal.id)}
+                onToggleSave={() => toggleSave(successGoal.id)}
+                onMarkDone={() => markDone(successGoal.id)}
+                onClose={closeToList}
+                surface={surface}
+              />
+            )}
+          </div>
         )}
 
         <NativeDatePicker
@@ -255,7 +262,7 @@ function GoalsRoute() {
         />
 
         {/* One full-screen cascade for the whole goals flow — anchored to the
-            phone frame (not a step view), so it spans the screen and is never
+            shell column (not a step view), so it spans the screen and is never
             cropped by an inner scroll container or the avatar wrapper. */}
         {burstKey > 0 && (
           <div className="pointer-events-none absolute inset-0 z-[60] overflow-hidden">
@@ -263,7 +270,7 @@ function GoalsRoute() {
           </div>
         )}
       </div>
-    </PhoneFrame>
+    </WebShell>
   );
 }
 
@@ -277,7 +284,6 @@ function ListView({
   onFilter,
   savedIds,
   onToggleSave,
-  onBack,
   onNew,
   onMarkDone,
 }: {
@@ -288,35 +294,19 @@ function ListView({
   onFilter: (f: Filter) => void;
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
-  onBack: () => void;
   onNew: () => void;
   onMarkDone: (id: string) => void;
 }) {
-  const isSE = useFrameSize().id === "se";
   const hasGoals = goals.length > 0;
   const shown = goals.filter((g) => (filter === "active" ? !g.completed : g.completed));
 
   return (
-    <div className="flex-1 flex flex-col pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <header className="shrink-0 px-6 pt-14 flex items-center">
-        <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={onBack}>
-          <ChevronLeft strokeWidth={1.5} />
-        </Button>
-      </header>
-      <h1
-        className={`shrink-0 px-6 font-display text-3xl tracking-tight text-white text-center ${
-          isSE ? "pt-4" : "pt-6 pb-2"
-        }`}
-      >
+    <WebContent className="text-white yuna-fade-in">
+      <h1 className="font-display text-3xl lg:text-4xl leading-tight tracking-tight text-white text-center">
         Goal Setting
       </h1>
 
-      <div
-        className={
-          "px-6 flex flex-col items-center text-center " +
-          (hasGoals ? "mt-4" : "flex-1 justify-center")
-        }
-      >
+      <div className="mt-6 flex flex-col items-center text-center">
         {!hasGoals && <YunaAvatar variant={photo} size={96} className="mb-8" />}
         <p className="max-w-[17rem] text-sm leading-snug text-white/80">
           Reaching goals helps build self-confidence and improves how we see ourselves.
@@ -329,7 +319,7 @@ function ListView({
       </div>
 
       {hasGoals && (
-        <section className="mt-10 px-6">
+        <section className="mt-10">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl tracking-tight text-white">Your Goals</h2>
             <SegmentedToggle
@@ -343,7 +333,7 @@ function ListView({
           </div>
 
           {shown.length > 0 ? (
-            <ul className="mt-4 flex flex-col gap-4">
+            <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 items-start gap-5">
               {shown.map((g) => (
                 <li key={g.id}>
                   <GoalCard
@@ -362,7 +352,7 @@ function ListView({
           )}
         </section>
       )}
-    </div>
+    </WebContent>
   );
 }
 

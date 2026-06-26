@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Divider } from "@/components/Divider";
 import { YunaExplains } from "@/components/YunaExplains";
@@ -46,11 +46,16 @@ function CompletedTasksRoute() {
     router.history.canGoBack() ? router.history.back() : navigate({ to: "/home" });
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0">
-        <PageHeader title="All Completed Tasks" surface={surface} onBack={onBack} />
+    <WebShell>
+      <WebContent width="max-w-2xl" className="text-white">
+        <PageHeader
+          title="All Completed Tasks"
+          surface={surface}
+          className="px-0 pt-0 pb-0"
+          onBack={onBack}
+        />
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-10 flex flex-col gap-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-6 flex flex-col gap-7">
           {/* Tally — three Fraunces figures across the same row as the screenshot. */}
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
@@ -92,7 +97,7 @@ function CompletedTasksRoute() {
             );
           })}
         </div>
-      </div>
-    </PhoneFrame>
+      </WebContent>
+    </WebShell>
   );
 }

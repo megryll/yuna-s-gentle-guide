@@ -1,16 +1,18 @@
 import { useSyncExternalStore } from "react";
 
-// User preference for the forest ambient bed. Default on so first-run users
-// hear the bed straight from the welcome screen onward; persists to
-// localStorage so a flip in Settings sticks across reloads.
+// Forest ambient bed preference.
+//
+// DISABLED on the web build: the looping nature bed is hard-pinned off so it
+// never auto-plays on desktop/web. This single getter gates every bed (the
+// shared singleton, chat's per-mount bed, and the __root controller), so
+// returning false silences all of them; the Settings toggle for it was removed
+// accordingly. Restore the original localStorage-backed logic to bring the bed
+// back. UI sound effects and Yuna's voice (TTS) are unaffected.
 
 const KEY = "yuna.natureSounds";
 
 function read(): boolean {
-  if (typeof window === "undefined") return true;
-  const raw = window.localStorage.getItem(KEY);
-  if (raw === "0") return false;
-  return true;
+  return false;
 }
 
 export function getNatureSoundsOn(): boolean {
@@ -52,7 +54,7 @@ const subscribe = (cb: () => void) => {
 };
 
 const getSnapshot = () => cached;
-const getServerSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export function useNatureSoundsOn(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

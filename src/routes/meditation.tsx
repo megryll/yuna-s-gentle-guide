@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, ThumbsUp, ThumbsDown, Check, ChevronLeft } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { Plus, ThumbsUp, ThumbsDown, Check } from "lucide-react";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { Toast, ToastViewport } from "@/components/Toast";
@@ -19,7 +19,6 @@ import { fetchTtsBlobUrl } from "@/lib/tts-client";
 import { VOICES, DEFAULT_VOICE } from "@/lib/voices";
 import { getVoice, useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useFrameSize } from "@/lib/frame-size";
 
 type Step = "create" | "crafting" | "player" | "complete";
 const STEPS: Step[] = ["create", "crafting", "player", "complete"];
@@ -226,8 +225,12 @@ function MeditationRoute() {
   }, [step]);
 
   return (
-    <PhoneFrame themed>
-      <div className="relative flex-1 flex flex-col text-white min-h-0">
+    <WebShell>
+      {/* Immersive single-task flow: keep the rail for escape, top-anchor the
+          single column (matching goals + the content screens so the header sits
+          at a consistent Y on desktop), and let each step flow naturally rather
+          than pinning CTAs to a phone's bottom edge. */}
+      <div className="relative flex flex-col items-center min-h-[100svh] md:min-h-screen text-white">
         {toast && (
           <ToastViewport>
             <Toast
@@ -239,7 +242,10 @@ function MeditationRoute() {
           </ToastViewport>
         )}
 
-        {step === "create" && (
+        {/* The setup step uses the standard content well (wide, top-anchored
+            header at the shared Y); the immersive in-flow steps stay in a narrow
+            centered column. */}
+        {step === "create" ? (
           <CreateView
             minutes={minutes}
             onMinutes={setMinutes}
@@ -248,37 +254,40 @@ function MeditationRoute() {
             selected={selected}
             onToggleTag={toggleTag}
             onOpenCustomize={() => setDrawerOpen(true)}
-            onBack={() => navigate({ to: "/tools" })}
             onStart={() => setStep("crafting")}
           />
-        )}
+        ) : (
+          // Fill the shell's height so the immersive steps can vertically center
+          // their content (each step is `flex-1 … justify-center`).
+          <div className="w-full max-w-2xl flex-1 flex flex-col min-h-0">
+            {step === "crafting" && (
+              <CraftingView percent={progress} status={CRAFTING_STATUS[statusIdx]} />
+            )}
 
-        {step === "crafting" && (
-          <CraftingView percent={progress} status={CRAFTING_STATUS[statusIdx]} />
-        )}
+            {step === "player" && (
+              <MeditationPlayer
+                minutes={minutes}
+                // Deep-linking straight to the player skips generation, so fall
+                // back to the fixed script rather than rendering an empty reader.
+                script={script || FALLBACK_SCRIPT}
+                voiceUrl={voiceUrl}
+                onFinish={() => setStep("complete")}
+              />
+            )}
 
-        {step === "player" && (
-          <MeditationPlayer
-            minutes={minutes}
-            // Deep-linking straight to the player skips generation, so fall
-            // back to the fixed script rather than rendering an empty reader.
-            script={script || FALLBACK_SCRIPT}
-            voiceUrl={voiceUrl}
-            onFinish={() => setStep("complete")}
-          />
-        )}
-
-        {step === "complete" && (
-          <CompleteView
-            rating={rating}
-            onRate={setRating}
-            saved={saved}
-            onSave={() => {
-              setSaved(true);
-              showToast("The meditation has been saved!", "success");
-            }}
-            onClose={() => navigate({ to: "/tools" })}
-          />
+            {step === "complete" && (
+              <CompleteView
+                rating={rating}
+                onRate={setRating}
+                saved={saved}
+                onSave={() => {
+                  setSaved(true);
+                  showToast("The meditation has been saved!", "success");
+                }}
+                onClose={() => navigate({ to: "/tools" })}
+              />
+            )}
+          </div>
         )}
       </div>
 
@@ -314,7 +323,7 @@ function MeditationRoute() {
           />
         </DrawerContent>
       </Drawer>
-    </PhoneFrame>
+    </WebShell>
   );
 }
 
@@ -328,7 +337,6 @@ function CreateView({
   selected,
   onToggleTag,
   onOpenCustomize,
-  onBack,
   onStart,
 }: {
   minutes: number;
@@ -338,59 +346,52 @@ function CreateView({
   selected: string[];
   onToggleTag: (label: string) => void;
   onOpenCustomize: () => void;
-  onBack: () => void;
   onStart: () => void;
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
-  const isSE = useFrameSize().id === "se";
   return (
-    <div className="flex-1 flex flex-col pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <header className="shrink-0 px-8 pt-14 flex items-center">
-        <Button surface={surface} variant="secondary" size="icon" aria-label="Back" onClick={onBack}>
-          <ChevronLeft strokeWidth={1.5} />
-        </Button>
+    <WebContent className="text-white yuna-fade-in">
+      <header className="text-center">
+        <h1 className="font-display text-3xl lg:text-4xl leading-tight tracking-tight text-white">
+          Guided Audio
+        </h1>
+        <p className="mt-2 text-sm leading-snug text-white/85">
+          Personalized meditations and breathing exercises
+        </p>
       </header>
-      <h1
-        className={`shrink-0 px-8 font-display text-3xl tracking-tight text-white text-center ${
-          isSE ? "pt-4" : "pt-6"
-        }`}
-      >
-        Guided Audio
-      </h1>
-      <p className="shrink-0 px-8 mt-1.5 text-sm leading-snug text-white/85 text-center">
-        Personalized meditations and breathing exercises
-      </p>
 
-      <div className="mt-8 px-8 flex flex-col items-center text-center">
-        <p className="text-sm text-white/85">How long do you have?</p>
-        <DurationDial value={minutes} min={MIN_MINUTES} max={MAX_MINUTES} onChange={onMinutes} />
-      </div>
+      <div className="mx-auto max-w-3xl">
+        <div className="mt-8 flex flex-col items-center text-center">
+          <p className="text-sm text-white/85">How long do you have?</p>
+          <DurationDial value={minutes} min={MIN_MINUTES} max={MAX_MINUTES} onChange={onMinutes} />
+        </div>
 
-      <div className="mt-6 px-8 flex flex-col items-center text-center">
-        <p className="text-sm text-white/85">Tell me what we should focus on</p>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-          {presets.map((p) => (
-            <Tag key={p} surface={surface} selected={selected.includes(p)} onClick={() => onToggleTag(p)}>
-              {p}
+        <div className="mt-6 flex flex-col items-center text-center">
+          <p className="text-sm text-white/85">Tell me what we should focus on</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {presets.map((p) => (
+              <Tag key={p} surface={surface} selected={selected.includes(p)} onClick={() => onToggleTag(p)}>
+                {p}
+              </Tag>
+            ))}
+            {customTags.map((t) => (
+              <Tag key={t} surface={surface} selected onClick={() => onToggleTag(t)}>
+                {t}
+              </Tag>
+            ))}
+            <Tag surface={surface} aria-label="Add custom instructions" onClick={onOpenCustomize}>
+              <Plus />
             </Tag>
-          ))}
-          {customTags.map((t) => (
-            <Tag key={t} surface={surface} selected onClick={() => onToggleTag(t)}>
-              {t}
-            </Tag>
-          ))}
-          <Tag surface={surface} aria-label="Add custom instructions" onClick={onOpenCustomize}>
-            <Plus />
-          </Tag>
+          </div>
+        </div>
+
+        <div className="mt-10 flex flex-col items-center">
+          <Button surface={surface} variant="primary" fullWidth onClick={onStart} className="max-w-sm">
+            Start meditation
+          </Button>
         </div>
       </div>
-
-      <div className="mt-auto px-8 pt-8">
-        <Button surface={surface} variant="primary" fullWidth onClick={onStart}>
-          Start meditation
-        </Button>
-      </div>
-    </div>
+    </WebContent>
   );
 }
 
@@ -551,7 +552,7 @@ function CraftingView({ percent, status }: { percent: number; status: string }) 
   const surface = useAppMode() === "light" ? "light" : "dark";
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between px-8 pt-20 pb-12 text-center yuna-fade-in">
+    <div className="flex-1 flex flex-col items-center justify-center gap-10 px-8 py-12 text-center yuna-fade-in">
       <div className="flex flex-col items-center gap-2">
         <h1 className="font-display text-3xl tracking-tight text-white">Crafting Your Session…</h1>
         <p className="text-sm text-white/80">You can prepare by taking a long, slow breath.</p>
@@ -589,8 +590,8 @@ function CompleteView({
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
   return (
-    <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+    <div className="flex-1 flex flex-col px-8 pt-14 pb-10 md:justify-center md:gap-8 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center gap-6">
         <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
           <span className="text-5xl" aria-hidden>
             🎉
@@ -618,7 +619,7 @@ function CompleteView({
         </div>
       </div>
 
-      <div className="shrink-0 flex flex-col gap-3">
+      <div className="shrink-0 flex flex-col items-center gap-3 [&>button]:max-w-sm">
         <Button
           surface={surface}
           variant="secondary"

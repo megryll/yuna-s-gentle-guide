@@ -41,7 +41,7 @@ function YouRoute() {
 
   return (
     <WebShell>
-      <WebContent width="max-w-2xl" className="text-white yuna-fade-in">
+      <WebContent className="text-white yuna-fade-in">
         <div className="flex justify-center">
           <ProgressRing progress={data.progress} icon={data.ringIcon} />
         </div>

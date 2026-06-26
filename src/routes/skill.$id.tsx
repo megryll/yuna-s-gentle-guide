@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, ChevronLeft, EyeOff, X } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { Check, EyeOff, X } from "lucide-react";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -29,22 +29,10 @@ function SkillDetailRoute() {
   const close = () => navigate({ to: "/home" });
 
   return (
-    <PhoneFrame themed>
-      <div className="relative flex-1 flex flex-col text-white min-h-0">
-        <header className="flex justify-start px-6 pt-14 pb-2 shrink-0">
-          <Button
-            surface={surface}
-            variant="secondary"
-            size="icon"
-            onClick={close}
-            aria-label="Back"
-          >
-            <ChevronLeft strokeWidth={1.5} />
-          </Button>
-        </header>
-
+    <WebShell>
+      <WebContent width="max-w-2xl" className="text-white">
         {skill ? (
-          <div className="flex-1 overflow-y-auto px-6 pt-2 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-2">
             {/* Hero keeps the learn-skill card's deep-green identity from the
                 feed (a fixed solid fill, mode-independent), white ink. */}
             <div
@@ -138,14 +126,14 @@ function SkillDetailRoute() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
+          <div className="mt-10 flex flex-col items-center text-center gap-4">
             <p className="text-base text-white/85">We couldn't find that skill.</p>
             <Button surface={surface} variant="secondary" size="sm" onClick={close}>
               Back home
             </Button>
           </div>
         )}
-      </div>
-    </PhoneFrame>
+      </WebContent>
+    </WebShell>
   );
 }

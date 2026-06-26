@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SquarePen } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
@@ -15,7 +15,7 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { useAppMode, useModeImage } from "@/lib/theme-prefs";
+import { useAppMode } from "@/lib/theme-prefs";
 import { flagSettingsSaved } from "@/lib/settings-saved-toast";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,6 @@ export const Route = createFileRoute("/settings_/account")({
 function AccountSettingsRoute() {
   const navigate = useNavigate();
   const mode = useAppMode();
-  const bgImage = useModeImage();
 
   const [name, setName] = useState("Megan");
   const [age, setAge] = useState("");
@@ -44,54 +43,46 @@ function AccountSettingsRoute() {
   const genderLabel = GENDER_OPTIONS.find((o) => o.value === gender)?.label ?? "";
 
   return (
-    <PhoneFrame>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
-      />
+    <WebShell>
+      <div className={"text-foreground " + (mode === "dark" ? "overlay-on-dark" : "")}>
+        <WebContent width="max-w-2xl">
+          <PageHeader
+            title="Account Settings"
+            tone="ink"
+            layout="inline"
+            className="px-0 pt-0 pb-0"
+            onBack={() => navigate({ to: "/settings" })}
+          />
 
-      <div
-        className={
-          "relative flex-1 flex flex-col text-foreground min-h-0 " +
-          (mode === "dark" ? "overlay-on-dark" : "")
-        }
-      >
-        <PageHeader
-          title="Account Settings"
-          tone="ink"
-          layout="inline"
-          onBack={() => navigate({ to: "/settings" })}
-        />
+          <div className="mt-6 flex flex-col gap-6">
+            <div className="rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md flex flex-col">
+              <FieldRow label="Name" value={name} onEdit={() => setNameOpen(true)} />
+              <FieldRow label="Email" value={email} onEdit={() => setEmailOpen(true)} />
+              <FieldRow
+                label="Age"
+                value={age || "Missing age"}
+                muted={!age}
+                onEdit={() => setAgeOpen(true)}
+              />
+              <FieldRow
+                label="Gender"
+                value={genderLabel || "Missing gender"}
+                muted={!gender}
+                onEdit={() => setGenderOpen(true)}
+              />
+              <FieldRow label="Phone number" value={phone} onEdit={() => setPhoneOpen(true)} last />
+            </div>
 
-        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-10 flex flex-col gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="shrink-0 rounded-2xl overflow-hidden hairline bg-background/40 backdrop-blur-md flex flex-col">
-            <FieldRow label="Name" value={name} onEdit={() => setNameOpen(true)} />
-            <FieldRow label="Email" value={email} onEdit={() => setEmailOpen(true)} />
-            <FieldRow
-              label="Age"
-              value={age || "Missing age"}
-              muted={!age}
-              onEdit={() => setAgeOpen(true)}
-            />
-            <FieldRow
-              label="Gender"
-              value={genderLabel || "Missing gender"}
-              muted={!gender}
-              onEdit={() => setGenderOpen(true)}
-            />
-            <FieldRow label="Phone number" value={phone} onEdit={() => setPhoneOpen(true)} last />
+            <Button
+              variant="destructive"
+              size="sm"
+              className="self-center"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete Account
+            </Button>
           </div>
-
-          <Button
-            variant="destructive"
-            size="sm"
-            className="self-center"
-            onClick={() => setDeleteOpen(true)}
-          >
-            Delete Account
-          </Button>
-        </div>
+        </WebContent>
       </div>
 
       <UpdateTextDrawer
@@ -166,7 +157,7 @@ function AccountSettingsRoute() {
           navigate({ to: "/" });
         }}
       />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 

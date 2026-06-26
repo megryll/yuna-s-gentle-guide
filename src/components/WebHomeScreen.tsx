@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bookmark, ChevronRight } from "lucide-react";
 
-import { WebShell } from "@/components/WebShell";
+import { WebShell, WebContent } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -11,7 +11,8 @@ import { HomeCardItem } from "@/components/HomeCards";
 import { CardActionsDrawer } from "@/components/CardActionsDrawer";
 import { Toast } from "@/components/Toast";
 import { Confetti } from "@/components/Confetti";
-import { HOME_CARDS, KIND_PLURAL, type HomeCard } from "@/lib/home-cards";
+import { HOME_CARDS, KIND_PLURAL, type CardKind, type HomeCard } from "@/lib/home-cards";
+import { Tag } from "@/components/Tag";
 import { DEFAULT_VOICE } from "@/lib/voices";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { useAppMode } from "@/lib/theme-prefs";
@@ -28,6 +29,20 @@ const GREETINGS: { title: (name: string | null) => string; sub: string }[] = [
   { title: (n) => (n ? `Good to see you, ${n}` : "Good to see you"), sub: "Where should we start today?" },
   { title: () => "Glad you're here", sub: "What would feel good to talk through today?" },
 ];
+
+// Short, chip-friendly labels for the Created For You type filter (KIND_META /
+// KIND_PLURAL run too long for pills). The key order also sets the chip order.
+const FILTER_LABELS: Record<CardKind, string> = {
+  "guided-session": "Guided Sessions",
+  meditation: "Meditations",
+  gratitude: "Gratitude",
+  "self-discovery": "Questionnaires",
+  affirmation: "Affirmations",
+  "learn-skill": "Skills",
+  accountability: "Goals",
+  book: "Books",
+};
+const CARD_KIND_ORDER = Object.keys(FILTER_LABELS) as CardKind[];
 
 export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
   const navigate = useNavigate();
@@ -56,6 +71,7 @@ export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
   );
   const [savedOnly, setSavedOnly] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<CardKind | "all">("all");
   const [completedIds, setCompletedIds] = useState<Set<string>>(() =>
     returning ? new Set(RETURNING_COMPLETED) : new Set(),
   );
@@ -135,7 +151,10 @@ export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
 
   const prefs = useContentPrefs();
   const base = cards.filter((c) => !dismissedIds.has(c.id) && prefs[c.type] !== false);
-  const visible = savedOnly ? base.filter((c) => savedIds.has(c.id)) : base;
+  // Chips reflect only the kinds actually present, in a stable order.
+  const availableTypes = CARD_KIND_ORDER.filter((k) => base.some((c) => c.type === k));
+  const typeFiltered = typeFilter === "all" ? base : base.filter((c) => c.type === typeFilter);
+  const visible = savedOnly ? typeFiltered.filter((c) => savedIds.has(c.id)) : typeFiltered;
   const incomplete = visible.filter((c) => !completedIds.has(c.id));
   const done = visible.filter((c) => completedIds.has(c.id));
 
@@ -180,15 +199,15 @@ export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-6xl px-6 lg:px-10 py-12 lg:py-16">
-        <header className="yuna-rise">
+      <WebContent>
+        <header className="yuna-rise text-center">
           <h1 className="font-display text-3xl lg:text-4xl leading-tight tracking-tight text-white">
             {returning ? greeting.title(name) : "Welcome in"}
           </h1>
           <p className="mt-2 text-base text-white/80">
             {returning ? greeting.sub : "I'll be here when you're ready to chat."}
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex justify-center">
             <SuggestionChip
               onClick={() => startChat({ q: "Chat Now", mode: "voice" })}
               leading={
@@ -216,6 +235,28 @@ export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
               <Bookmark strokeWidth={1.75} fill={savedOnly ? "currentColor" : "none"} aria-hidden />
             </Button>
           </div>
+
+          {availableTypes.length > 1 && (
+            <div className="flex flex-wrap gap-2 mb-5">
+              <Tag
+                surface={surface}
+                selected={typeFilter === "all"}
+                onClick={() => setTypeFilter("all")}
+              >
+                All
+              </Tag>
+              {availableTypes.map((k) => (
+                <Tag
+                  key={k}
+                  surface={surface}
+                  selected={typeFilter === k}
+                  onClick={() => setTypeFilter(k)}
+                >
+                  {FILTER_LABELS[k]}
+                </Tag>
+              ))}
+            </div>
+          )}
 
           {visible.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/25 bg-white/[0.04] px-6 py-10 text-center yuna-rise">
@@ -247,7 +288,7 @@ export function WebHomeScreen({ variant }: { variant: "new" | "returning" }) {
             </>
           )}
         </section>
-      </div>
+      </WebContent>
 
       <CardActionsDrawer
         card={menuCard}

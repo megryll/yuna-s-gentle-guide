@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bookmark, Share } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { useDarkBlurImage } from "@/lib/theme-prefs";
 
@@ -36,8 +35,13 @@ function Splash() {
   }, [navigate, chromeOff]);
 
   return (
-    <PhoneFrame backgroundImage={blurBg}>
-      <div className="flex-1 flex flex-col min-h-0 px-8 pt-14 pb-10 text-white">
+    // Dark-locked immersive moment (no nav shell), centered full-screen on the
+    // dark blur photo — the web analog to its PhoneFrame, scaling to any viewport.
+    <div
+      className="min-h-[100svh] w-full bg-cover bg-center text-white flex flex-col items-center px-8 pt-14 pb-10"
+      style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)), url(${blurBg})` }}
+    >
+      <div className="flex flex-1 flex-col w-full max-w-md">
         <div className="flex justify-center pt-10">
           <img src="/yuna-logo.svg" alt="Yuna" className="h-8 w-auto" />
         </div>
@@ -79,6 +83,6 @@ function Splash() {
           </Button>
         </div>
       </div>
-    </PhoneFrame>
+    </div>
   );
 }
