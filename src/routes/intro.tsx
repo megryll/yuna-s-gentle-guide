@@ -10,9 +10,8 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 import { LeafSpinner } from "@/components/LeafSpinner";
-import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 import { Switch } from "@/components/Switch";
@@ -258,10 +257,6 @@ function Intro() {
   // right on top of /home's welcome. speakYunaLine bails at the top when
   // draining, so the rest of the queue drops silently.
   const drainingRef = useRef(false);
-
-  // Keyboard height plus a gap so the focused name field clears the keyboard
-  // with a little breathing room instead of sitting flush against it.
-  const KEYBOARD_OFFSET = KEYBOARD_HEIGHT + 20;
 
   // Keep a ref of `muted` for setTimeout-scheduled callbacks (closure freshness)
   useEffect(() => {
@@ -813,10 +808,10 @@ function Intro() {
 
   return (
     <FaceIdCtx.Provider value={{ on: faceIdOn, request: faceIdRequest }}>
-    <PhoneFrame backgroundImage={darkBg}>
+    <OnboardingFrame backgroundImage={darkBg}>
       {transitioning && (
         <div
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
           style={{
             backgroundImage: `linear-gradient(rgba(0,0,0,0.42), rgba(0,0,0,0.42)), url(${darkBg})`,
             backgroundSize: "cover",
@@ -883,11 +878,9 @@ function Intro() {
             className="flex-1 w-full flex flex-col gap-3 min-h-0 px-8 overflow-y-auto overflow-x-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{
               transition: "padding 200ms ease-out",
-              paddingBottom: inputFocused
-                ? KEYBOARD_OFFSET
-                : phase === "reveal"
-                  ? 140
-                  : 40,
+              // No simulated keyboard on web, so the focused name field needs no
+              // extra lift — just end-of-scroll breathing room.
+              paddingBottom: phase === "reveal" ? 140 : 40,
             }}
           >
             {/* Blur fade overlay — sticks at the top of the scroll port and
@@ -1067,7 +1060,7 @@ function Intro() {
           </div>
         </div>
       </div>
-    </PhoneFrame>
+    </OnboardingFrame>
     </FaceIdCtx.Provider>
   );
 }
@@ -1676,7 +1669,7 @@ function PushPermissionModal({
 }) {
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="push-modal-title"
@@ -1733,7 +1726,7 @@ function FaceIdPermissionModal({
 }) {
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center px-10 bg-black/45 yuna-fade-in"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="faceid-modal-title"
