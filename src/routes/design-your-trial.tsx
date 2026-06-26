@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, X } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { WebShell } from "@/components/WebShell";
 import { Button } from "@/components/Button";
 import { Switch } from "@/components/Switch";
 import { Badge } from "@/components/Badge";
@@ -50,8 +50,9 @@ const TRIALS: Record<
 
 function DesignYourTrial() {
   const navigate = useNavigate();
-  // In-app paywall — follows the user's Light/Dark toggle like other in-app
-  // screens (Home, Chat). The photo and ink invert via `PhoneFrame themed`;
+  // In-app paywall — reached from the rail / top-bar "Upgrade" and the Home
+  // tap, so it lives inside WebShell (rail stays as the escape) and follows the
+  // user's Light/Dark toggle. WebShell paints the mode photo and inverts ink;
   // DS components drop to `surface="light"` in light mode.
   const mode = useAppMode();
   const surface = mode === "dark" ? "dark" : "light";
@@ -64,9 +65,13 @@ function DesignYourTrial() {
   const active = TRIALS[trial];
 
   return (
-    <PhoneFrame themed>
-      <div className="flex-1 flex flex-col px-8 pt-14 pb-10 text-white min-h-0 yuna-fade-in">
-        <div className="flex justify-end">
+    <WebShell>
+      {/* Focused in-app paywall: a decision column centered in the content area
+          beside the rail. On desktop it widens and scales type and centers
+          vertically, rather than the phone-frame's top-aligned, bottom-pushed
+          layout. The close returns to Home. */}
+      <div className="min-h-screen flex flex-col text-white yuna-fade-in">
+        <div className="flex justify-end px-6 md:px-10 pt-6 md:pt-8">
           <Button
             surface={surface}
             variant="secondary"
@@ -78,68 +83,72 @@ function DesignYourTrial() {
           </Button>
         </div>
 
-        <div className="mt-4 yuna-rise">
-          <h1 className="font-display text-3xl leading-tight tracking-tight text-white">
-            Design Your Trial
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-white/85 max-w-[19rem]">
-            Manage stress, ease anxiety, and build confidence in just 7 minutes a day.
-          </p>
-        </div>
+        <div className="flex-1 flex items-center justify-center px-6 md:px-8 pb-16">
+          <div className="w-full max-w-md md:max-w-lg">
+            <div className="yuna-rise">
+              <h1 className="font-display text-3xl md:text-4xl leading-tight tracking-tight text-white">
+                Design Your Trial
+              </h1>
+              <p className="mt-3 md:mt-4 text-sm md:text-base leading-relaxed text-white/85 max-w-[19rem] md:max-w-md">
+                Manage stress, ease anxiety, and build confidence in just 7 minutes a day.
+              </p>
+            </div>
 
-        <div className="mt-10 flex flex-col gap-3 yuna-rise">
-          {(Object.keys(TRIALS) as TrialId[]).map((id) => (
-            <Button
-              key={id}
-              surface={surface}
-              variant="card"
-              selected={trial === id}
-              subtitle={TRIALS[id].length}
-              trailing={<RadioDot selected={trial === id} />}
-              onClick={() => setTrial(id)}
-            >
-              {TRIALS[id].price}
-            </Button>
-          ))}
-        </div>
+            <div className="mt-10 flex flex-col gap-3 yuna-rise">
+              {(Object.keys(TRIALS) as TrialId[]).map((id) => (
+                <Button
+                  key={id}
+                  surface={surface}
+                  variant="card"
+                  selected={trial === id}
+                  subtitle={TRIALS[id].length}
+                  trailing={<RadioDot selected={trial === id} />}
+                  onClick={() => setTrial(id)}
+                >
+                  {TRIALS[id].price}
+                </Button>
+              ))}
+            </div>
 
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <span className="text-base text-white/90">Remind me before my trial ends</span>
-          <Switch
-            surface={surface}
-            checked={remind}
-            onChange={setRemind}
-            label="Remind me before my trial ends"
-          />
-        </div>
+            <div className="mt-6 flex items-center justify-between gap-4">
+              <span className="text-base text-white/90">Remind me before my trial ends</span>
+              <Switch
+                surface={surface}
+                checked={remind}
+                onChange={setRemind}
+                label="Remind me before my trial ends"
+              />
+            </div>
 
-        <div className="mt-auto pt-8 flex flex-col items-center">
-          <Button
-            surface={surface}
-            variant="link"
-            onClick={() => setPlansOpen(true)}
-          >
-            View all plans
-          </Button>
+            <div className="mt-10 flex flex-col items-center">
+              <Button
+                surface={surface}
+                variant="link"
+                onClick={() => setPlansOpen(true)}
+              >
+                View all plans
+              </Button>
 
-          <Button
-            surface={surface}
-            variant="primary"
-            fullWidth
-            onClick={close}
-            className="mt-5"
-          >
-            {active.cta}
-          </Button>
+              <Button
+                surface={surface}
+                variant="primary"
+                fullWidth
+                onClick={close}
+                className="mt-5"
+              >
+                {active.cta}
+              </Button>
 
-          <p className="mt-4 text-center text-xs leading-relaxed text-white/75 max-w-[20rem]">
-            {active.note}
-          </p>
+              <p className="mt-4 text-center text-xs leading-relaxed text-white/75 max-w-[20rem]">
+                {active.note}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <AllPlansDrawer open={plansOpen} onOpenChange={setPlansOpen} />
-    </PhoneFrame>
+    </WebShell>
   );
 }
 
