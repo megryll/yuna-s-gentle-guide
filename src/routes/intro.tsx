@@ -808,7 +808,7 @@ function Intro() {
 
   return (
     <FaceIdCtx.Provider value={{ on: faceIdOn, request: faceIdRequest }}>
-    <OnboardingFrame backgroundImage={darkBg}>
+    <OnboardingFrame backgroundImage={darkBg} width="max-w-md lg:max-w-2xl" fillViewport>
       {transitioning && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 yuna-fade-in"
@@ -875,7 +875,7 @@ function Intro() {
               via paddingBottom, which expands when the keyboard opens. */}
           <div
             ref={chatScrollRef}
-            className="flex-1 w-full flex flex-col gap-3 min-h-0 px-8 overflow-y-auto overflow-x-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex-1 w-full flex flex-col gap-3 min-h-0 px-8 lg:pl-16 overflow-y-auto overflow-x-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{
               transition: "padding 200ms ease-out",
               // No simulated keyboard on web, so the focused name field needs no
@@ -889,7 +889,7 @@ function Intro() {
                 so there's no hard clipping edge. Negative margin + gap math
                 makes it contribute zero vertical space to flow. */}
             <div
-              className="sticky top-0 -mx-8 -mb-[172px] shrink-0 pointer-events-none z-[5]"
+              className="sticky top-0 -mx-8 lg:-ml-16 -mb-[172px] shrink-0 pointer-events-none z-[5]"
               aria-hidden
               style={{
                 height: 160,
@@ -923,7 +923,7 @@ function Intro() {
             ))}
             {typing && <TypingBubble frostedImage={darkBg} />}
             {stepIdx === 4 && phase === "wait-tap" && (
-              <div className="yuna-rise -mx-8 mt-1">
+              <div className="yuna-rise -mx-8 lg:-ml-16 mt-1">
                 <VoicePicker
                   selectedIdx={voiceIdx}
                   onSelect={(i) => {
@@ -1485,6 +1485,7 @@ function VoicePicker({
         playingIdx={playingIdx}
         onTogglePlay={onTogglePlay}
         surface="dark"
+        showArrows
       />
       <VoiceControlPills
         languageLabel={languageLabel}

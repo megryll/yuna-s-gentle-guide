@@ -187,7 +187,7 @@ const ROUTE_NOTES: Record<string, Partial<EngineerNotes>> = {
       { label: "Avatar", href: "/avatar.png" },
     ],
     gotchas: [
-      { id: "home-greeting-rotation", text: "Header + subtext rotate from a preset list (RETURNING_GREETINGS in HomeScreen.tsx — 6 title/subtitle pairs, not AI-generated). \n\nOne pair is picked at random each time the app is loaded — new users get a fixed 'Welcome in.' greeting." },
+      { id: "home-greeting-rotation", text: "Header + subtext rotate from a preset list (GREETINGS in WebHomeScreen.tsx — 4 title/subtitle pairs, not AI-generated). \n\nOne pair is picked at random each time the app is loaded — new users get a fixed 'Welcome in.' greeting." },
       { id: "ece271ba-b5e0-4849-a7f7-ec5c6dcdc0e0", text: "3-dot menu > Stop seeing [card type] turns that item off in their Content Preferences (settings)" },
       { id: "3d547e86-8d99-4ffb-8003-cfec31ffbc16", text: "3-dot menu > Mark as Completed replaces any previous way to complete a task for Affirmations, Book Recos, Guided Sessions" },
     ],

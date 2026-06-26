@@ -233,6 +233,7 @@ export function IntroVoicePicker({
   playingIdx,
   onTogglePlay,
   surface = "dark",
+  showArrows = false,
 }: {
   selectedIdx: number;
   onSelect: (idx: number) => void;
@@ -240,6 +241,10 @@ export function IntroVoicePicker({
   onTogglePlay: (idx: number) => void;
   /** "dark" matches photo-bg (intro), "light" matches the personalize drawer. */
   surface?: "dark" | "light";
+  /** Render prev/next arrow buttons over the carousel (desktop only) for
+   *  click navigation where there's no swipe. Off by default so the
+   *  phone-width drawer / settings usages stay swipe-only. */
+  showArrows?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({
@@ -338,35 +343,96 @@ export function IntroVoicePicker({
     window.addEventListener("pointercancel", handleUp);
   };
 
+  // Fade the partially-visible peek cards out toward each edge instead of a
+  // hard cut. The opaque band is exactly the centered active card (its width
+  // is 100% − 2·peek = VOICE_CARD_W), so the focused card never dims.
+  const edgeMask = `linear-gradient(to right, transparent 0, #000 ${VOICE_PEEK}, #000 calc(100% - ${VOICE_PEEK}), transparent 100%)`;
+
+  return (
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
+        style={{
+          gap: VOICE_CARD_GAP,
+          paddingLeft: VOICE_PEEK,
+          paddingRight: VOICE_PEEK,
+          paddingTop: 6,
+          paddingBottom: 6,
+          scrollPaddingLeft: VOICE_PEEK,
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          touchAction: "pan-x",
+          maskImage: edgeMask,
+          WebkitMaskImage: edgeMask,
+        }}
+        onPointerDown={onPointerDown}
+      >
+        {INTRO_VOICES.map((voice, idx) => (
+          <VoiceIntroCard
+            key={voice.id}
+            voice={voice}
+            active={idx === selectedIdx}
+            playing={playingIdx === idx}
+            onSelect={() => handleCardClick(idx)}
+            onTogglePlay={() => onTogglePlay(idx)}
+            surface={surface}
+          />
+        ))}
+        <style>{`.voice-carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
+      </div>
+      {showArrows && (
+        <>
+          <CarouselArrow
+            side="left"
+            surface={surface}
+            disabled={selectedIdx <= 0}
+            onClick={() => snapTo(selectedIdx - 1)}
+          />
+          <CarouselArrow
+            side="right"
+            surface={surface}
+            disabled={selectedIdx >= INTRO_VOICES.length - 1}
+            onClick={() => snapTo(selectedIdx + 1)}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function CarouselArrow({
+  side,
+  surface,
+  disabled,
+  onClick,
+}: {
+  side: "left" | "right";
+  surface: "dark" | "light";
+  disabled: boolean;
+  onClick: () => void;
+}) {
   return (
     <div
-      ref={scrollRef}
-      className="voice-carousel-scroll flex overflow-x-auto snap-x snap-mandatory select-none cursor-grab active:cursor-grabbing"
-      style={{
-        gap: VOICE_CARD_GAP,
-        paddingLeft: VOICE_PEEK,
-        paddingRight: VOICE_PEEK,
-        paddingTop: 6,
-        paddingBottom: 6,
-        scrollPaddingLeft: VOICE_PEEK,
-        WebkitOverflowScrolling: "touch",
-        scrollbarWidth: "none",
-        touchAction: "pan-x",
-      }}
-      onPointerDown={onPointerDown}
+      className={
+        "hidden lg:block absolute top-1/2 -translate-y-1/2 z-10 " +
+        (side === "left" ? "left-3" : "right-3")
+      }
     >
-      {INTRO_VOICES.map((voice, idx) => (
-        <VoiceIntroCard
-          key={voice.id}
-          voice={voice}
-          active={idx === selectedIdx}
-          playing={playingIdx === idx}
-          onSelect={() => handleCardClick(idx)}
-          onTogglePlay={() => onTogglePlay(idx)}
-          surface={surface}
-        />
-      ))}
-      <style>{`.voice-carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
+      <Button
+        surface={surface}
+        variant="secondary"
+        size="icon"
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={side === "left" ? "Previous voice" : "Next voice"}
+      >
+        {side === "left" ? (
+          <ChevronLeft size={18} strokeWidth={1.8} aria-hidden="true" />
+        ) : (
+          <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" />
+        )}
+      </Button>
     </div>
   );
 }

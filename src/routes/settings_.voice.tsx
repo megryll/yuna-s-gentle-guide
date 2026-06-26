@@ -75,6 +75,7 @@ function CustomizeVoiceRoute() {
                   const id = VOICE_IDS[i];
                   if (id) void voicePreview.toggle(id);
                 }}
+                showArrows
               />
             </section>
 
