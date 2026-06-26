@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/drawer";
 import { useDarkBlurImage, useWelcomeImage } from "@/lib/theme-prefs";
 import { usePlatform } from "@/lib/platform";
-import { useFrameSize } from "@/lib/frame-size";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,11 +33,6 @@ function Index() {
   const welcomeBg = useWelcomeImage();
   const blurBg = useDarkBlurImage();
   const platform = usePlatform();
-  // Center the conversation in the space above the sheet on roomy frames; on a
-  // short frame (SE) bottom-anchor it instead so it doesn't float far above the
-  // sheet. Keyed on frame height since the device toggle changes height, not the
-  // browser viewport — so a CSS breakpoint can't see it.
-  const shortFrame = useFrameSize().h < 750;
   // Android can't render backdrop-filter, so the frosted bottom sheet over the
   // un-blurred forest photo looks harsh. Paint the pre-blurred photo into its
   // background instead — fixed attachment so the patch aligns with what's
@@ -58,7 +52,7 @@ function Index() {
   }, []);
 
   return (
-    <PhoneFrame backgroundImage={welcomeBg}>
+    <OnboardingFrame backgroundImage={welcomeBg}>
       {loaded && (
       <div className="flex-1 flex flex-col min-h-0 text-white">
         <div className="yuna-fade-in shrink-0 px-8 pt-14 pb-2">
@@ -71,7 +65,7 @@ function Index() {
             aura bleeds ~80px past its box, and on a short frame the bottom-anchor
             grows any spillover upward into the empty logo space, never down. */}
         <div className="flex-1 min-h-0 px-8 flex flex-col">
-          <div className={`flex items-end gap-3 pb-4 ${shortFrame ? "mt-auto" : "my-auto"}`}>
+          <div className="flex items-end gap-3 pb-4 my-auto">
             <div
               className="shrink-0"
               style={{
@@ -113,10 +107,10 @@ function Index() {
         </div>
 
         {/* Pinned to the bottom in flow — its height is reserved automatically,
-            so the conversation never sits behind it. The -mb peeks the sheet's
-            base past the frame's rounded corner, matching the old absolute look. */}
+            so the conversation never sits behind it. Sits flush at the viewport
+            bottom on web (no phone corner to peek past). */}
         <div
-          className="shrink-0 -mb-[72px] overflow-hidden rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-24 flex flex-col gap-5"
+          className="shrink-0 overflow-hidden rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-10 flex flex-col gap-5"
           style={{
             animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both",
             ...sheetStyle,
@@ -163,7 +157,7 @@ function Index() {
       )}
 
       <ReferralCodeDrawer open={referralOpen} onOpenChange={setReferralOpen} />
-    </PhoneFrame>
+    </OnboardingFrame>
   );
 }
 
