@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
-import { PhoneFrame } from "@/components/PhoneFrame";
+import { OnboardingFrame } from "@/components/OnboardingFrame";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { TextField, FieldError } from "@/components/TextField";
@@ -10,8 +10,6 @@ import { Toast } from "@/components/Toast";
 // Basic shape check — only enforced when the entry looks like an email (has
 // an "@"), so access codes still pass straight through.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
-import { useDarkBlurImage } from "@/lib/theme-prefs";
 import {
   Drawer,
   DrawerContent,
@@ -33,18 +31,11 @@ export const Route = createFileRoute("/employer-access")({
   component: EmployerAccessScreen,
 });
 
-// How far to slide the screen up when the keyboard is showing. We don't push
-// up by the full keyboard height — keeping ~70px of breathing room above the
-// input feels closer to native iOS behavior.
-const FOCUS_SHIFT = KEYBOARD_HEIGHT - 70;
-
 function EmployerAccessScreen() {
   const navigate = useNavigate();
-  const darkBg = useDarkBlurImage();
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const [unlocked, setUnlocked] = useState(false);
-  const [inputFocused, setInputFocused] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [troubleOpen, setTroubleOpen] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
@@ -78,15 +69,8 @@ function EmployerAccessScreen() {
   }, [toastOpen]);
 
   return (
-    <PhoneFrame backgroundImage={darkBg}>
-      <div
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col px-8 pt-14 pb-10 text-white yuna-fade-in transition-transform duration-200 ease-out"
-        style={
-          inputFocused && !unlocked
-            ? { transform: `translateY(-${FOCUS_SHIFT}px)` }
-            : undefined
-        }
-      >
+    <OnboardingFrame>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col px-8 pt-14 pb-10 text-white yuna-fade-in">
         <div className="flex items-center justify-between">
           <Button
             surface="dark"
@@ -154,8 +138,6 @@ function EmployerAccessScreen() {
                     setCode(e.target.value);
                     if (codeError) setCodeError("");
                   }}
-                  onFocus={() => setInputFocused(true)}
-                  onBlur={() => setInputFocused(false)}
                   placeholder="Enter your email or access code here"
                   autoCapitalize="none"
                   autoCorrect="off"
@@ -197,7 +179,7 @@ function EmployerAccessScreen() {
         onOpenChange={setTroubleOpen}
         onSubmit={handleRequestSent}
       />
-    </PhoneFrame>
+    </OnboardingFrame>
   );
 }
 
