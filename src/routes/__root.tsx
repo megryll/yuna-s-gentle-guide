@@ -171,7 +171,7 @@ function AdminChromeTab({ visible }: { visible: boolean }) {
       aria-pressed={!visible}
       aria-label={visible ? "Hide admin chrome" : "Show admin chrome"}
       title={visible ? "Hide admin chrome" : "Show admin chrome"}
-      className="hidden md:flex fixed top-3 right-3 z-[60] items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur-md p-2 text-muted-foreground shadow-sm active:text-foreground"
+      className="hidden md:flex fixed top-3 right-3 z-[60] items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur-md p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground/90 active:text-foreground"
     >
       {visible ? (
         <PanelLeftClose size={16} strokeWidth={1.8} aria-hidden />

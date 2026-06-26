@@ -121,7 +121,7 @@ function ZoomControl({
   onChange: (next: number) => void;
 }) {
   const stepBtn =
-    "flex h-7 w-7 items-center justify-center rounded-full border border-border text-foreground transition-colors active:bg-foreground/10 disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
+    "flex h-7 w-7 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/10 disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
   return (
     <div className="flex items-center gap-3 rounded-full border border-border bg-muted/40 px-3 py-1.5">
       <span className="text-xs font-medium text-muted-foreground">Zoom</span>
@@ -224,7 +224,7 @@ function Thumb({ screen, width }: { screen: ResolvedScreen; width: number }) {
           type="button"
           onClick={open}
           aria-label={`Open ${screen.label}`}
-          className="absolute inset-0 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring active:bg-foreground/10"
+          className="absolute inset-0 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring hover:bg-foreground/[0.06] active:bg-foreground/10"
         />
       </div>
       <span className="truncate text-xs text-foreground/80">{screen.label}</span>

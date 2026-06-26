@@ -14,7 +14,7 @@ export function PrototypeMuteToggle() {
         "hidden md:inline-flex items-center justify-center h-8 w-8 rounded-full border border-border backdrop-blur-md shadow-sm transition-colors " +
         (muted
           ? "bg-foreground text-background"
-          : "bg-background/80 text-muted-foreground active:text-foreground")
+          : "bg-background/80 text-muted-foreground hover:text-foreground/90 active:text-foreground")
       }
     >
       {muted ? (

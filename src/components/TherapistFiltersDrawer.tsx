@@ -302,7 +302,7 @@ function LocationFilter({
                     }}
                     className={
                       "w-full flex items-center gap-2 px-4 py-3 text-left text-sm transition-colors " +
-                      (dark ? "text-white active:bg-white/10" : "text-foreground active:bg-foreground/5")
+                      (dark ? "text-white hover:bg-white/[0.06] active:bg-white/10" : "text-foreground hover:bg-foreground/[0.03] active:bg-foreground/5")
                     }
                   >
                     <MapPin size={15} className={dark ? "text-white/60" : "text-foreground/50"} aria-hidden />

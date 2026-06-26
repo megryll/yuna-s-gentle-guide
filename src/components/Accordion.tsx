@@ -34,8 +34,8 @@ export interface AccordionProps {
 }
 
 const SURFACE = {
-  dark: { press: "active:bg-white/[0.04]", chevron: "text-white/60" },
-  light: { press: "active:bg-foreground/[0.04]", chevron: "text-foreground/55" },
+  dark: { press: "hover:bg-white/[0.02] active:bg-white/[0.04]", chevron: "text-white/60" },
+  light: { press: "hover:bg-foreground/[0.02] active:bg-foreground/[0.04]", chevron: "text-foreground/55" },
 } as const;
 
 export function Accordion({

@@ -126,7 +126,7 @@ export function YunaStatus({
           type="button"
           onClick={onRetry}
           className={cn(
-            "text-sm font-semibold underline underline-offset-2 active:opacity-80",
+            "text-sm font-semibold underline underline-offset-2 transition-opacity hover:opacity-90 active:opacity-80",
             retryColor,
           )}
         >

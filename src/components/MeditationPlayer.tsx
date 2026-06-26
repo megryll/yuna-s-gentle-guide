@@ -207,7 +207,7 @@ export function MeditationPlayer({ minutes, script, voiceUrl, onFinish }: Medita
         <button
           type="button"
           onClick={begin}
-          className="flex-1 w-full flex flex-col items-center justify-center select-none active:opacity-80 transition-opacity"
+          className="flex-1 w-full flex flex-col items-center justify-center select-none hover:opacity-90 active:opacity-80 transition-opacity"
           aria-label="Tap to begin"
         >
           <span className="font-display text-2xl tracking-tight text-white/90">Tap to begin</span>

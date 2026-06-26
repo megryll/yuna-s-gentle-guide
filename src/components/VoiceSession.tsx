@@ -837,7 +837,7 @@ function VoicePad({
       className={
         containerBase +
         containerState +
-        (pressActive ? " cursor-pointer select-none active:bg-white/[0.14]" : "")
+        (pressActive ? " cursor-pointer select-none hover:bg-white/[0.10] active:bg-white/[0.14]" : "")
       }
     >
       <span
@@ -955,7 +955,7 @@ function PrivacyFooter({ onLeaveFeedback }: { onLeaveFeedback: () => void }) {
       <button
         type="button"
         onClick={onLeaveFeedback}
-        className="text-white/85 active:text-white transition-colors"
+        className="text-white/85 hover:text-white/90 active:text-white transition-colors"
       >
         Leave Feedback
       </button>

@@ -198,7 +198,7 @@ function SettingsRowItem({
     <button
       type="button"
       onClick={() => row.to && onNavigate(row.to)}
-      className={`${baseClass} active:bg-foreground/[0.05] transition-colors`}
+      className={`${baseClass} hover:bg-foreground/[0.03] active:bg-foreground/[0.05] transition-colors`}
     >
       <div className="flex items-center gap-4">
         <Icon size={18} strokeWidth={1.5} className="text-foreground" aria-hidden />

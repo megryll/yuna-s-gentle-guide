@@ -106,7 +106,7 @@ export function CardActionsDrawer({
               type="button"
               onClick={() => setScreen("menu")}
               aria-label="Back to options"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground/75 active:text-foreground -ml-1 mb-5"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground/75 hover:text-foreground/90 active:text-foreground -ml-1 mb-5 transition-colors"
             >
               <ChevronLeft size={18} strokeWidth={2} aria-hidden />
               Back
@@ -165,7 +165,7 @@ function MenuRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-4 p-4 text-left active:bg-foreground/[0.06] transition-colors",
+        "flex items-center gap-4 p-4 text-left hover:bg-foreground/[0.03] active:bg-foreground/[0.06] transition-colors",
         !last && "border-b border-border",
       )}
     >

@@ -240,7 +240,7 @@ export function CommentLayer() {
           "fixed z-50 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm shadow-lg shadow-black/25 backdrop-blur-md transition-colors " +
           (adding
             ? "bg-amber-500 text-white"
-            : "bg-background/85 text-foreground active:bg-background")
+            : "bg-background/85 text-foreground hover:bg-background/95 active:bg-background")
         }
         style={{ left: frame.left + frame.width / 2, top: fabTop }}
       >
@@ -330,7 +330,7 @@ function PinPopover({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="shrink-0 rounded-full p-1 text-muted-foreground active:text-foreground"
+          className="shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
         >
           <X size={15} />
         </button>
@@ -362,7 +362,7 @@ function PinPopover({
                 setName(comment.name);
                 setEditing(false);
               }}
-              className="rounded-full px-3 py-1.5 text-sm text-muted-foreground active:text-foreground"
+              className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
             >
               Cancel
             </button>
@@ -385,14 +385,14 @@ function PinPopover({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground active:text-foreground"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
             >
               <Pencil size={13} /> Edit
             </button>
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-red-600 active:text-red-700"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm text-red-600 transition-colors hover:text-red-700 active:text-red-700"
             >
               <Trash2 size={13} /> Delete
             </button>
@@ -463,7 +463,7 @@ function Composer({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-full px-3 py-1.5 text-sm text-muted-foreground active:text-foreground"
+          className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
         >
           Cancel
         </button>

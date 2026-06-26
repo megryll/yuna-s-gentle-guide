@@ -33,7 +33,7 @@ function ToolsRoute() {
                 style={{ animationDelay: `${i * 60}ms` }}
                 className={
                   "yuna-rise relative w-full rounded-3xl overflow-hidden aspect-[16/9] " +
-                  (t.to ? "cursor-pointer active:opacity-90 transition-opacity" : "")
+                  (t.to ? "cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity" : "")
                 }
                 role={t.to ? "button" : undefined}
                 tabIndex={t.to ? 0 : undefined}

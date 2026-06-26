@@ -18,7 +18,7 @@ export function CommentsToggle() {
         "hidden md:inline-flex items-center gap-1.5 rounded-full border border-border p-1 pr-3 backdrop-blur-md shadow-sm transition-colors " +
         (on
           ? "bg-amber-500 text-white"
-          : "bg-background/80 text-muted-foreground active:text-foreground")
+          : "bg-background/80 text-muted-foreground hover:text-foreground/90 active:text-foreground")
       }
     >
       <span

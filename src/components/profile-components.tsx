@@ -97,7 +97,7 @@ export function FocusAreaBentoCard({
     <Link
       to="/focus-area/$num"
       params={{ num: String(num) }}
-      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-md active:opacity-90 transition-opacity`}
+      className={`relative flex-1 min-w-0 rounded-2xl overflow-hidden flex flex-col text-left border border-white/15 ${cardBg} backdrop-blur-md hover:opacity-95 active:opacity-90 transition-opacity`}
       style={{ minHeight: 168 }}
     >
       <span

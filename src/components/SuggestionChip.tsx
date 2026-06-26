@@ -29,7 +29,7 @@ export function SuggestionChip({ children, onClick, disabled, leading }: Props) 
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center rounded-full text-left gap-3 pl-5 pr-3 py-3 text-base leading-snug transition-opacity active:opacity-80 disabled:opacity-50 disabled:pointer-events-none"
+      className="inline-flex items-center rounded-full text-left gap-3 pl-5 pr-3 py-3 text-base leading-snug transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:pointer-events-none"
       style={{
         backgroundColor: isLight ? BG_LIGHT : BG_DARK,
         color: isLight ? WHITE : INK,

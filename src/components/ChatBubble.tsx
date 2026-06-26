@@ -122,7 +122,7 @@ function BubbleMenu({ actions }: { actions: ChatBubbleMenuAction[] }) {
         <button
           type="button"
           aria-label="Message options"
-          className="absolute right-1 top-1 z-10 grid place-items-center rounded-full p-1.5 text-white/60 outline-none active:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40"
+          className="absolute right-1 top-1 z-10 grid place-items-center rounded-full p-1.5 text-white/60 outline-none transition-colors hover:bg-white/[0.06] active:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40"
         >
           <MoreVertical size={16} strokeWidth={2} aria-hidden />
         </button>
@@ -154,7 +154,7 @@ function BubbleMenu({ actions }: { actions: ChatBubbleMenuAction[] }) {
                 key={action.label}
                 onSelect={action.onSelect}
                 className={cn(
-                  "flex cursor-default select-none items-center justify-between gap-6 px-4 py-3.5 text-base outline-none active:bg-foreground/8 focus-visible:bg-foreground/8",
+                  "flex cursor-default select-none items-center justify-between gap-6 px-4 py-3.5 text-base outline-none transition-colors hover:bg-foreground/[0.04] active:bg-foreground/8 focus-visible:bg-foreground/8",
                   i > 0 && "border-t border-border",
                 )}
               >

@@ -58,7 +58,7 @@ export function RatingScale<V extends string>({
             onClick={() => onChange(opt.value)}
             className={
               "h-11 min-w-11 inline-flex items-center justify-center leading-none " +
-              "transition-opacity active:opacity-70 focus-visible:outline-none " +
+              "transition-opacity hover:opacity-80 active:opacity-70 focus-visible:outline-none " +
               ink +
               " " +
               textSize

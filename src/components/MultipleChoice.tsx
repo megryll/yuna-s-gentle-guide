@@ -127,10 +127,10 @@ export function MultipleChoice(props: MultipleChoiceProps) {
               dark
                 ? selected
                   ? "border-white bg-white/10 text-white focus-visible:ring-white/60"
-                  : "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
+                  : "border-white/40 text-white hover:bg-white/[0.06] active:bg-white/10 focus-visible:ring-white/60"
                 : selected
                   ? "border-foreground/40 bg-foreground/5 text-foreground focus-visible:ring-foreground/30"
-                  : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
+                  : "border-border text-foreground hover:bg-foreground/[0.04] active:bg-foreground/8 focus-visible:ring-foreground/30",
             )}
           >
             {(opt.emoji || opt.icon) && (

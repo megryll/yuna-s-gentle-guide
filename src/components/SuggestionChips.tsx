@@ -51,7 +51,7 @@ export function SuggestionChips({
             (vertical ? "" : "shrink-0 ") +
             "rounded-full hairline px-3.5 py-1.5 text-xs leading-snug bg-background transition-colors " +
             (interactive
-              ? "active:bg-foreground/8 disabled:opacity-50 disabled:pointer-events-none"
+              ? "hover:bg-foreground/[0.04] active:bg-foreground/8 disabled:opacity-50 disabled:pointer-events-none"
               : "text-muted-foreground cursor-default")
           }
         >

@@ -30,7 +30,13 @@ A React + TanStack Router phone-frame simulator for the Yuna wellness app. Every
    - **Chat conversational scroll**: `px-5` (chat is in the light cluster, denser than hero)
    - **Call body**: `px-8` (heroic centered layout)
 
-5. **No hover states — this is a mobile prototype.** Use `active:` for pressed feedback (already in DS Button). Only `focus-visible:` (keyboard a11y) and `disabled:` are allowed beyond `active:`.
+5. **Hover states — this is the web (desktop) build.** Every genuinely interactive element gets a `hover:` state as a *gentle preview* of its `active:` press; `active:` stays the stronger press. The conventions (mirror them, don't invent new ones):
+   - **Solid-fill buttons** (`active:opacity-80`) → `hover:opacity-90`.
+   - **Plain / icon / opacity-press** (`active:opacity-60`/`70`) → `hover:opacity-80`.
+   - **Outlined / tinted-bg press** (`active:bg-white/15`, `active:bg-foreground/8`, …) → a `hover:bg-…` at ~half the active alpha (`/15`→`/8`, `/10`→`/[0.06]`, `/8`→`/[0.04]`).
+   - **Text-dim → brighten** (`text-white/70 active:text-white`) → `hover:text-white/90` (ink: `hover:text-foreground/90`).
+   - **Links** → `hover:underline underline-offset-4`.
+   Mirror the surface vocabulary the active state uses (white-alpha on dark, foreground-alpha on light) so `.theme-light` inverts hover for free; use only token/standard alpha stops. Don't add hover to static text or non-interactive containers. `focus-visible:` (keyboard a11y) and `disabled:` remain required where they already are.
 
 6. **Fonts — two families only.**
    - Body copy + button labels: Stara (set on `body`; Buttons inherit it)
@@ -138,7 +144,7 @@ DS components take `surface` — pass it, don't restyle. **House default rule:**
 - [ ] DS page reflects any source-component changes
 - [ ] No new hardcoded button/input/card markup that should be DS-driven
 - [ ] No `font-sans-ui` outside simulated OS chrome (Stara wins for all app content)
-- [ ] No `hover:` states added (active: only)
+- [ ] Interactive elements have a `hover:` preview alongside `active:` (rule 5 conventions)
 - [ ] Padding matches the cluster rules
 - [ ] `surface` matches the cluster, and flips to `light` when the app is in light mode
 - [ ] Reads correctly in dark **and** light mode (no sub-floor contrast; inline/arbitrary colors are mode-aware)

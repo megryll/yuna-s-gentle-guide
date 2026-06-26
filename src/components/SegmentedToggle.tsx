@@ -120,8 +120,8 @@ function Segment({
     ? "bg-[#ffffff] text-[#1D1F25]"
     : "bg-[#1D1F25] text-[#ffffff]";
   const inactiveClass = isDark
-    ? "text-white active:bg-white/10"
-    : "text-foreground/75 active:bg-foreground/10";
+    ? "text-white hover:bg-white/[0.06] active:bg-white/10"
+    : "text-foreground/75 hover:bg-foreground/[0.04] active:bg-foreground/10";
   // Labeled segments grow with their text (px + gap); icon-only segments are
   // square. sm shaves a row off both so the compact rail reads h-8 / h-7.
   const sizeClass = hasLabel

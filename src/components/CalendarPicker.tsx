@@ -123,8 +123,8 @@ export function CalendarPicker({
                     : "bg-foreground text-background font-semibold active:scale-95 focus-visible:ring-foreground/30"
                   : selectable
                     ? dark
-                      ? "text-white active:bg-white/10 focus-visible:ring-white/60"
-                      : "text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30"
+                      ? "text-white hover:bg-white/[0.06] active:bg-white/10 focus-visible:ring-white/60"
+                      : "text-foreground hover:bg-foreground/[0.04] active:bg-foreground/8 focus-visible:ring-foreground/30"
                     : dark
                       ? "text-white/30"
                       : "text-foreground/25",

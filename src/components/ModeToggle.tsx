@@ -49,7 +49,7 @@ function ToggleButton({
         "flex items-center justify-center p-1.5 rounded-full transition-colors " +
         (active
           ? "bg-foreground text-background"
-          : "text-muted-foreground active:text-foreground")
+          : "text-muted-foreground hover:text-foreground/90 active:text-foreground")
       }
     >
       {children}

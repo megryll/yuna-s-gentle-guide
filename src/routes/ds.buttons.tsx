@@ -231,6 +231,9 @@ function StateStack({
       <Button surface={surface} variant={variant} fullWidth>
         Default
       </Button>
+      <Button surface={surface} variant={variant} fullWidth className={hoverClass(variant, surface)}>
+        Hover
+      </Button>
       <Button surface={surface} variant={variant} fullWidth className={pressedClass(variant, surface)}>
         Pressed
       </Button>
@@ -245,6 +248,9 @@ function LinkStateRow({ surface }: { surface: "dark" | "light" }) {
   return (
     <Row className="gap-5">
       <Button surface={surface} variant="link">Default</Button>
+      <Button surface={surface} variant="link" className={hoverClass("link", surface)}>
+        Hover
+      </Button>
       <Button surface={surface} variant="link" className={pressedClass("link", surface)}>
         Pressed
       </Button>
@@ -259,6 +265,9 @@ function CardStateStack({ surface }: { surface: "dark" | "light" }) {
       <Button surface={surface} variant="card">Default</Button>
       <Button surface={surface} variant="card" selected>
         Selected
+      </Button>
+      <Button surface={surface} variant="card" className={hoverClass("card", surface)}>
+        Hover
       </Button>
       <Button surface={surface} variant="card" className={pressedClass("card", surface)}>
         Pressed
@@ -282,6 +291,7 @@ function IconStateRow({
 }) {
   const states: { caption: string; className?: string; disabled?: boolean }[] = [
     { caption: "Default" },
+    { caption: "Hover", className: hoverClass(variant, surface) },
     { caption: "Pressed", className: pressedClass(variant, surface) },
     { caption: "Disabled", disabled: true },
   ];
@@ -331,6 +341,27 @@ function pressedClass(
     case "primary":
     default:
       return "opacity-80";
+  }
+}
+
+// Static class mirroring each variant's `hover:` preview feedback (gentler than
+// pressed), so the "Hover" state is visible at rest in the matrix.
+function hoverClass(
+  variant: "primary" | "destructive" | "secondary" | "card" | "link" | "plain",
+  surface: "dark" | "light",
+): string {
+  switch (variant) {
+    case "secondary":
+      return surface === "dark" ? "bg-white/8" : "bg-foreground/[0.04]";
+    case "card":
+      return surface === "dark" ? "bg-white/[0.06]" : "bg-foreground/[0.04]";
+    case "link":
+      return "underline underline-offset-4";
+    case "plain":
+      return "opacity-80";
+    case "primary":
+    default:
+      return "opacity-90";
   }
 }
 

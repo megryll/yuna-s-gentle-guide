@@ -187,7 +187,7 @@ export function CardRow({
           hasMenu ? "items-stretch min-h-[96px] pr-14" : "items-center",
           !isLight && "card-fixed-dark",
           completed && "opacity-60",
-          interactive && "active:opacity-90",
+          interactive && "hover:opacity-95 active:opacity-90",
           !interactive && "cursor-default",
           // Pin disabled (display-only) rows to full opacity — unless completed,
           // whose opacity-60 fade must survive (the :disabled variant otherwise

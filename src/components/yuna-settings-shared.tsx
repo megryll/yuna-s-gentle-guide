@@ -96,7 +96,7 @@ export function ChoiceList({
             onClick={() => onChange(o.id)}
             className={
               "w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors " +
-              (selected ? "bg-foreground/10 text-foreground" : "active:bg-foreground/8 text-foreground") +
+              (selected ? "bg-foreground/10 text-foreground" : "hover:bg-foreground/[0.04] active:bg-foreground/8 text-foreground") +
               (i > 0 ? " border-t border-border" : "")
             }
           >
@@ -198,7 +198,7 @@ export function NavRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-foreground/8 transition-colors border-t border-border first:border-t-0"
+      className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-foreground/[0.04] active:bg-foreground/8 transition-colors border-t border-border first:border-t-0"
     >
       <span className="h-9 w-9 rounded-full flex items-center justify-center text-foreground shrink-0">
         {icon}
@@ -523,7 +523,7 @@ function VoiceIntroCard({
             e.stopPropagation();
             onTogglePlay();
           }}
-          className="self-start gap-1.5 bg-white/15 backdrop-blur-sm active:bg-white/25"
+          className="self-start gap-1.5 bg-white/15 backdrop-blur-sm hover:bg-white/20 active:bg-white/25"
           aria-label={playing ? "Pause voice preview" : "Play voice preview"}
         >
           {playing ? <PausePill /> : <PlayPill />}

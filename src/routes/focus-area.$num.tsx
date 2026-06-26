@@ -68,7 +68,7 @@ function FocusAreaRoute() {
             <button
               type="button"
               onClick={() => setInfoOpen((v) => !v)}
-              className="flex items-center justify-center active:opacity-70 transition-opacity"
+              className="flex items-center justify-center hover:opacity-80 active:opacity-70 transition-opacity"
               aria-label="About upcoming tasks"
               aria-expanded={infoOpen}
             >

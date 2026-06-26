@@ -55,13 +55,13 @@ const INTERACTIVE =
 // vocabulary so the shim inverts it correctly in light mode.
 const SURFACE: Record<AppMode, { on: string; off: string; informational: string }> = {
   dark: {
-    off: "border border-white/30 bg-white/10 text-white/90 active:bg-white/20 focus-visible:ring-white/60",
-    on: "bg-white text-neutral-900 border border-white active:opacity-80 focus-visible:ring-white/60",
+    off: "border border-white/30 bg-white/10 text-white/90 hover:bg-white/15 active:bg-white/20 focus-visible:ring-white/60",
+    on: "bg-white text-neutral-900 border border-white hover:opacity-90 active:opacity-80 focus-visible:ring-white/60",
     informational: "bg-white/12 text-white/85",
   },
   light: {
-    off: "border border-border bg-foreground/5 text-foreground/90 active:bg-foreground/10 focus-visible:ring-foreground/30",
-    on: "bg-foreground text-background border border-foreground active:opacity-80 focus-visible:ring-foreground/40",
+    off: "border border-border bg-foreground/5 text-foreground/90 hover:bg-foreground/[0.07] active:bg-foreground/10 focus-visible:ring-foreground/30",
+    on: "bg-foreground text-background border border-foreground hover:opacity-90 active:opacity-80 focus-visible:ring-foreground/40",
     informational: "bg-foreground/8 text-foreground/85",
   },
 };

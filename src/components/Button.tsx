@@ -77,48 +77,48 @@ const buttonVariants = cva(
         surface: "dark",
         variant: "primary",
         className:
-          "bg-white text-neutral-900 active:opacity-80 focus-visible:ring-white/60",
+          "bg-white text-neutral-900 hover:opacity-90 active:opacity-80 focus-visible:ring-white/60",
       },
       {
         surface: "dark",
         variant: "destructive",
         className:
-          "bg-alert-orange text-neutral active:opacity-80 focus-visible:ring-alert-orange/50",
+          "bg-alert-orange text-neutral hover:opacity-90 active:opacity-80 focus-visible:ring-alert-orange/50",
       },
       {
         surface: "dark",
         variant: "secondary",
         className:
-          "border border-white/40 text-white active:bg-white/15 focus-visible:ring-white/60",
+          "border border-white/40 text-white hover:bg-white/8 active:bg-white/15 focus-visible:ring-white/60",
       },
       {
         surface: "dark",
         variant: "plain",
-        className: "text-white active:opacity-60 focus-visible:ring-white/60",
+        className: "text-white hover:opacity-80 active:opacity-60 focus-visible:ring-white/60",
       },
       // ─── Light surface ───────────────────────────────────────────────────
       {
         surface: "light",
         variant: "primary",
         className:
-          "bg-foreground text-background active:opacity-80 focus-visible:ring-foreground/40",
+          "bg-foreground text-background hover:opacity-90 active:opacity-80 focus-visible:ring-foreground/40",
       },
       {
         surface: "light",
         variant: "destructive",
         className:
-          "bg-alert-orange text-neutral active:opacity-80 focus-visible:ring-alert-orange/50",
+          "bg-alert-orange text-neutral hover:opacity-90 active:opacity-80 focus-visible:ring-alert-orange/50",
       },
       {
         surface: "light",
         variant: "secondary",
         className:
-          "border border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
+          "border border-border text-foreground hover:bg-foreground/[0.04] active:bg-foreground/8 focus-visible:ring-foreground/30",
       },
       {
         surface: "light",
         variant: "plain",
-        className: "text-foreground active:opacity-60 focus-visible:ring-foreground/30",
+        className: "text-foreground hover:opacity-80 active:opacity-60 focus-visible:ring-foreground/30",
       },
     ],
     defaultVariants: {
@@ -187,11 +187,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "disabled:opacity-50 disabled:pointer-events-none",
             surface === "dark"
               ? isSelected
-                ? "border-white bg-white/10 text-white active:bg-white/10 focus-visible:ring-white/60"
-                : "border-white/40 text-white active:bg-white/10 focus-visible:ring-white/60"
+                ? "border-white bg-white/10 text-white hover:bg-white/15 active:bg-white/10 focus-visible:ring-white/60"
+                : "border-white/40 text-white hover:bg-white/[0.06] active:bg-white/10 focus-visible:ring-white/60"
               : isSelected
-                ? "border-foreground/40 bg-foreground/5 text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30"
-                : "border-border text-foreground active:bg-foreground/8 focus-visible:ring-foreground/30",
+                ? "border-foreground/40 bg-foreground/5 text-foreground hover:bg-foreground/8 active:bg-foreground/8 focus-visible:ring-foreground/30"
+                : "border-border text-foreground hover:bg-foreground/[0.04] active:bg-foreground/8 focus-visible:ring-foreground/30",
             className,
           )}
           ref={ref}
@@ -238,7 +238,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <Comp
           className={cn(
             "inline-flex items-center gap-1 select-none bg-transparent p-0 text-sm",
-            "transition-opacity duration-100 ease-out active:opacity-70",
+            "transition-opacity duration-100 ease-out hover:underline underline-offset-4 active:opacity-70",
             "focus-visible:outline-none focus-visible:underline underline-offset-4",
             "disabled:opacity-50 disabled:pointer-events-none",
             surface === "dark" ? "text-white/85" : "text-foreground/85",

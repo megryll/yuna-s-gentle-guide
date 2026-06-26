@@ -166,7 +166,7 @@ function Tab({
         <button
           type="button"
           onClick={onSelect}
-          className="flex flex-col items-center justify-center"
+          className="flex flex-col items-center justify-center hover:opacity-90 active:opacity-80 transition-opacity"
           style={{ transform: "translateY(-12px)" }}
           aria-current={active ? "page" : undefined}
         >
@@ -188,7 +188,7 @@ function Tab({
       <Link
         to={item.to}
         search={item.search}
-        className="flex flex-col items-center justify-center"
+        className="flex flex-col items-center justify-center hover:opacity-90 active:opacity-80 transition-opacity"
         style={{ transform: "translateY(-12px)" }}
         aria-current={active ? "page" : undefined}
       >
@@ -205,7 +205,7 @@ function Tab({
 
   const iconActiveClass = isDark ? "text-white" : "text-foreground";
   const iconInactiveClass = isDark
-    ? "text-white/60"
+    ? "text-white/60 group-hover:text-white/90"
     : "text-muted-foreground group-hover:text-foreground";
 
   return (

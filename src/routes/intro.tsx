@@ -1202,7 +1202,7 @@ function Bubble({
             href="https://yuna.io/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 flex w-fit items-center gap-1 text-white/85 underline underline-offset-2 decoration-white/50 text-base active:opacity-80 transition-opacity"
+            className="mt-2 flex w-fit items-center gap-1 text-white/85 underline underline-offset-2 decoration-white/50 text-base hover:opacity-80 active:opacity-80 transition-opacity"
           >
             Read our Privacy Policy
             <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
@@ -1701,14 +1701,14 @@ function PushPermissionModal({
           <button
             type="button"
             onClick={onDeny}
-            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 transition-colors hover:bg-white/[0.06] active:bg-white/10"
           >
             Don&rsquo;t Allow
           </button>
           <button
             type="button"
             onClick={onAllow}
-            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white transition-colors hover:bg-white/[0.06] active:bg-white/10"
           >
             Allow
           </button>
@@ -1757,14 +1757,14 @@ function FaceIdPermissionModal({
           <button
             type="button"
             onClick={onDeny}
-            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base text-white border-r border-white/15 transition-colors hover:bg-white/[0.06] active:bg-white/10"
           >
             Don&rsquo;t Allow
           </button>
           <button
             type="button"
             onClick={onAllow}
-            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white active:bg-white/10"
+            className="px-3 py-2.5 font-sans-ui text-base font-semibold text-white transition-colors hover:bg-white/[0.06] active:bg-white/10"
           >
             OK
           </button>

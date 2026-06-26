@@ -166,7 +166,7 @@ export function TherapistCard({
           onClick={onView}
           className={cn(
             "w-full rounded-3xl p-3.5 pr-12 flex items-center gap-3 text-left",
-            "transition-opacity duration-100 active:opacity-90",
+            "transition-opacity duration-100 hover:opacity-95 active:opacity-90",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
             dark ? "text-white focus-visible:ring-white/60" : "text-foreground focus-visible:ring-foreground/30",
             frostedPanel(surface),

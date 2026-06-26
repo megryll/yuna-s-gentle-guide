@@ -46,7 +46,7 @@ export function Checkbox({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "flex items-center gap-3 text-left transition-opacity active:opacity-80",
+        "flex items-center gap-3 text-left transition-opacity hover:opacity-90 active:opacity-80",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
         dark ? "focus-visible:ring-white/60" : "focus-visible:ring-foreground/30",
         "disabled:opacity-50 disabled:pointer-events-none",

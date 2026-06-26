@@ -87,7 +87,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="relative -mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full opacity-50 transition active:scale-90 active:opacity-90"
+            className="relative -mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full opacity-50 transition hover:opacity-75 active:scale-90 active:opacity-90"
           >
             <X size={16} strokeWidth={2.25} />
           </button>

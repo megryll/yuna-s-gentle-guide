@@ -72,7 +72,7 @@ export function EngineerSidebar() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open implementation panel"
-        className="hidden lg:flex fixed right-0 top-24 z-50 items-center gap-1 rounded-l-md border border-r-0 border-border bg-background px-2 py-2 text-[9px] tracking-[0.3em] uppercase text-muted-foreground active:text-foreground [writing-mode:vertical-rl]"
+        className="hidden lg:flex fixed right-0 top-24 z-50 items-center gap-1 rounded-l-md border border-r-0 border-border bg-background px-2 py-2 text-[9px] tracking-[0.3em] uppercase text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground [writing-mode:vertical-rl]"
       >
         Implementation
       </button>
@@ -92,7 +92,7 @@ export function EngineerSidebar() {
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Collapse implementation panel"
-          className="text-muted-foreground active:text-foreground"
+          className="text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
         >
           <X size={14} strokeWidth={2} />
         </button>
@@ -105,7 +105,7 @@ export function EngineerSidebar() {
           href={`/animation-specs?screen=${encodeURIComponent(path)}`}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px] text-foreground active:bg-accent"
+          className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-accent/50 active:bg-accent"
         >
           <span className="flex items-center gap-2">
             <Play size={13} strokeWidth={2} className="text-muted-foreground" />
@@ -125,7 +125,7 @@ export function EngineerSidebar() {
                   <a
                     href={asset.href}
                     download
-                    className="group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 text-[12px] text-foreground active:bg-accent"
+                    className="group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 text-[12px] text-foreground transition-colors hover:bg-accent/50 active:bg-accent"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <KindIcon size={13} strokeWidth={2} className="shrink-0 text-muted-foreground" />
@@ -208,7 +208,7 @@ function NotesSection({ path, codeNotes }: { path: string; codeNotes: Gotcha[] }
             onClick={exportAll}
             aria-label="Export all notes as JSON (for the code seeds)"
             title="Export all notes for code"
-            className="text-muted-foreground active:text-foreground"
+            className="text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
           >
             <FileDown size={13} strokeWidth={2} />
           </button>
@@ -216,7 +216,7 @@ function NotesSection({ path, codeNotes }: { path: string; codeNotes: Gotcha[] }
             type="button"
             onClick={add}
             aria-label="Add note"
-            className="text-muted-foreground active:text-foreground"
+            className="text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
           >
             <Plus size={13} strokeWidth={2} />
           </button>
@@ -258,7 +258,7 @@ function NotesSection({ path, codeNotes }: { path: string; codeNotes: Gotcha[] }
                       <button
                         type="button"
                         onClick={() => cancel(note)}
-                        className="px-2 py-1 text-muted-foreground active:text-foreground"
+                        className="px-2 py-1 text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
                       >
                         Cancel
                       </button>
@@ -273,7 +273,7 @@ function NotesSection({ path, codeNotes }: { path: string; codeNotes: Gotcha[] }
                         type="button"
                         onClick={() => startEdit(note.id, note.text)}
                         aria-label="Edit note"
-                        className="text-muted-foreground active:text-foreground"
+                        className="text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
                       >
                         <Pencil size={12} strokeWidth={2} />
                       </button>
@@ -281,7 +281,7 @@ function NotesSection({ path, codeNotes }: { path: string; codeNotes: Gotcha[] }
                         type="button"
                         onClick={() => removeNote(path, note.id, note.isUser)}
                         aria-label="Delete note"
-                        className="text-muted-foreground active:text-foreground"
+                        className="text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
                       >
                         <Trash2 size={12} strokeWidth={2} />
                       </button>
@@ -395,7 +395,7 @@ function ClassInspector() {
           "flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-[12px] tracking-wide uppercase transition-colors " +
           (active
             ? "bg-foreground text-background"
-            : "border border-border text-foreground active:bg-accent")
+            : "border border-border text-foreground hover:bg-accent/50 active:bg-accent")
         }
       >
         <MousePointerClick size={14} strokeWidth={2} />
@@ -417,7 +417,7 @@ function ClassInspector() {
             <button
               type="button"
               onClick={selectParent}
-              className="text-[10px] tracking-wide uppercase text-muted-foreground active:text-foreground"
+              className="text-[10px] tracking-wide uppercase text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
             >
               ↑ parent
             </button>
@@ -496,7 +496,7 @@ function Section({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex flex-1 items-center justify-between rounded-md px-2 py-1.5 text-[9px] tracking-[0.3em] uppercase text-muted-foreground active:text-foreground"
+          className="flex flex-1 items-center justify-between rounded-md px-2 py-1.5 text-[9px] tracking-[0.3em] uppercase text-muted-foreground transition-colors hover:text-foreground/90 active:text-foreground"
         >
           <span>
             {title}
@@ -691,7 +691,7 @@ function Chip({
         "rounded-full px-2.5 py-1 text-[10.5px] capitalize transition-colors",
         active
           ? "bg-foreground text-background"
-          : "border border-border text-muted-foreground active:bg-accent",
+          : "border border-border text-muted-foreground hover:bg-accent/50 active:bg-accent",
       )}
     >
       {label}

@@ -149,7 +149,7 @@ export function AppMenuDrawer({
                     key={r.label}
                     onClick={() => { r.onClick?.(); onOpenChange(false); }}
                     className={
-                      "w-full flex items-center gap-3 px-4 py-3 text-left active:bg-foreground/8 transition-colors " +
+                      "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-foreground/[0.04] active:bg-foreground/8 transition-colors " +
                       (i > 0 ? "border-t border-border" : "")
                     }
                   >
@@ -173,7 +173,7 @@ export function AppMenuDrawer({
           <div className="mt-8 rounded-2xl hairline overflow-hidden bg-background">
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-foreground/8 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-foreground/[0.04] active:bg-foreground/8 transition-colors"
             >
               <span className="h-8 w-8 flex items-center justify-center text-foreground shrink-0">
                 <LogoutIcon />
@@ -182,7 +182,7 @@ export function AppMenuDrawer({
             </button>
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive active:bg-destructive/10 transition-colors border-t border-border"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/[0.06] active:bg-destructive/10 transition-colors border-t border-border"
             >
               <span className="h-8 w-8 flex items-center justify-center shrink-0">
                 <TrashIcon />

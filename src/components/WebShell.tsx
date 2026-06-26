@@ -1,12 +1,13 @@
 import { type ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { History, House, MessageCircle, Pencil, Plus, Settings, Sparkles, User } from "lucide-react";
+import { History, House, MessageCircle, Pencil, Plus, Settings, Sparkles, User, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { isLightMode, useAppMode, useModeImage } from "@/lib/theme-prefs";
 import { usePlatform } from "@/lib/platform";
 import { useAdminChrome } from "@/lib/admin-chrome";
 import { useSessions } from "@/lib/sessions";
+import { setUpgradePromoDismissed, useUpgradePromoDismissed } from "@/lib/upgrade-promo";
 import { useStartChat } from "@/lib/chat-launch";
 import { TOOLS } from "@/lib/tools";
 import { Button } from "@/components/Button";
@@ -102,6 +103,7 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
   const startChat = useStartChat();
   const sessions = useSessions();
   const { pathname } = useLocation();
+  const promoDismissed = useUpgradePromoDismissed();
 
   return (
     <aside
@@ -129,7 +131,7 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
             "flex items-center justify-center lg:justify-start gap-3 rounded-2xl px-3 py-2.5 text-sm tracking-wide transition-colors",
             active
               ? "bg-white/15 text-white font-semibold"
-              : "text-white/70 active:text-white",
+              : "text-white/70 hover:text-white/90 active:text-white",
           );
           return item.startsChat ? (
             <button
@@ -166,7 +168,7 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center justify-center lg:justify-start gap-3 rounded-2xl px-3 py-2.5 text-sm tracking-wide transition-colors",
-                active ? "bg-white/15 text-white font-semibold" : "text-white/70 active:text-white",
+                active ? "bg-white/15 text-white font-semibold" : "text-white/70 hover:text-white/90 active:text-white",
               )}
             >
               <tool.Icon size={20} strokeWidth={1.7} aria-hidden className="shrink-0" />
@@ -180,7 +182,7 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
           aria-current={isActive("/settings") ? "page" : undefined}
           className={cn(
             "flex items-center justify-center lg:justify-start gap-3 rounded-2xl px-3 py-2.5 text-sm tracking-wide transition-colors",
-            isActive("/settings") ? "bg-white/15 text-white font-semibold" : "text-white/70 active:text-white",
+            isActive("/settings") ? "bg-white/15 text-white font-semibold" : "text-white/70 hover:text-white/90 active:text-white",
           )}
         >
           <Settings size={20} strokeWidth={1.7} aria-hidden className="shrink-0" />
@@ -217,14 +219,14 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
 
       {/* Recent sessions. Flex-1 so the list scrolls in the space below the CTA
           to the bottom of the rail. */}
-      <div className="mt-7 flex-1 flex flex-col min-h-0">
+      <div className="mt-4 flex-1 flex flex-col min-h-0">
         {sessions.length > 0 && (
-          <div className="hidden lg:flex flex-col min-h-0 mt-6">
+          <div className="hidden lg:flex flex-col min-h-0">
             <div className="flex items-center justify-between px-3 mb-2">
               <p className="text-[10px] tracking-[0.25em] uppercase text-white/55">Recent</p>
               <Link
                 to="/sessions"
-                className="text-[11px] tracking-wide text-white/60 active:text-white transition-colors"
+                className="text-[11px] tracking-wide text-white/60 hover:text-white/90 active:text-white transition-colors"
               >
                 View all
               </Link>
@@ -239,7 +241,7 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
                       params={{ id: s.id }}
                       className={cn(
                         "block rounded-xl px-3 py-2 text-[13px] leading-snug transition-colors line-clamp-2",
-                        active ? "bg-white/10 text-white" : "text-white/70 active:text-white",
+                        active ? "bg-white/10 text-white" : "text-white/70 hover:text-white/90 active:text-white",
                       )}
                     >
                       {s.title}
@@ -254,19 +256,30 @@ function AppNavRail({ surface: _surface }: { surface: Surface }) {
 
       {/* Upgrade promo — pinned to the foot of the expanded rail (lg only; the
           collapsed md rail has no room). Content-card shell + a DS primary
-          Button as the CTA. */}
-      <div className="hidden lg:block mt-4 rounded-2xl border border-white/12 bg-white/8 p-4">
-        <div className="flex items-center gap-2 text-white">
-          <Sparkles size={18} strokeWidth={1.8} aria-hidden />
-          <span className="font-display text-lg leading-none">Yuna Plus</span>
+          Button as the CTA. Dismissable: the X collapses it into the "Upgrade"
+          nav item in the lower-left group above. */}
+      {!promoDismissed && (
+        <div className="hidden lg:block relative mt-4 rounded-2xl border border-white/12 bg-white/8 p-4">
+          <button
+            type="button"
+            onClick={() => setUpgradePromoDismissed(true)}
+            aria-label="Dismiss Yuna Plus"
+            className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full text-white/55 hover:text-white/90 hover:bg-white/[0.06] active:text-white active:bg-white/10 transition-colors"
+          >
+            <X size={15} strokeWidth={1.8} aria-hidden />
+          </button>
+          <div className="flex items-center gap-2 text-white pr-7">
+            <Sparkles size={18} strokeWidth={1.8} aria-hidden />
+            <span className="font-display text-lg leading-none">Yuna Plus</span>
+          </div>
+          <p className="mt-2 text-[13px] leading-snug text-white/75">
+            Unlimited sessions, deeper guidance, and your full history.
+          </p>
+          <Button asChild surface="dark" variant="primary" size="sm" fullWidth className="mt-3">
+            <Link to="/design-your-trial">Upgrade</Link>
+          </Button>
         </div>
-        <p className="mt-2 text-[13px] leading-snug text-white/75">
-          Unlimited sessions, deeper guidance, and your full history.
-        </p>
-        <Button asChild surface="dark" variant="primary" size="sm" fullWidth className="mt-3">
-          <Link to="/design-your-trial">Upgrade</Link>
-        </Button>
-      </div>
+      )}
 
     </aside>
   );
@@ -281,14 +294,14 @@ function MobileTopBar() {
       <div className="flex items-center gap-1">
         <Link
           to="/design-your-trial"
-          className="grid h-10 w-10 place-items-center rounded-full text-white/80 active:text-white"
+          className="grid h-10 w-10 place-items-center rounded-full text-white/80 hover:text-white/90 active:text-white transition-colors"
           aria-label="Upgrade"
         >
           <Sparkles size={20} strokeWidth={1.7} aria-hidden />
         </Link>
         <Link
           to="/settings"
-          className="grid h-10 w-10 place-items-center rounded-full text-white/80 active:text-white"
+          className="grid h-10 w-10 place-items-center rounded-full text-white/80 hover:text-white/90 active:text-white transition-colors"
           aria-label="Settings"
         >
           <Settings size={20} strokeWidth={1.7} aria-hidden />
