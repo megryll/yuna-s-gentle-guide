@@ -110,7 +110,7 @@ function Index() {
             so the conversation never sits behind it. Sits flush at the viewport
             bottom on web (no phone corner to peek past). */}
         <div
-          className="shrink-0 overflow-hidden rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-10 flex flex-col gap-5"
+          className="shrink-0 overflow-hidden rounded-t-[48px] bg-white/10 backdrop-blur-sm border-t border-white/25 text-white px-8 pt-7 pb-10 flex flex-col gap-5 lg:rounded-none lg:bg-transparent lg:backdrop-blur-none lg:border-t-0"
           style={{
             animation: "welcome-rise 900ms cubic-bezier(0.2,0.8,0.2,1) 1770ms both",
             ...sheetStyle,
