@@ -27,23 +27,27 @@ export function StoryRing({ card, onClick }: { card: HomeCard; onClick: () => vo
       type="button"
       onClick={onClick}
       aria-label="Open your daily highlights"
-      className="relative shrink-0 rounded-full transition-transform active:scale-95"
+      className="relative h-10 w-10 shrink-0 rounded-full transition-transform active:scale-95"
     >
+      <img
+        src={cardPhoto(card)}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full object-cover"
+      />
+      {/* Gradient ring with a transparent hole punched out, so the 2px gap
+          between ring and image shows the real background (IG-style). */}
       <span
-        className="block rounded-full p-[3px]"
+        aria-hidden
+        className="absolute inset-0 rounded-full"
         style={{
           background:
             "conic-gradient(from 210deg, var(--secondary-green), var(--primary-green), var(--secondary-green))",
+          WebkitMask: "radial-gradient(circle, transparent 0 18px, #000 18px)",
+          mask: "radial-gradient(circle, transparent 0 18px, #000 18px)",
         }}
-      >
-        <img
-          src={cardPhoto(card)}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className="block h-9 w-9 rounded-full object-cover"
-        />
-      </span>
+      />
     </button>
   );
 }
