@@ -1,0 +1,25 @@
+{
+  "pkg": "yuna-design-system",
+  "globalName": "YunaDS",
+  "projectId": "f23f94e4-bd2e-4ac0-af19-50f18ebbd79a",
+  "shape": "package",
+  "entry": ".design-sync/pilot-entry.tsx",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "dist/client/assets/styles-Ccw_3Itu.css",
+  "extraFonts": [".design-sync/fonts.css"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "dtsPropsFor": {
+    "Button": "children?: React.ReactNode; variant?: \"primary\" | \"destructive\" | \"secondary\" | \"plain\" | \"card\" | \"link\"; size?: \"md\" | \"sm\" | \"xs\" | \"icon\" | \"icon-sm\" | \"icon-lg\"; surface?: \"dark\" | \"light\"; fullWidth?: boolean; asChild?: boolean; pressed?: boolean; selected?: boolean; label?: string; subtitle?: string; leading?: React.ReactNode; trailing?: React.ReactNode; disabled?: boolean; onClick?: React.MouseEventHandler<HTMLButtonElement>; className?: string;",
+    "Badge": "children?: React.ReactNode; icon?: React.ReactNode; size?: \"sm\" | \"md\"; label?: string; className?: string;",
+    "Divider": "surface?: \"dark\" | \"light\"; label?: string; className?: string;",
+    "YunaAvatar": "size?: number; className?: string; variant?: \"maya\" | \"kai\" | \"arun\" | \"vivian\"; glow?: boolean;",
+    "ChatBubble": "from?: \"yuna\" | \"user\"; size?: \"md\" | \"lg\"; typing?: boolean; tail?: boolean; frostedImage?: string; attachment?: React.ReactNode; menuActions?: { label: string; icon: React.ReactNode; onSelect: () => void; }[]; className?: string; style?: React.CSSProperties; children?: React.ReactNode;"
+  },
+  "componentSrcMap": {
+    "Button": "src/components/Button.tsx",
+    "Badge": "src/components/Badge.tsx",
+    "Divider": "src/components/Divider.tsx",
+    "YunaAvatar": "src/components/YunaAvatar.tsx",
+    "ChatBubble": "src/components/ChatBubble.tsx"
+  }
+}
