@@ -25,6 +25,7 @@ import { YunaAvatar } from "@/components/YunaAvatar";
 import { SegmentedToggle, type SegmentedToggleOption } from "@/components/SegmentedToggle";
 import { RatingScale } from "@/components/RatingScale";
 import { HomeCardItem, HomeCardRow } from "@/components/HomeCards";
+import { StoryRing, StoryViewer } from "@/components/HomeStory";
 import { HOME_CARDS, KIND_PLURAL, type HomeCard } from "@/lib/home-cards";
 import { CardActionsDrawer } from "@/components/CardActionsDrawer";
 import { Toast, ToastViewport } from "@/components/Toast";
@@ -521,6 +522,7 @@ function CreatedForYou({
   onViewAllCompleted: () => void;
 }) {
   const surface = useAppMode() === "light" ? "light" : "dark";
+  const { avatar } = useYunaIdentity();
   const prefs = useContentPrefs();
   // Drop dismissed cards and any kind the user has turned off in Content
   // Preferences (or via the card menu's "Stop seeing …").
@@ -528,6 +530,11 @@ function CreatedForYou({
   const visible = savedOnly ? base.filter((c) => savedIds.has(c.id)) : base;
   const incomplete = visible.filter((c) => !completedIds.has(c.id));
   const done = visible.filter((c) => completedIds.has(c.id));
+
+  // Daily-highlights story: steps through the whole incomplete feed. The
+  // launcher thumb is the first card.
+  const [storyOpen, setStoryOpen] = useState(false);
+  const storyCards = incomplete;
 
   const renderFeed = (list: HomeCard[]) => (
     <ul className={"flex flex-col " + (viewMode === "card" ? "gap-5" : "gap-4")}>
@@ -558,7 +565,12 @@ function CreatedForYou({
   return (
     <div className="mt-12">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <p className="text-uppercase tracking-[0.25em] uppercase text-white/70">Created For You</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <p className="text-uppercase tracking-[0.25em] uppercase text-white/70">Created For You</p>
+          {storyCards.length > 0 && (
+            <StoryRing card={storyCards[0]} onClick={() => setStoryOpen(true)} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <ViewToggle mode={viewMode} onChange={setViewMode} />
           <SavedToggle on={savedOnly} onClick={() => setSavedOnly(!savedOnly)} />
@@ -596,6 +608,17 @@ function CreatedForYou({
       )}
 
       {showFeedback && <ExperienceFeedback />}
+
+      <StoryViewer
+        open={storyOpen}
+        cards={storyCards}
+        avatar={avatar}
+        onClose={() => setStoryOpen(false)}
+        onOpenCard={(c) => {
+          setStoryOpen(false);
+          onOpen(c);
+        }}
+      />
     </div>
   );
 }
