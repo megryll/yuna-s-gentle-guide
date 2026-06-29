@@ -134,7 +134,7 @@ export function AdminSidebar() {
           `mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 ${ROW_TEXT} ` +
           (currentPath === "/gallery"
             ? "bg-foreground text-background"
-            : "text-muted-foreground hover:text-foreground hover:bg-accent")
+            : "text-muted-foreground hover:text-foreground hover:bg-muted")
         }
       >
         <LayoutGrid size={13} strokeWidth={2} className="shrink-0" />
@@ -234,7 +234,7 @@ function DsGroupHeader({
       aria-expanded={open}
       className={
         `flex w-full items-center justify-between rounded-md px-2 py-1.5 transition-colors ${ROW_TEXT} ` +
-        "text-muted-foreground hover:text-foreground hover:bg-accent"
+        "text-muted-foreground hover:text-foreground hover:bg-muted"
       }
     >
       <span>{label}</span>
@@ -264,7 +264,7 @@ function ParentRow({
         "flex items-center rounded-md transition-colors " +
         (active
           ? "bg-foreground text-background"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent")
+          : "text-muted-foreground hover:text-foreground hover:bg-muted")
       }
     >
       <Link
@@ -315,7 +315,7 @@ function NavLink({
         base +
         (active
           ? "bg-foreground text-background"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent")
+          : "text-muted-foreground hover:text-foreground hover:bg-muted")
       }
     >
       {entry.label}
