@@ -105,7 +105,7 @@ export function EngineerSidebar() {
           href={`/animation-specs?screen=${encodeURIComponent(path)}`}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-accent/50 active:bg-accent"
+          className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
         >
           <span className="flex items-center gap-2">
             <Play size={13} strokeWidth={2} className="text-muted-foreground" />
@@ -125,7 +125,7 @@ export function EngineerSidebar() {
                   <a
                     href={asset.href}
                     download
-                    className="group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 text-[12px] text-foreground transition-colors hover:bg-accent/50 active:bg-accent"
+                    className="group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 text-[12px] text-foreground transition-colors hover:bg-muted/50 active:bg-muted"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <KindIcon size={13} strokeWidth={2} className="shrink-0 text-muted-foreground" />
@@ -395,7 +395,7 @@ function ClassInspector() {
           "flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-[12px] tracking-wide uppercase transition-colors " +
           (active
             ? "bg-foreground text-background"
-            : "border border-border text-foreground hover:bg-accent/50 active:bg-accent")
+            : "border border-border text-foreground hover:bg-muted/50 active:bg-muted")
         }
       >
         <MousePointerClick size={14} strokeWidth={2} />
@@ -438,7 +438,7 @@ function ClassInspector() {
                     {g.tokens.map((t) => (
                       <code
                         key={t}
-                        className="rounded bg-accent px-1.5 py-0.5 font-mono text-[10.5px] text-foreground"
+                        className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10.5px] text-foreground"
                       >
                         {t}
                       </code>
@@ -691,7 +691,7 @@ function Chip({
         "rounded-full px-2.5 py-1 text-[10.5px] capitalize transition-colors",
         active
           ? "bg-foreground text-background"
-          : "border border-border text-muted-foreground hover:bg-accent/50 active:bg-accent",
+          : "border border-border text-muted-foreground hover:bg-muted/50 active:bg-muted",
       )}
     >
       {label}
