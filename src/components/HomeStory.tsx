@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, ChevronLeft, ChevronRight, Play, Share2, Star, X } from "lucide-react";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -15,6 +15,9 @@ import { DEFAULT_VOICE } from "@/lib/voices";
 function cardPhoto(card: HomeCard): string {
   return card.naturePath ?? KIND_META[card.type].naturePath;
 }
+
+// Auto-advance dwell per slide (ms) for the IG-style story.
+const SLIDE_MS = 6000;
 
 /**
  * Instagram-style story launcher — a gradient ring around a circular crop of
@@ -61,11 +64,15 @@ function StorySlide({
   saved,
   onToggleSave,
   onOpen,
+  onPause,
 }: {
   card: HomeCard;
   saved: boolean;
   onToggleSave: () => void;
   onOpen: () => void;
+  // Called when the user taps into a gratitude entry — halts auto-advance so
+  // the slide waits for an explicit Next.
+  onPause: () => void;
 }) {
   const meta = KIND_META[card.type];
   const { avatar } = useYunaIdentity();
@@ -225,6 +232,7 @@ function StorySlide({
                 }
                 placeholder={GRATITUDE_PROMPTS[i]}
                 aria-label={`Gratitude ${i + 1}`}
+                onFocus={onPause}
               />
             ))}
           </div>
@@ -271,43 +279,14 @@ function StorySlide({
   }
 }
 
-// First-run onboarding hint that flashes a tap zone to teach navigation.
-function TapHint({ side, label }: { side: "left" | "right"; label: string }) {
-  const right = side === "right";
-  return (
-    <div
-      className={
-        "pointer-events-none absolute inset-y-0 flex w-2/5 flex-col justify-end gap-3 pb-40 " +
-        (right ? "right-0 items-end pr-7" : "left-0 items-start pl-7")
-      }
-    >
-      {/* Only the gradient flashes; the chevron + label stay steady on top. */}
-      <span
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background: `linear-gradient(to ${right ? "left" : "right"}, rgba(0,0,0,0.78), rgba(0,0,0,0))`,
-          animation: "story-hint-flash 1.4s ease-in-out infinite",
-        }}
-      />
-      <span className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-white/15 text-white">
-        {right ? (
-          <ChevronRight size={26} strokeWidth={2} aria-hidden />
-        ) : (
-          <ChevronLeft size={26} strokeWidth={2} aria-hidden />
-        )}
-      </span>
-      <span className="relative text-sm font-medium text-white">{label}</span>
-    </div>
-  );
-}
-
 /**
  * Full-screen story takeover. Steps through `cards` — each slide is a full-bleed
  * version of the card's photo with the card's elements laid on top. Segmented
- * progress bars up top and tap zones (left third = back, right two-thirds =
- * forward); no auto-advance. A first-run tap tutorial flashes each side once.
- * Portals into the phone frame so it covers the whole frame, AppBar included.
+ * progress bars up top fill over each slide's dwell and auto-advance. The whole
+ * left third taps back / right two-thirds taps forward, plus explicit prev/next
+ * arrows in the bottom corners. Focusing a gratitude entry halts auto-advance
+ * so the slide waits for an explicit Next. Portals into the phone frame so it
+ * covers the whole frame, AppBar included.
  */
 export function StoryViewer({
   open,
@@ -327,32 +306,32 @@ export function StoryViewer({
   // Bumped to replay the slide's fade when tapping back from the first slide.
   const [nonce, setNonce] = useState(0);
   const [saved, setSaved] = useState<Set<string>>(() => new Set());
-  // First-run tap tutorial: flash the right zone ("Tap to proceed") on slide 1,
-  // then the left zone ("Tap to return") on slide 2, then never again this
-  // session. `done` means no hint is showing.
-  const [tutorial, setTutorial] = useState<"right" | "left" | "done">("done");
-  const tutorialSeen = useRef(false);
+  // Auto-advance is paused for the current slide once the user taps into a
+  // gratitude entry; navigating to any slide clears it.
+  const [paused, setPaused] = useState(false);
 
-  // Each fresh open starts on the first slide; restart the tutorial unless it's
-  // already been seen this page session.
+  // Each fresh open starts on the first slide, un-paused.
   useEffect(() => {
     if (open) {
       setCurrent(0);
       setNonce((n) => n + 1);
-      setTutorial(tutorialSeen.current ? "done" : "right");
+      setPaused(false);
     }
   }, [open]);
 
-  // Advance the hint with the user: right → left once they reach the second
-  // slide, then dismiss (and remember) once they navigate away from it.
+  // A new slide always resumes auto-advance.
   useEffect(() => {
-    if (!open) return;
-    if (tutorial === "right" && current >= 1) setTutorial("left");
-    else if (tutorial === "left" && current !== 1) {
-      setTutorial("done");
-      tutorialSeen.current = true;
-    }
-  }, [open, current, tutorial]);
+    setPaused(false);
+  }, [current, nonce]);
+
+  // Auto-advance: dwell on each slide, then move forward (closing past the
+  // last). Cleared while paused or whenever the slide changes.
+  useEffect(() => {
+    if (!open || paused) return;
+    const t = setTimeout(() => goNext(), SLIDE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, current, nonce, paused]);
 
   if (!open || cards.length === 0 || !container) return null;
 
@@ -415,17 +394,29 @@ export function StoryViewer({
       {/* Chrome: progress + header pinned top, the slide below. */}
       <div className="pointer-events-none relative flex h-full flex-col px-5 pt-3 pb-8">
         <div className="flex items-center gap-1">
-          {cards.map((c, i) => (
-            <span
-              key={c.id}
-              className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/30"
-            >
+          {cards.map((c, i) => {
+            const active = i === current;
+            return (
               <span
-                className="absolute inset-0 origin-left rounded-full bg-white transition-transform duration-200"
-                style={{ transform: i <= current ? "scaleX(1)" : "scaleX(0)" }}
-              />
-            </span>
-          ))}
+                key={c.id}
+                className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/30"
+              >
+                <span
+                  // Re-key the active fill so its animation restarts on each slide.
+                  key={active ? `fill-${current}-${nonce}` : "static"}
+                  className="absolute inset-0 origin-left rounded-full bg-white"
+                  style={
+                    active
+                      ? {
+                          animation: `story-progress ${SLIDE_MS}ms linear both`,
+                          animationPlayState: paused ? "paused" : "running",
+                        }
+                      : { transform: i < current ? "scaleX(1)" : "scaleX(0)" }
+                  }
+                />
+              </span>
+            );
+          })}
         </div>
 
         <div className="pointer-events-auto mt-3 flex items-center gap-2.5">
@@ -457,11 +448,32 @@ export function StoryViewer({
             saved={saved.has(card.id)}
             onToggleSave={() => toggleSave(card.id)}
             onOpen={() => onOpenCard(card)}
+            onPause={() => setPaused(true)}
           />
         </div>
 
-        {tutorial === "right" && <TapHint side="right" label="Tap to proceed" />}
-        {tutorial === "left" && <TapHint side="left" label="Tap to return" />}
+        {/* Explicit prev/next arrows in the bottom corners — supplement the
+            full-height left/right tap zones. */}
+        <Button
+          surface="dark"
+          variant="secondary"
+          size="icon"
+          aria-label="Previous"
+          onClick={goPrev}
+          className="pointer-events-auto absolute bottom-7 left-5 bg-black/30 backdrop-blur-sm"
+        >
+          <ChevronLeft strokeWidth={2} aria-hidden />
+        </Button>
+        <Button
+          surface="dark"
+          variant="secondary"
+          size="icon"
+          aria-label="Next"
+          onClick={goNext}
+          className="pointer-events-auto absolute bottom-7 right-5 bg-black/30 backdrop-blur-sm"
+        >
+          <ChevronRight strokeWidth={2} aria-hidden />
+        </Button>
       </div>
     </div>
   );

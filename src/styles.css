@@ -379,10 +379,11 @@
     from { opacity: 0; transform: scale(1.04); }
     to { opacity: 1; transform: scale(1); }
   }
-  /* Onboarding hint that flashes a tap zone the first time through a story. */
-  @keyframes story-hint-flash {
-    0%, 100% { opacity: 0.25; }
-    50% { opacity: 1; }
+  /* Auto-advance fill for the segmented progress bar — the active segment
+     grows left-to-right over a slide's dwell; animation-play-state pauses it. */
+  @keyframes story-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
   }
 
   /* ─── Questionnaire pane transitions ──────────────────────────────────────
