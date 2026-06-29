@@ -341,7 +341,7 @@ export function HomeScreen({
               open(openPrompt(c));
             }}
             onOpenMenu={setMenuCard}
-            showFeedback={returning}
+            showFeedback
             onViewAllCompleted={() => navigate({ to: "/completed-tasks" })}
           />
         </div>
