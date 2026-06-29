@@ -182,7 +182,7 @@ export function AppMenuDrawer({
             </button>
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive active:bg-destructive/10 transition-colors border-t border-border"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-alert-red active:bg-alert-red/10 transition-colors border-t border-border"
             >
               <span className="h-8 w-8 flex items-center justify-center shrink-0">
                 <TrashIcon />

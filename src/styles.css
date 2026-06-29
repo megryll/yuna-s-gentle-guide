@@ -95,7 +95,7 @@
  * Design system definition.
  *
  * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
+ * classes (e.g. --color-muted -> bg-muted, text-muted).
  *
  * The :root and .dark blocks define the actual color values using oklch.
  * All colors MUST use oklch format.
@@ -119,37 +119,11 @@
   --text-uppercase--line-height: 1rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
   --color-primary-beige: var(--primary-beige);
   --color-primary-green: var(--primary-green);
   --color-neutral: var(--neutral);
@@ -169,36 +143,11 @@
   --radius: 1.25rem;
   --background: oklch(0.992 0.003 80);
   --foreground: oklch(0.18 0.014 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.014 260);
   --popover: var(--primary-beige);
   --popover-foreground: oklch(0.18 0.014 260);
-  --primary: oklch(0.55 0.14 255);
-  --primary-foreground: oklch(0.99 0.003 80);
-  --secondary: oklch(0.97 0.005 80);
-  --secondary-foreground: oklch(0.18 0.014 260);
   --muted: oklch(0.96 0.005 80);
   --muted-foreground: oklch(0.5 0.02 260);
-  --accent: oklch(0.94 0.02 255);
-  --accent-foreground: oklch(0.3 0.05 260);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.86 0.01 260);
-  --input: oklch(0.86 0.01 260);
-  --ring: oklch(0.55 0.14 255);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
   --primary-beige: #F5F0ED;
   /* Deep forest green — focus-area accents, insight tags, the light-mode
      progress ring. The deeper companion to --secondary-green. */
@@ -243,36 +192,11 @@
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
   --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
 @layer base {
@@ -803,7 +727,7 @@
   .overlay-on-dark .text-muted-foreground { color: rgba(255, 255, 255, 0.8); }
   .overlay-on-dark .text-neutral-900:not(.bg-white) { color: rgb(255, 255, 255); }
   .overlay-on-dark .text-neutral-600 { color: rgba(255, 255, 255, 0.75); }
-  .overlay-on-dark .text-destructive { color: rgb(255, 138, 138); }
+  .overlay-on-dark .text-alert-red { color: rgb(255, 138, 138); }
 
   .overlay-on-dark .bg-background { background-color: rgba(255, 255, 255, 0.06); }
   .overlay-on-dark .bg-background\/80 { background-color: rgba(255, 255, 255, 0.12); }
@@ -812,7 +736,6 @@
   .overlay-on-dark .bg-background\/40 { background-color: rgba(255, 255, 255, 0.06); }
   .overlay-on-dark .bg-popover { background-color: rgba(255, 255, 255, 0.10); }
   .overlay-on-dark .bg-muted { background-color: rgba(255, 255, 255, 0.15); }
-  .overlay-on-dark .bg-card { background-color: rgba(255, 255, 255, 0.08); }
 
   /* Primary CTA: surface=light primary renders as bg-foreground/text-background.
      In an overlay-on-dark surface (dialog/drawer/tooltip when appMode is dark),
@@ -826,14 +749,6 @@
   .overlay-on-dark .border-foreground\/20 { border-color: rgba(255, 255, 255, 0.25); }
   .overlay-on-dark .border-foreground\/40 { border-color: rgba(255, 255, 255, 0.45); }
 
-  .overlay-on-dark .hover\:bg-accent:hover { background-color: rgba(255, 255, 255, 0.08); }
-  /* `bg-accent/70` is the selected-row tint in `ChoiceList`. The default
-     `--accent` is a pale near-white; over the dark photo at 70% it reads as
-     a bright band with poor contrast against the white text. Remap to a
-     subtle frosted tint so the row marks itself without washing out. */
-  .overlay-on-dark .bg-accent\/70 { background-color: rgba(255, 255, 255, 0.12); }
-  .overlay-on-dark .bg-accent\/40 { background-color: rgba(255, 255, 255, 0.06); }
-  .overlay-on-dark .active\:bg-accent\/40:active { background-color: rgba(255, 255, 255, 0.06); }
   /* Light-cluster press tint (`active:bg-foreground/8` on secondary/card
      buttons, menu + settings rows, suggestion chips). The ink tint is
      invisible on the dark photo, so flip it to a white tint inside dark
@@ -843,7 +758,6 @@
      the press tint. Flip to a white tint inside dark overlays so the row
      still marks itself on the dark photo. */
   .overlay-on-dark .bg-foreground\/10 { background-color: rgba(255, 255, 255, 0.14); }
-  .overlay-on-dark .hover\:bg-destructive\/10:hover { background-color: rgba(255, 120, 120, 0.10); }
   .overlay-on-dark .active\:bg-background\/80:active { background-color: rgba(255, 255, 255, 0.12); }
 
   /* ─── Android-platform shim (.platform-android) ────────────────────────────
@@ -897,5 +811,4 @@
   .platform-android .overlay-on-dark .bg-background\/80  { background-color: rgba(255, 255, 255, 0.20); }
   .platform-android .overlay-on-dark .bg-popover         { background-color: rgba(255, 255, 255, 0.18); }
   .platform-android .overlay-on-dark .bg-muted           { background-color: rgba(255, 255, 255, 0.22); }
-  .platform-android .overlay-on-dark .bg-card            { background-color: rgba(255, 255, 255, 0.16); }
 }
