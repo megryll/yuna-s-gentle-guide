@@ -8,6 +8,22 @@
   "cssEntry": "dist/client/assets/styles-Ccw_3Itu.css",
   "extraFonts": [".design-sync/fonts.css"],
   "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "Toast": { "cardMode": "single" },
+    "Accordion": { "cardMode": "single" },
+    "CardSuggestion": { "cardMode": "single" },
+    "Slider": { "cardMode": "column" },
+    "MultipleChoice": { "cardMode": "column" },
+    "Card": { "cardMode": "column" },
+    "HomeCards": { "cardMode": "column" },
+    "PageHeader": { "cardMode": "column" },
+    "ProgressBar": { "cardMode": "column" },
+    "CalendarPicker": { "cardMode": "column" },
+    "Waveform": { "cardMode": "column" },
+    "YunaExplains": { "cardMode": "column" },
+    "DictationField": { "cardMode": "column" },
+    "DictationTextArea": { "cardMode": "column" }
+  },
   "dtsPropsFor": {
     "Button": "children?: React.ReactNode; variant?: \"primary\" | \"destructive\" | \"secondary\" | \"plain\" | \"card\" | \"link\"; size?: \"md\" | \"sm\" | \"xs\" | \"icon\" | \"icon-sm\" | \"icon-lg\"; surface?: \"dark\" | \"light\"; fullWidth?: boolean; asChild?: boolean; pressed?: boolean; selected?: boolean; label?: string; subtitle?: string; leading?: React.ReactNode; trailing?: React.ReactNode; disabled?: boolean; onClick?: React.MouseEventHandler<HTMLButtonElement>; className?: string;",
     "Badge": "children?: React.ReactNode; icon?: React.ReactNode; size?: \"sm\" | \"md\"; label?: string; className?: string;",

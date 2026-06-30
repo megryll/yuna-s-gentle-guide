@@ -50,6 +50,15 @@ Repo-specific gotchas for future `/design-sync` runs.
 - **Did NOT run `npm run build`** — reused existing `cssEntry` (`dist/client/assets/styles-Ccw_3Itu.css`, confirmed present). No cssEntry change.
 - All 31 components compiled into the esbuild bundle with **zero un-bundleable imports** — no provider was required to import any of them (consistent with the localStorage-hook note above). Floor cards may render visually empty without context, but that's a non-blocking render-time concern, not a compile failure.
 
+## This run (2026-06-29) — authoring wave
+
+- **30 of 31 components now have authored previews** (`.design-sync/previews/*.tsx`), fanned out across 3 subagents. Realistic Yuna-voice copy, dark-panel backdrop for photo-cluster components, image stand-ins where needed.
+- **AppBar floor-cards by design** — it calls `useStartChat()` → TanStack Router `useNavigate()`/`useLocation()`, which throw without a `RouterProvider` (none in the design host). Authoring it would ship a broken card. To author it later, add a router `cfg.provider` or a stub. Its preview file was removed so it floor-cards gracefully.
+- **`cfg.overrides` cardMode applied:** single → Toast, Accordion, CardSuggestion (overlay/tall); column → Slider, MultipleChoice, Card, HomeCards, PageHeader, ProgressBar, CalendarPicker, Waveform, YunaExplains, DictationField, DictationTextArea (full-width).
+- **Image stand-ins** (public `<img>` don't ship): HomeCards / CardSuggestion / YunaAvatar / YunaExplains hide broken imgs via scoped `<style>` + gradient/glyph fallback.
+- **Static-only states:** Waveform renders its resting state (bars are audio/ref-driven); DictationField/DictationTextArea show empty + has-text states (not the live mic/recording state).
+- Renders were NOT machine-checked (no chromium) — verified by human review.
+
 ## Re-sync risks
 
 - `cssEntry` hash drifts every build (see above) — the #1 thing to refresh.
