@@ -1,11 +1,12 @@
+import { darkPanel } from "./_bg";
 import { Button } from "yuna-design-system";
 import { ChevronRight, Bookmark, Share2, Plus } from "lucide-react";
 
-// Dark photo-cluster stand-in: brand greens, no shipped photo asset.
+// Dark photo-cluster panel — the real blurred forest photo, inlined.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col items-start gap-3"
     >
       {children}

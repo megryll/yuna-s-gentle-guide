@@ -1,11 +1,12 @@
+import { darkPanel } from "./_bg";
 import { RadialProgress } from "yuna-design-system";
 
 // RadialProgress defaults to surface="dark" (white arc), so previews sit on a
-// dark brand-green panel.
+// dark photo panel.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-8 grid place-items-center"
     >
       {children}

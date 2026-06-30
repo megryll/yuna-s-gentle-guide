@@ -1,12 +1,13 @@
+import { darkPanel } from "./_bg";
 import { useState } from "react";
 import { CalendarPicker } from "yuna-design-system";
 
 // CalendarPicker defaults to surface="dark" (white-on-dark grid), so previews
-// sit on a dark brand-green panel.
+// sit on a dark photo panel.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6"
     >
       {children}

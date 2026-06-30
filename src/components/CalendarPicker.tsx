@@ -73,7 +73,7 @@ export function CalendarPicker({
         >
           <ChevronLeft />
         </Button>
-        <span className="font-display text-lg tracking-tight">{formatMonth(view)}</span>
+        <span className={cn("font-display text-lg tracking-tight", dark ? "text-white" : "text-foreground")}>{formatMonth(view)}</span>
         <Button
           surface={surface}
           variant="secondary"

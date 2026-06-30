@@ -1,3 +1,4 @@
+import { darkPanel } from "./_bg";
 import { useState } from "react";
 import { DictationField } from "yuna-design-system";
 
@@ -5,11 +6,11 @@ import { DictationField } from "yuna-design-system";
 // mic to dictate. These cards render statically (no mic / audio), so they show
 // the two resting visual states — empty (hold-to-talk mic) and with text (send
 // arrow). It defaults to surface="dark" over a frosted input, so previews sit
-// on a dark brand-green panel.
+// on a dark photo panel.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col gap-4"
     >
       {children}

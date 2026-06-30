@@ -1,11 +1,12 @@
+import { darkPanel } from "./_bg";
 import { Toast } from "yuna-design-system";
 
 // Toast carries its own solid fill, but the neutral variant inverts by surface,
-// so the dark-surface examples sit on a dark brand-green panel.
+// so the dark-surface examples sit on a dark photo panel.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col gap-3"
     >
       {children}

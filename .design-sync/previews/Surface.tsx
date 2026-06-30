@@ -1,12 +1,13 @@
+import { darkPanel } from "./_bg";
 import { Surface } from "yuna-design-system";
 
 // Surface is a frosted glass panel authored in white-alpha (dark cluster). On
-// the dark photo it reads as a translucent plate; we stand in a brand-green
+// the dark photo it reads as a translucent plate; we stand in a photo
 // panel behind it. The light variant uses ink-alpha and needs no wrapper.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col gap-4"
     >
       {children}

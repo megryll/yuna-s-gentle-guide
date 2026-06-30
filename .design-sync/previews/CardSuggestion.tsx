@@ -1,14 +1,15 @@
+import { darkPanel } from "./_bg";
 import { CardSuggestion } from "yuna-design-system";
 
 // Card Suggestion is authored white-on-dark (a frosted chat bubble or voice
-// sheet over a photo), so the previews sit on the dark brand-green cluster. The
+// sheet over a photo), so the previews sit on the dark photo cluster. The
 // reco tile's photo (a public/ asset) doesn't ship, so it falls back to its
 // black wash — still white Fraunces on a dark tile, as intended. We omit
 // frostedImage so no broken backdrop asset is referenced.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6"
     >
       {children}

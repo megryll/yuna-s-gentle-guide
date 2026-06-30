@@ -8,7 +8,10 @@
 
 ## ⏭️ RESUME HERE — pending work
 
-1. **User review fixes (TOP PRIORITY):** On final review the user said "pretty much everything looks good, except a couple things." **Those couple things were NOT yet specified — ask the user which components/cards look off**, then fix the relevant `.design-sync/previews/<Name>.tsx` → rebuild → re-upload (see commands below).
+1. ~~**User review fixes (TOP PRIORITY)**~~ ✅ done 2026-06-29 — the three things the user flagged are fixed + re-uploaded:
+   - **CalendarPicker month title** was invisible in dark mode (span had no color class). Fixed in `src/components/CalendarPicker.tsx` (now branches `dark ? text-white : text-foreground`) — and propagated to the other two worktrees (`feature/questionnaire-v2`, `feature/web`) since it was a shared DS bug.
+   - **Card preview** collapsed to thin white rows (relied on `aspect-square` with no resolved width + no panel). Rewrote `.design-sync/previews/Card.tsx` to use a `w-[280px]` card on the photo panel.
+   - **Dark background shade** — the flat green gradient stand-in was replaced with the REAL blurred photos (`dark4-blur.png` / `light-blur-bg.png`), downscaled + inlined as data URIs in the shared `.design-sync/previews/_bg.ts` (public `url()` assets don't ship; blurred photos are tiny at ~13KB). All 27 gradient previews now spread `darkPanel` from `_bg.ts`.
 2. Optional later: author **AppBar** (needs a TanStack Router `cfg.provider` or stub — currently a floor card on purpose).
 3. Optional later: ship real **public image assets** (avatars/photos) so YunaAvatar / HomeCards / CardSuggestion / YunaExplains show real images instead of gradient stand-ins.
 4. The local review server (`http-serve.mjs`) was running in the background — it dies when context clears. Re-serve with the command below.

@@ -1,8 +1,9 @@
+import { darkPanel } from "./_bg";
 import { YunaExplains } from "yuna-design-system";
 import { Image as ImageIcon } from "lucide-react";
 
 // YunaExplains defaults to surface="dark" (frosted white-on-dark row), so
-// previews sit on a dark brand-green panel.
+// previews sit on a dark photo panel.
 //
 // The component renders a YunaAvatar internally, whose photo lives in the app's
 // public/ dir and is NOT shipped to the design bundle — the real <img> would
@@ -13,7 +14,7 @@ import { Image as ImageIcon } from "lucide-react";
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col gap-3 ye-stand relative"
     >
       <style>{`.ye-stand img{opacity:0}`}</style>

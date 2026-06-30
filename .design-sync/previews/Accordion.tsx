@@ -1,13 +1,14 @@
+import { darkPanel } from "./_bg";
 import { useState } from "react";
 import { Accordion, Surface } from "yuna-design-system";
 
 // Accordion's chevron + press tint are authored white-on-dark, so the previews
-// sit on the dark brand-green cluster. The component renders only the
+// sit on the dark photo cluster. The component renders only the
 // disclosure mechanics, so each cell wraps it in a frosted Surface for chrome.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6"
     >
       {children}

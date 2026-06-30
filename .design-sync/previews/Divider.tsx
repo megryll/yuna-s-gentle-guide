@@ -1,3 +1,4 @@
+import { darkPanel } from "./_bg";
 import { Divider } from "yuna-design-system";
 
 export function Plain() {
@@ -19,7 +20,7 @@ export function Labeled() {
 export function OnDark() {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 w-full max-w-sm flex flex-col gap-5"
     >
       <Divider surface="dark" />

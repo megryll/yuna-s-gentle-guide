@@ -1,12 +1,13 @@
+import { darkPanel } from "./_bg";
 import { IconMedallion } from "yuna-design-system";
 import { CalendarClock, Wind, Sparkles, Moon } from "lucide-react";
 
 // A frosted plate authored in white-on-dark (bg-white/10 ring-white/15), so the
-// previews sit on the dark brand-green cluster it's designed for.
+// previews sit on the dark photo cluster it's designed for.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-8 flex items-center justify-center gap-5"
     >
       {children}

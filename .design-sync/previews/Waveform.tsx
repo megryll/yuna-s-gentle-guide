@@ -1,14 +1,15 @@
+import { darkPanel } from "./_bg";
 import { Waveform } from "yuna-design-system";
 
 // Waveform is audio-driven: with a live AnalyserNode each of its 36 bars
 // animates to the mic signal. These cards render statically with no audio, so
 // they show the component's genuine resting state — the quiet, even bars it
 // holds when nothing is being recorded. Bars default to white, so previews sit
-// on a dark brand-green panel.
+// on a dark photo panel.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-col gap-5"
     >
       {children}

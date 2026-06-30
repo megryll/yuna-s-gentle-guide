@@ -1,13 +1,14 @@
+import { darkPanel } from "./_bg";
 import { ChatBubble } from "yuna-design-system";
 import { ThumbsDown, Copy } from "lucide-react";
 
 // ChatBubble is authored white-on-dark (frosted yuna bubble over a photo), so
-// previews sit on a dark brand-green panel. Alignment + max-width belong to the
+// previews sit on a dark photo panel. Alignment + max-width belong to the
 // caller, so each bubble is wrapped accordingly.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-5 flex flex-col gap-3"
     >
       {children}

@@ -1,15 +1,16 @@
+import { darkPanel } from "./_bg";
 import { PageHeader, Button } from "yuna-design-system";
 import { Bookmark, MoreHorizontal } from "lucide-react";
 
 const noop = () => undefined;
 
 // On the light cluster PageHeader needs no wrapper. On the dark photo cluster
-// the back button + title switch to white, so that cell sits on a brand-green
+// the back button + title switch to white, so that cell sits on a photo
 // stand-in.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl overflow-hidden"
     >
       {children}

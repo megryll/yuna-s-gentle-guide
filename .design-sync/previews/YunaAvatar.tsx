@@ -1,3 +1,4 @@
+import { darkPanel } from "./_bg";
 import { YunaAvatar } from "yuna-design-system";
 import { Image as ImageIcon } from "lucide-react";
 
@@ -41,7 +42,7 @@ export function Sizes() {
 export function Glow() {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-10 grid place-items-center"
     >
       <Stand size={64}>

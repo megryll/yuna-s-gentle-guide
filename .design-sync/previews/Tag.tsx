@@ -1,13 +1,14 @@
+import { darkPanel } from "./_bg";
 import { Tag } from "yuna-design-system";
 import { Sun, Music, Plus } from "lucide-react";
 
 // Tappable + informational tags are authored in white-on-dark vocabulary on the
-// dark cluster, so dark-surface cells sit on a brand-green panel. The light
+// dark cluster, so dark-surface cells sit on a photo panel. The light
 // surface uses ink tokens and needs no wrapper.
 function Dark({ children }: { children: React.ReactNode }) {
   return (
     <div
-      style={{ background: "linear-gradient(155deg, #3a4a40 0%, #1d2a22 100%)" }}
+      style={darkPanel}
       className="rounded-2xl p-6 flex flex-wrap items-center gap-2"
     >
       {children}
