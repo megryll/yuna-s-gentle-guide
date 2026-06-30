@@ -32,6 +32,10 @@ api/_ssr
 # previews/, overrides/) ARE committed; only these generated bits are ignored.
 .ds-sync/
 ds-bundle/
+# design-sync .d.ts emit: tsconfig + repo-root declarationDir the converter scans
+# for real prop contracts (see .design-sync/NOTES.md). Regenerated each sync.
+tsconfig.dts.json
+ds-types/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
