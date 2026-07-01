@@ -30,6 +30,9 @@ import { getNatureSoundsOn } from "@/lib/nature-sounds-prefs";
 import { Button } from "@/components/Button";
 import { ChatBubble, type ChatBubbleMenuAction } from "@/components/ChatBubble";
 import { CardSuggestion } from "@/components/CardSuggestion";
+import { GuidedSteps } from "@/components/GuidedSteps";
+import { RadialProgress } from "@/components/RadialProgress";
+import { Tooltip } from "@/components/Tooltip";
 import { YunaStatus } from "@/components/YunaStatus";
 import {
   RECO_SAMPLES,
@@ -39,6 +42,7 @@ import {
   setSessionSuicidality,
   useSessionEscalation,
   useSessionGuided,
+  useSessionGuidedComplete,
   useSessionReco,
   useSessionStatus,
   useSessionSuicidality,
@@ -164,6 +168,18 @@ const REMINISCE_OPENERS = [
   "Hi again. Something from our last chat has been sitting with me: that bit about wanting more space to breathe. How's that going?",
 ];
 
+// The fixed stages of a guided session, surfaced as a progress tracker in the
+// guided-session header.
+const GUIDED_STEPS = [
+  "Learn the target skill",
+  "Make a plan for practice",
+  "Guided session complete",
+];
+
+// Yuna's spoken close to a guided session, shown above the completion card.
+const GUIDED_COMPLETE_LINE =
+  "You did it. We worked through every step of your guided session together, and that really is something. Whenever you're ready, here's a look back at what came up.";
+
 function isReminisceEntry(initial: string): boolean {
   const v = initial.trim().toLowerCase();
   if (!v) return true;
@@ -204,6 +220,13 @@ function Chat() {
   // "Guided Session" dev chip (sample title). The search param wins.
   const devGuided = useSessionGuided();
   const guidedTitle = guided || devGuided;
+  // Guided-session progress: the header tracker shows every step done and the
+  // conversation closes with a completion card. Dev-only (EngineerSidebar).
+  const guidedComplete = useSessionGuidedComplete();
+  // The header progress tracker collapses to a compact ring by default so it
+  // never eats viewport; tapping it reveals the full step checklist.
+  const [guidedStepsOpen, setGuidedStepsOpen] = useState(false);
+  const guidedDone = guidedComplete ? GUIDED_STEPS.length : 0;
   const inVoice = mode === "voice";
   // Initial chat-now landing in voice mode (no revisit flag). This branch
   // defers the mic-permission prompt: Yuna introduces herself, walks the
@@ -869,18 +892,49 @@ function Chat() {
             Frosted white-alpha medallion authored in white-on-dark so
             .theme-light / .platform-android shims adapt it across modes. */}
         {guidedTitle && (
-          <div className="shrink-0 flex items-center gap-3 px-5 pt-14 pb-3 border-b border-white/10">
-            <IconMedallion size="sm">
-              <MessageCircle size={15} strokeWidth={1.9} className="text-white" aria-hidden />
-            </IconMedallion>
-            <div className="min-w-0">
-              <span className="block text-[10px] uppercase tracking-[0.18em] text-white/75">
-                Guided
-              </span>
-              <p className="font-display text-[15px] leading-snug text-white line-clamp-2">
-                {guidedTitle}
-              </p>
-            </div>
+          <div className="relative shrink-0 px-5 pt-14 pb-3 border-b border-white/10">
+            <button
+              type="button"
+              onClick={() => setGuidedStepsOpen((v) => !v)}
+              aria-expanded={guidedStepsOpen}
+              className="w-full flex items-center gap-3 text-left active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-2xl"
+            >
+              <IconMedallion size="sm">
+                <MessageCircle size={15} strokeWidth={1.9} className="text-white" aria-hidden />
+              </IconMedallion>
+              <div className="min-w-0 flex-1">
+                <span className="block text-[10px] uppercase tracking-[0.18em] text-white/75">
+                  Guided
+                </span>
+                <p className="font-display text-[15px] leading-snug text-white line-clamp-2">
+                  {guidedTitle}
+                </p>
+              </div>
+              <RadialProgress
+                size={48}
+                strokeWidth={3}
+                value={guidedDone / GUIDED_STEPS.length}
+                surface={appMode === "light" ? "light" : "dark"}
+                className="shrink-0"
+                aria-label={`${guidedDone} of ${GUIDED_STEPS.length} steps complete`}
+              >
+                <span className="text-sm font-semibold tabular-nums text-white">
+                  {guidedDone}/{GUIDED_STEPS.length}
+                </span>
+              </RadialProgress>
+            </button>
+            <Tooltip
+              open={guidedStepsOpen}
+              onClose={() => setGuidedStepsOpen(false)}
+              arrow={{ side: "top", offset: "right-6" }}
+              className="top-full right-4 mt-2 w-[260px]"
+            >
+              <GuidedSteps
+                steps={GUIDED_STEPS}
+                completed={guidedDone}
+                surface={appMode === "light" ? "light" : "dark"}
+              />
+            </Tooltip>
           </div>
         )}
 
@@ -999,6 +1053,27 @@ function Chat() {
                     onFindTherapist={() => setSessionEscalation(null)}
                   />
                 </div>
+              )}
+              {guidedComplete && (
+                <>
+                  <div className="yuna-rise w-full flex justify-start">
+                    <ChatBubble from="yuna" frostedImage={blurBg} className="max-w-[88%]">
+                      {GUIDED_COMPLETE_LINE}
+                    </ChatBubble>
+                  </div>
+                  <div className="yuna-rise w-full flex justify-start">
+                    <CardSuggestion
+                      mode="text"
+                      variant="completion"
+                      title={guidedTitle || undefined}
+                      surface={appMode === "light" ? "light" : "dark"}
+                      frostedImage={blurBg}
+                      onSeeSummary={() =>
+                        navigate({ to: "/sessions/$id", params: { id: "s-04" } })
+                      }
+                    />
+                  </div>
+                </>
               )}
             </div>
 

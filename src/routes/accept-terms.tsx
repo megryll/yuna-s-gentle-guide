@@ -20,11 +20,11 @@ export const Route = createFileRoute("/accept-terms")({
 });
 
 const TERMS: string[] = [
-  "Yuna is only meant for adults",
-  "Yuna is not human and can make mistakes",
-  "This is not care from a licensed psychologist or therapist",
-  "Yuna is not a crisis service",
-  "Agree to terms of service",
+  "Yuna is only meant for adults.",
+  "Yuna is not human and can make mistakes.",
+  "This is not care from a licensed psychologist or therapist.",
+  "Yuna is not a crisis service.",
+  "Agree to terms of service.",
 ];
 
 function AcceptTerms() {
@@ -64,10 +64,10 @@ function AcceptTerms() {
             <h1 className="text-3xl leading-tight tracking-tight text-white">
               Let's set up your
               <br />
-              private space
+              private space.
             </h1>
             <p className="mt-3 text-sm text-white/75 leading-relaxed max-w-[18rem] mx-auto">
-              Please review carefully and accept before continuing with Yuna
+              Please review carefully and accept before continuing with Yuna.
             </p>
           </div>
 

@@ -24,6 +24,7 @@ import {
   GUIDED_SAMPLE_TITLE,
   setSessionEscalation,
   setSessionGuided,
+  setSessionGuidedComplete,
   setSessionIllinois,
   setSessionReco,
   setSessionScheduleSession,
@@ -31,6 +32,7 @@ import {
   setSessionSuicidality,
   useSessionEscalation,
   useSessionGuided,
+  useSessionGuidedComplete,
   useSessionIllinois,
   useSessionScheduleSession,
   useSessionReco,
@@ -545,6 +547,7 @@ function YunaStatesSection() {
   const escalation = useSessionEscalation();
   const suicidality = useSessionSuicidality();
   const guided = useSessionGuided();
+  const guidedComplete = useSessionGuidedComplete();
   const location = useLocation();
   const inVoice = (location.search as { mode?: string })?.mode === "voice";
 
@@ -614,6 +617,14 @@ function YunaStatesSection() {
           active={!!guided}
           label="Guided Session"
           onClick={() => setSessionGuided(guided ? null : GUIDED_SAMPLE_TITLE)}
+        />
+        {/* Completion is a sub-state of a guided session: it marks every step
+            done and surfaces the conclusion card. Turning it on ensures a
+            guided session is active so the header + tracker render. */}
+        <Chip
+          active={guidedComplete}
+          label="Guided Complete"
+          onClick={() => setSessionGuidedComplete(!guidedComplete)}
         />
       </div>
     </Section>

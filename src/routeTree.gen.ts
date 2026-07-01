@@ -49,6 +49,7 @@ import { Route as FocusAreaNumRouteImport } from './routes/focus-area.$num'
 import { Route as DsYunaExplainsRouteImport } from './routes/ds.yuna-explains'
 import { Route as DsWaveformRouteImport } from './routes/ds.waveform'
 import { Route as DsTypographyRouteImport } from './routes/ds.typography'
+import { Route as DsTooltipRouteImport } from './routes/ds.tooltip'
 import { Route as DsToastsRouteImport } from './routes/ds.toasts'
 import { Route as DsTextFieldsRouteImport } from './routes/ds.text-fields'
 import { Route as DsTextAreaRouteImport } from './routes/ds.text-area'
@@ -65,6 +66,7 @@ import { Route as DsProgressBarRouteImport } from './routes/ds.progress-bar'
 import { Route as DsPageHeaderRouteImport } from './routes/ds.page-header'
 import { Route as DsMultipleChoiceRouteImport } from './routes/ds.multiple-choice'
 import { Route as DsIconsRouteImport } from './routes/ds.icons'
+import { Route as DsGuidedStepsRouteImport } from './routes/ds.guided-steps'
 import { Route as DsDrawerRouteImport } from './routes/ds.drawer'
 import { Route as DsDividerRouteImport } from './routes/ds.divider'
 import { Route as DsColorsRouteImport } from './routes/ds.colors'
@@ -282,6 +284,11 @@ const DsTypographyRoute = DsTypographyRouteImport.update({
   path: '/ds/typography',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DsTooltipRoute = DsTooltipRouteImport.update({
+  id: '/ds/tooltip',
+  path: '/ds/tooltip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DsToastsRoute = DsToastsRouteImport.update({
   id: '/ds/toasts',
   path: '/ds/toasts',
@@ -360,6 +367,11 @@ const DsMultipleChoiceRoute = DsMultipleChoiceRouteImport.update({
 const DsIconsRoute = DsIconsRouteImport.update({
   id: '/ds/icons',
   path: '/ds/icons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DsGuidedStepsRoute = DsGuidedStepsRouteImport.update({
+  id: '/ds/guided-steps',
+  path: '/ds/guided-steps',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DsDrawerRoute = DsDrawerRouteImport.update({
@@ -472,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/guided-steps': typeof DsGuidedStepsRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
   '/ds/page-header': typeof DsPageHeaderRoute
@@ -488,6 +501,7 @@ export interface FileRoutesByFullPath {
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
+  '/ds/tooltip': typeof DsTooltipRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
@@ -544,6 +558,7 @@ export interface FileRoutesByTo {
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/guided-steps': typeof DsGuidedStepsRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
   '/ds/page-header': typeof DsPageHeaderRoute
@@ -560,6 +575,7 @@ export interface FileRoutesByTo {
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
+  '/ds/tooltip': typeof DsTooltipRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
@@ -617,6 +633,7 @@ export interface FileRoutesById {
   '/ds/colors': typeof DsColorsRoute
   '/ds/divider': typeof DsDividerRoute
   '/ds/drawer': typeof DsDrawerRoute
+  '/ds/guided-steps': typeof DsGuidedStepsRoute
   '/ds/icons': typeof DsIconsRoute
   '/ds/multiple-choice': typeof DsMultipleChoiceRoute
   '/ds/page-header': typeof DsPageHeaderRoute
@@ -633,6 +650,7 @@ export interface FileRoutesById {
   '/ds/text-area': typeof DsTextAreaRoute
   '/ds/text-fields': typeof DsTextFieldsRoute
   '/ds/toasts': typeof DsToastsRoute
+  '/ds/tooltip': typeof DsTooltipRoute
   '/ds/typography': typeof DsTypographyRoute
   '/ds/waveform': typeof DsWaveformRoute
   '/ds/yuna-explains': typeof DsYunaExplainsRoute
@@ -691,6 +709,7 @@ export interface FileRouteTypes {
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/guided-steps'
     | '/ds/icons'
     | '/ds/multiple-choice'
     | '/ds/page-header'
@@ -707,6 +726,7 @@ export interface FileRouteTypes {
     | '/ds/text-area'
     | '/ds/text-fields'
     | '/ds/toasts'
+    | '/ds/tooltip'
     | '/ds/typography'
     | '/ds/waveform'
     | '/ds/yuna-explains'
@@ -763,6 +783,7 @@ export interface FileRouteTypes {
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/guided-steps'
     | '/ds/icons'
     | '/ds/multiple-choice'
     | '/ds/page-header'
@@ -779,6 +800,7 @@ export interface FileRouteTypes {
     | '/ds/text-area'
     | '/ds/text-fields'
     | '/ds/toasts'
+    | '/ds/tooltip'
     | '/ds/typography'
     | '/ds/waveform'
     | '/ds/yuna-explains'
@@ -835,6 +857,7 @@ export interface FileRouteTypes {
     | '/ds/colors'
     | '/ds/divider'
     | '/ds/drawer'
+    | '/ds/guided-steps'
     | '/ds/icons'
     | '/ds/multiple-choice'
     | '/ds/page-header'
@@ -851,6 +874,7 @@ export interface FileRouteTypes {
     | '/ds/text-area'
     | '/ds/text-fields'
     | '/ds/toasts'
+    | '/ds/tooltip'
     | '/ds/typography'
     | '/ds/waveform'
     | '/ds/yuna-explains'
@@ -908,6 +932,7 @@ export interface RootRouteChildren {
   DsColorsRoute: typeof DsColorsRoute
   DsDividerRoute: typeof DsDividerRoute
   DsDrawerRoute: typeof DsDrawerRoute
+  DsGuidedStepsRoute: typeof DsGuidedStepsRoute
   DsIconsRoute: typeof DsIconsRoute
   DsMultipleChoiceRoute: typeof DsMultipleChoiceRoute
   DsPageHeaderRoute: typeof DsPageHeaderRoute
@@ -924,6 +949,7 @@ export interface RootRouteChildren {
   DsTextAreaRoute: typeof DsTextAreaRoute
   DsTextFieldsRoute: typeof DsTextFieldsRoute
   DsToastsRoute: typeof DsToastsRoute
+  DsTooltipRoute: typeof DsTooltipRoute
   DsTypographyRoute: typeof DsTypographyRoute
   DsWaveformRoute: typeof DsWaveformRoute
   DsYunaExplainsRoute: typeof DsYunaExplainsRoute
@@ -1224,6 +1250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DsTypographyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ds/tooltip': {
+      id: '/ds/tooltip'
+      path: '/ds/tooltip'
+      fullPath: '/ds/tooltip'
+      preLoaderRoute: typeof DsTooltipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ds/toasts': {
       id: '/ds/toasts'
       path: '/ds/toasts'
@@ -1334,6 +1367,13 @@ declare module '@tanstack/react-router' {
       path: '/ds/icons'
       fullPath: '/ds/icons'
       preLoaderRoute: typeof DsIconsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ds/guided-steps': {
+      id: '/ds/guided-steps'
+      path: '/ds/guided-steps'
+      fullPath: '/ds/guided-steps'
+      preLoaderRoute: typeof DsGuidedStepsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ds/drawer': {
@@ -1476,6 +1516,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsColorsRoute: DsColorsRoute,
   DsDividerRoute: DsDividerRoute,
   DsDrawerRoute: DsDrawerRoute,
+  DsGuidedStepsRoute: DsGuidedStepsRoute,
   DsIconsRoute: DsIconsRoute,
   DsMultipleChoiceRoute: DsMultipleChoiceRoute,
   DsPageHeaderRoute: DsPageHeaderRoute,
@@ -1492,6 +1533,7 @@ const rootRouteChildren: RootRouteChildren = {
   DsTextAreaRoute: DsTextAreaRoute,
   DsTextFieldsRoute: DsTextFieldsRoute,
   DsToastsRoute: DsToastsRoute,
+  DsTooltipRoute: DsTooltipRoute,
   DsTypographyRoute: DsTypographyRoute,
   DsWaveformRoute: DsWaveformRoute,
   DsYunaExplainsRoute: DsYunaExplainsRoute,

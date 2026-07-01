@@ -42,6 +42,7 @@ let suicidalityOn = false;
 let illinoisOn = false;
 let scheduleSessionOn = false;
 let guidedTitle: string | null = null;
+let guidedComplete = false;
 
 function emit() {
   for (const l of listeners) l();
@@ -79,6 +80,14 @@ export function setSessionScheduleSession(next: boolean) {
 }
 export function setSessionGuided(next: string | null) {
   guidedTitle = next;
+  // No guided session, no completion to track.
+  if (next === null) guidedComplete = false;
+  emit();
+}
+export function setSessionGuidedComplete(next: boolean) {
+  guidedComplete = next;
+  // Completion implies an active guided session, so the header + tracker render.
+  if (next && guidedTitle === null) guidedTitle = GUIDED_SAMPLE_TITLE;
   emit();
 }
 
@@ -129,5 +138,12 @@ export function useSessionGuided(): string | null {
     subscribe,
     () => guidedTitle,
     () => guidedTitle,
+  );
+}
+export function useSessionGuidedComplete(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => guidedComplete,
+    () => guidedComplete,
   );
 }

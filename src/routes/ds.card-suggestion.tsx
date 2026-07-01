@@ -28,7 +28,7 @@ function DSCardSuggestion() {
     <DSPage title="Card Suggestion">
       <Section
         title="Variants"
-        subtitle="Two forms — a left-aligned text bubble and a centered voice sheet. The reco and escalation variants swap the body but share this shell, so each is shown once: reco in text, escalation in voice."
+        subtitle="Two forms — a left-aligned text bubble and a centered voice sheet. The reco, escalation, and completion variants swap the body but share this shell, so each is shown once: reco in text, escalation in voice, completion in text."
       >
         <div className="flex flex-col gap-8">
           <SurfacePair
@@ -65,6 +65,24 @@ function DSCardSuggestion() {
               )
             }
           />
+          <SurfacePair
+            innerLabel="Text — left-aligned chat bubble (completion)"
+            align="start"
+            renderRow={(s) =>
+              themed(
+                s,
+                <div className="flex justify-start">
+                  <CardSuggestion
+                    mode="text"
+                    variant="completion"
+                    title="Untangle perfectionism at work, one thread at a time"
+                    surface={s}
+                    frostedImage={modeImage(s)}
+                  />
+                </div>,
+              )
+            }
+          />
         </div>
       </Section>
 
@@ -88,6 +106,12 @@ function DSCardSuggestion() {
   // variant="escalation" — hand over a support resource
   tier:            "self-harm" | "crisis" | "non-crisis"
   onFindTherapist?: () => void      // shown for crisis + non-crisis tiers
+
+  // variant="completion" — mark the end of a guided session
+  title?:        string             // finished session's title, carried on the tile
+  naturePath?:   string             // tile photo, default: the guided-session kind's photo
+  summaryLabel?: string             // primary action label, default: "See session summary"
+  onSeeSummary?: () => void
 />`}</PropsBlock>
       </Section>
     </DSPage>

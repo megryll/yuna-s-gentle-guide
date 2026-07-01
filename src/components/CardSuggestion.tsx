@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
-import { LifeBuoy, MessageCircle } from "lucide-react";
+import { LifeBuoy, MessageCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 import { cardSurface } from "@/components/Card";
@@ -80,7 +81,18 @@ type EscalationProps = BaseProps & {
   onFindTherapist?: () => void;
 };
 
-type CardSuggestionProps = RecoProps | EscalationProps;
+type CompletionProps = BaseProps & {
+  variant: "completion";
+  /** The finished guided session's title, carried on the photo tile. */
+  title?: string;
+  /** Tile background photo; falls back to the guided-session kind's photo. */
+  naturePath?: string;
+  /** Primary action label. Default "See session summary". */
+  summaryLabel?: string;
+  onSeeSummary?: () => void;
+};
+
+type CardSuggestionProps = RecoProps | EscalationProps | CompletionProps;
 
 /**
  * Card Suggestion — something Yuna surfaces mid-session, inside the
@@ -91,13 +103,17 @@ type CardSuggestionProps = RecoProps | EscalationProps;
  *   - "voice" — a centered, frosted slide-up sheet with a drag-notch, floating
  *               above the voice pad.
  *
- * Two variants, picked by `variant`:
+ * Three variants, picked by `variant`:
  *   - "reco" (default) — recommends a card (meditation, questionnaire, any
  *     CardKind): an eyebrow + a photo-washed tile carrying the title + a
  *     No-thanks / Start pair.
  *   - "escalation" — hands over a vetted support resource when a conversation
  *     surfaces something beyond Yuna's scope. Three tiers; the urgent tiers get
  *     a solid forest-green tile, the non-crisis tier a gentle frosted one.
+ *   - "completion" — marks the satisfying end of a guided session: an eyebrow +
+ *     the finished session's title on its photo tile with a check Badge in the
+ *     top-left corner (the Home cards' completed flag) + a single "See session
+ *     summary" CTA. Pair it with a preceding Yuna chat bubble for the words.
  *
  * The frosted shell + white ink are authored white-on-dark and invert via
  * `.theme-light`; the green escalation tile stays fixed-dark. `surface` threads
@@ -143,6 +159,37 @@ export function CardSuggestion(props: CardSuggestionProps) {
               Find a therapist
             </Button>
           )}
+        </div>
+      </div>
+    );
+  } else if (props.variant === "completion") {
+    const naturePath = props.naturePath ?? KIND_META["guided-session"].naturePath;
+    body = (
+      <div>
+        <div className={cn("flex items-center gap-1.5", voice && "justify-center")}>
+          <Sparkles size={16} strokeWidth={1.7} aria-hidden className="text-white" />
+          <span className="text-sm font-medium text-white/90">Guided session</span>
+        </div>
+
+        {/* Completed photo tile: the session title on its nature photo, with a
+            check Badge straddling the top-left corner — the same completed flag
+            the Home content cards use. */}
+        <div className="relative mt-3">
+          <Badge icon size="sm" label="Completed" className="absolute -top-2 left-4 z-10" />
+          <div
+            className="rounded-2xl overflow-hidden card-fixed-dark"
+            style={cardSurface({ naturePath }).style}
+          >
+            <h3 className="font-display text-2xl leading-[1.15] tracking-tight text-white px-5 py-6">
+              {props.title ?? "Your guided session"}
+            </h3>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <Button surface={surface} variant="primary" fullWidth onClick={props.onSeeSummary}>
+            {props.summaryLabel ?? "See session summary"}
+          </Button>
         </div>
       </div>
     );
