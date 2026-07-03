@@ -62,10 +62,9 @@ const RETURNING_GREETINGS: { title: (name: string | null) => string; sub: string
 const stripHeadlinePeriod = (s: string) =>
   s.endsWith(".") && !s.endsWith("...") ? s.slice(0, -1) : s;
 
-// The home feed is the same for new and returning users — only the greeting
-// and the welcome audio differ by user type. New users see the full authored
-// list, whose first entry is the starting-point questionnaire — their natural
-// first step. Returning users have it dropped (see `cards` below).
+// Source feed for both user types. New users see the full authored list; the
+// returning-user view (see `cards` below) drops the onboarding starting-point
+// card and floats New items to the top.
 const POST_INTRO_CARDS = HOME_CARDS;
 
 // Returning users land with a few tasks already behind them — these drop under
@@ -90,17 +89,26 @@ export function HomeScreen({
   const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
-  // A brand-new user's feed is new in its entirety, so per-card "New" flags
-  // carry no signal — the badges only render for returning users. Returning
-  // users have already set their starting point, so that onboarding card is
-  // dropped for them.
-  const cards = useMemo(
-    () =>
-      variant === "returning"
-        ? POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point")
-        : POST_INTRO_CARDS.map((c) => ({ ...c, isNew: false })),
-    [variant],
-  );
+  const cards = useMemo(() => {
+    // A brand-new user's feed is new in its entirety, so per-card "New" flags
+    // carry no signal — strip them. Pin the starting-point questionnaire to the
+    // very top (their natural first step), and drop the other questionnaire
+    // (Sleep, Stress & Burnout) so onboarding has a single, unambiguous baseline.
+    if (variant !== "returning") {
+      const stripped = POST_INTRO_CARDS.filter((c) => c.id !== "sleep-stress-burnout").map((c) => ({
+        ...c,
+        isNew: false,
+      }));
+      return [
+        ...stripped.filter((c) => c.id === "your-starting-point"),
+        ...stripped.filter((c) => c.id !== "your-starting-point"),
+      ];
+    }
+    // Returning users have already set their starting point, so drop that card,
+    // and float anything flagged New to the top (stable within each group).
+    const kept = POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point");
+    return [...kept.filter((c) => c.isNew), ...kept.filter((c) => !c.isNew)];
+  }, [variant]);
   const initialSavedIds = useMemo(
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
@@ -243,18 +251,20 @@ export function HomeScreen({
         )}
         <div className="flex-1 flex flex-col px-6 pt-14 pb-6 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center justify-between -mx-1">
-            <Button
-              surface="dark"
-              variant="secondary"
-              size="xs"
-              onClick={() =>
-                scheduleSessionState
-                  ? setScheduleOpen(true)
-                  : navigate({ to: "/design-your-trial" })
-              }
-            >
-              {scheduleSessionState ? "Schedule a session" : "Upgrade"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                surface="dark"
+                variant="secondary"
+                size="xs"
+                onClick={() =>
+                  scheduleSessionState
+                    ? setScheduleOpen(true)
+                    : navigate({ to: "/design-your-trial" })
+                }
+              >
+                {scheduleSessionState ? "Schedule a session" : "Upgrade"}
+              </Button>
+            </div>
             <Button
               surface="dark"
               variant="plain"
@@ -318,6 +328,10 @@ export function HomeScreen({
               }
               if (c.type === "gratitude") {
                 navigate({ to: "/gratitude" });
+                return;
+              }
+              if (c.type === "self-discovery" && c.id === "your-starting-point") {
+                navigate({ to: "/questionnaire/$id", params: { id: c.id } });
                 return;
               }
               if (c.type === "guided-session") {
@@ -623,12 +637,18 @@ function CreatedForYou({
   );
 }
 
+// Emoji nudge down a hair so they read as vertically centered in the pill.
+const Emoji = ({ children }: { children: string }) => (
+  <span aria-hidden className="inline-block translate-y-[1.5px]">
+    {children}
+  </span>
+);
 const EXPERIENCE_FACES = [
-  { value: "angry", content: "😠", label: "Angry" },
-  { value: "sad", content: "😞", label: "Sad" },
-  { value: "neutral", content: "😐", label: "Neutral" },
-  { value: "good", content: "🙂", label: "Good" },
-  { value: "great", content: "😊", label: "Great" },
+  { value: "angry", content: <Emoji>😠</Emoji>, label: "Angry" },
+  { value: "sad", content: <Emoji>😞</Emoji>, label: "Sad" },
+  { value: "neutral", content: <Emoji>😐</Emoji>, label: "Neutral" },
+  { value: "good", content: <Emoji>🙂</Emoji>, label: "Good" },
+  { value: "great", content: <Emoji>😊</Emoji>, label: "Great" },
 ] as const;
 
 function ExperienceFeedback() {
@@ -643,9 +663,10 @@ function ExperienceFeedback() {
       <p className="mt-2 text-sm leading-relaxed text-white/75">
         {hasPick ? "Your feedback helps us improve!" : "Our team reads every submission"}
       </p>
-      <div className="mt-5">
+      <div className="mt-5 flex justify-center">
         <RatingScale
           surface={surface}
+          size="lg"
           ariaLabel="What was your Yuna experience like today?"
           value={picked}
           onChange={setPicked}

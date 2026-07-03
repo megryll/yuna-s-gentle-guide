@@ -5,13 +5,19 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
+import { Divider } from "@/components/Divider";
+import { ProgressRecap } from "@/components/DimensionTrends";
+import { IconMedallion } from "@/components/IconMedallion";
 import { MultipleChoice } from "@/components/MultipleChoice";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Slider } from "@/components/Slider";
 import { QuestionCard, CardLead } from "@/components/SurveyCard";
 import { Tag } from "@/components/Tag";
-import { YunaExplains } from "@/components/YunaExplains";
+import { YunaAvatar } from "@/components/YunaAvatar";
+import { useYunaIdentity } from "@/lib/yuna-session";
+import { DEFAULT_VOICE } from "@/lib/voices";
 import { useAppMode } from "@/lib/theme-prefs";
+import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
 import {
@@ -24,6 +30,7 @@ import {
   type ScaleItem,
 } from "@/lib/questionnaire-data";
 import { setQuestionnaireResult } from "@/lib/questionnaire-state";
+import { setUserType } from "@/lib/user-type";
 
 // ─── The "Your starting point" questionnaire flow ────────────────────────────
 // Shares the survey runner's shell (/survey/$id): audio·label·close header, a
@@ -32,21 +39,32 @@ import { setQuestionnaireResult } from "@/lib/questionnaire-state";
 // and Previous/Next navigation. The flow is bespoke (a focus picker drives a
 // branch) but the chrome and interaction grammar match the generic survey.
 //
-// Steps: 0 focus picker · 1 work impact · 2–4 branch items (driven by the top
-// priority, per BASELINE-QUESTIONNAIRE.md) · 5 completion.
+// Steps: 0 focus picker · 1 work impact (framed against the top pick) · then the
+// branch items for every pick in priority order, deduped so a question shared by
+// two picks is asked once · last step completion. The step count is therefore
+// dynamic (driven by how many areas were picked), computed from `buildFlow`.
 
-const TOTAL_STEPS = 5;
-const COMPLETION_STEP = 5;
 const MAX_PRIORITIES = 3;
+// How far to lift the flow when the "Something Else" field is focused so it
+// clears the simulated keyboard, keeping ~70px of breathing room above it
+// (mirrors the employer-access screen). Only step 0 has a text field.
+const FOCUS_SHIFT = KEYBOARD_HEIGHT - 70;
+// URL sanity bound only — the real completion index is derived from the picks
+// (picker + impact + up to 3×3 deduped branch items). The component treats any
+// step at or past the computed completion index as the completion screen.
+const MAX_STEP = 12;
 
-type StepSearch = { step?: number };
+// `from=session` marks a run launched from a session, so finishing returns there
+// instead of Home (the default landing for every other entry point).
+type StepSearch = { step?: number; from?: "session" };
 
 export const Route = createFileRoute("/questionnaire/$id")({
   validateSearch: (search: Record<string, unknown>): StepSearch => {
     const raw = search.step;
     const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
-    if (Number.isNaN(n)) return {};
-    return { step: Math.max(0, Math.min(COMPLETION_STEP, Math.floor(n))) };
+    const from = search.from === "session" ? ("session" as const) : undefined;
+    if (Number.isNaN(n)) return from ? { from } : {};
+    return { step: Math.max(0, Math.min(MAX_STEP, Math.floor(n))), ...(from && { from }) };
   },
   head: () => ({ meta: [{ title: "Your Starting Point — Yuna" }] }),
   component: QuestionnaireRoute,
@@ -54,13 +72,36 @@ export const Route = createFileRoute("/questionnaire/$id")({
 
 type Answers = Record<string, string | number>;
 
+type FlowEntry = { item: BankItem; area: ReturnType<typeof focusAreaById> };
+
+// The ordered question flow behind steps ≥ 1: the work-impact item first (framed
+// against the top pick), then each pick's branch items in priority order. Deduped
+// by question id so an item shared across picks (e.g. globalMentalHealth) is asked
+// once, tagged with the first pick that introduced it. Empty picks (a bare deep
+// link) fall back to the stress branch so every step still renders.
+function buildFlow(focus: string[]): FlowEntry[] {
+  const priorities = focus.length ? focus : ["stress"];
+  const flow: FlowEntry[] = [{ item: IMPACT_ITEM, area: focusAreaById(priorities[0]) }];
+  const seen = new Set<string>([IMPACT_ITEM.id]);
+  for (const fid of priorities) {
+    const area = focusAreaById(fid);
+    for (const item of branchItemsFor(fid)) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      flow.push({ item, area });
+    }
+  }
+  return flow;
+}
+
 function QuestionnaireRoute() {
   const { id } = Route.useParams();
-  const { step = 0 } = Route.useSearch();
+  const { step = 0, from } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
   const muted = usePrototypeMute();
   const surface = useAppMode() === "light" ? "light" : "dark";
+  const { avatar } = useYunaIdentity();
 
   // Focus-area ids in tap order = priority order; the top one drives the rest.
   const [focus, setFocus] = useState<string[]>([]);
@@ -69,12 +110,15 @@ function QuestionnaireRoute() {
   const [answers, setAnswers] = useState<Answers>({});
   // Prototype audio-readout toggle — swaps the icon, doesn't drive real TTS.
   const [audioOn, setAudioOn] = useState(true);
+  // Lift the flow when the open-ended "Something Else" field (the only text
+  // input in the flow) is focused, so the keyboard doesn't cover it.
+  const [inputFocused, setInputFocused] = useState(false);
 
-  // A direct deep link (admin sidebar) lands mid-flow with no picks; fall back
-  // to the stress branch so every step renders.
-  const topPriority = focus[0] ?? "stress";
-  const topArea = focusAreaById(topPriority);
-  const branch = branchItemsFor(topPriority);
+  // The whole question flow (impact + every pick's branch items), and the step
+  // index that lands on completion. Both are derived from the picks, so the flow
+  // grows as the user prioritizes more areas.
+  const flow = buildFlow(focus);
+  const completionStep = flow.length + 1;
 
   // Card transition: the leaving card stays mounted with its exit animation
   // while the new one enters; direction derives from the step delta. `leaving`
@@ -95,10 +139,18 @@ function QuestionnaireRoute() {
   // In-flow steps replace history so the flow occupies one entry; exiting
   // returns to wherever the user came from (Home card or You) in one hop.
   const goto = (next: number) =>
-    navigate({ to: "/questionnaire/$id", params: { id }, search: { step: next }, replace: true });
+    navigate({ to: "/questionnaire/$id", params: { id }, search: { step: next, from }, replace: true });
 
+  // Mid-flow close: abandon back to wherever the flow was launched.
   const exitFlow = () =>
     router.history.canGoBack() ? router.history.back() : router.navigate({ to: "/home" });
+
+  // Finishing the questionnaire lands on Home by default; only a run launched
+  // from a session hops back to that session.
+  const finishFlow = () =>
+    from === "session" && router.history.canGoBack()
+      ? router.history.back()
+      : router.navigate({ to: "/home" });
 
   // Single-select picks record with a soft pop, then auto-advance after a beat
   // so the selection's settle-pulse registers before the screen moves. Scales
@@ -126,16 +178,16 @@ function QuestionnaireRoute() {
     setFocus(next);
   };
 
-  // The question behind a given step index (null for picker + completion).
-  const itemFor = (s: number): BankItem | null =>
-    s === 1 ? IMPACT_ITEM : s >= 2 && s < COMPLETION_STEP ? branch[s - 2] : null;
+  // The flow entry behind a given step index (null for picker + completion).
+  const entryFor = (s: number): FlowEntry | null =>
+    s >= 1 && s < completionStep ? flow[s - 1] : null;
 
   // Enough of an answer to advance: the picker needs ≥1 priority, everything
   // else needs a recorded value.
   const isStepAnswered = (s: number): boolean => {
     if (s === 0) return focus.length > 0;
-    const q = itemFor(s);
-    return q ? answers[q.id] !== undefined : true;
+    const e = entryFor(s);
+    return e ? answers[e.item.id] !== undefined : true;
   };
 
   const onBack = () => {
@@ -151,7 +203,7 @@ function QuestionnaireRoute() {
   // straight to this step has no answers — the gallery iframes every screen,
   // and previewing must not mark the questionnaire complete).
   const celebrated = useRef(false);
-  const completedForReal = step === COMPLETION_STEP && Object.keys(answers).length > 0;
+  const completedForReal = step >= completionStep && Object.keys(answers).length > 0;
   useEffect(() => {
     if (!completedForReal || celebrated.current) return;
     celebrated.current = true;
@@ -160,6 +212,10 @@ function QuestionnaireRoute() {
       priorities: focus,
       answers,
     });
+    // Finishing the starting-point survey flips the You tab into its returning
+    // state. Fires once (the celebrated guard), so a later manual toggle back to
+    // "new" via the admin control sticks until the survey is completed again.
+    if (id === "your-starting-point") setUserType("returning");
     playCompleteSwell({ muted });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedForReal]);
@@ -177,18 +233,19 @@ function QuestionnaireRoute() {
           onOtherChange={setOtherFocus}
         />
       );
-    const q = itemFor(paneStep);
-    if (!q) return null;
+    const entry = entryFor(paneStep);
+    if (!entry) return null;
+    const { item: q, area } = entry;
     return (
       <>
-        {topArea && (
+        {area && (
           <div className="mb-3">
             <Tag
               variant="informational"
               surface={surface}
-              icon={topArea.emoji && <span aria-hidden>{topArea.emoji}</span>}
+              icon={area.emoji && <span aria-hidden>{area.emoji}</span>}
             >
-              {topArea.label}
+              {area.label}
             </Tag>
           </div>
         )}
@@ -211,58 +268,73 @@ function QuestionnaireRoute() {
             surface={surface}
           />
         )}
+        {/* Footer attribution — names the clinically validated instrument the
+            question is drawn from. Fine print, hint-level contrast. */}
+        <div className="mt-7">
+          <Divider surface={surface} />
+          <p className="mt-3 text-xs leading-snug text-white/60">
+            Based on the {q.source}, a clinically validated survey.
+          </p>
+        </div>
       </>
     );
   };
 
-  const onCompletion = step === COMPLETION_STEP;
+  const onCompletion = step >= completionStep;
   const nextDisabled = !isStepAnswered(step);
-  // Single-select picks auto-advance, so the Next button is redundant on those
-  // steps; the multi-select picker and scale steps still need it.
-  const autoAdvanceStep = itemFor(step)?.kind === "likert";
 
-  // The completion payoff is its own moment — no header, progress, or card.
-  // Mirrors the meditation complete screen: a frosted celebration badge, a
-  // congratulatory headline, then Yuna reflecting back the priorities they
-  // chose (in place of the meditation's rating), and a single Close button.
+  // The completion payoff is its own moment: an eyebrow + close, Yuna's avatar
+  // over a short uncontained reflection, the progress recap comparing the
+  // dimensions they prioritized against baseline, then a single Continue that
+  // returns to wherever the flow was launched.
   if (onCompletion) {
     const focusLabels = focus
       .map((fid) => (fid === "other" ? otherFocus.trim() : focusAreaById(fid)?.label.toLowerCase()))
       .filter((l): l is string => !!l);
     const top = focusLabels[0];
-    const list =
-      focusLabels.length <= 1
-        ? focusLabels.join("")
-        : `${focusLabels.slice(0, -1).join(", ")} and ${focusLabels[focusLabels.length - 1]}`;
     const reflection = !top
-      ? "Thank you for sharing this with me. You told me stress and sleep & energy are weighing on you most right now, and that stress comes first. We'll start there, one small step at a time."
-      : focusLabels.length === 1
-        ? `Thank you for sharing this with me. You told me ${top} is where you'd like support right now. We'll take it gently, one small step at a time.`
-        : `Thank you for sharing this with me. You told me ${list} matter to you, and that ${top} comes first. We'll start there, one small step at a time.`;
+      ? "Thank you for sharing. We'll start with what matters most, one small step at a time."
+      : `Thank you for sharing. You told me ${top} matters most right now, so that's where we'll start.`;
 
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0 text-white">
-          <div className="flex-1 flex flex-col px-8 pt-14 pb-10 yuna-fade-in min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
-              <div className="relative flex items-center justify-center h-28 w-28 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
-                <span className="text-5xl" aria-hidden>
-                  🎉
-                </span>
+          <div className="flex-1 flex flex-col gap-10 overflow-y-auto overflow-x-hidden px-8 pb-6 yuna-fade-in min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Header: eyebrow + close. No title or completion mark — Yuna's
+                centered avatar and reflection below are the moment. */}
+            <div className="pt-14">
+              <div className="relative flex items-center justify-center">
+                <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
+                  Questionnaire complete
+                </p>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <Button
+                    surface={surface}
+                    variant="plain"
+                    size="icon"
+                    onClick={finishFlow}
+                    aria-label="Close"
+                  >
+                    <X strokeWidth={1.6} aria-hidden />
+                  </Button>
+                </div>
               </div>
-
-              <h1 className="font-display text-3xl leading-tight tracking-tight text-white max-w-[16rem]">
-                Great job sharing your starting point.
-              </h1>
-
-              <YunaExplains surface={surface} className="w-full text-left">
-                {reflection}
-              </YunaExplains>
             </div>
 
-            <div className="shrink-0">
-              <Button surface={surface} variant="primary" fullWidth onClick={exitFlow}>
-                Close
+            {/* Yuna reflects back the priorities — avatar centered above the
+                text, uncontained so it reads as Yuna speaking, not a card. */}
+            <div className="flex flex-col items-center text-center gap-4">
+              <IconMedallion size="lg" label="Yuna">
+                <YunaAvatar variant={avatar ?? DEFAULT_VOICE} size={64} />
+              </IconMedallion>
+              <p className="text-base leading-relaxed text-white/90">{reflection}</p>
+            </div>
+
+            <ProgressRecap priorities={focus} surface={surface} />
+
+            <div className="pt-2 flex flex-col gap-3">
+              <Button surface={surface} variant="primary" fullWidth onClick={finishFlow}>
+                Continue
               </Button>
             </div>
           </div>
@@ -274,7 +346,16 @@ function QuestionnaireRoute() {
 
   return (
     <PhoneFrame themed>
-      <div className="flex-1 flex flex-col min-h-0 text-white">
+      <div
+        className="flex-1 flex flex-col min-h-0 text-white transition-transform duration-200 ease-out"
+        style={inputFocused ? { transform: `translateY(-${FOCUS_SHIFT}px)` } : undefined}
+        onFocusCapture={(e) => {
+          if ((e.target as HTMLElement).tagName === "TEXTAREA") setInputFocused(true);
+        }}
+        onBlurCapture={(e) => {
+          if ((e.target as HTMLElement).tagName === "TEXTAREA") setInputFocused(false);
+        }}
+      >
         {/* Header: audio toggle · label · close. */}
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 pt-14 pb-1">
           <div className="justify-self-start">
@@ -314,12 +395,12 @@ function QuestionnaireRoute() {
           <div className="w-[42%]">
             <ProgressBar
               surface={surface}
-              value={(step + 1) / TOTAL_STEPS}
+              value={(step + 1) / completionStep}
               aria-label="Your starting point progress"
             />
           </div>
           <span className="text-sm text-white/75">
-            Question {step + 1} of {TOTAL_STEPS}
+            Question {step + 1} of {completionStep}
           </span>
         </div>
 
@@ -355,11 +436,9 @@ function QuestionnaireRoute() {
           <Button surface={surface} variant="secondary" disabled={step === 0} onClick={onBack}>
             Previous
           </Button>
-          {!autoAdvanceStep && (
-            <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
-              Next
-            </Button>
-          )}
+          <Button surface={surface} variant="primary" disabled={nextDisabled} onClick={onNext}>
+            Next
+          </Button>
         </footer>
       </div>
     </PhoneFrame>
@@ -394,7 +473,7 @@ function FocusPane({
           ariaLabel="What would you like support with right now?"
           otherValue={otherValue}
           onOtherChange={onOtherChange}
-          otherPlaceholder="Type or record your answer"
+          otherPlaceholder="Type your answer"
           options={FOCUS_AREAS.map((a) => {
             const rank = value.indexOf(a.id);
             return {
@@ -444,15 +523,18 @@ function ScaleBody({
     touched && q.distress && (q.distress === "high" ? frac > 0.5 : frac < 0.5)
       ? "orange"
       : "green";
-  // With a midLabel the live descriptor accompanies the value; otherwise the
+  // `levels` names every step, so the chosen label shows below the number for
+  // any value; a midLabel gives a coarser three-band descriptor; otherwise the
   // hint just fades once touched.
-  const descriptor = q.midLabel
-    ? frac < 1 / 3
-      ? q.minLabel
-      : frac < 2 / 3
-        ? q.midLabel
-        : q.maxLabel
-    : null;
+  const descriptor = q.levels
+    ? (q.levels[display] ?? null)
+    : q.midLabel
+      ? frac < 1 / 3
+        ? q.minLabel
+        : frac < 2 / 3
+          ? q.midLabel
+          : q.maxLabel
+      : null;
   return (
     <>
       <div className="mt-8 flex flex-col items-center">
@@ -494,4 +576,3 @@ function ScaleBody({
     </>
   );
 }
-

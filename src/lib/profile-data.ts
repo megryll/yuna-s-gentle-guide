@@ -16,10 +16,22 @@ export type FocusAreaMeta = {
   body: string;
 };
 
+/** Activity tallies shown in the You-tab stat grid, keyed to {@link STAT_CARDS}. */
+export type ProfileStats = {
+  chats: number;
+  skills: number;
+  questionnaires: number;
+  gratitude: number;
+  meditations: number;
+  goals: number;
+};
+
 export type ProfileData = {
-  conversations: number;
-  messages: number;
-  insights: number;
+  /** The user's first name, shown beside the progress ring. */
+  name: string;
+  /** Growth stage label paired with the ring icon (e.g. "Sprouting", "Rooted"). */
+  stage: string;
+  stats: ProfileStats;
   /** 0..1 — drives the hero ring */
   progress: number;
   /** Centred icon inside the hero ring */
@@ -45,9 +57,9 @@ export type ProfileData = {
 export const INSIGHT_PREVIEW_COUNT = 3;
 
 const priya: ProfileData = {
-  conversations: 4,
-  messages: 12,
-  insights: 4,
+  name: "Priya",
+  stage: "Sprouting",
+  stats: { chats: 4, skills: 3, questionnaires: 2, gratitude: 3, meditations: 5, goals: 1 },
   progress: 0.14,
   ringIcon: "/assets/profile/emerging.png",
 
@@ -101,9 +113,9 @@ const priya: ProfileData = {
 };
 
 const james: ProfileData = {
-  conversations: 42,
-  messages: 128,
-  insights: 52,
+  name: "James",
+  stage: "Rooted",
+  stats: { chats: 42, skills: 14, questionnaires: 6, gratitude: 18, meditations: 27, goals: 5 },
   progress: 0.9,
   ringIcon: "/assets/profile/rooted.png",
 

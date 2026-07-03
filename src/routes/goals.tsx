@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -103,6 +103,7 @@ function goalSentence(text: string): string {
 
 function GoalsRoute() {
   const navigate = useNavigate();
+  const router = useRouter();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const { avatar } = useYunaIdentity();
   const photo = avatar ?? DEFAULT_VOICE;
@@ -196,7 +197,9 @@ function GoalsRoute() {
             onFilter={setFilter}
             savedIds={savedIds}
             onToggleSave={toggleSave}
-            onBack={() => navigate({ to: "/tools" })}
+            onBack={() =>
+              router.history.canGoBack() ? router.history.back() : navigate({ to: "/tools" })
+            }
             onNew={startFlow}
             onMarkDone={markDone}
           />

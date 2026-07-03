@@ -258,12 +258,12 @@ export const HOME_CARDS: HomeCard[] = [
   },
   {
     type: "self-discovery",
-    id: "feeling-check",
-    title: "How Have You Been Feeling Lately?",
+    id: "sleep-stress-burnout",
+    title: "Sleep, Stress & Burnout",
     description:
-      "A 9-question check-in that helps measure your mood and emotional wellbeing over the past two weeks.",
-    duration: "5–10 minutes",
-    naturePath: "/nature/Background-11.png",
+      "A quick measure of how you're sleeping, what's weighing on you, and how much you're carrying.",
+    duration: "5 min",
+    isNew: true,
   },
   {
     type: "affirmation",
@@ -407,8 +407,7 @@ export const HOME_CARDS: HomeCard[] = [
     title: "Where Is Your Energy Actually Going?",
     description:
       "A short audit of where your week is spent versus where you wish it were. Surfaces the invisible trade-offs.",
-    duration: "6–8 minutes",
-    naturePath: "/nature/Background-12.png",
+    duration: "6–8 min",
   },
   {
     type: "affirmation",

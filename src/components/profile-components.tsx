@@ -25,10 +25,15 @@ const greenMix = (pct: number) =>
 export function ProgressRing({
   progress,
   icon,
+  size = 89,
 }: {
   progress: number;
   icon: string;
+  /** Rendered diameter in px. Geometry is defined in a fixed 92-unit viewBox, so
+   *  the stroke and centred icon scale with this. Defaults to 89. */
+  size?: number;
 }) {
+  const imgSize = Math.round(size * 0.58);
   const r = 43;
   const cx = 46;
   const cy = 46;
@@ -52,8 +57,8 @@ export function ProgressRing({
   const trackStroke = isLight ? "#ffffff" : "rgba(255,255,255,0.18)";
 
   return (
-    <div className="relative" style={{ width: 89, height: 89 }}>
-      <svg viewBox="0 0 92 92" width={89} height={89} className="absolute inset-0">
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 92 92" width={size} height={size} className="absolute inset-0">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={trackStroke} strokeWidth={3} />
         <circle
           cx={cx}
@@ -73,7 +78,7 @@ export function ProgressRing({
         src={icon}
         alt=""
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 object-contain"
-        style={{ width: 52, height: 52 }}
+        style={{ width: imgSize, height: imgSize }}
       />
     </div>
   );

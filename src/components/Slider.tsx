@@ -124,10 +124,7 @@ export function Slider({
       <div className="flex flex-col gap-0.5">
         {(leftLabel || rightLabel) && (
           <div
-            className={
-              "flex items-center justify-between text-sm font-medium tracking-[0.04em] uppercase " +
-              s.end
-            }
+            className={"flex items-center justify-between text-sm font-medium " + s.end}
           >
             <span className={negative && touched ? s.endActive : ""}>{leftLabel}</span>
             <span className={positive && touched ? s.endActive : ""}>{rightLabel}</span>
@@ -205,7 +202,7 @@ export function Slider({
               type="button"
               onClick={() => onChange(i)}
               className={
-                "text-xs text-center transition-colors " +
+                "text-sm text-center transition-colors " +
                 (i === value ? s.stepOn + " font-medium" : s.stepOff)
               }
             >
@@ -216,10 +213,7 @@ export function Slider({
       )}
       {stepList.length === 0 && (leftLabel || rightLabel) && (
         <div
-          className={
-            "mt-3 flex items-center justify-between text-xs font-medium tracking-[0.04em] uppercase " +
-            s.end
-          }
+          className={"mt-3 flex items-center justify-between text-sm font-medium " + s.end}
         >
           <span className={value === 0 && touched ? s.endActive : ""}>{leftLabel}</span>
           <span className={value === maxIdx && touched ? s.endActive : ""}>{rightLabel}</span>

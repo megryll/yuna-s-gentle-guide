@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconMedallion } from "@/components/IconMedallion";
@@ -24,9 +24,12 @@ import { DictationTextArea } from "@/components/DictationTextArea";
  * simulated-haptic register beat used across the prototype.
  *
  * An option flagged `other` is the open-ended escape hatch ("Something Else"):
- * while selected it swaps its row for an inline DictationTextArea so the user
- * can type or record a custom answer. Thread `otherValue` / `onOtherChange` for
- * its text; clearing the field when it's already empty deselects the option.
+ * selecting it opens an inline (text-only) DictationTextArea in place of the row
+ * to type a custom answer. Blurring the field commits the answer — the row
+ * collapses back into a normal selected option showing the typed answer (blur
+ * with an empty field instead deselects). Tapping that committed row deselects
+ * it; selecting again reopens the editable field. Thread `otherValue` /
+ * `onOtherChange` for its text.
  *
  * options:    [{ value, label, emoji?, icon?, subtitle?, trailing?, disabled?, other? }]
  * value:      selected value (single) or values (multiple)
@@ -38,6 +41,7 @@ import { DictationTextArea } from "@/components/DictationTextArea";
  * otherValue / onOtherChange / otherPlaceholder: the open-ended field's text,
  *             setter, and idle hint — required once any option sets `other`.
  * surface?:   "dark" | "light" (default "dark")
+ * animateIn?: cascade the rows in on mount, one after another (default false)
  * ariaLabel:  names the group (radiogroup / group)
  */
 export type MultipleChoiceOption = {
@@ -56,6 +60,7 @@ type BaseProps = {
   options: MultipleChoiceOption[];
   indicator?: "check" | "none";
   surface?: "dark" | "light";
+  animateIn?: boolean;
   ariaLabel: string;
   className?: string;
   otherValue?: string;
@@ -63,16 +68,23 @@ type BaseProps = {
   otherPlaceholder?: string;
 };
 
+const CASCADE_STEP_MS = 55;
+
 export type MultipleChoiceProps =
   | (BaseProps & { multiple?: false; value: string | null; onChange: (value: string) => void })
   | (BaseProps & { multiple: true; value: string[]; onChange: (value: string[]) => void });
 
 export function MultipleChoice(props: MultipleChoiceProps) {
-  const { options, surface = "dark", ariaLabel, className } = props;
+  const { options, surface = "dark", animateIn = false, ariaLabel, className } = props;
   const multiple = props.multiple ?? false;
   const indicator = props.indicator ?? "check";
   const dark = surface === "dark";
   const otherValue = props.otherValue ?? "";
+  // Whether the open-ended "other" option is showing its editable field. True
+  // while the user is filling it in; flips to false on blur so it collapses to
+  // a committed row. An empty selected field also counts as "editing" so a
+  // freshly-selected option opens straight into the field.
+  const [editingOther, setEditingOther] = useState(false);
 
   const isSelected = (v: string) =>
     multiple ? (props.value as string[]).includes(v) : props.value === v;
@@ -92,24 +104,29 @@ export function MultipleChoice(props: MultipleChoiceProps) {
       aria-label={ariaLabel}
       className={cn("flex flex-col gap-2", className)}
     >
-      {options.map((opt) => {
+      {options.map((opt, i) => {
         const selected = isSelected(opt.value);
-        // A selected open-ended option becomes the inline text/record field.
-        // Clearing it when already empty toggles the option back off.
-        if (opt.other && selected) {
+        // The open-ended option shows its editable field while being filled in
+        // (explicitly editing, or selected-but-still-empty); otherwise it
+        // renders as a row like any other, labelled with the committed answer.
+        if (opt.other && selected && (editingOther || !otherValue.trim())) {
           return (
             <DictationTextArea
               key={opt.value}
+              autoFocus
+              textOnly
               surface={surface}
               value={otherValue}
               onChange={(v) => props.onOtherChange?.(v)}
-              onClear={() =>
-                otherValue.trim() ? props.onOtherChange?.("") : handle(opt.value)
-              }
+              onBlur={() => {
+                setEditingOther(false);
+                if (!otherValue.trim()) handle(opt.value);
+              }}
               placeholder={props.otherPlaceholder}
             />
           );
         }
+        const label = opt.other && selected ? otherValue.trim() || opt.label : opt.label;
         return (
           <button
             key={opt.value}
@@ -117,10 +134,17 @@ export function MultipleChoice(props: MultipleChoiceProps) {
             role={multiple ? "checkbox" : "radio"}
             aria-checked={selected}
             disabled={opt.disabled}
-            onClick={() => handle(opt.value)}
+            onClick={() => {
+              // Selecting the open-ended option opens its field; deselecting
+              // closes it. Other options just toggle.
+              if (opt.other) setEditingOther(!selected);
+              handle(opt.value);
+            }}
+            style={animateIn ? { animationDelay: `${i * CASCADE_STEP_MS}ms` } : undefined}
             className={cn(
               "w-full rounded-2xl border px-4 py-3 flex items-center gap-3 text-left",
               "transition-[transform,background-color,border-color] duration-100 ease-out active:scale-[0.99]",
+              animateIn && "survey-cascade-item",
               selected && "yuna-settle",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
               "disabled:opacity-50 disabled:pointer-events-none",
@@ -145,7 +169,7 @@ export function MultipleChoice(props: MultipleChoiceProps) {
               </IconMedallion>
             )}
             <span className="flex-1 min-w-0">
-              <span className="block text-sm font-semibold leading-tight">{opt.label}</span>
+              <span className="block text-sm font-semibold leading-tight">{label}</span>
               {opt.subtitle && (
                 <span
                   className={cn(

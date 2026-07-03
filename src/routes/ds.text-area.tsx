@@ -71,6 +71,19 @@ function FilledDictationDemo({ surface }: { surface: "dark" | "light" }) {
   return <DictationTextArea surface={surface} value={value} onChange={setValue} />;
 }
 
+function TextOnlyDictationDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState("");
+  return (
+    <DictationTextArea
+      surface={surface}
+      textOnly
+      value={value}
+      onChange={setValue}
+      placeholder="Type your answer"
+    />
+  );
+}
+
 function DSTextArea() {
   return (
     <DSPage title="Text Area">
@@ -84,7 +97,7 @@ function DSTextArea() {
 
       <Section
         title="Dictation"
-        subtitle="DictationTextArea is the type-or-record sibling: an empty field shows a Mic, tap to record (a live waveform replaces the text), tap Stop to keep the transcript. With text the trailing button becomes an X to clear, and the field auto-grows with the answer."
+        subtitle="DictationTextArea is the type-or-record sibling: an empty field shows a Mic, tap to record (a live waveform replaces the text), tap Stop to keep the transcript. With text the trailing button becomes an X to clear, and the field auto-grows with the answer. Pass textOnly to drop dictation — a typed field with no Mic (X to clear shows only with text)."
       >
         <SurfaceMatrix rows={DICTATION_ROWS} />
       </Section>
@@ -101,6 +114,8 @@ function DSTextArea() {
   value:        string                 // controlled text
   onChange:     (v: string) => void    // typing or live transcript
   onClear?:     () => void             // overrides the X (default clears to "")
+  onBlur?:      () => void             // fires on focus leaving the field (not while recording)
+  textOnly?:    boolean                // disable dictation — typed input only; default false
   surface?:     "dark" | "light"       // default "dark"
   placeholder?: string                 // default "Type or record your answer"
   autoFocus?:   boolean
@@ -122,4 +137,5 @@ const STATE_ROWS: MatrixRow[] = [
 const DICTATION_ROWS: MatrixRow[] = [
   { label: "Empty", render: (s) => <IdleDictationDemo surface={s} /> },
   { label: "With text", render: (s) => <FilledDictationDemo surface={s} /> },
+  { label: "Text only", render: (s) => <TextOnlyDictationDemo surface={s} /> },
 ];

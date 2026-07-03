@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { ChevronLeft, MessageCircle } from "lucide-react";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
@@ -13,6 +13,10 @@ import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 
 export const Route = createFileRoute("/sessions")({
+  // `?from=you` marks an entry pushed from the You tab's Chats tile, which gets a
+  // back arrow. Arriving via the AppBar tab carries no param and shows none.
+  validateSearch: (search: Record<string, unknown>): { from?: "you" } =>
+    search.from === "you" ? { from: "you" } : {},
   head: () => ({ meta: [{ title: "Sessions — Yuna" }] }),
   component: SessionsRoute,
 });
@@ -23,12 +27,32 @@ function SessionsRoute() {
   return userType === "returning" ? <SessionsReturning /> : <SessionsNew />;
 }
 
+// Sessions is a primary tab, so it has no header by default. Only when entered
+// from the You tab's Chats tile (?from=you) does a back arrow appear, to return
+// there; arriving via the AppBar tab shows none.
+function BackArrow() {
+  const router = useRouter();
+  const navigate = useNavigate();
+  const { from } = Route.useSearch();
+  if (from !== "you") return null;
+  const back = () =>
+    router.history.canGoBack() ? router.history.back() : navigate({ to: "/you" });
+  return (
+    <header className="shrink-0 mb-3">
+      <Button surface="dark" variant="secondary" size="icon" aria-label="Back" onClick={back}>
+        <ChevronLeft strokeWidth={1.5} />
+      </Button>
+    </header>
+  );
+}
+
 function SessionsNew() {
   const startChat = useStartChat();
   return (
     <ScreenChrome hideHeader surface="dark">
-      <div className="flex-1 flex flex-col justify-center px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center">
+      <div className="flex-1 flex flex-col px-6 pb-10 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <BackArrow />
+        <div className="flex-1 flex flex-col justify-center items-center text-center">
           <IconMedallion size="xl">
             <MessageCircle size={32} strokeWidth={1.4} className="text-white/70" aria-hidden />
           </IconMedallion>
@@ -73,6 +97,7 @@ function SessionsReturning() {
       </ToastViewport>
 
       <div className="flex-1 flex flex-col px-6 pb-8 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <BackArrow />
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Past sessions</h1>
 
         <ul className="mt-6 flex flex-col gap-4">

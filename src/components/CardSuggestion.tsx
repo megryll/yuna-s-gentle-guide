@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
-import { cardSurface } from "@/components/Card";
+import { cardSurface, CardWatermark, MetaDot } from "@/components/Card";
 import { KIND_META, type CardKind } from "@/lib/home-cards";
 
 export type EscalationTier = "self-harm" | "crisis" | "non-crisis";
@@ -62,11 +62,17 @@ type BaseProps = {
 
 type RecoProps = BaseProps & {
   variant?: "reco";
-  /** CardKind — drives the eyebrow label + fallback tile photo. */
+  /** CardKind — drives the eyebrow label + the tile background. Solid kinds
+   *  (e.g. questionnaires) render their fixed fill + watermark; photo kinds
+   *  fall back to KIND_META[kind].naturePath. */
   kind: CardKind;
   /** Recommended card's title (white Fraunces on the tile). */
   title: string;
-  /** Tile background photo; falls back to KIND_META[kind].naturePath. */
+  /** Teaser line rendered under the title inside the tile. */
+  description?: string;
+  /** Length estimate appended to the eyebrow as a "• 5 min" MetaDot. */
+  duration?: string;
+  /** Tile background photo (photo kinds only — solid kinds ignore it). */
   naturePath?: string;
   /** Primary action label. Default "Start". */
   startLabel?: string;
@@ -200,15 +206,26 @@ export function CardSuggestion(props: CardSuggestionProps) {
         <div className={cn("flex items-center gap-1.5", voice && "justify-center")}>
           <MessageCircle size={16} strokeWidth={1.7} aria-hidden className="text-white" />
           <span className="text-sm font-medium text-white/90">{meta.label}</span>
+          {props.duration && <MetaDot>{props.duration}</MetaDot>}
         </div>
 
         <div
-          className="mt-2.5 rounded-2xl overflow-hidden card-fixed-dark"
-          style={cardSurface({ naturePath: props.naturePath ?? meta.naturePath }).style}
+          className="relative mt-2.5 rounded-2xl overflow-hidden card-fixed-dark"
+          style={
+            meta.solidBg != null
+              ? { backgroundColor: meta.solidBg }
+              : cardSurface({ naturePath: props.naturePath ?? meta.naturePath }).style
+          }
         >
-          <h3 className="font-display text-2xl leading-[1.15] tracking-tight text-white px-5 py-6">
-            {props.title}
-          </h3>
+          {meta.watermark && <CardWatermark src={meta.watermark} className="h-[130%] -right-3" />}
+          <div className="relative px-5 py-6">
+            <h3 className="font-display text-2xl leading-[1.15] tracking-tight text-white">
+              {props.title}
+            </h3>
+            {props.description && (
+              <p className="mt-2 text-sm leading-snug text-white/80">{props.description}</p>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 flex gap-2 [&>*]:flex-1">

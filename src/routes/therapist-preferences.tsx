@@ -1,20 +1,29 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { X, Search, MapPin, Check, MessageCircle, Pause, Play } from "lucide-react";
+import { MessageCircle, Pause, Play, X, Search, MapPin, Check } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
 import { TextField } from "@/components/TextField";
 import { ProgressBar } from "@/components/ProgressBar";
-import { QuestionCard } from "@/components/SurveyCard";
 import { MultipleChoice } from "@/components/MultipleChoice";
 import { LeafSpinner } from "@/components/LeafSpinner";
 import { IconMedallion } from "@/components/IconMedallion";
+import { QuestionCard, CardLead } from "@/components/SurveyCard";
 import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
-import { playSelectPop } from "@/lib/survey-sound";
+import { playCompleteSwell, playSelectPop } from "@/lib/survey-sound";
 import { setPreferencesApplied } from "@/lib/therapist-prefs";
 import { SURVEY_QUESTIONS, LOCATIONS, type SurveyQuestion } from "@/lib/therapist-data";
+
+// ─── Therapist preferences flow ──────────────────────────────────────────────
+// Shares the survey runner's shell (/survey/$id): audio·label·close header, a
+// persistent screen title, a top progress bar with a "Question N of M" counter,
+// each question on a frosted QuestionCard that tilts off as the next tilts in,
+// and Previous/Next navigation. The questions are bespoke (location typeahead,
+// single/multi choice, searchable chips) and most are optional, so Next is never
+// gated. The payoff isn't a celebration pane — it's the "Finding your matches"
+// hand-off into the recommendations deck.
 
 type StepSearch = { step?: number };
 
@@ -34,8 +43,8 @@ type Answers = Record<string, string | string[] | null>;
 function PreferencesRoute() {
   const { step = 0 } = Route.useSearch();
   const navigate = useNavigate();
-  const surface = useAppMode() === "light" ? "light" : "dark";
   const muted = usePrototypeMute();
+  const surface = useAppMode() === "light" ? "light" : "dark";
 
   const [answers, setAnswers] = useState<Answers>({});
   const [search, setSearch] = useState("");
@@ -47,8 +56,8 @@ function PreferencesRoute() {
   const isLast = step === total - 1;
 
   // Card transition: the leaving card stays mounted with its exit animation
-  // while the new one enters; direction derives from the step delta (mirrors
-  // the questionnaire route's tilt-and-slide grammar).
+  // while the new one enters; direction derives from the step delta. `leaving`
+  // is set before paint so the incoming card animates in from the first frame.
   const prevStep = useRef(step);
   const [leaving, setLeaving] = useState<{ step: number; dir: "fwd" | "back" } | null>(null);
   useLayoutEffect(() => {
@@ -68,8 +77,8 @@ function PreferencesRoute() {
   };
 
   const onNext = () => {
-    playSelectPop({ muted });
     if (isLast) {
+      playCompleteSwell({ muted });
       setLoading(true);
       setTimeout(() => {
         setPreferencesApplied(true);
@@ -77,36 +86,13 @@ function PreferencesRoute() {
       }, 1600);
       return;
     }
+    playSelectPop({ muted });
     goto(step + 1);
   };
 
   const onBack = () => {
     if (step === 0) return;
     goto(step - 1);
-  };
-
-  // A question's content (title + prompt + body) for a given step, rendered
-  // inside the QuestionCard. The questions themselves are unchanged — only the
-  // chrome around them is new.
-  const renderQuestion = (qIndex: number): ReactNode => {
-    const q = SURVEY_QUESTIONS[qIndex];
-    if (!q) return null;
-    return (
-      <>
-        <h2 className="font-display text-2xl leading-tight tracking-tight text-white">{q.title}</h2>
-        <p className="mt-2 text-sm leading-snug text-white/85">{q.prompt}</p>
-        <div className="mt-6">
-          <QuestionBody
-            question={q}
-            surface={surface}
-            search={search}
-            setSearch={setSearch}
-            answers={answers}
-            setAnswers={setAnswers}
-          />
-        </div>
-      </>
-    );
   };
 
   if (loading) {
@@ -124,6 +110,30 @@ function PreferencesRoute() {
       </PhoneFrame>
     );
   }
+
+  // The inner contents of a question card for a given step: the question title
+  // as the card lead, its prompt as a subline, then the typed body.
+  const renderCard = (paneStep: number): ReactNode => {
+    const question = SURVEY_QUESTIONS[paneStep];
+    if (!question) return null;
+    return (
+      <>
+        <CardLead>{question.title}</CardLead>
+        <p className="mt-1.5 text-sm leading-snug text-white/75">{question.prompt}</p>
+        <div className="mt-5">
+          <QuestionBody
+            question={question}
+            surface={surface}
+            muted={muted}
+            search={search}
+            setSearch={setSearch}
+            answers={answers}
+            setAnswers={setAnswers}
+          />
+        </div>
+      </>
+    );
+  };
 
   return (
     <PhoneFrame themed>
@@ -164,7 +174,7 @@ function PreferencesRoute() {
         {/* Persistent screen title. */}
         <div className="px-6 pt-2 text-center">
           <h1 className="font-display text-2xl leading-snug tracking-tight text-white">
-            Find your therapist
+            Find your match
           </h1>
         </div>
 
@@ -190,7 +200,7 @@ function PreferencesRoute() {
               surface={surface}
               className={leaving ? (leaving.dir === "fwd" ? "survey-card-in-fwd" : "survey-card-in-back") : ""}
             >
-              {renderQuestion(step)}
+              {renderCard(step)}
             </QuestionCard>
           </div>
           {leaving && (
@@ -203,7 +213,7 @@ function PreferencesRoute() {
                 surface={surface}
                 className={leaving.dir === "fwd" ? "survey-card-out-fwd" : "survey-card-out-back"}
               >
-                {renderQuestion(leaving.step)}
+                {renderCard(leaving.step)}
               </QuestionCard>
             </div>
           )}
@@ -226,6 +236,7 @@ function PreferencesRoute() {
 function QuestionBody({
   question,
   surface,
+  muted,
   search,
   setSearch,
   answers,
@@ -233,13 +244,16 @@ function QuestionBody({
 }: {
   question: SurveyQuestion;
   surface: "dark" | "light";
+  muted: boolean;
   search: string;
   setSearch: (v: string) => void;
   answers: Answers;
   setAnswers: (fn: (prev: Answers) => Answers) => void;
 }) {
-  const setAnswer = (value: string | string[] | null) =>
+  const setAnswer = (value: string | string[] | null) => {
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
+    playSelectPop({ muted });
+  };
 
   if (question.type === "location") {
     return (

@@ -39,37 +39,6 @@ function SingleDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
-const PRIORITIES = ["Sleep", "Stress", "Focus"];
-
-function NoneDemo({ surface }: { surface: "dark" | "light" }) {
-  const [value, setValue] = useState<string[]>(["Sleep"]);
-  return (
-    <MultipleChoice
-      surface={surface}
-      multiple
-      indicator="none"
-      ariaLabel="Priorities in order"
-      options={PRIORITIES.map((o) => {
-        const rank = value.indexOf(o);
-        return {
-          value: o,
-          label: o,
-          trailing:
-            rank >= 0 ? (
-              <Badge
-                size="sm"
-                icon={<span className="text-[11px] font-bold leading-none">{rank + 1}</span>}
-                label={`Priority ${rank + 1}`}
-              />
-            ) : undefined,
-        };
-      })}
-      value={value}
-      onChange={setValue}
-    />
-  );
-}
-
 function MultiDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState<string[]>(["LGBTQ+ affirming"]);
   return (
@@ -84,12 +53,41 @@ function MultiDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
-function DetailDemo({ surface }: { surface: "dark" | "light" }) {
+function OrderedDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState<string[]>(["Culturally sensitive", "Faith-informed"]);
+  return (
+    <MultipleChoice
+      surface={surface}
+      multiple
+      indicator="none"
+      ariaLabel="Identity and background, ranked"
+      options={IDENTITY.map((o) => ({
+        ...o,
+        trailing: value.includes(o.value) ? (
+          <Badge
+            size="sm"
+            icon={
+              <span className="text-[11px] font-bold leading-none">
+                {value.indexOf(o.value) + 1}
+              </span>
+            }
+            label={`Priority ${value.indexOf(o.value) + 1}`}
+          />
+        ) : undefined,
+      }))}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+
+function BadgeDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState<string | null>("intro");
   return (
     <MultipleChoice
       surface={surface}
       ariaLabel="Session type"
+      indicator="none"
       options={[
         { value: "intro", label: "Free intro call", subtitle: "A quick conversation to see if you're a fit.", trailing: <Badge>15 min</Badge> },
         { value: "session", label: "First full session", subtitle: "A full intake session to begin working together.", trailing: <Badge>50 min</Badge> },
@@ -100,9 +98,22 @@ function DetailDemo({ surface }: { surface: "dark" | "light" }) {
   );
 }
 
+function SelectedDemo({ surface }: { surface: "dark" | "light" }) {
+  const [value, setValue] = useState<string | null>("Online");
+  return (
+    <MultipleChoice
+      surface={surface}
+      ariaLabel="Session format"
+      options={FORMAT}
+      value={value}
+      onChange={setValue}
+    />
+  );
+}
+
 function OtherDemo({ surface }: { surface: "dark" | "light" }) {
   const [value, setValue] = useState<string[]>(["custom"]);
-  const [other, setOther] = useState("");
+  const [other, setOther] = useState("Navigating a recent move");
   return (
     <MultipleChoice
       surface={surface}
@@ -158,12 +169,13 @@ function DSMultipleChoice() {
   value:      string[]
   onChange:   (value: string[]) => void
 
-  indicator?: "check" | "none"     // default "check"; "none" = caller owns the
-                                   // cue via trailing (e.g. priority numerals)
+  indicator?: "check" | "none"     // default "check";
+                                   // "none" when trailing owns the selection cue
   otherValue?:       string        // open-ended option's text (option.other)
   onOtherChange?:    (v: string) => void
   otherPlaceholder?: string        // idle hint for the open-ended field
   surface?:   "dark" | "light"     // default "dark"
+  animateIn?: boolean              // cascade rows in on mount; default false
   ariaLabel:  string               // names the group
   className?: string
 />`}</PropsBlock>
@@ -175,11 +187,12 @@ function DSMultipleChoice() {
 const VARIANT_ROWS: MatrixRow[] = [
   { label: "Single", render: (s) => <SingleDemo surface={s} /> },
   { label: "Multiple", render: (s) => <MultiDemo surface={s} /> },
-  { label: "Indicator: none", render: (s) => <NoneDemo surface={s} /> },
-  { label: "With detail", render: (s) => <DetailDemo surface={s} /> },
+  { label: "Multiple, no indicator", render: (s) => <OrderedDemo surface={s} /> },
+  { label: "With badge", render: (s) => <BadgeDemo surface={s} /> },
   { label: "Other (open-ended)", render: (s) => <OtherDemo surface={s} /> },
 ];
 
 const STATE_ROWS: MatrixRow[] = [
+  { label: "Selected", render: (s) => <SelectedDemo surface={s} /> },
   { label: "Disabled option", render: (s) => <DisabledDemo surface={s} /> },
 ];

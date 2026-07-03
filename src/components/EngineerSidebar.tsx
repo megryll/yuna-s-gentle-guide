@@ -632,8 +632,8 @@ function YunaStatesSection() {
 }
 
 // ─── Home states (screen trigger) ────────────────────────────────────────────
-// Pushes the Home screen into a given state for review. One chip for now: the
-// Illinois service-limitation takeover.
+// Pushes the Home screen into a given state for review: the Illinois
+// service-limitation takeover and the "Schedule a session" drawer.
 
 function HomeStatesSection() {
   const illinois = useSessionIllinois();

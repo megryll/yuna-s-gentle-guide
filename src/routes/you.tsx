@@ -1,23 +1,65 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  ClipboardList,
+  Compass,
+  Flower2,
+  GraduationCap,
+  LineChart,
+  MessageCircle,
+  NotebookPen,
+  Sparkles,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Button } from "@/components/Button";
+import { Divider } from "@/components/Divider";
 import { IconMedallion } from "@/components/IconMedallion";
 import { Surface } from "@/components/Surface";
+import { DimensionTrends } from "@/components/DimensionTrends";
+import { useAppMode } from "@/lib/theme-prefs";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
 import {
   getProfileData,
-  INSIGHT_PREVIEW_COUNT,
   type Insight,
-  type InsightCategory,
+  type ProfileStats,
 } from "@/lib/profile-data";
+
+// The activity stat grid, in display order. "Skills Learned" sits second; the
+// rest follow in sequence. Each key reads its tally off ProfileData.stats, and
+// `to` deep-links the tile to its destination screen.
+const STAT_CARDS: {
+  key: keyof ProfileStats;
+  label: string;
+  icon: LucideIcon;
+  to: string;
+  search?: Record<string, unknown>;
+}[] = [
+  { key: "chats", label: "Chats", icon: MessageCircle, to: "/sessions", search: { from: "you" } },
+  { key: "skills", label: "Skills", icon: GraduationCap, to: "/all-tasks", search: { type: "skill" } },
+  { key: "questionnaires", label: "Questionnaires", icon: ClipboardList, to: "/all-tasks", search: { type: "questionnaire" } },
+  { key: "gratitude", label: "Days of Gratitude", icon: NotebookPen, to: "/all-tasks", search: { type: "gratitude" } },
+  { key: "meditations", label: "Meditations", icon: Flower2, to: "/all-tasks", search: { type: "meditation" } },
+  { key: "goals", label: "Goals", icon: Target, to: "/all-tasks", search: { type: "goal" } },
+];
 import {
   EmptyStateCard,
   FocusAreaBentoCard,
   InsightCard,
-  MoreButton,
   ProgressRing,
 } from "@/components/profile-components";
+
+// Round-robin merge: take the first of each list, then the second of each, …
+// so a fixed-length slice spans categories instead of draining the first list.
+function interleave<T>(...lists: T[][]): T[] {
+  const out: T[] = [];
+  const max = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < max; i++) {
+    for (const list of lists) if (i < list.length) out.push(list[i]);
+  }
+  return out;
+}
 
 export const Route = createFileRoute("/you")({
   head: () => ({
@@ -32,37 +74,55 @@ export const Route = createFileRoute("/you")({
 function YouRoute() {
   const userType = useUserType();
   const navigate = useNavigate();
+  const surface = useAppMode() === "light" ? "light" : "dark";
 
   if (userType === "new") return <YouEmptyState />;
   const data = getProfileData(userType);
 
-  const openInsights = (category: InsightCategory) =>
-    navigate({ to: "/insights/$category", params: { category } });
+  // A mix of recently surfaced insights — one from each category in turn
+  // (breakthrough, belief, basic, …) so the preview spans the picture rather
+  // than showing three of one kind. The full set lives on /your-insights.
+  const recent = interleave(
+    data.breakthroughs ?? [],
+    data.beliefs ?? [],
+    data.basics,
+  ).slice(0, 3);
+  const totalInsights =
+    (data.breakthroughs?.length ?? 0) + (data.beliefs?.length ?? 0) + data.basics.length;
 
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex justify-center pt-4">
-          <ProgressRing progress={data.progress} icon={data.ringIcon} />
+        <div className="flex items-center justify-center gap-4 pt-4">
+          <ProgressRing progress={data.progress} icon={data.ringIcon} size={64} />
+          <div className="flex flex-col gap-1">
+            <h1 className="font-display text-2xl leading-none text-white">{data.name}</h1>
+            <p className="text-sm leading-none text-white/75">
+              Profile Stage: <span className="text-white/90">{data.stage}</span>
+            </p>
+          </div>
         </div>
 
-        <div className="flex gap-2 mt-6">
-          {[
-            { value: data.conversations, label: "Conversations" },
-            { value: data.messages, label: "Messages" },
-            { value: data.insights, label: "Insights" },
-          ].map((stat) => (
-            <Surface
-              key={stat.label}
-              className="flex-1 py-5 px-2 flex flex-col items-center gap-1"
+        <Divider surface="dark" className="mt-4" />
+
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          {STAT_CARDS.map(({ key, label, icon: Icon, to, search }) => (
+            <Link
+              key={key}
+              to={to}
+              search={search as never}
+              className="block active:opacity-90 transition-opacity"
             >
-              <span className="font-display font-normal text-2xl leading-none text-white">
-                {stat.value}
-              </span>
-              <span className="text-uppercase font-medium tracking-[0.12em] uppercase text-white/75">
-                {stat.label}
-              </span>
-            </Surface>
+              <Surface radius="xl" className="h-full flex items-center gap-2.5 px-3 py-2.5">
+                <Icon size={26} strokeWidth={1.5} className="shrink-0 text-white/85" aria-hidden />
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-display font-normal text-2xl leading-none text-white">
+                    {data.stats[key]}
+                  </span>
+                  <span className="text-[13px] leading-[16px] text-white/75">{label}</span>
+                </div>
+              </Surface>
+            </Link>
           ))}
         </div>
 
@@ -82,60 +142,32 @@ function YouRoute() {
             </div>
           </Section>
 
-          <Section heading="Breakthroughs">
-            {data.breakthroughs ? (
-              <ListOfInsights insights={data.breakthroughs} accentLeft />
-            ) : (
-              <EmptyStateCard
-                heading="None yet, keep chatting"
-                body="Breakthroughs happen gradually, then suddenly. As real shifts emerge in your thinking, Yuna will mark them here."
-                leafSrc="/assets/profile/empty-leaf-2.svg"
-              />
-            )}
+          <Section heading="Progress">
+            <DimensionTrends surface={surface} navigate={navigate} />
           </Section>
 
-          <Section heading="Beliefs & Behaviors">
-            {data.beliefs ? (
+          <Section heading="Recent Insights">
+            {recent.length > 0 ? (
               <>
-                <ListOfInsights insights={data.beliefs.slice(0, INSIGHT_PREVIEW_COUNT)} />
-                {data.beliefs.length > INSIGHT_PREVIEW_COUNT && (
-                  <MoreButton
-                    count={data.beliefs.length - INSIGHT_PREVIEW_COUNT}
-                    onClick={() => openInsights("beliefs")}
-                  />
-                )}
+                <ListOfInsights insights={recent} />
+                <Button
+                  surface="dark"
+                  variant="secondary"
+                  fullWidth
+                  className="mt-1"
+                  onClick={() => navigate({ to: "/your-insights" })}
+                >
+                  View all {totalInsights} insights
+                </Button>
               </>
             ) : (
               <EmptyStateCard
                 heading="None yet, keep chatting"
-                body="As your conversations deepen, Yuna will surface the core beliefs shaping how you see the world, and the recurring patterns that tend to follow from them."
+                body="As your conversations deepen, Yuna will surface what she's noticing about you here."
                 leafSrc="/assets/profile/empty-leaf-1.svg"
               />
             )}
           </Section>
-
-          <Section heading="Basics">
-            <ListOfInsights insights={data.basics.slice(0, INSIGHT_PREVIEW_COUNT)} />
-            {data.basics.length > INSIGHT_PREVIEW_COUNT && (
-              <MoreButton
-                count={data.basics.length - INSIGHT_PREVIEW_COUNT}
-                onClick={() => openInsights("basics")}
-              />
-            )}
-          </Section>
-        </div>
-
-        <div className="flex flex-col items-center gap-3 mt-10">
-          <p className="font-display text-xl leading-7 text-white/90 text-center">
-            Something feel off?
-          </p>
-          <p className="text-sm leading-[22px] text-white/75 text-center max-w-[20rem]">
-            Yuna's understanding grows over time. If anything here doesn't feel right, you can help
-            refine it.
-          </p>
-          <Button surface="dark" variant="secondary" size="md" className="mt-1">
-            Help Yuna understand you better
-          </Button>
         </div>
       </div>
     </ScreenChrome>
@@ -168,25 +200,39 @@ function YouEmptyState() {
   return (
     <ScreenChrome hideHeader surface="dark">
       <div className="flex-1 flex flex-col px-6 pt-2 pb-12 text-white yuna-fade-in overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col items-center text-center pt-10">
+        <div className="flex flex-col items-center text-center pt-1">
           <EmptyHeroGlow />
-          <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-6">
+          <h1 className="font-display text-2xl leading-[1.15] tracking-tight mt-5">
             Your space, just beginning
           </h1>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <PreviewRow heading="Focus Areas" body="Where we'll be working together" />
-          <PreviewRow heading="Breakthroughs" body="Real shifts in your thinking, as they emerge" />
+        <div className="mt-7 flex flex-col gap-2.5">
           <PreviewRow
-            heading="Beliefs & Behaviors"
-            body="Patterns I'll start to notice as we talk"
+            icon={Compass}
+            heading="Focus areas"
+            body="Where you and Yuna choose to put your energy."
+          />
+          <PreviewRow
+            icon={LineChart}
+            heading="Progress"
+            body="How your mood, stress, and motivation shift over time."
+          />
+          <PreviewRow
+            icon={Sparkles}
+            heading="Insights"
+            body="The breakthroughs and patterns Yuna reflects back to you."
           />
         </div>
 
-        <div className="mt-10 flex justify-center">
-          <Button surface="dark" variant="primary" onClick={() => startChat()}>
+        <div className="mt-8 flex flex-col items-center gap-2.5">
+          <Button surface="dark" variant="primary" fullWidth onClick={() => startChat()}>
             Start your first conversation
+          </Button>
+          <Button surface="dark" variant="secondary" fullWidth asChild>
+            <Link to="/questionnaire/$id" params={{ id: "your-starting-point" }}>
+              Take a 3-minute questionnaire
+            </Link>
           </Button>
         </div>
       </div>
@@ -226,13 +272,29 @@ function EmptyHeroGlow() {
   );
 }
 
-function PreviewRow({ heading, body }: { heading: string; body: string }) {
+function PreviewRow({
+  icon: Icon,
+  heading,
+  body,
+}: {
+  icon: LucideIcon;
+  heading: string;
+  body: string;
+}) {
   return (
-    <Surface dashed className="px-4 py-3.5">
-      <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/75">
-        {heading}
-      </p>
-      <p className="text-sm leading-[20px] text-white/75 mt-1">{body}</p>
+    <Surface dashed className="flex items-start gap-3 px-4 py-3.5">
+      <span
+        aria-hidden
+        className="h-9 w-9 rounded-lg shrink-0 flex items-center justify-center bg-white/10"
+      >
+        <Icon size={18} strokeWidth={1.5} className="text-white/85" />
+      </span>
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="text-uppercase font-semibold tracking-[0.1em] uppercase text-white/75">
+          {heading}
+        </p>
+        <p className="text-sm leading-[20px] text-white/80">{body}</p>
+      </div>
     </Surface>
   );
 }
