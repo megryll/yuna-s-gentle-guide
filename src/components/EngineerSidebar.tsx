@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { getEngineerNotes, type Gotcha } from "@/lib/engineer-notes";
+import { completeNextAppointment, useAppointments } from "@/lib/therapist-prefs";
 import { addUserNote, editNote, exportOverlay, removeNote, useResolvedNotes, type ResolvedNote } from "@/lib/notes-prefs";
 import { cn } from "@/lib/utils";
 import type { YunaState } from "@/components/YunaStatus";
@@ -148,6 +149,7 @@ export function EngineerSidebar() {
           Last in the panel, and only where each state actually lives. */}
       {path === "/chat" && <YunaStatesSection />}
       {path === "/home" && <HomeStatesSection />}
+      {(path === "/therapist-hub" || path === "/tools") && <TherapistStatesSection />}
     </aside>
   );
 }
@@ -650,6 +652,29 @@ function HomeStatesSection() {
           active={scheduleSession}
           label="Schedule a session"
           onClick={() => setSessionScheduleSession(!scheduleSession)}
+        />
+      </div>
+    </Section>
+  );
+}
+
+// ─── Therapist states (screen trigger) ───────────────────────────────────────
+// The prototype has no clock: "Complete next appointment" stands in for a
+// booked session's time passing, flipping the hub + Tools tile into their
+// post-session (debrief) state.
+
+function TherapistStatesSection() {
+  const appointments = useAppointments();
+  const upcoming = appointments.filter((a) => !a.completed).length;
+  return (
+    <Section title="States" defaultOpen={true}>
+      <div className="flex flex-wrap gap-1">
+        <Chip
+          active={false}
+          label={`Complete next appointment${upcoming ? ` (${upcoming} upcoming)` : ""}`}
+          onClick={completeNextAppointment}
+          disabled={upcoming === 0}
+          disabledReason="No upcoming appointment to complete"
         />
       </div>
     </Section>

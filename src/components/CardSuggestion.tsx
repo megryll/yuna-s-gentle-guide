@@ -66,6 +66,9 @@ type RecoProps = BaseProps & {
    *  (e.g. questionnaires) render their fixed fill + watermark; photo kinds
    *  fall back to KIND_META[kind].naturePath. */
   kind: CardKind;
+  /** Overrides the kind's eyebrow label (the tile keeps the kind's background)
+   *  — for offers that reuse a kind's look but aren't that content type. */
+  eyebrow?: string;
   /** Recommended card's title (white Fraunces on the tile). */
   title: string;
   /** Teaser line rendered under the title inside the tile. */
@@ -205,7 +208,7 @@ export function CardSuggestion(props: CardSuggestionProps) {
       <div>
         <div className={cn("flex items-center gap-1.5", voice && "justify-center")}>
           <MessageCircle size={16} strokeWidth={1.7} aria-hidden className="text-white" />
-          <span className="text-sm font-medium text-white/90">{meta.label}</span>
+          <span className="text-sm font-medium text-white/90">{props.eyebrow ?? meta.label}</span>
           {props.duration && <MetaDot>{props.duration}</MetaDot>}
         </div>
 

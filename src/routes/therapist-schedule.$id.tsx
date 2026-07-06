@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -17,28 +17,69 @@ import {
   SESSION_TYPES,
   timesForDate,
   formatLongDate,
+  toISODate,
 } from "@/lib/therapist-data";
+import { addAppointment, getAppointment, updateAppointment } from "@/lib/therapist-prefs";
 
 export const Route = createFileRoute("/therapist-schedule/$id")({
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): {
+    // Reschedule an existing appointment (hub "Reschedule") — confirm updates
+    // it in place instead of booking a second one.
+    appt?: string;
+    // Preselect a session type (the debrief hand-off books the full session).
+    session?: string;
+  } => ({
+    appt: (s.appt as string | undefined) || undefined,
+    session: s.session === "session" ? "session" : undefined,
+  }),
   head: () => ({ meta: [{ title: "Schedule a Call — Yuna" }] }),
   component: ScheduleRoute,
 });
 
 function ScheduleRoute() {
   const { id } = Route.useParams();
+  const { appt, session: preselect } = Route.useSearch();
   const navigate = useNavigate();
   const surface = useAppMode() === "light" ? "light" : "dark";
 
   const therapist = getTherapist(id) ?? matchedTherapists()[0];
 
-  const [sessionId, setSessionId] = useState<string>("intro");
+  // The appointment this screen owns: seeded by the `appt` param (reschedule),
+  // or set on first confirm so the confirmation's Reschedule edits in place.
+  const [bookedId, setBookedId] = useState<string | null>(() => (getAppointment(appt) ? appt! : null));
+
+  const [sessionId, setSessionId] = useState<string>(
+    () => getAppointment(appt)?.sessionTypeId ?? preselect ?? "intro",
+  );
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
+  const confirmBooking = () => {
+    if (!date || !time) return;
+    const record = {
+      therapistId: therapist.id,
+      sessionTypeId: sessionId,
+      dateISO: toISODate(date),
+      time,
+    };
+    if (bookedId) updateAppointment(bookedId, record);
+    else setBookedId(addAppointment(record));
+    setConfirmed(true);
+  };
+
   const session = useMemo(() => SESSION_TYPES.find((s) => s.id === sessionId) ?? SESSION_TYPES[0], [sessionId]);
   const times = date ? timesForDate(date) : [];
   const step = !date ? 0 : !time ? 1 : 2;
+
+  // Picking a date reveals the times section below the fold — bring it into
+  // view once it has rendered so the user sees the next step.
+  const timesRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (date) timesRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [date]);
 
   const TherapistMini = (
     <div className={`flex items-center gap-3 rounded-2xl ${frostedPanel(surface)} p-3`}>
@@ -54,7 +95,7 @@ function ScheduleRoute() {
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0">
-          <PageHeader surface={surface} onBack={() => navigate({ to: "/tools" })} />
+          <PageHeader surface={surface} onBack={() => navigate({ to: "/therapist-hub" })} />
           <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 text-white flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex flex-col items-center text-center mt-8 yuna-fade-in">
             <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-secondary-green">
@@ -76,7 +117,7 @@ function ScheduleRoute() {
           </div>
 
           <div className="mt-auto pt-8 flex flex-col gap-2">
-            <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/tools" })}>
+            <Button surface={surface} variant="primary" fullWidth onClick={() => navigate({ to: "/therapist-hub" })}>
               Done
             </Button>
             <Button
@@ -105,7 +146,13 @@ function ScheduleRoute() {
       <div className="flex-1 flex flex-col min-h-0">
         <PageHeader
           surface={surface}
-          onBack={() => navigate({ to: "/therapist-profile/$id", params: { id: therapist.id } })}
+          onBack={() =>
+            navigate(
+              appt
+                ? { to: "/therapist-hub" }
+                : { to: "/therapist-profile/$id", params: { id: therapist.id } },
+            )
+          }
           center={<StepDots surface={surface} count={3} current={step} aria-label={`Step ${step + 1} of 3`} />}
         />
 
@@ -149,7 +196,7 @@ function ScheduleRoute() {
           </section>
 
           {date && (
-            <section>
+            <section ref={timesRef}>
               <Label>Times for {formatLongDate(date)}</Label>
               {times.length === 0 ? (
                 <p className="text-sm text-white/75">No times available. Try another day.</p>
@@ -167,7 +214,7 @@ function ScheduleRoute() {
         </div>
 
         <footer className="shrink-0 px-6 pb-10 pt-3">
-          <Button surface={surface} variant="primary" fullWidth disabled={!date || !time} onClick={() => setConfirmed(true)}>
+          <Button surface={surface} variant="primary" fullWidth disabled={!date || !time} onClick={confirmBooking}>
             {confirmLabel}
           </Button>
         </footer>

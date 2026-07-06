@@ -31,8 +31,10 @@ import {
   toggleSaved,
   setPreferencesApplied,
   resetTherapistPrefs,
+  preferencesAppliedThisSession,
+  getAppointments,
 } from "@/lib/therapist-prefs";
-import { useUserType } from "@/lib/user-type";
+import { getUserType, useUserType } from "@/lib/user-type";
 import { matchedTherapists, getTherapist, type Therapist } from "@/lib/therapist-data";
 
 export const Route = createFileRoute("/therapist-recommendations")({
@@ -69,6 +71,18 @@ function RecommendationsRoute() {
   // "Returning" lands straight on the deck. Only react to an actual toggle
   // change (prevUserType) so the survey's own setPreferencesApplied → navigate
   // back here isn't clobbered on mount. Mirrors goals.tsx.
+  // A "New" user starts at the pre-survey teaser on every fresh page load: a
+  // preferencesApplied flag restored from a previous session's localStorage is
+  // stale for them. A flag set *this* session is the survey's own completion
+  // hand-off and must survive the mount, so it's exempt.
+  // …unless a booked appointment exists: the journey is mid-flight (the hub's
+  // "Browse more therapists" lands here), so a fresh-load reset would silently
+  // cancel the booking. Only the explicit admin toggle flip resets past one.
+  useEffect(() => {
+    if (getUserType() === "new" && !preferencesAppliedThisSession() && getAppointments().length === 0)
+      resetTherapistPrefs();
+  }, []);
+
   const userType = useUserType();
   const prevUserType = useRef(userType);
   useEffect(() => {
@@ -130,7 +144,10 @@ function RecommendationsRoute() {
         {showSaved ? (
           <SavedView surface={surface} list={savedList} savedIds={savedIds} onView={openProfile} />
         ) : !preferencesApplied ? (
-          <Teaser surface={surface} onStart={() => navigate({ to: "/therapist-preferences" })} />
+          <Teaser
+            surface={surface}
+            onStart={() => navigate({ to: "/therapist-preferences", search: { step: 0 } })}
+          />
         ) : (
           // One vertical scroll owns the title, hint, card, and buttons, so on a
           // short frame (SE) everything scrolls together and nothing is clipped
@@ -186,6 +203,7 @@ function RecommendationsRoute() {
           flashToast("Your preferences have been applied.");
         }}
       />
+
     </PhoneFrame>
   );
 }
@@ -205,7 +223,7 @@ function Teaser({ surface, onStart }: { surface: "dark" | "light"; onStart: () =
         Find a therapist who truly fits you.
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-white/85 max-w-[17rem]">
-        Answer a few questions about your focus, insurance, and preferences. Then meet the therapists Yuna matches to you.
+        Answer a few questions about what matters to you, your location, and coverage. Then meet the therapists Yuna matches to you.
       </p>
       <Button surface={surface} variant="primary" fullWidth onClick={onStart} className="mt-8 max-w-xs">
         Take the preferences survey

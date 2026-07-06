@@ -52,6 +52,27 @@ function DSCardSuggestion() {
             }
           />
           <SurfacePair
+            innerLabel="Text — reco with eyebrow override"
+            align="start"
+            renderRow={(s) =>
+              themed(
+                s,
+                <div className="flex justify-start">
+                  <CardSuggestion
+                    mode="text"
+                    kind="self-discovery"
+                    eyebrow="Custom Eyebrow"
+                    title="An offer that reuses a kind's look"
+                    description="The tile keeps the kind's background; only the eyebrow label changes."
+                    startLabel="Browse"
+                    surface={s}
+                    frostedImage={modeImage(s)}
+                  />
+                </div>,
+              )
+            }
+          />
+          <SurfacePair
             innerLabel="Voice — centered slide-up sheet (escalation)"
             renderRow={(s) =>
               themed(
@@ -99,6 +120,8 @@ function DSCardSuggestion() {
   // variant="reco" (default) — recommend a card
   kind:          CardKind           // drives the eyebrow label + tile background
                                     //   (solid kinds: fixed fill + watermark)
+  eyebrow?:      string             // overrides the kind's eyebrow label; tile
+                                    //   keeps the kind's background
   title:         string             // recommended card's title (white Fraunces)
   description?:  string             // teaser line under the title, inside the tile
   duration?:     string             // length estimate — "• 5 min" after the eyebrow

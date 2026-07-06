@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Yuna — Conversation Summary</title>
+    <style>
+      @font-face {
+        font-family: "Fraunces";
+        src: url("/fonts/Fraunces-Variable.ttf") format("truetype");
+        font-weight: 300 900;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Stara";
+        src: url("/fonts/Stara-Medium.otf") format("opentype");
+        font-weight: 500;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Stara";
+        src: url("/fonts/Stara-SemiBold.otf") format("opentype");
+        font-weight: 600;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Stara";
+        src: url("/fonts/Stara-Bold.otf") format("opentype");
+        font-weight: 700;
+        font-display: swap;
+      }
+
+      :root {
+        --ink: #22301f;
+        --ink-soft: rgba(34, 48, 31, 0.72);
+        --ink-faint: rgba(34, 48, 31, 0.5);
+        --green: #4e7d43;
+        --hairline: rgba(34, 48, 31, 0.14);
+      }
+
+      * { box-sizing: border-box; margin: 0; }
+
+      body {
+        background: #e7e5df;
+        font-family: "Stara", -apple-system, sans-serif;
+        font-weight: 500;
+        color: var(--ink);
+        padding: 48px 16px 80px;
+      }
+
+      .page {
+        max-width: 680px;
+        margin: 0 auto;
+        background: #fdfdfb;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 12px 40px rgba(0, 0, 0, 0.14);
+        padding: 64px 64px 56px;
+      }
+      @media (max-width: 560px) {
+        body { padding: 16px 8px 48px; }
+        .page { padding: 40px 28px 36px; }
+      }
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .wordmark {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 600;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+      .doc-type {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      h1 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 550;
+        font-size: 34px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin-top: 36px;
+      }
+      .meta {
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+      }
+      .meta strong { font-weight: 600; color: var(--ink); }
+
+      section { margin-top: 36px; }
+      h2 {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--green);
+      }
+      section p {
+        margin-top: 10px;
+        font-size: 15px;
+        line-height: 1.65;
+        color: var(--ink-soft);
+      }
+
+      .trend { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+      .trend-row { display: grid; grid-template-columns: 120px 1fr 64px; align-items: center; gap: 14px; }
+      .trend-label { font-size: 13px; font-weight: 600; }
+      .trend-bar { height: 8px; border-radius: 4px; background: rgba(34, 48, 31, 0.08); overflow: hidden; }
+      .trend-fill { height: 100%; border-radius: 4px; background: var(--green); opacity: 0.75; }
+      .trend-value { font-size: 13px; color: var(--ink-soft); text-align: right; }
+
+      ul { margin-top: 10px; padding-left: 18px; }
+      li { font-size: 15px; line-height: 1.65; color: var(--ink-soft); margin-top: 4px; }
+
+      footer {
+        margin-top: 48px;
+        padding-top: 20px;
+        border-top: 1px solid var(--hairline);
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--ink-faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="brand">
+        <span class="wordmark">Yuna</span>
+        <span class="doc-type">Conversation summary</span>
+      </div>
+
+      <h1>Getting to know your new client</h1>
+      <p class="meta">
+        Prepared for <strong id="therapist">your therapist</strong><span id="credentials"></span><br />
+        Generated on <span id="date"></span> · Shared with the client's consent
+      </p>
+
+      <section>
+        <h2>What they've been working on</h2>
+        <p>
+          Recent conversations have centered on work stress and setting boundaries with family.
+          They have been practicing grounding techniques and reported finding them helpful during
+          high-pressure moments at work.
+        </p>
+      </section>
+
+      <section>
+        <h2>Recent conversations</h2>
+        <p>
+          Six conversations over the past month, mostly about workload, sleep, and one difficult
+          conversation they have been putting off. Sessions were a mix of open reflection and
+          short guided exercises.
+        </p>
+      </section>
+
+      <section>
+        <h2>Mood check-ins</h2>
+        <p>Self-reported screeners over the past three months.</p>
+        <div class="trend">
+          <div class="trend-row">
+            <span class="trend-label">Anxiety · GAD-7</span>
+            <div class="trend-bar"><div class="trend-fill" style="width: 38%"></div></div>
+            <span class="trend-value">11 → 8</span>
+          </div>
+          <div class="trend-row">
+            <span class="trend-label">Mood · PHQ-9</span>
+            <div class="trend-bar"><div class="trend-fill" style="width: 30%"></div></div>
+            <span class="trend-value">9 → 8</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Their goals</h2>
+        <ul>
+          <li>Build a consistent wind-down routine before bed.</li>
+          <li>Speak up at least once in the weekly team meeting.</li>
+        </ul>
+      </section>
+
+      <footer>
+        This summary reflects self-reported conversations and check-ins with Yuna. It is not a
+        clinical assessment or diagnosis. The client chose which sections to include and can
+        revoke access at any time.
+      </footer>
+    </div>
+
+    <script>
+      // Personalized via query params from the app: ?therapist=…&credentials=…
+      const params = new URLSearchParams(location.search);
+      const t = params.get("therapist");
+      const c = params.get("credentials");
+      if (t) document.getElementById("therapist").textContent = t;
+      if (c) document.getElementById("credentials").textContent = ", " + c;
+      document.getElementById("date").textContent = new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    </script>
+  </body>
+</html>
