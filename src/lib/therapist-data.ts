@@ -475,10 +475,14 @@ export const SURVEY_QUESTIONS: SurveyQuestion[] = [
     budget: {
       id: "sessionBudget",
       label: "What feels comfortable per session?",
-      options: ["Under $100", "$100–200", "$200+"],
+      options: ["Under $100", "$100–$150", "$150+"],
     },
   },
 ];
+
+/** The prototype's stand-in for device geolocation: the location Yuna
+ *  "detected", offered as a one-tap pick on the survey's location question. */
+export const DETECTED_LOCATION = { city: "San Francisco", state: "CA", zip: "94102" };
 
 /** Location typeahead suggestions for the survey + filters drawer. At least one
  *  city per US state (plus DC), so a search by any state name returns a match. */
@@ -543,9 +547,10 @@ export const LOCATIONS = [
 
 export type SessionType = { id: string; label: string; duration: string; body: string };
 
+// One offering only: the standard 45-minute session. (Free intro calls were
+// removed from the flow; the id stays "session" so stored appointments match.)
 export const SESSION_TYPES: SessionType[] = [
-  { id: "intro", label: "Free intro call", duration: "15 min", body: "A quick conversation to see if you're a fit." },
-  { id: "session", label: "First full session", duration: "50 min", body: "A full intake session to begin working together." },
+  { id: "session", label: "Therapy session", duration: "45 min", body: "A full session to begin working together." },
 ];
 
 // Indexed by JS weekday (0 = Sunday). Empty = closed that day.
@@ -640,6 +645,26 @@ export function guidedDebriefScript(therapistFirstName: string): SurveyChatScrip
       "Thank you for sharing that. One more: did you feel like you could open up, or was something missing?",
     wrapUp: `That's helpful to sit with, and whatever you decide is okay. If it felt right, you can book a full session with ${name} below. If it didn't, I can help you keep looking.`,
   };
+}
+
+// ─── Guided session — Session prep ───────────────────────────────────────────
+// The hub's "Prepare with Yuna" tile opens a guided conversation ahead of an
+// upcoming appointment. Contextual greeting only — after Yuna's opener the
+// conversation is a normal open session (no fixed follow-up or hand-off).
+
+export const GUIDED_PREP_TITLE = "Prepare for your therapy session";
+
+export function guidedPrepGreeting(
+  therapistFirstName: string,
+  dateLabel: string | null,
+): string[] {
+  const session = dateLabel
+    ? `your session with ${therapistFirstName} on ${dateLabel}`
+    : `your upcoming session with ${therapistFirstName}`;
+  return [
+    `I'm glad you're taking a moment to get ready for ${session}.`,
+    `What feels most important to bring up with ${therapistFirstName}? We can talk through your goals, or anything you're unsure about.`,
+  ];
 }
 
 // ─── Share summary with your therapist ───────────────────────────────────────

@@ -15,6 +15,9 @@ export type Appointment = {
   sessionTypeId: string;
   dateISO: string;
   time: string;
+  /** Secured on the therapist's booking platform. Requests start unconfirmed
+   *  (the timeslot is held 24 hours); the hub's confirm action flips this. */
+  confirmed?: boolean;
   completed?: boolean;
   debriefed?: boolean;
   summaryShared?: boolean;

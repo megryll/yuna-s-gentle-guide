@@ -39,11 +39,10 @@ function useTherapistTool(): Tool {
 
   if (upcoming) {
     const name = getTherapist(upcoming.therapistId)?.name.split(" ")[0] ?? "your therapist";
-    const kind = upcoming.sessionTypeId === "intro" ? "Intro call" : "Session";
     return {
       ...THERAPIST_TILE,
       title: "Your Therapist",
-      caption: `${kind} with ${name} · ${formatShortDate(fromISODate(upcoming.dateISO))}, ${upcoming.time}`,
+      caption: `Session with ${name} · ${formatShortDate(fromISODate(upcoming.dateISO))}, ${upcoming.time}`,
       emoji: "🗓️",
       badge: "Upcoming",
       to: "/therapist-hub",

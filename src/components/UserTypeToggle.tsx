@@ -5,6 +5,7 @@ import {
   useUserType,
   type UserType,
 } from "@/lib/user-type";
+import { resetTherapistPrefs } from "@/lib/therapist-prefs";
 
 export function UserTypeToggle() {
   const userType = useUserType();
@@ -25,7 +26,12 @@ export function UserTypeToggle() {
       <ToggleButton
         active={displayed === "new"}
         disabled={false}
-        onClick={() => setUserType("new")}
+        onClick={() => {
+          setUserType("new");
+          // A brand-new user has no therapist journey: clear saved therapists,
+          // survey completion, and any booked appointments, wherever we are.
+          resetTherapistPrefs();
+        }}
       >
         New
       </ToggleButton>

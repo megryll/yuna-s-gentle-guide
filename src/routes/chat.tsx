@@ -53,10 +53,13 @@ import { useAppMode, useModeImage } from "@/lib/theme-prefs";
 import {
   GUIDED_DEBRIEF_STEPS,
   guidedDebriefScript,
+  guidedPrepGreeting,
   getTherapist,
   matchedTherapists,
+  formatLongDate,
+  fromISODate,
 } from "@/lib/therapist-data";
-import { markDebriefed } from "@/lib/therapist-prefs";
+import { getAppointments, markDebriefed } from "@/lib/therapist-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -66,7 +69,7 @@ export const Route = createFileRoute("/chat")({
     revisit?: string;
     mode?: "text" | "voice";
     guided?: string;
-    flow?: "therapist-debrief";
+    flow?: "therapist-debrief" | "therapist-prep";
     therapist?: string;
     personalize?: boolean;
   } => ({
@@ -74,10 +77,14 @@ export const Route = createFileRoute("/chat")({
     revisit: s.revisit as string | undefined,
     mode: s.mode === "voice" ? "voice" : "text",
     guided: s.guided as string | undefined,
-    // Scripted-flow marker — selects a bespoke opener/hand-off (the debrief's
-    // session-booking offer). Absent for ordinary conversations.
-    flow: s.flow === "therapist-debrief" ? "therapist-debrief" : undefined,
-    // The therapist a scripted flow is about (the debrief names them).
+    // Scripted-flow marker — selects a bespoke opener (the pre-session prep)
+    // or opener + hand-off (the debrief's session-booking offer). Absent for
+    // ordinary conversations.
+    flow:
+      s.flow === "therapist-debrief" || s.flow === "therapist-prep"
+        ? (s.flow as "therapist-debrief" | "therapist-prep")
+        : undefined,
+    // The therapist a scripted flow is about (both flows name them).
     therapist: (s.therapist as string | undefined) || undefined,
     // Deep-link the Personalize Yuna drawer open (used by the /gallery board).
     // The search parser coerces `personalize=1` to the number 1, so accept the
@@ -241,6 +248,24 @@ function Chat() {
   const debriefTherapist = isDebrief ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
   const debriefFirstName = debriefTherapist?.name.split(" ")[0] ?? "";
   const script = isDebrief ? guidedDebriefScript(debriefFirstName) : null;
+  // The pre-session prep is greeting-only: Yuna opens with the upcoming
+  // appointment's context (therapist, date), then it's an ordinary open
+  // conversation — no fixed follow-up, no hand-off.
+  const isPrep = flow === "therapist-prep";
+  const prepTherapist = isPrep ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
+  const prepAppointment = prepTherapist
+    ? (getAppointments()
+        .filter((a) => !a.completed && a.therapistId === prepTherapist.id)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0] ?? null)
+    : null;
+  const prepGreeting = prepTherapist
+    ? guidedPrepGreeting(
+        prepTherapist.name.split(" ")[0],
+        prepAppointment ? formatLongDate(fromISODate(prepAppointment.dateISO)) : null,
+      )
+    : null;
+  // Scripted-flow greeting lines, whichever flow is active.
+  const greetingLines = script?.greeting ?? prepGreeting;
   const guidedSteps = isDebrief ? GUIDED_DEBRIEF_STEPS : GUIDED_STEPS;
   // Guided-session progress: the header tracker shows every step done and the
   // conversation closes with a completion card. Dev-only (EngineerSidebar).
@@ -413,7 +438,7 @@ function Chat() {
       }
     }
 
-    if (isDebrief && !isRevisit) {
+    if ((isDebrief || isPrep) && !isRevisit) {
       respondScripted();
     } else if (isReturningReminisce) {
       respondReminisce();
@@ -701,14 +726,14 @@ function Chat() {
     }, delay);
   };
 
-  // Scripted-flow opener (the debrief). Yuna plays the greeting lines one
+  // Scripted-flow opener (debrief / prep). Yuna plays the greeting lines one
   // bubble at a time (last one asks the first question), then waits for the
-  // user's answers — advanceScripted drives the rest. Voice mode speaks the
-  // greeting via VoiceSession.initialGreetingLines instead (see
-  // scriptedVoiceGreeting below).
+  // user's answers — the debrief's advanceScripted drives the rest; prep falls
+  // through to open conversation. Voice mode speaks the greeting via
+  // VoiceSession.initialGreetingLines instead (see scriptedVoiceGreeting below).
   const respondScripted = () => {
-    if (mode === "voice" || !script) return;
-    const lines = script.greeting;
+    if (mode === "voice" || !greetingLines) return;
+    const lines = greetingLines;
     const playLine = (i: number) => {
       if (i >= lines.length) return;
       setTyping(true);
@@ -798,10 +823,10 @@ function Chat() {
       return;
     }
     // Suggestion-chip entries from /home still go through the older
-    // limitations + voice-pitch flow (respondToInitial). Chat-now sessions
-    // skip straight to Claude so the open intake exchange isn't interrupted
+    // limitations + voice-pitch flow (respondToInitial). Chat-now and prep
+    // sessions skip straight to Claude so the open exchange isn't interrupted
     // by a canned acknowledgement.
-    if (isFirstUserMessage && !isChatNowSessionRef.current) {
+    if (isFirstUserMessage && !isPrep && !isChatNowSessionRef.current) {
       respondToInitial(value);
     } else {
       void respondClaude(value);
@@ -988,7 +1013,7 @@ function Chat() {
   // then it's a normal voice session (the follow-up/wrap-up + hand-off are the
   // text-mode affordances). Only on a fresh entry — a revisit resumes.
   const scriptedVoiceGreeting =
-    script && !(revisit === "1" || revisit === "true") ? [...script.greeting] : undefined;
+    greetingLines && !(revisit === "1" || revisit === "true") ? [...greetingLines] : undefined;
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
@@ -1147,7 +1172,6 @@ function Chat() {
                       navigate({
                         to: "/therapist-schedule/$id",
                         params: { id: debriefTherapist.id },
-                        search: { session: "session" },
                       })
                     }
                   >

@@ -1,29 +1,15 @@
-import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bookmark, MapPin, Clock, Video, Globe, Phone } from "lucide-react";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { Bookmark, MapPin, Clock, Video, Globe } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
 import { Tag } from "@/components/Tag";
 import { Divider } from "@/components/Divider";
-import { Toast, ToastViewport } from "@/components/Toast";
-import { TextField } from "@/components/TextField";
-import { TextArea } from "@/components/TextArea";
-import { YunaAvatar } from "@/components/YunaAvatar";
 import { frostedPanel, TherapistPhoto } from "@/components/TherapistCard";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-} from "@/components/ui/drawer";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useTransientToast } from "@/lib/use-transient-toast";
 import { useSavedIds, toggleSaved } from "@/lib/therapist-prefs";
-import { getTherapist, matchedTherapists, type Therapist } from "@/lib/therapist-data";
+import { getTherapist, matchedTherapists } from "@/lib/therapist-data";
 
 export const Route = createFileRoute("/therapist-profile/$id")({
   head: () => ({ meta: [{ title: "Therapist Profile — Yuna" }] }),
@@ -33,14 +19,11 @@ export const Route = createFileRoute("/therapist-profile/$id")({
 function ProfileRoute() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const router = useRouter();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const savedIds = useSavedIds();
 
   const therapist = getTherapist(id) ?? matchedTherapists()[0];
-
-  const [emailOpen, setEmailOpen] = useState(false);
-  const { message: sentToast, show: showSentToast, dismiss: dismissSentToast } =
-    useTransientToast();
 
   const saved = savedIds.includes(therapist.id);
   const firstName = therapist.name.replace(/^Dr\.\s+/, "").split(" ")[0];
@@ -53,11 +36,16 @@ function ProfileRoute() {
 
   return (
     <PhoneFrame themed>
+      <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Hero */}
         <PageHeader
           surface={surface}
-          onBack={() => navigate({ to: "/therapist-recommendations" })}
+          onBack={() =>
+            router.history.canGoBack()
+              ? router.history.back()
+              : navigate({ to: "/therapist-recommendations" })
+          }
           trailing={
             <Button
               surface={surface}
@@ -83,7 +71,7 @@ function ProfileRoute() {
           </div>
         </div>
 
-        <div className="px-6 pb-10 flex flex-col gap-6 yuna-fade-in">
+        <div className="px-6 pb-6 flex flex-col gap-6 yuna-fade-in">
           {/* About */}
           <section>
             <SectionTitle>About {firstName}</SectionTitle>
@@ -163,45 +151,21 @@ function ProfileRoute() {
             />
           </section>
 
-          {/* Contact CTA */}
-          <section className={`rounded-3xl ${frostedPanel(surface)} p-6 flex flex-col items-center gap-4`}>
-            <Button surface={surface} variant="link" asChild>
-              <a href="tel:+15555555555" className="flex items-center gap-2 text-base font-semibold">
-                <Phone size={18} strokeWidth={2} aria-hidden /> Call (555) 555-5555
-              </a>
-            </Button>
-            <Button surface={surface} variant="primary" fullWidth onClick={() => setEmailOpen(true)}>
-              Draft an email with Yuna
-            </Button>
-            <Button surface={surface} variant="secondary" fullWidth onClick={() => navigate({ to: "/therapist-schedule/$id", params: { id: therapist.id } })}>
-              Schedule a call
-            </Button>
-          </section>
         </div>
       </div>
 
-      {sentToast && (
-        <ToastViewport>
-          <Toast
-            surface={surface}
-            variant="success"
-            message="Your message has been sent."
-            onDismiss={dismissSentToast}
-            className="yuna-fade-in"
-          />
-        </ToastViewport>
-      )}
-
-      <EmailDrawer
-        open={emailOpen}
-        onOpenChange={setEmailOpen}
-        therapist={therapist}
-        firstName={firstName}
-        onSent={() => {
-          setEmailOpen(false);
-          showSentToast("Your message has been sent.");
-        }}
-      />
+      {/* Persistent CTA — always in view, no scrolling needed to book. */}
+      <footer className="shrink-0 px-6 pb-10 pt-3">
+        <Button
+          surface={surface}
+          variant="primary"
+          fullWidth
+          onClick={() => navigate({ to: "/therapist-schedule/$id", params: { id: therapist.id } })}
+        >
+          Schedule a session
+        </Button>
+      </footer>
+      </div>
     </PhoneFrame>
   );
 }
@@ -223,81 +187,5 @@ function InfoRows({ surface, rows }: { surface: "dark" | "light"; rows: [string,
         </div>
       ))}
     </div>
-  );
-}
-
-// ─── Email draft drawer ──────────────────────────────────────────────────────
-// One-off multiline message field, kept inline (single call site). If a second
-// place needs a multiline input, promote this to a `TextArea` DS primitive.
-
-function EmailDrawer({
-  open,
-  onOpenChange,
-  therapist,
-  firstName,
-  onSent,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  therapist: Therapist;
-  firstName: string;
-  onSent: () => void;
-}) {
-  const surface = useAppMode();
-  const dark = surface === "dark";
-  const focus = therapist.issues[0]?.toLowerCase() ?? "what I have been working through";
-
-  const [subject, setSubject] = useState("Connecting through Yuna about working together");
-  const [message, setMessage] = useState(
-    `Hi ${firstName},\n\nMy name is Megan. I was matched with you through Yuna, my wellness companion, and your profile resonated with what I have been working through.\n\nLately I have been focused on ${focus}, and your approach stood out to me. I would love to find out whether you are taking on new clients, and what a good first step might look like.\n\nThank you for your time,\nMegan`,
-  );
-
-  return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90%]">
-        <DrawerHeader className="px-6 pt-3 pb-2 text-left">
-          <div className="flex items-center gap-3">
-            <YunaAvatar size={40} />
-            <div>
-              <DrawerTitle>Drafted by Yuna</DrawerTitle>
-              <DrawerDescription className="mt-1">
-                Yuna pulled from what you have shared. Edit anything before you send.
-              </DrawerDescription>
-            </div>
-          </div>
-        </DrawerHeader>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-2 flex flex-col gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className={"flex items-center gap-2 rounded-2xl px-4 py-3 " + (dark ? "bg-white/10" : "bg-foreground/5")}>
-            <span className="text-uppercase font-semibold uppercase tracking-[0.12em] text-muted-foreground">To</span>
-            <span className="text-sm font-semibold truncate">{therapist.name}</span>
-          </div>
-
-          <label className="flex flex-col gap-2">
-            <span className="text-uppercase font-semibold uppercase tracking-[0.12em] text-muted-foreground">Subject</span>
-            <TextField surface={surface} value={subject} onChange={(e) => setSubject(e.target.value)} />
-          </label>
-
-          <label className="flex flex-col gap-2">
-            <span className="text-uppercase font-semibold uppercase tracking-[0.12em] text-muted-foreground">Message</span>
-            <TextArea
-              surface={surface}
-              rows={9}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <DrawerFooter className="px-6 pb-8 gap-2">
-          <Button surface={surface} variant="primary" fullWidth onClick={onSent}>
-            Send email
-          </Button>
-          <Button surface={surface} variant="link" onClick={() => onOpenChange(false)} className="mx-auto">
-            Cancel
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
   );
 }

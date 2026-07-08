@@ -7,10 +7,11 @@ export type ChatLaunchSearch = {
   mode?: "text" | "voice";
   revisit?: string;
   // Guided-session title shown in the chat header band, and the flow marker that
-  // selects a scripted opener (the post-appointment debrief). Both must be
-  // carried through the first-session disclaimer gate, so they live here.
+  // selects a scripted opener (the post-appointment debrief / pre-session prep).
+  // Both must be carried through the first-session disclaimer gate, so they
+  // live here.
   guided?: string;
-  flow?: "therapist-debrief";
+  flow?: "therapist-debrief" | "therapist-prep";
   // The therapist a scripted flow is about (the debrief names them and its
   // hand-off card books with them).
   therapist?: string;
@@ -62,14 +63,14 @@ export function useChatLaunchActive(): boolean {
 // Entry-point helper. First conversation → show disclaimers on the current
 // screen, then continue to /chat. Every later conversation → navigate straight
 // through (the in-memory `seenDisclaimers` flag survives in-app navigation).
-// The therapist debrief skips the gate entirely — by user decision the
-// scripted conversation opens without the three first-session disclaimer
-// screens. The seen flag is left untouched, so a later ordinary first
-// conversation still gets them.
+// The scripted therapist flows (debrief, session prep) skip the gate entirely —
+// by user decision those conversations open without the three first-session
+// disclaimer screens. The seen flag is left untouched, so a later ordinary
+// first conversation still gets them.
 export function useStartChat() {
   const navigate = useNavigate();
   return (search?: ChatLaunchSearch) => {
-    if (search?.flow === "therapist-debrief" || getSeenDisclaimers()) {
+    if (search?.flow || getSeenDisclaimers()) {
       navigate({ to: "/chat", search: search ?? {} });
     } else {
       requestChatLaunch(search);

@@ -95,7 +95,7 @@ export const PAGES: ScreenEntry[] = [
       { label: "Survey · Location", to: "/therapist-preferences", search: { step: 3 } },
       { label: "Survey · Insurance", to: "/therapist-preferences", search: { step: 4 } },
       { label: "Therapist Profile", to: "/therapist-profile/$id", params: { id: "kerstin" } },
-      { label: "Schedule Call", to: "/therapist-schedule/$id", params: { id: "kerstin" } },
+      { label: "Schedule Session", to: "/therapist-schedule/$id", params: { id: "kerstin" } },
       { label: "Your Therapist · Hub", to: "/therapist-hub" },
       { label: "Share Summary", to: "/therapist-share-summary/$id", params: { id: "kerstin" } },
       {

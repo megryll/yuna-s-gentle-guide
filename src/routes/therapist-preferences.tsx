@@ -18,7 +18,7 @@ import { useAppMode } from "@/lib/theme-prefs";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop } from "@/lib/survey-sound";
 import { setPreferencesApplied } from "@/lib/therapist-prefs";
-import { SURVEY_QUESTIONS, LOCATIONS, type SurveyQuestion } from "@/lib/therapist-data";
+import { SURVEY_QUESTIONS, LOCATIONS, DETECTED_LOCATION, type SurveyQuestion } from "@/lib/therapist-data";
 
 // ─── Therapist preferences survey ────────────────────────────────────────────
 // The preferences questionnaire, opened from the recommendations teaser. The
@@ -632,48 +632,68 @@ function LocationQuestion({
     );
   }
 
+  const detected = `${DETECTED_LOCATION.city}, ${DETECTED_LOCATION.state}`;
+
   return (
-    <div className="relative">
-      <TextField
+    <div className="flex flex-col gap-4">
+      {/* The detected location as a one-tap pick, with search as the fallback. */}
+      <MultipleChoice
         surface={surface}
-        placeholder="e.g. Portland, OR or 98101"
-        leading={<Search size={16} className={dark ? "text-white/60" : "text-foreground/50"} aria-hidden />}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        ariaLabel="Use your detected location"
+        options={[
+          {
+            value: detected,
+            label: detected,
+            subtitle: "Detected from your device",
+            icon: <MapPin size={16} aria-hidden />,
+          },
+        ]}
+        value={null}
+        onChange={(v) => onSelect(v)}
       />
-      {query.length > 0 && (
-        <ul
-          className={
-            "mt-2 overflow-hidden rounded-2xl border " +
-            (dark ? "border-white/20 bg-white/10 backdrop-blur-md" : "border-foreground/15 bg-white/70 backdrop-blur-md")
-          }
-        >
-          {matches.length === 0 ? (
-            <li className={"px-4 py-3 text-sm " + (dark ? "text-white/70" : "text-foreground/70")}>
-              No matches. Try a city, state, or ZIP.
-            </li>
-          ) : (
-            matches.map((l) => (
-              <li key={l.zip}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(`${l.city}, ${l.state}`)}
-                  className={
-                    "w-full flex items-center gap-2 px-4 py-3 text-left text-sm transition-colors " +
-                    (dark ? "text-white active:bg-white/10" : "text-foreground active:bg-foreground/5")
-                  }
-                >
-                  <MapPin size={15} className={dark ? "text-white/60" : "text-foreground/50"} aria-hidden />
-                  <span className="font-semibold">{l.city}</span>
-                  <span className={dark ? "text-white/70" : "text-foreground/70"}>
-                    {l.state} · {l.zip}
-                  </span>
-                </button>
+      <Divider surface={surface} label="or" />
+      <div className="relative">
+        <TextField
+          surface={surface}
+          placeholder="Search another city, state, or ZIP"
+          leading={<Search size={16} className={dark ? "text-white/60" : "text-foreground/50"} aria-hidden />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {query.length > 0 && (
+          <ul
+            className={
+              "mt-2 overflow-hidden rounded-2xl border " +
+              (dark ? "border-white/20 bg-white/10 backdrop-blur-md" : "border-foreground/15 bg-white/70 backdrop-blur-md")
+            }
+          >
+            {matches.length === 0 ? (
+              <li className={"px-4 py-3 text-sm " + (dark ? "text-white/70" : "text-foreground/70")}>
+                No matches. Try a city, state, or ZIP.
               </li>
-            ))
-          )}
-        </ul>
-      )}
+            ) : (
+              matches.map((l) => (
+                <li key={l.zip}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(`${l.city}, ${l.state}`)}
+                    className={
+                      "w-full flex items-center gap-2 px-4 py-3 text-left text-sm transition-colors " +
+                      (dark ? "text-white active:bg-white/10" : "text-foreground active:bg-foreground/5")
+                    }
+                  >
+                    <MapPin size={15} className={dark ? "text-white/60" : "text-foreground/50"} aria-hidden />
+                    <span className="font-semibold">{l.city}</span>
+                    <span className={dark ? "text-white/70" : "text-foreground/70"}>
+                      {l.state} · {l.zip}
+                    </span>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

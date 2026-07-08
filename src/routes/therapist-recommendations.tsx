@@ -7,7 +7,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { Bookmark, SlidersHorizontal, Clock, Sprout, MoveHorizontal } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -56,6 +56,7 @@ function applyFilters(list: Therapist[], f: TherapistFilters): Therapist[] {
 
 function RecommendationsRoute() {
   const navigate = useNavigate();
+  const router = useRouter();
   const surface = useAppMode() === "light" ? "light" : "dark";
   const isSE = useFrameSize().id === "se";
   const preferencesApplied = usePreferencesApplied();
@@ -114,7 +115,9 @@ function RecommendationsRoute() {
         {/* Top bar */}
         <PageHeader
           surface={surface}
-          onBack={() => navigate({ to: "/tools" })}
+          onBack={() =>
+            router.history.canGoBack() ? router.history.back() : navigate({ to: "/tools" })
+          }
           trailing={
             <>
               <Button

@@ -35,7 +35,6 @@ import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
 import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
-import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
 import { SchedulePrioritizeGate } from "@/components/SchedulePrioritizeDrawer";
 import { ScheduleSessionDrawer } from "@/components/ScheduleSessionDrawer";
 
@@ -358,7 +357,6 @@ export function HomeScreen({
 
         <AppBar surface={surface} />
       </div>
-      <FirstSessionDisclaimerGate />
       <SchedulePrioritizeGate />
       <ScheduleSessionDrawer
         open={scheduleOpen}
