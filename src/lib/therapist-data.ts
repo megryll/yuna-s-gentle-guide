@@ -1,3 +1,6 @@
+import type { HomeCard } from "@/lib/home-cards";
+import type { Appointment } from "@/lib/therapist-prefs";
+
 // ─── Therapist Recommendations — data model ──────────────────────────────────
 // Ported from the reference prototype's therapistData.js, retyped for this
 // codebase. Each therapist has a headshot photo under /public/therapists/ (the
@@ -644,6 +647,23 @@ export function guidedDebriefScript(therapistFirstName: string): SurveyChatScrip
     followUp:
       "Thank you for sharing that. One more: did you feel like you could open up, or was something missing?",
     wrapUp: `That's helpful to sit with, and whatever you decide is okay. If it felt right, you can book a full session with ${name} below. If it didn't, I can help you keep looking.`,
+  };
+}
+
+// ─── Home follow-up card ─────────────────────────────────────────────────────
+// Once a booked session's time has passed (and it hasn't been debriefed), the
+// Home feed pins a guided-session card offering the same debrief chat the hub
+// does. Built per-appointment so the copy names the therapist and the date.
+
+export function debriefHomeCard(a: Appointment): HomeCard {
+  const t = getTherapist(a.therapistId) ?? matchedTherapists()[0];
+  const name = t.name.split(" ")[0];
+  return {
+    type: "guided-session",
+    id: `therapist-debrief-${a.id}`,
+    title: `How did your session with ${name} go?`,
+    subtitle: `You met with ${name} on ${formatLongDate(fromISODate(a.dateISO))}. Let's take a few minutes to unpack it together.`,
+    isNew: true,
   };
 }
 

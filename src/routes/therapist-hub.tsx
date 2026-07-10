@@ -59,6 +59,28 @@ function HubRoute() {
     () => appointments.filter((a) => a.completed && !a.debriefed),
     [appointments],
   );
+  // Once the debrief is done, a completed appointment settles into the past
+  // record rather than vanishing from the hub.
+  const past = useMemo(
+    () =>
+      appointments
+        .filter((a) => a.completed && a.debriefed)
+        .slice()
+        .sort((a, b) => b.dateISO.localeCompare(a.dateISO)),
+    [appointments],
+  );
+  // With nothing on the calendar, the hub pivots to rebooking: the most recent
+  // completed session names the therapist the next-session tile books with.
+  const lastCompleted = useMemo(
+    () =>
+      appointments
+        .filter((a) => a.completed)
+        .slice()
+        .sort((a, b) => b.dateISO.localeCompare(a.dateISO))[0] ?? null,
+    [appointments],
+  );
+  const rebookTherapist =
+    upcoming.length === 0 && lastCompleted ? getTherapist(lastCompleted.therapistId) : null;
   // The share offer targets the next call; the common case is one appointment.
   const next = upcoming[0];
   const nextTherapist = next ? getTherapist(next.therapistId) : null;
@@ -87,7 +109,11 @@ function HubRoute() {
           <EmptyState surface={surface} onFind={() => navigate({ to: "/therapist-recommendations" })} />
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-8 flex flex-col gap-7 yuna-fade-in [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <h1 className="font-display text-3xl tracking-tight text-white">Upcoming Appointments</h1>
+            {/* Once nothing is on the calendar the page is a record + next step,
+                not a schedule — the title follows. */}
+            <h1 className="font-display text-3xl tracking-tight text-white">
+              {upcoming.length > 0 ? "Upcoming Appointments" : "Your Therapist"}
+            </h1>
 
             {needsDebrief.length > 0 && (
               <section>
@@ -130,6 +156,25 @@ function HubRoute() {
               </section>
             )}
 
+            {rebookTherapist && lastCompleted && (
+              <section>
+                <SectionLabel>Next step</SectionLabel>
+                <PrepareCard
+                  surface={surface}
+                  icon={<CalendarIcon size={20} strokeWidth={1.75} className="text-white" aria-hidden />}
+                  title={`Book your next session with ${firstName(rebookTherapist)}`}
+                  body={`One session is a great start. If ${firstName(rebookTherapist)} felt like a good fit, you can grab another time whenever you're ready.`}
+                  cta="See available times"
+                  onAction={() =>
+                    navigate({
+                      to: "/therapist-schedule/$id",
+                      params: { id: rebookTherapist.id },
+                    })
+                  }
+                />
+              </section>
+            )}
+
             {next && nextTherapist && (
               <section>
                 <SectionLabel>Prepare for your session</SectionLabel>
@@ -162,6 +207,17 @@ function HubRoute() {
                       })
                     }
                   />
+                </div>
+              </section>
+            )}
+
+            {past.length > 0 && (
+              <section>
+                <SectionLabel>Past sessions</SectionLabel>
+                <div className="flex flex-col gap-3">
+                  {past.map((a) => (
+                    <PastAppointmentCard key={a.id} surface={surface} appointment={a} />
+                  ))}
                 </div>
               </section>
             )}
@@ -369,6 +425,28 @@ function DebriefCard({
       <Button surface={surface} variant="primary" fullWidth onClick={onDebrief}>
         Debrief with Yuna
       </Button>
+    </div>
+  );
+}
+
+// Quiet record of a completed, debriefed session — who and when, no actions.
+// Rebooking lives in the "Next step" tile, not here.
+function PastAppointmentCard({
+  surface,
+  appointment,
+}: {
+  surface: "dark" | "light";
+  appointment: Appointment;
+}) {
+  const therapist = getTherapist(appointment.therapistId) ?? matchedTherapists()[0];
+  const session =
+    SESSION_TYPES.find((s) => s.id === appointment.sessionTypeId) ?? SESSION_TYPES[0];
+  return (
+    <div className={`rounded-3xl ${frostedPanel(surface)} p-5 flex flex-col gap-3`}>
+      <TherapistMini therapist={therapist} />
+      <p className="text-sm text-white/75">
+        {session.label} · {formatLongDate(fromISODate(appointment.dateISO))} · {appointment.time}
+      </p>
     </div>
   );
 }

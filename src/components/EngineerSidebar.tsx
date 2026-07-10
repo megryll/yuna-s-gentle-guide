@@ -635,7 +635,9 @@ function YunaStatesSection() {
 
 // ─── Home states (screen trigger) ────────────────────────────────────────────
 // Pushes the Home screen into a given state for review: the Illinois
-// service-limitation takeover and the "Schedule a session" drawer.
+// service-limitation takeover, the "Schedule a session" drawer, and (shared
+// with the therapist screens) completing a booked appointment, which pins the
+// post-session follow-up card to the top of the feed.
 
 function HomeStatesSection() {
   const illinois = useSessionIllinois();
@@ -653,6 +655,7 @@ function HomeStatesSection() {
           label="Schedule a session"
           onClick={() => setSessionScheduleSession(!scheduleSession)}
         />
+        <CompleteAppointmentChip />
       </div>
     </Section>
   );
@@ -660,22 +663,28 @@ function HomeStatesSection() {
 
 // ─── Therapist states (screen trigger) ───────────────────────────────────────
 // The prototype has no clock: "Complete next appointment" stands in for a
-// booked session's time passing, flipping the hub + Tools tile into their
-// post-session (debrief) state.
+// booked session's time passing, flipping the hub, the Tools tile, and the
+// Home follow-up card into their post-session (debrief) state.
 
-function TherapistStatesSection() {
+function CompleteAppointmentChip() {
   const appointments = useAppointments();
   const upcoming = appointments.filter((a) => !a.completed).length;
   return (
+    <Chip
+      active={false}
+      label={`Complete next appointment${upcoming ? ` (${upcoming} upcoming)` : ""}`}
+      onClick={completeNextAppointment}
+      disabled={upcoming === 0}
+      disabledReason="No upcoming appointment to complete"
+    />
+  );
+}
+
+function TherapistStatesSection() {
+  return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
-        <Chip
-          active={false}
-          label={`Complete next appointment${upcoming ? ` (${upcoming} upcoming)` : ""}`}
-          onClick={completeNextAppointment}
-          disabled={upcoming === 0}
-          disabledReason="No upcoming appointment to complete"
-        />
+        <CompleteAppointmentChip />
       </div>
     </Section>
   );
