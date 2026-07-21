@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
+import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
 import { KeyboardSimulator } from "@/components/KeyboardSimulator";
 import { useFrameSize } from "@/lib/frame-size";
 import { usePlatform } from "@/lib/platform";
@@ -94,6 +95,7 @@ export function PhoneFrame({
             <PhoneFrameOuterContext.Provider value={outerContainer}>
               {children}
               <KeyboardSimulator container={container} />
+              <FirstSessionDisclaimerGate />
             </PhoneFrameOuterContext.Provider>
           </PhoneFrameContext.Provider>
         </div>

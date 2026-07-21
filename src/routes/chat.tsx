@@ -50,6 +50,16 @@ import {
 import { TextField } from "@/components/TextField";
 import { KEYBOARD_HEIGHT } from "@/components/KeyboardSimulator";
 import { useAppMode, useModeImage } from "@/lib/theme-prefs";
+import {
+  GUIDED_DEBRIEF_STEPS,
+  guidedDebriefScript,
+  guidedPrepGreeting,
+  getTherapist,
+  matchedTherapists,
+  formatLongDate,
+  fromISODate,
+} from "@/lib/therapist-data";
+import { getAppointments, markDebriefed } from "@/lib/therapist-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -59,12 +69,23 @@ export const Route = createFileRoute("/chat")({
     revisit?: string;
     mode?: "text" | "voice";
     guided?: string;
+    flow?: "therapist-debrief" | "therapist-prep";
+    therapist?: string;
     personalize?: boolean;
   } => ({
     q: (s.q as string | undefined) ?? "",
     revisit: s.revisit as string | undefined,
     mode: s.mode === "voice" ? "voice" : "text",
     guided: s.guided as string | undefined,
+    // Scripted-flow marker — selects a bespoke opener (the pre-session prep)
+    // or opener + hand-off (the debrief's session-booking offer). Absent for
+    // ordinary conversations.
+    flow:
+      s.flow === "therapist-debrief" || s.flow === "therapist-prep"
+        ? (s.flow as "therapist-debrief" | "therapist-prep")
+        : undefined,
+    // The therapist a scripted flow is about (both flows name them).
+    therapist: (s.therapist as string | undefined) || undefined,
     // Deep-link the Personalize Yuna drawer open (used by the /gallery board).
     // The search parser coerces `personalize=1` to the number 1, so accept the
     // numeric, boolean, and string forms.
@@ -187,7 +208,7 @@ function isReminisceEntry(initial: string): boolean {
 }
 
 function Chat() {
-  const { q, revisit, mode, guided, personalize } = Route.useSearch();
+  const { q, revisit, mode, guided, flow, therapist, personalize } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
@@ -220,13 +241,53 @@ function Chat() {
   // "Guided Session" dev chip (sample title). The search param wins.
   const devGuided = useSessionGuided();
   const guidedTitle = guided || devGuided;
+  // The post-appointment debrief is a real guided session (`flow` marks it):
+  // a scripted opener plus a booking hand-off. It swaps in its own step
+  // checklist and drives progress locally instead of the dev completion store.
+  const isDebrief = flow === "therapist-debrief";
+  const debriefTherapist = isDebrief ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
+  const debriefFirstName = debriefTherapist?.name.split(" ")[0] ?? "";
+  const script = isDebrief ? guidedDebriefScript(debriefFirstName) : null;
+  // The pre-session prep is greeting-only: Yuna opens with the upcoming
+  // appointment's context (therapist, date), then it's an ordinary open
+  // conversation — no fixed follow-up, no hand-off.
+  const isPrep = flow === "therapist-prep";
+  const prepTherapist = isPrep ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
+  const prepAppointment = prepTherapist
+    ? (getAppointments()
+        .filter((a) => !a.completed && a.therapistId === prepTherapist.id)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0] ?? null)
+    : null;
+  const prepGreeting = prepTherapist
+    ? guidedPrepGreeting(
+        prepTherapist.name.split(" ")[0],
+        prepAppointment ? formatLongDate(fromISODate(prepAppointment.dateISO)) : null,
+      )
+    : null;
+  // Scripted-flow greeting lines, whichever flow is active.
+  const greetingLines = script?.greeting ?? prepGreeting;
+  const guidedSteps = isDebrief ? GUIDED_DEBRIEF_STEPS : GUIDED_STEPS;
   // Guided-session progress: the header tracker shows every step done and the
   // conversation closes with a completion card. Dev-only (EngineerSidebar).
   const guidedComplete = useSessionGuidedComplete();
   // The header progress tracker collapses to a compact ring by default so it
   // never eats viewport; tapping it reveals the full step checklist.
   const [guidedStepsOpen, setGuidedStepsOpen] = useState(false);
-  const guidedDone = guidedComplete ? GUIDED_STEPS.length : 0;
+  // Debrief scripting: which scripted beat comes next (0 = play followUp on the
+  // first answer, 1 = play wrapUp + reveal the booking hand-off), and whether
+  // that hand-off is showing. The hand-off is a local flag, not a persisted
+  // message — on a revisit it's re-derived from the restored transcript.
+  const scriptStepRef = useRef(0);
+  const [handoffShown, setHandoffShown] = useState(false);
+  // Debrief progress: 1 of 2 once its hand-off is up; otherwise the dev
+  // completion store drives the generic flow.
+  const guidedDone = isDebrief
+    ? handoffShown
+      ? 1
+      : 0
+    : guidedComplete
+      ? GUIDED_STEPS.length
+      : 0;
   const inVoice = mode === "voice";
   // Initial chat-now landing in voice mode (no revisit flag). This branch
   // defers the mic-permission prompt: Yuna introduces herself, walks the
@@ -351,6 +412,14 @@ function Chat() {
       const stored = loadStoredMessages();
       if (stored.length > 0) setMessages(stored);
       isChatNowSessionRef.current = getChatNowSession();
+      // The debrief hand-off isn't a persisted message, so re-derive it from
+      // the restored transcript: if Yuna's wrap-up already landed, the scripted
+      // conversation is finished and the booking hand-off belongs back on
+      // screen (and further sends should no longer advance the script).
+      if (script && stored.some((m) => m.kind === "text" && m.text === script.wrapUp)) {
+        scriptStepRef.current = 2;
+        setHandoffShown(true);
+      }
     } else {
       // Any non-revisit entry starts a fresh thread. Wipe persisted log +
       // session flags so the next conversation begins clean.
@@ -369,7 +438,9 @@ function Chat() {
       }
     }
 
-    if (isReturningReminisce) {
+    if ((isDebrief || isPrep) && !isRevisit) {
+      respondScripted();
+    } else if (isReturningReminisce) {
       respondReminisce();
     } else if (isChatNow && !isRevisit) {
       respondToChatNow();
@@ -655,6 +726,52 @@ function Chat() {
     }, delay);
   };
 
+  // Scripted-flow opener (debrief / prep). Yuna plays the greeting lines one
+  // bubble at a time (last one asks the first question), then waits for the
+  // user's answers — the debrief's advanceScripted drives the rest; prep falls
+  // through to open conversation. Voice mode speaks the greeting via
+  // VoiceSession.initialGreetingLines instead (see scriptedVoiceGreeting below).
+  const respondScripted = () => {
+    if (mode === "voice" || !greetingLines) return;
+    const lines = greetingLines;
+    const playLine = (i: number) => {
+      if (i >= lines.length) return;
+      setTyping(true);
+      setTimeout(
+        () => {
+          setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: lines[i] }]);
+          setTyping(false);
+          speakIfEnabled(lines[i]);
+          playLine(i + 1);
+        },
+        i === 0 ? 700 : 1100,
+      );
+    };
+    playLine(0);
+  };
+
+  // Advance the scripted conversation after a user answer. Step 0 → the
+  // follow-up question; step 1 → the wrap-up + the flow's hand-off (the
+  // debrief's booking actions).
+  const advanceScripted = () => {
+    if (!script) return;
+    const step = scriptStepRef.current;
+    scriptStepRef.current = step + 1;
+    const line = step === 0 ? script.followUp : script.wrapUp;
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: line }]);
+      setTyping(false);
+      speakIfEnabled(line);
+      if (step >= 1) {
+        setHandoffShown(true);
+        // The debrief itself is what the hub was waiting on — reaching the
+        // wrap-up settles the appointment's "how did it go?" prompt.
+        if (isDebrief && debriefTherapist) markDebriefed(debriefTherapist.id);
+      }
+    }, 900);
+  };
+
   // Chat-now text opener. Voice mode is driven separately by VoiceSession's
   // initialGreetingLines (see chatNowVoiceGreeting below) so we don't speak
   // from here in that branch.
@@ -698,11 +815,18 @@ function Chat() {
     userTopicsRef.current.push(value);
     setLastTopics(userTopicsRef.current);
     inputRef.current?.blur();
+    // The scripted debrief has a fixed follow-up + wrap-up, so its answers
+    // advance the script rather than hitting the model. Once the hand-off is
+    // up the script is finished — fall through to Claude.
+    if (isDebrief && !handoffShown) {
+      advanceScripted();
+      return;
+    }
     // Suggestion-chip entries from /home still go through the older
-    // limitations + voice-pitch flow (respondToInitial). Chat-now sessions
-    // skip straight to Claude so the open intake exchange isn't interrupted
+    // limitations + voice-pitch flow (respondToInitial). Chat-now and prep
+    // sessions skip straight to Claude so the open exchange isn't interrupted
     // by a canned acknowledgement.
-    if (isFirstUserMessage && !isChatNowSessionRef.current) {
+    if (isFirstUserMessage && !isPrep && !isChatNowSessionRef.current) {
       respondToInitial(value);
     } else {
       void respondClaude(value);
@@ -853,12 +977,18 @@ function Chat() {
     navigate({ to: "/wrap-up" });
   };
 
+  // A mode toggle is a continuation, not a fresh entry, so it carries `revisit`
+  // plus the guided title / flow marker so the guided header and scripted state
+  // survive the swap.
+  const modeSwitchSearch = (next: "text" | "voice") =>
+    ({ q: "", mode: next, revisit: "1", guided, flow, therapist }) as const;
+
   const switchToText = () => {
     if (mode !== "voice") return;
     // `revisit: "1"` so the boot effect treats this as a continuation —
     // chat history survives the mode swap instead of being wiped as a
     // fresh entry.
-    navigate({ to: "/chat", search: { q: "", mode: "text", revisit: "1" } });
+    navigate({ to: "/chat", search: modeSwitchSearch("text") });
   };
 
   // "Continue Over Voice" in text mode just navigates — the browser owns
@@ -866,19 +996,24 @@ function Chat() {
   const openMicForVoice = () => {
     stopTts();
     setVoicePitchActive(false);
-    navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
+    navigate({ to: "/chat", search: modeSwitchSearch("voice") });
   };
 
   const switchToVoiceMode = () => {
     if (mode === "voice") return;
     stopTts();
     setVoicePitchActive(false);
-    navigate({ to: "/chat", search: { q: "", mode: "voice", revisit: "1" } });
+    navigate({ to: "/chat", search: modeSwitchSearch("voice") });
   };
 
   // Chat-now landing in voice mode: hand VoiceSession the opener line so
   // Yuna greets the user once the mic comes up.
   const chatNowVoiceGreeting = isChatNowVoice ? [chatNowOpener(yunaUserName)] : undefined;
+  // Scripted flow landing in voice mode: Yuna speaks the scripted greeting,
+  // then it's a normal voice session (the follow-up/wrap-up + hand-off are the
+  // text-mode affordances). Only on a fresh entry — a revisit resumes.
+  const scriptedVoiceGreeting =
+    greetingLines && !(revisit === "1" || revisit === "true") ? [...greetingLines] : undefined;
 
   return (
     <PhoneFrame backgroundImage="/background.png" themed>
@@ -913,13 +1048,13 @@ function Chat() {
               <RadialProgress
                 size={48}
                 strokeWidth={3}
-                value={guidedDone / GUIDED_STEPS.length}
+                value={guidedDone / guidedSteps.length}
                 surface={appMode === "light" ? "light" : "dark"}
                 className="shrink-0"
-                aria-label={`${guidedDone} of ${GUIDED_STEPS.length} steps complete`}
+                aria-label={`${guidedDone} of ${guidedSteps.length} steps complete`}
               >
                 <span className="text-sm font-semibold tabular-nums text-white">
-                  {guidedDone}/{GUIDED_STEPS.length}
+                  {guidedDone}/{guidedSteps.length}
                 </span>
               </RadialProgress>
             </button>
@@ -930,7 +1065,7 @@ function Chat() {
               className="top-full right-4 mt-2 w-[260px]"
             >
               <GuidedSteps
-                steps={GUIDED_STEPS}
+                steps={guidedSteps}
                 completed={guidedDone}
                 surface={appMode === "light" ? "light" : "dark"}
               />
@@ -1007,7 +1142,7 @@ function Chat() {
         {inVoice ? (
           <VoiceSession
             onEndCall={endChat}
-            initialGreetingLines={chatNowVoiceGreeting}
+            initialGreetingLines={chatNowVoiceGreeting ?? scriptedVoiceGreeting}
             onMessageAppended={(msg) => {
               setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]));
             }}
@@ -1028,6 +1163,29 @@ function Chat() {
                 return <Bubble key={m.id} msg={m} frostedImage={blurBg} />;
               })}
               {typing && <TypingBubble frostedImage={blurBg} />}
+              {handoffShown && !typing && isDebrief && debriefTherapist && (
+                <div className="yuna-rise flex flex-col items-start gap-2">
+                  <Button
+                    surface={appMode === "light" ? "light" : "dark"}
+                    variant="primary"
+                    onClick={() =>
+                      navigate({
+                        to: "/therapist-schedule/$id",
+                        params: { id: debriefTherapist.id },
+                      })
+                    }
+                  >
+                    Book a full session with {debriefFirstName}
+                  </Button>
+                  <Button
+                    surface={appMode === "light" ? "light" : "dark"}
+                    variant="secondary"
+                    onClick={() => navigate({ to: "/therapist-recommendations" })}
+                  >
+                    Keep exploring therapists
+                  </Button>
+                </div>
+              )}
               {reco && RECO_SAMPLES[reco] && (
                 <div className="yuna-rise w-full flex justify-start">
                   <CardSuggestion

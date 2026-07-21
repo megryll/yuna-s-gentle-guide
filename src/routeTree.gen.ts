@@ -15,6 +15,7 @@ import { Route as WrapUpRouteImport } from './routes/wrap-up'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TherapistRecommendationsRouteImport } from './routes/therapist-recommendations'
 import { Route as TherapistPreferencesRouteImport } from './routes/therapist-preferences'
+import { Route as TherapistHubRouteImport } from './routes/therapist-hub'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
@@ -35,6 +36,7 @@ import { Route as AnimationSpecsRouteImport } from './routes/animation-specs'
 import { Route as AllTasksRouteImport } from './routes/all-tasks'
 import { Route as AcceptTermsRouteImport } from './routes/accept-terms'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TherapistShareSummaryIdRouteImport } from './routes/therapist-share-summary.$id'
 import { Route as TherapistScheduleIdRouteImport } from './routes/therapist-schedule.$id'
 import { Route as TherapistProfileIdRouteImport } from './routes/therapist-profile.$id'
 import { Route as SurveyIdRouteImport } from './routes/survey.$id'
@@ -117,6 +119,11 @@ const TherapistRecommendationsRoute =
 const TherapistPreferencesRoute = TherapistPreferencesRouteImport.update({
   id: '/therapist-preferences',
   path: '/therapist-preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TherapistHubRoute = TherapistHubRouteImport.update({
+  id: '/therapist-hub',
+  path: '/therapist-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplashRoute = SplashRouteImport.update({
@@ -217,6 +224,11 @@ const AcceptTermsRoute = AcceptTermsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TherapistShareSummaryIdRoute = TherapistShareSummaryIdRouteImport.update({
+  id: '/therapist-share-summary/$id',
+  path: '/therapist-share-summary/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TherapistScheduleIdRoute = TherapistScheduleIdRouteImport.update({
@@ -502,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
+  '/therapist-hub': typeof TherapistHubRoute
   '/therapist-preferences': typeof TherapistPreferencesRoute
   '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
@@ -560,6 +573,7 @@ export interface FileRoutesByFullPath {
   '/survey/$id': typeof SurveyIdRoute
   '/therapist-profile/$id': typeof TherapistProfileIdRoute
   '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
+  '/therapist-share-summary/$id': typeof TherapistShareSummaryIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -582,6 +596,7 @@ export interface FileRoutesByTo {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
+  '/therapist-hub': typeof TherapistHubRoute
   '/therapist-preferences': typeof TherapistPreferencesRoute
   '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
@@ -640,6 +655,7 @@ export interface FileRoutesByTo {
   '/survey/$id': typeof SurveyIdRoute
   '/therapist-profile/$id': typeof TherapistProfileIdRoute
   '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
+  '/therapist-share-summary/$id': typeof TherapistShareSummaryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -663,6 +679,7 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
+  '/therapist-hub': typeof TherapistHubRoute
   '/therapist-preferences': typeof TherapistPreferencesRoute
   '/therapist-recommendations': typeof TherapistRecommendationsRoute
   '/tools': typeof ToolsRoute
@@ -721,6 +738,7 @@ export interface FileRoutesById {
   '/survey/$id': typeof SurveyIdRoute
   '/therapist-profile/$id': typeof TherapistProfileIdRoute
   '/therapist-schedule/$id': typeof TherapistScheduleIdRoute
+  '/therapist-share-summary/$id': typeof TherapistShareSummaryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -745,6 +763,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/splash'
+    | '/therapist-hub'
     | '/therapist-preferences'
     | '/therapist-recommendations'
     | '/tools'
@@ -803,6 +822,7 @@ export interface FileRouteTypes {
     | '/survey/$id'
     | '/therapist-profile/$id'
     | '/therapist-schedule/$id'
+    | '/therapist-share-summary/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -825,6 +845,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/splash'
+    | '/therapist-hub'
     | '/therapist-preferences'
     | '/therapist-recommendations'
     | '/tools'
@@ -883,6 +904,7 @@ export interface FileRouteTypes {
     | '/survey/$id'
     | '/therapist-profile/$id'
     | '/therapist-schedule/$id'
+    | '/therapist-share-summary/$id'
   id:
     | '__root__'
     | '/'
@@ -905,6 +927,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/splash'
+    | '/therapist-hub'
     | '/therapist-preferences'
     | '/therapist-recommendations'
     | '/tools'
@@ -963,6 +986,7 @@ export interface FileRouteTypes {
     | '/survey/$id'
     | '/therapist-profile/$id'
     | '/therapist-schedule/$id'
+    | '/therapist-share-summary/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -986,6 +1010,7 @@ export interface RootRouteChildren {
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
   SplashRoute: typeof SplashRoute
+  TherapistHubRoute: typeof TherapistHubRoute
   TherapistPreferencesRoute: typeof TherapistPreferencesRoute
   TherapistRecommendationsRoute: typeof TherapistRecommendationsRoute
   ToolsRoute: typeof ToolsRoute
@@ -1044,6 +1069,7 @@ export interface RootRouteChildren {
   SurveyIdRoute: typeof SurveyIdRoute
   TherapistProfileIdRoute: typeof TherapistProfileIdRoute
   TherapistScheduleIdRoute: typeof TherapistScheduleIdRoute
+  TherapistShareSummaryIdRoute: typeof TherapistShareSummaryIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1088,6 +1114,13 @@ declare module '@tanstack/react-router' {
       path: '/therapist-preferences'
       fullPath: '/therapist-preferences'
       preLoaderRoute: typeof TherapistPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/therapist-hub': {
+      id: '/therapist-hub'
+      path: '/therapist-hub'
+      fullPath: '/therapist-hub'
+      preLoaderRoute: typeof TherapistHubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/splash': {
@@ -1228,6 +1261,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/therapist-share-summary/$id': {
+      id: '/therapist-share-summary/$id'
+      path: '/therapist-share-summary/$id'
+      fullPath: '/therapist-share-summary/$id'
+      preLoaderRoute: typeof TherapistShareSummaryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/therapist-schedule/$id': {
@@ -1618,6 +1658,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
   SplashRoute: SplashRoute,
+  TherapistHubRoute: TherapistHubRoute,
   TherapistPreferencesRoute: TherapistPreferencesRoute,
   TherapistRecommendationsRoute: TherapistRecommendationsRoute,
   ToolsRoute: ToolsRoute,
@@ -1676,6 +1717,7 @@ const rootRouteChildren: RootRouteChildren = {
   SurveyIdRoute: SurveyIdRoute,
   TherapistProfileIdRoute: TherapistProfileIdRoute,
   TherapistScheduleIdRoute: TherapistScheduleIdRoute,
+  TherapistShareSummaryIdRoute: TherapistShareSummaryIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

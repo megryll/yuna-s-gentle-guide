@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
+import { useAppointments } from "@/lib/therapist-prefs";
+import { formatShortDate, fromISODate, getTherapist } from "@/lib/therapist-data";
 
 type Tool = {
   id: string;
@@ -9,20 +11,56 @@ type Tool = {
   caption: string;
   image: string;
   emoji: string;
-  isNew?: boolean;
+  /** Optional corner badge label ("New", "Upcoming", …). */
+  badge?: string;
   /** Destination route when the tool is wired up; omit for inert tiles. */
   to?: string;
 };
 
+// The therapist tile follows the user through the journey: discover → an
+// upcoming appointment → a completed call waiting on its debrief. Derived in
+// useTherapistTool below; this is the not-yet-booked base state.
+const THERAPIST_TILE: Tool = {
+  id: "therapist",
+  title: "Therapist Recommendation",
+  caption: "Discover licensed therapists",
+  image: "/tools/therapist.jpg",
+  emoji: "💬",
+  to: "/therapist-recommendations",
+};
+
+function useTherapistTool(): Tool {
+  const appointments = useAppointments();
+  const upcoming = appointments
+    .filter((a) => !a.completed)
+    .slice()
+    .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
+  const needsDebrief = appointments.find((a) => a.completed && !a.debriefed);
+
+  if (upcoming) {
+    const name = getTherapist(upcoming.therapistId)?.name.split(" ")[0] ?? "your therapist";
+    return {
+      ...THERAPIST_TILE,
+      title: "Your Therapist",
+      caption: `Session with ${name} · ${formatShortDate(fromISODate(upcoming.dateISO))}, ${upcoming.time}`,
+      emoji: "🗓️",
+      badge: "Upcoming",
+      to: "/therapist-hub",
+    };
+  }
+  if (needsDebrief) {
+    const name = getTherapist(needsDebrief.therapistId)?.name.split(" ")[0] ?? "your therapist";
+    return {
+      ...THERAPIST_TILE,
+      title: "Your Therapist",
+      caption: `How did your call with ${name} go?`,
+      to: "/therapist-hub",
+    };
+  }
+  return THERAPIST_TILE;
+}
+
 const TOOLS: Tool[] = [
-  {
-    id: "therapist",
-    title: "Therapist Recommendation",
-    caption: "Discover licensed therapists",
-    image: "/tools/therapist.jpg",
-    emoji: "💬",
-    to: "/therapist-recommendations",
-  },
   {
     id: "guided-audio",
     title: "Guided Audio",
@@ -56,6 +94,8 @@ export const Route = createFileRoute("/tools")({
 
 function ToolsRoute() {
   const navigate = useNavigate();
+  const therapistTool = useTherapistTool();
+  const tools = [therapistTool, ...TOOLS];
   const mode = useAppMode();
   const isLight = mode === "light";
   // Light mode: lift the photo with a white wash so the title reads dark.
@@ -72,7 +112,7 @@ function ToolsRoute() {
         <h1 className="mt-2 font-display text-3xl tracking-tight text-white">Tools</h1>
 
         <ul className="mt-5 flex flex-col gap-3">
-          {TOOLS.map((t, i) => (
+          {tools.map((t, i) => (
             <li key={t.id}>
               <div
                 style={{ animationDelay: `${i * 60}ms` }}
@@ -102,7 +142,7 @@ function ToolsRoute() {
                   aria-hidden
                 />
                 <div className="absolute inset-0" style={{ background: overlay }} />
-                {t.isNew && <Badge className="absolute top-3 left-3">New</Badge>}
+                {t.badge && <Badge className="absolute top-3 left-3">{t.badge}</Badge>}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <p className={"font-display text-xl leading-tight tracking-tight " + titleClass}>
                     {t.title}

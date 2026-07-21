@@ -5,7 +5,6 @@ import { YunaHeaderTrigger } from "@/components/YunaHeaderTrigger";
 import { AppMenuDrawer } from "@/components/AppMenuDrawer";
 import { AppBar } from "@/components/AppBar";
 import { Button } from "@/components/Button";
-import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
 import { useStartChat } from "@/lib/chat-launch";
 import { isLightMode, useAppMode } from "@/lib/theme-prefs";
 
@@ -81,7 +80,6 @@ export function ScreenChrome({
       </div>
 
       <AppMenuDrawer open={menuOpen} onOpenChange={setMenuOpen} />
-      <FirstSessionDisclaimerGate />
     </PhoneFrame>
   );
 }

@@ -102,11 +102,12 @@ export function FirstSessionDisclaimers({
   );
 }
 
-// Mounted inside the photo-bg shells (HomeScreen / ScreenChrome) so the
-// disclaimers portal into the current PhoneFrame and play over the screen the
-// user started from. A first-session chat launch flips the chat-launch store
-// active; on completion we record the flag and continue to /chat with the
-// originally intended search params.
+// Mounted once inside PhoneFrame so every screen that can launch a chat plays
+// the disclaimers in place, over the screen the user started from — a pending
+// launch can never arm silently on a gate-less screen and fire later. A
+// first-session chat launch flips the chat-launch store active; on completion
+// we record the flag and continue to /chat with the originally intended
+// search params.
 export function FirstSessionDisclaimerGate() {
   const active = useChatLaunchActive();
   const navigate = useNavigate();

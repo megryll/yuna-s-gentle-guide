@@ -138,7 +138,7 @@ function DSTextFields() {
 
       <Section
         title="Dictation"
-        subtitle="DictationField packages the hold-to-talk pattern: an empty field shows a press-and-hold mic that records (waveform replaces the input) and on release converts speech to text and submits. Type and the button flips to send."
+        subtitle="DictationField packages the hold-to-talk pattern. Default: an empty field shows a press-and-hold mic that records (waveform replaces the input) and on release submits; type and the button flips to send. With fillOnly: the mic stays a plain collector — release drops the transcript into the field for review and the caller advances with its own control."
       >
         <SurfaceMatrix rows={DICTATION_ROWS} />
       </Section>
@@ -157,8 +157,9 @@ function DSTextFields() {
 
 <DictationField
   value:        string                  // controlled text
-  onChange:     (v: string) => void
-  onSubmit:     (text: string) => void  // typed value on send · transcript on release
+  onChange:     (v: string) => void     // typed text · transcript when fillOnly
+  onSubmit?:    (text: string) => void  // typed value on send · transcript on release (unused with fillOnly)
+  fillOnly?:    boolean                 // mic fills the field instead of submitting; no send affordance
   surface?:     "dark" | "light"        // default: "dark"
   size?:        "md" | "lg"
   placeholder?: string
@@ -170,7 +171,8 @@ function DSTextFields() {
 }
 
 const DICTATION_ROWS: MatrixRow[] = [
-  { label: "Dictation", render: (s) => <DictationDemo surface={s} /> },
+  { label: "Submit on release", render: (s) => <DictationDemo surface={s} /> },
+  { label: "Fill only (no submit)", render: (s) => <DictationFillDemo surface={s} /> },
 ];
 
 function DictationDemo({ surface }: { surface: Surface }) {
@@ -182,6 +184,19 @@ function DictationDemo({ surface }: { surface: Surface }) {
       onChange={setText}
       onSubmit={() => setText("")}
       placeholder="Type a Message…"
+    />
+  );
+}
+
+function DictationFillDemo({ surface }: { surface: Surface }) {
+  const [text, setText] = useState("");
+  return (
+    <DictationField
+      surface={surface}
+      fillOnly
+      value={text}
+      onChange={setText}
+      placeholder="Type or record your answer"
     />
   );
 }

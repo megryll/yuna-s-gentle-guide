@@ -35,7 +35,8 @@ import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
 import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
-import { FirstSessionDisclaimerGate } from "@/components/FirstSessionDisclaimers";
+import { useAppointments } from "@/lib/therapist-prefs";
+import { debriefHomeCard, GUIDED_DEBRIEF_TITLE } from "@/lib/therapist-data";
 import { SchedulePrioritizeGate } from "@/components/SchedulePrioritizeDrawer";
 import { ScheduleSessionDrawer } from "@/components/ScheduleSessionDrawer";
 
@@ -89,6 +90,16 @@ export function HomeScreen({
   const greeting = RETURNING_GREETINGS[greetIdx];
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [savedOnly, setSavedOnly] = useState(false);
+  // Once a therapist appointment's time has passed and the debrief hasn't
+  // happened, a follow-up guided-session card pins to the top of the feed.
+  // Opening it launches the same debrief chat as the hub; the chat's
+  // markDebriefed clears the flag and the card leaves the feed on its own.
+  const appointments = useAppointments();
+  const debriefAppt = appointments.find((a) => a.completed && !a.debriefed) ?? null;
+  const followUpCard = useMemo(
+    () => (debriefAppt ? debriefHomeCard(debriefAppt) : null),
+    [debriefAppt],
+  );
   const cards = useMemo(() => {
     // A brand-new user's feed is new in its entirety, so per-card "New" flags
     // carry no signal — strip them. Pin the starting-point questionnaire to the
@@ -106,9 +117,15 @@ export function HomeScreen({
     }
     // Returning users have already set their starting point, so drop that card,
     // and float anything flagged New to the top (stable within each group).
+    // The post-session follow-up outranks everything: it's the one time-bound
+    // item in the feed, so it pins above the New group.
     const kept = POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point");
-    return [...kept.filter((c) => c.isNew), ...kept.filter((c) => !c.isNew)];
-  }, [variant]);
+    return [
+      ...(followUpCard ? [followUpCard] : []),
+      ...kept.filter((c) => c.isNew),
+      ...kept.filter((c) => !c.isNew),
+    ];
+  }, [variant, followUpCard]);
   const initialSavedIds = useMemo(
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
@@ -334,6 +351,17 @@ export function HomeScreen({
                 navigate({ to: "/questionnaire/$id", params: { id: c.id } });
                 return;
               }
+              if (followUpCard && c.id === followUpCard.id && debriefAppt) {
+                // The post-session follow-up opens the scripted debrief (the
+                // same chat the hub's "Debrief with Yuna" launches), not a
+                // generic guided session.
+                startChat({
+                  guided: GUIDED_DEBRIEF_TITLE,
+                  flow: "therapist-debrief",
+                  therapist: debriefAppt.therapistId,
+                });
+                return;
+              }
               if (c.type === "guided-session") {
                 // Carry the title into chat so the guided-session header
                 // banner can remind the user which session they're in.
@@ -358,7 +386,6 @@ export function HomeScreen({
 
         <AppBar surface={surface} />
       </div>
-      <FirstSessionDisclaimerGate />
       <SchedulePrioritizeGate />
       <ScheduleSessionDrawer
         open={scheduleOpen}

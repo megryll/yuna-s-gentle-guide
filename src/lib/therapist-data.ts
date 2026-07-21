@@ -1,3 +1,6 @@
+import type { HomeCard } from "@/lib/home-cards";
+import type { Appointment } from "@/lib/therapist-prefs";
+
 // ─── Therapist Recommendations — data model ──────────────────────────────────
 // Ported from the reference prototype's therapistData.js, retyped for this
 // codebase. Each therapist has a headshot photo under /public/therapists/ (the
@@ -349,11 +352,43 @@ export function matchedTherapists(): Therapist[] {
 
 // ─── Preferences survey ──────────────────────────────────────────────────────
 
-export type SurveyQuestion =
+export type SurveyQuestion = {
+  /** Gates Next until answered and shows a "Required" (vs "Optional") card tag.
+   *  Only location carries this today; everything else is skippable. */
+  required?: boolean;
+} & (
+  | { id: string; type: "freeText"; title: string; prompt: string; placeholder: string }
+  | { id: string; type: "pillGroup"; title: string; prompt: string; items: PillGroupItem[] }
   | { id: string; type: "location"; title: string; prompt: string }
   | { id: string; type: "single"; title: string; prompt: string; options: ChoiceOption[] }
   | { id: string; type: "multi"; title: string; prompt: string; options: ChoiceOption[] }
-  | { id: string; type: "chips"; title: string; prompt: string; placeholder: string; suggestions: string[] };
+  | { id: string; type: "chips"; title: string; prompt: string; placeholder: string; suggestions: string[] }
+  | {
+      id: string;
+      type: "insurance";
+      title: string;
+      prompt: string;
+      placeholder: string;
+      suggestions: string[];
+      /** The exclusive "paying out of pocket" choice shown above the search. */
+      none: { value: string; label: string; subtitle: string };
+      /** Follow-up revealed while `none` is selected: per-session budget. */
+      budget: { id: string; label: string; options: string[] };
+    }
+);
+
+/** Scripted two-exchange opener: Yuna greets, the user answers, Yuna asks one
+ *  follow-up, the user answers again, Yuna wraps up. */
+export type SurveyChatScript = { greeting: string[]; followUp: string; wrapUp: string };
+
+export type PillGroupItem = {
+  id: string;
+  label: string;
+  options: { value: string; label: string }[];
+  /** Multi-select row — renders as wrapping tag chips instead of a single-pick
+   *  segmented rail (which only fits a few short, mutually exclusive labels). */
+  multi?: true;
+};
 
 export type ChoiceOption = { value: string; label: string; emoji?: string };
 
@@ -375,73 +410,88 @@ export const INSURANCE_OPTIONS = [
 
 export const SURVEY_QUESTIONS: SurveyQuestion[] = [
   {
+    id: "matters",
+    type: "freeText",
+    title: "What matters most to you in a therapist?",
+    prompt: "In your own words. A sentence or two is plenty.",
+    placeholder: "Type or record your answer",
+  },
+  {
+    id: "avoid",
+    type: "freeText",
+    title: "Anything you'd want to avoid?",
+    prompt: "Maybe something that hasn't worked for you before. It's okay to skip this.",
+    placeholder: "Type or record your answer",
+  },
+  {
+    id: "quickOnes",
+    type: "pillGroup",
+    title: "A few quick ones",
+    prompt: "Tap what fits. Skip anything you like.",
+    items: [
+      {
+        id: "format",
+        label: "How would you like to meet?",
+        options: [
+          { value: "In Person", label: "In person" },
+          { value: "Online", label: "Online" },
+          { value: "Either", label: "Either" },
+        ],
+      },
+      {
+        id: "gender",
+        label: "Therapist gender preference?",
+        options: [
+          { value: "Female", label: "Female" },
+          { value: "Male", label: "Male" },
+          { value: "Non-binary", label: "Non-binary" },
+          { value: "No preference", label: "Any" },
+        ],
+      },
+      {
+        id: "identity",
+        label: "Identity and background preferences?",
+        multi: true,
+        options: [
+          { value: "LGBTQ+ affirming", label: "LGBTQ+ affirming" },
+          { value: "Culturally sensitive", label: "Culturally sensitive" },
+          { value: "Faith-informed", label: "Faith-informed" },
+          { value: "Indigenous Peoples", label: "Indigenous Peoples" },
+          { value: "Newcomer or immigrant experience", label: "Newcomer or immigrant" },
+        ],
+      },
+    ],
+  },
+  {
     id: "location",
     type: "location",
+    required: true,
     title: "Let's confirm your location",
     prompt: "Therapists are only licensed to practice in certain states. We'll use this to match you with ones who can see you.",
   },
   {
-    id: "format",
-    type: "single",
-    title: "How would you like to see your therapist?",
-    prompt: "Choose the format that works for you.",
-    options: [
-      { value: "In Person", label: "In Person", emoji: "🛋️" },
-      { value: "Online", label: "Online", emoji: "💻" },
-      { value: "Either", label: "Either", emoji: "✨" },
-    ],
-  },
-  {
-    id: "gender",
-    type: "single",
-    title: "Show only therapists who are...",
-    prompt: "Optional. Choose any that matter to you, or skip.",
-    options: [
-      { value: "Female", label: "Female", emoji: "👩" },
-      { value: "Male", label: "Male", emoji: "👨" },
-      { value: "Non-binary", label: "Non-binary", emoji: "🧑" },
-      { value: "No preference", label: "No preference", emoji: "👥" },
-    ],
-  },
-  {
-    id: "specialties",
-    type: "chips",
-    title: "Areas of expertise",
-    prompt: "Select the areas you'd like support with.",
-    placeholder: "Search specialities",
-    suggestions: SPECIALTY_OPTIONS,
-  },
-  {
-    id: "approaches",
-    type: "chips",
-    title: "What approach feels right?",
-    prompt: "Different therapists use different methods. Pick any that interest you, or skip if unsure.",
-    placeholder: "Search approaches",
-    suggestions: APPROACH_OPTIONS,
-  },
-  {
-    id: "identity",
-    type: "multi",
-    title: "Identity and background",
-    prompt: "Some people prefer a therapist who shares or has experience with their identity.",
-    options: [
-      { value: "LGBTQ+ affirming", label: "LGBTQ+ affirming", emoji: "🏳️‍🌈" },
-      { value: "Culturally sensitive", label: "Culturally sensitive", emoji: "🌍" },
-      { value: "Faith-informed", label: "Faith-informed", emoji: "🙏" },
-      { value: "Indigenous Peoples", label: "Indigenous Peoples", emoji: "🪶" },
-      { value: "Newcomer or immigrant experience", label: "Newcomer or immigrant experience", emoji: "✈️" },
-      { value: "No preference", label: "No preference", emoji: "✨" },
-    ],
-  },
-  {
     id: "insurance",
-    type: "chips",
+    type: "insurance",
     title: "Do you have insurance coverage?",
-    prompt: "Search for your provider, or skip if not applicable.",
-    placeholder: "Search providers",
+    prompt: "Search for your provider, or let me know if you're paying out of pocket.",
+    placeholder: "Search insurance providers",
     suggestions: INSURANCE_OPTIONS,
+    none: {
+      value: "No insurance coverage",
+      label: "No insurance coverage",
+      subtitle: "I am paying out of pocket",
+    },
+    budget: {
+      id: "sessionBudget",
+      label: "What feels comfortable per session?",
+      options: ["Under $100", "$100–$150", "$150+"],
+    },
   },
 ];
+
+/** The prototype's stand-in for device geolocation: the location Yuna
+ *  "detected", offered as a one-tap pick on the survey's location question. */
+export const DETECTED_LOCATION = { city: "San Francisco", state: "CA", zip: "94102" };
 
 /** Location typeahead suggestions for the survey + filters drawer. At least one
  *  city per US state (plus DC), so a search by any state name returns a match. */
@@ -506,9 +556,10 @@ export const LOCATIONS = [
 
 export type SessionType = { id: string; label: string; duration: string; body: string };
 
+// One offering only: the standard 45-minute session. (Free intro calls were
+// removed from the flow; the id stays "session" so stored appointments match.)
 export const SESSION_TYPES: SessionType[] = [
-  { id: "intro", label: "Free intro call", duration: "15 min", body: "A quick conversation to see if you're a fit." },
-  { id: "session", label: "First full session", duration: "50 min", body: "A full intake session to begin working together." },
+  { id: "session", label: "Therapy session", duration: "45 min", body: "A full session to begin working together." },
 ];
 
 // Indexed by JS weekday (0 = Sunday). Empty = closed that day.
@@ -563,3 +614,117 @@ export function formatMonth(d: Date): string {
 export function formatLongDate(d: Date): string {
   return `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
+
+/** Short form for tight spots (the Tools tile caption): "Tue, Jul 14". */
+export function formatShortDate(d: Date): string {
+  return `${WEEKDAYS[d.getDay()].slice(0, 3)}, ${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
+}
+
+// Appointments persist their date as a local "yyyy-mm-dd" string. Round-trip
+// through these (not `new Date(iso)`, which parses as UTC midnight and can
+// shift a day in western timezones).
+export function toISODate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+export function fromISODate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
+// ─── Guided session — Session debrief ────────────────────────────────────────
+// After a completed call, the hub (and the Tools tile) offer a short debrief
+// chat. Same scripted two-exchange shape as the reco opener; the hand-off card
+// offers booking a first full session with the same therapist.
+
+export const GUIDED_DEBRIEF_TITLE = "Session debrief";
+
+export const GUIDED_DEBRIEF_STEPS = ["Share how it went", "Choose your next step"];
+
+export function guidedDebriefScript(therapistFirstName: string): SurveyChatScript {
+  const name = therapistFirstName;
+  return {
+    greeting: [
+      `Welcome back. I'd love to hear how your call with ${name} went.`,
+      `There's no right or wrong answer here. How did it feel to talk with ${name}?`,
+    ],
+    followUp:
+      "Thank you for sharing that. One more: did you feel like you could open up, or was something missing?",
+    wrapUp: `That's helpful to sit with, and whatever you decide is okay. If it felt right, you can book a full session with ${name} below. If it didn't, I can help you keep looking.`,
+  };
+}
+
+// ─── Home follow-up card ─────────────────────────────────────────────────────
+// Once a booked session's time has passed (and it hasn't been debriefed), the
+// Home feed pins a guided-session card offering the same debrief chat the hub
+// does. Built per-appointment so the copy names the therapist and the date.
+
+export function debriefHomeCard(a: Appointment): HomeCard {
+  const t = getTherapist(a.therapistId) ?? matchedTherapists()[0];
+  const name = t.name.split(" ")[0];
+  return {
+    type: "guided-session",
+    id: `therapist-debrief-${a.id}`,
+    title: `How did your session with ${name} go?`,
+    subtitle: `You met with ${name} on ${formatLongDate(fromISODate(a.dateISO))}. Let's take a few minutes to unpack it together.`,
+    isNew: true,
+  };
+}
+
+// ─── Guided session — Session prep ───────────────────────────────────────────
+// The hub's "Prepare with Yuna" tile opens a guided conversation ahead of an
+// upcoming appointment. Contextual greeting only — after Yuna's opener the
+// conversation is a normal open session (no fixed follow-up or hand-off).
+
+export const GUIDED_PREP_TITLE = "Prepare for your therapy session";
+
+export function guidedPrepGreeting(
+  therapistFirstName: string,
+  dateLabel: string | null,
+): string[] {
+  const session = dateLabel
+    ? `your session with ${therapistFirstName} on ${dateLabel}`
+    : `your upcoming session with ${therapistFirstName}`;
+  return [
+    `I'm glad you're taking a moment to get ready for ${session}.`,
+    `What feels most important to bring up with ${therapistFirstName}? We can talk through your goals, or anything you're unsure about.`,
+  ];
+}
+
+// ─── Share summary with your therapist ───────────────────────────────────────
+// The consent-forward pre-session share. Each section is individually
+// includable; nothing is shared until the user explicitly sends.
+
+export type ShareSummarySection = { id: string; title: string; body: string };
+
+/** The prototype's stand-in for the generated PDF: a static mock document
+ *  (public/mock-summary.html) opened in a new tab, personalized via params. */
+export function summaryPdfUrl(t: Therapist): string {
+  const params = new URLSearchParams({ therapist: t.name, credentials: t.credentials });
+  return `/mock-summary.html?${params}`;
+}
+
+export const SHARE_SUMMARY_SECTIONS: ShareSummarySection[] = [
+  {
+    id: "focus",
+    title: "What you've been working on",
+    body: "Work stress and setting boundaries with family. You've practiced grounding techniques in your recent conversations with Yuna.",
+  },
+  {
+    id: "sessions",
+    title: "Recent conversations",
+    body: "A short recap of the past month: six conversations, mostly about workload, sleep, and one hard conversation you've been putting off.",
+  },
+  {
+    id: "checkins",
+    title: "Mood check-ins",
+    body: "Your anxiety (GAD-7) and mood (PHQ-9) trends from the past three months.",
+  },
+  {
+    id: "goals",
+    title: "Your goals",
+    body: "Two active goals: building a wind-down routine and speaking up in your weekly team meeting.",
+  },
+];
