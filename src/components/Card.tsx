@@ -39,6 +39,7 @@ import { Badge } from "@/components/Badge";
  *   completed?: boolean           — fade the row + show a check Badge top-left
  *
  * CardHeader props: meta {label, tone}, cadence?, eyebrow?, leading?, onMore?
+ *   (set onMore to show the top-right 3-dot menu; omit it for a plain header)
  * CardFooter props: primary, meta?, isSaved?, onToggleSave?, tone?
  * CardCTA props:    tone, onClick, children
  * MetaDot props:    tone?, children — dot-prefixed meta token after an eyebrow
@@ -307,19 +308,21 @@ export function CardHeader({
         </p>
         {cadence && <DailyTag tone={meta.tone} />}
       </div>
-      <Button
-        surface={isDark ? "dark" : "light"}
-        variant="plain"
-        size="icon-sm"
-        aria-label="More options"
-        onClick={(e) => {
-          e.stopPropagation();
-          onMore?.();
-        }}
-        className="shrink-0 -mt-1 -mr-1"
-      >
-        <MoreHorizontal strokeWidth={2} aria-hidden />
-      </Button>
+      {onMore && (
+        <Button
+          surface={isDark ? "dark" : "light"}
+          variant="plain"
+          size="icon-sm"
+          aria-label="More options"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMore();
+          }}
+          className="shrink-0 -mt-1 -mr-1"
+        >
+          <MoreHorizontal strokeWidth={2} aria-hidden />
+        </Button>
+      )}
     </div>
   );
 }

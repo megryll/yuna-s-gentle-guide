@@ -47,6 +47,7 @@ let escalationTier: EscalationTier | null = null;
 let suicidalityOn = false;
 let illinoisOn = false;
 let scheduleSessionOn = false;
+let upcomingApptOn = false;
 let guidedTitle: string | null = null;
 let guidedComplete = false;
 
@@ -82,6 +83,10 @@ export function setSessionIllinois(next: boolean) {
 }
 export function setSessionScheduleSession(next: boolean) {
   scheduleSessionOn = next;
+  emit();
+}
+export function setSessionUpcomingAppointment(next: boolean) {
+  upcomingApptOn = next;
   emit();
 }
 export function setSessionGuided(next: string | null) {
@@ -137,6 +142,13 @@ export function useSessionScheduleSession(): boolean {
     subscribe,
     () => scheduleSessionOn,
     () => scheduleSessionOn,
+  );
+}
+export function useSessionUpcomingAppointment(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => upcomingApptOn,
+    () => upcomingApptOn,
   );
 }
 export function useSessionGuided(): string | null {
