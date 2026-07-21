@@ -41,7 +41,7 @@ function DSCards() {
     cadence?: "Daily"            // appends a "• Daily" tag
     eyebrow?: string             // overrides meta.label
     leading?: ReactNode          // leading glyph (e.g. an avatar)
-    onMore?:  () => void         // wires the top-right More (3-dot) button
+    onMore?:  () => void         // shows the top-right More (3-dot) button; omit for a plain header
   />
   …body (caller-owned, centered)…
   <CardFooter
@@ -187,7 +187,7 @@ function DemoCard({ completed = false }: { completed?: boolean } = {}) {
   return (
     <div className="max-w-[300px]">
       <Card tone="dark" completed={completed} naturePath={NATURE}>
-        <CardHeader meta={{ label: "Meditation", tone: "dark" }} cadence="Daily" />
+        <CardHeader meta={{ label: "Meditation", tone: "dark" }} cadence="Daily" onMore={() => {}} />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white text-center">
             A Five-Minute Midday Reset

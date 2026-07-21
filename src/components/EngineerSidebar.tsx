@@ -31,11 +31,13 @@ import {
   setSessionScheduleSession,
   setSessionStatus,
   setSessionSuicidality,
+  setSessionUpcomingAppointment,
   useSessionEscalation,
   useSessionGuided,
   useSessionGuidedComplete,
   useSessionIllinois,
   useSessionScheduleSession,
+  useSessionUpcomingAppointment,
   useSessionReco,
   useSessionStatus,
   useSessionSuicidality,
@@ -635,13 +637,15 @@ function YunaStatesSection() {
 
 // ─── Home states (screen trigger) ────────────────────────────────────────────
 // Pushes the Home screen into a given state for review: the Illinois
-// service-limitation takeover, the "Schedule a session" drawer, and (shared
+// service-limitation takeover, the "Schedule a session" drawer, the
+// "Upcoming appointment" prep card pinned to the top of the feed, and (shared
 // with the therapist screens) completing a booked appointment, which pins the
 // post-session follow-up card to the top of the feed.
 
 function HomeStatesSection() {
   const illinois = useSessionIllinois();
   const scheduleSession = useSessionScheduleSession();
+  const upcoming = useSessionUpcomingAppointment();
   return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
@@ -654,6 +658,11 @@ function HomeStatesSection() {
           active={scheduleSession}
           label="Schedule a session"
           onClick={() => setSessionScheduleSession(!scheduleSession)}
+        />
+        <Chip
+          active={upcoming}
+          label="Upcoming appointment"
+          onClick={() => setSessionUpcomingAppointment(!upcoming)}
         />
         <CompleteAppointmentChip />
       </div>
@@ -672,7 +681,7 @@ function CompleteAppointmentChip() {
   return (
     <Chip
       active={false}
-      label={`Complete next appointment${upcoming ? ` (${upcoming} upcoming)` : ""}`}
+      label={`Appointment followup${upcoming ? ` (${upcoming} upcoming)` : ""}`}
       onClick={completeNextAppointment}
       disabled={upcoming === 0}
       disabledReason="No upcoming appointment to complete"

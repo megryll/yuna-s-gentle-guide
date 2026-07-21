@@ -19,6 +19,7 @@ import {
   setSessionIllinois,
   useSessionIllinois,
   useSessionScheduleSession,
+  useSessionUpcomingAppointment,
 } from "@/lib/session-dev";
 import { SuggestionChip } from "@/components/SuggestionChip";
 import { YunaAvatar } from "@/components/YunaAvatar";
@@ -36,7 +37,13 @@ import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
 import { useAppointments } from "@/lib/therapist-prefs";
-import { debriefHomeCard, GUIDED_DEBRIEF_TITLE } from "@/lib/therapist-data";
+import {
+  debriefHomeCard,
+  prepHomeCard,
+  matchedTherapists,
+  GUIDED_DEBRIEF_TITLE,
+  GUIDED_PREP_TITLE,
+} from "@/lib/therapist-data";
 import { SchedulePrioritizeGate } from "@/components/SchedulePrioritizeDrawer";
 import { ScheduleSessionDrawer } from "@/components/ScheduleSessionDrawer";
 
@@ -100,6 +107,17 @@ export function HomeScreen({
     () => (debriefAppt ? debriefHomeCard(debriefAppt) : null),
     [debriefAppt],
   );
+  // Before a booked session, a guided-session prep card pins to the top of the
+  // feed. Shown whenever there's an upcoming (not-yet-completed) appointment,
+  // and forced on by the EngineerSidebar "Upcoming appointment" state so it can
+  // be reviewed without booking. Opening it launches the same prep chat the hub
+  // does.
+  const upcomingAppt = appointments.find((a) => !a.completed) ?? null;
+  const upcomingState = useSessionUpcomingAppointment();
+  const prepCard = useMemo(
+    () => (upcomingAppt || upcomingState ? prepHomeCard(upcomingAppt ?? undefined) : null),
+    [upcomingAppt, upcomingState],
+  );
   const cards = useMemo(() => {
     // A brand-new user's feed is new in its entirety, so per-card "New" flags
     // carry no signal — strip them. Pin the starting-point questionnaire to the
@@ -121,11 +139,12 @@ export function HomeScreen({
     // item in the feed, so it pins above the New group.
     const kept = POST_INTRO_CARDS.filter((c) => c.id !== "your-starting-point");
     return [
+      ...(prepCard ? [prepCard] : []),
       ...(followUpCard ? [followUpCard] : []),
       ...kept.filter((c) => c.isNew),
       ...kept.filter((c) => !c.isNew),
     ];
-  }, [variant, followUpCard]);
+  }, [variant, followUpCard, prepCard]);
   const initialSavedIds = useMemo(
     () => new Set(cards.filter((c) => c.isSaved).map((c) => c.id)),
     [cards],
@@ -359,6 +378,17 @@ export function HomeScreen({
                   guided: GUIDED_DEBRIEF_TITLE,
                   flow: "therapist-debrief",
                   therapist: debriefAppt.therapistId,
+                });
+                return;
+              }
+              if (prepCard && c.id === prepCard.id) {
+                // The prep card opens the same guided pre-session chat the hub
+                // does; fall back to the top match when it's the review-only
+                // state (no real appointment behind it).
+                startChat({
+                  guided: GUIDED_PREP_TITLE,
+                  flow: "therapist-prep",
+                  therapist: upcomingAppt?.therapistId ?? matchedTherapists()[0]?.id,
                 });
                 return;
               }

@@ -18,11 +18,13 @@ import { useYunaIdentity } from "@/lib/yuna-session";
 
 type ItemProps = {
   card: HomeCard;
-  isSaved: boolean;
-  completed: boolean;
   onClick: () => void;
-  onMenu: () => void;
-  onToggleSave: () => void;
+  // Feed-only affordances — omit to render the card without the 3-dot menu or
+  // the save bookmark (e.g. a fixed guided-session card outside the Home feed).
+  isSaved?: boolean;
+  completed?: boolean;
+  onMenu?: () => void;
+  onToggleSave?: () => void;
 };
 
 export function HomeCardItem(props: ItemProps) {

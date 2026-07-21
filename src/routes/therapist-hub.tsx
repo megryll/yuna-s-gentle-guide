@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { Calendar as CalendarIcon, ExternalLink, FileText, MessageCircle } from "lucide-react";
+import { Calendar as CalendarIcon, ExternalLink, FileText } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
+import { HomeCardItem } from "@/components/HomeCards";
 import { PageHeader } from "@/components/PageHeader";
 import { Divider } from "@/components/Divider";
 import { Toast, ToastViewport } from "@/components/Toast";
@@ -25,6 +26,7 @@ import {
   fromISODate,
   GUIDED_DEBRIEF_TITLE,
   GUIDED_PREP_TITLE,
+  prepHomeCard,
   SESSION_TYPES,
   type Therapist,
 } from "@/lib/therapist-data";
@@ -179,13 +181,9 @@ function HubRoute() {
               <section>
                 <SectionLabel>Prepare for your session</SectionLabel>
                 <div className="flex flex-col gap-3">
-                  <PrepareCard
-                    surface={surface}
-                    icon={<MessageCircle size={20} strokeWidth={1.75} className="text-white" aria-hidden />}
-                    title="Prepare with Yuna"
-                    body="Start a session to talk through your goals and concerns related to your upcoming session."
-                    cta="Start a session"
-                    onAction={() =>
+                  <HomeCardItem
+                    card={prepHomeCard(next)}
+                    onClick={() =>
                       startChat({
                         guided: GUIDED_PREP_TITLE,
                         flow: "therapist-prep",

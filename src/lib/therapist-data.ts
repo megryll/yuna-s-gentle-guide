@@ -680,6 +680,24 @@ export function debriefHomeCard(a: Appointment): HomeCard {
 
 export const GUIDED_PREP_TITLE = "Prepare for your therapy session";
 
+// The guided-session feed card offering that prep conversation — pinned to the
+// top of the Home feed while a session is coming up, and shown in the hub's
+// "Prepare for your session" section. Names the therapist when one is known
+// (from the upcoming appointment); stays generic otherwise.
+export function prepHomeCard(a?: Appointment): HomeCard {
+  const t = a ? getTherapist(a.therapistId) : null;
+  const name = t ? t.name.split(" ")[0] : null;
+  return {
+    type: "guided-session",
+    id: a ? `therapist-prep-${a.id}` : "therapist-prep",
+    title: "Prepare with Yuna",
+    subtitle: name
+      ? `Talk through your goals and anything on your mind before your session with ${name}.`
+      : "Talk through your goals and anything on your mind before your upcoming session.",
+    isNew: true,
+  };
+}
+
 export function guidedPrepGreeting(
   therapistFirstName: string,
   dateLabel: string | null,
