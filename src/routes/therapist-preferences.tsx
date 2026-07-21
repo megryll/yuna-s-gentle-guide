@@ -98,6 +98,11 @@ function PreferencesRoute() {
   const total = SURVEY_QUESTIONS.length;
   const isLast = qStep === total - 1;
 
+  // A required question (only location today) gates Next until it's answered;
+  // every other step stays skippable.
+  const current = SURVEY_QUESTIONS[qStep];
+  const nextBlocked = !!current?.required && !answers[current.id];
+
   // Card transition: the leaving card stays mounted with its exit animation
   // while the new one enters; direction derives from the step delta. `leaving`
   // is set before paint so the incoming card animates in from the first frame.
@@ -121,6 +126,7 @@ function PreferencesRoute() {
   };
 
   const onNext = () => {
+    if (nextBlocked) return;
     if (isLast) {
       playCompleteSwell({ muted });
       setLoading(true);
@@ -163,6 +169,14 @@ function PreferencesRoute() {
     if (!question) return null;
     return (
       <QuestionCard surface={surface} className={animClass}>
+        <p
+          className={
+            "text-uppercase uppercase font-bold mb-2 " +
+            (question.required ? "text-alert-orange" : "text-secondary-green")
+          }
+        >
+          {question.required ? "Required" : "Optional"}
+        </p>
         <CardLead>{question.title}</CardLead>
         <p className="mt-1.5 text-sm leading-snug text-white/75">{question.prompt}</p>
         <div className="mt-5">
@@ -174,7 +188,6 @@ function PreferencesRoute() {
             setSearch={setSearch}
             answers={answers}
             setAnswers={setAnswers}
-            onAdvance={onNext}
           />
         </div>
       </QuestionCard>
@@ -289,7 +302,7 @@ function PreferencesRoute() {
           <Button surface={surface} variant="secondary" disabled={qStep === 0} onClick={onBack}>
             Previous
           </Button>
-          <Button surface={surface} variant="primary" onClick={onNext}>
+          <Button surface={surface} variant="primary" onClick={onNext} disabled={nextBlocked}>
             {isLast ? "See matches" : "Next"}
           </Button>
         </footer>
@@ -306,7 +319,6 @@ function QuestionBody({
   setSearch,
   answers,
   setAnswers,
-  onAdvance,
 }: {
   question: SurveyQuestion;
   surface: "dark" | "light";
@@ -315,8 +327,6 @@ function QuestionBody({
   setSearch: (v: string) => void;
   answers: Answers;
   setAnswers: (fn: (prev: Answers) => Answers) => void;
-  /** Free-text submit (send / mic release) advances to the next question. */
-  onAdvance: () => void;
 }) {
   const setAnswer = (value: string | string[] | null) => {
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
@@ -324,20 +334,16 @@ function QuestionBody({
   };
 
   if (question.type === "freeText") {
-    // Open-ended answer via the chat composer's hold-to-talk field: hold the
-    // mic to dictate (release sends), or type and hit send. Sending commits
-    // the answer and advances, like sending a chat message; the answer stays
-    // editable via Previous, and Next still skips past an empty field.
+    // Open-ended answer: type it, or hold the mic to dictate. Releasing drops
+    // the transcript into the field for review rather than auto-advancing — the
+    // answer stays editable and Next moves on when the user is ready.
     return (
       <DictationField
         surface={surface}
+        fillOnly
         placeholder={question.placeholder}
         value={(answers[question.id] as string) ?? ""}
         onChange={(v) => setAnswers((prev) => ({ ...prev, [question.id]: v }))}
-        onSubmit={(text) => {
-          setAnswers((prev) => ({ ...prev, [question.id]: text }));
-          onAdvance();
-        }}
       />
     );
   }

@@ -352,7 +352,11 @@ export function matchedTherapists(): Therapist[] {
 
 // ─── Preferences survey ──────────────────────────────────────────────────────
 
-export type SurveyQuestion =
+export type SurveyQuestion = {
+  /** Gates Next until answered and shows a "Required" (vs "Optional") card tag.
+   *  Only location carries this today; everything else is skippable. */
+  required?: boolean;
+} & (
   | { id: string; type: "freeText"; title: string; prompt: string; placeholder: string }
   | { id: string; type: "pillGroup"; title: string; prompt: string; items: PillGroupItem[] }
   | { id: string; type: "location"; title: string; prompt: string }
@@ -370,7 +374,8 @@ export type SurveyQuestion =
       none: { value: string; label: string; subtitle: string };
       /** Follow-up revealed while `none` is selected: per-session budget. */
       budget: { id: string; label: string; options: string[] };
-    };
+    }
+);
 
 /** Scripted two-exchange opener: Yuna greets, the user answers, Yuna asks one
  *  follow-up, the user answers again, Yuna wraps up. */
@@ -460,6 +465,7 @@ export const SURVEY_QUESTIONS: SurveyQuestion[] = [
   {
     id: "location",
     type: "location",
+    required: true,
     title: "Let's confirm your location",
     prompt: "Therapists are only licensed to practice in certain states. We'll use this to match you with ones who can see you.",
   },

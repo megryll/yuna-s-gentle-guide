@@ -20,16 +20,22 @@ import {
  * Controlled: pass `value` / `onChange` for the typed text. `onSubmit` fires
  * with the final text — the typed value on send, or the transcript on release.
  *
+ * fillOnly: keep the mic as a plain collector. Releasing drops the transcript
+ *   into the field (via `onChange`) instead of submitting, the button never
+ *   flips to a send arrow, and Enter doesn't submit — the caller advances with
+ *   its own control (e.g. a survey's Next). `onSubmit` is unused in this mode.
+ *
  * surface: which background it sits on (dark photo vs light).
  */
 type Props = {
   value: string;
   onChange: (v: string) => void;
-  onSubmit: (text: string) => void;
+  onSubmit?: (text: string) => void;
   surface?: "dark" | "light";
   size?: "md" | "lg";
   placeholder?: string;
   autoFocus?: boolean;
+  fillOnly?: boolean;
 };
 
 export function DictationField({
@@ -40,6 +46,7 @@ export function DictationField({
   size = "md",
   placeholder,
   autoFocus,
+  fillOnly,
 }: Props) {
   const [recording, setRecording] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
@@ -92,7 +99,9 @@ export function DictationField({
         setRecording(false);
         stopAnalyser();
         const t = committed.trim();
-        if (t) onSubmit(t);
+        // fillOnly drops the transcript into the field for review; the default
+        // composer mode submits it (send-a-message semantics).
+        if (t) (fillOnly ? onChange : onSubmit)?.(t);
       },
       onError: (err) => {
         recRef.current = null;
@@ -127,7 +136,9 @@ export function DictationField({
       className="w-full"
       onSubmit={(e) => {
         e.preventDefault();
-        if (hasText) onSubmit(value.trim());
+        // fillOnly never advances on Enter — the caller's own control commits.
+        if (fillOnly) return;
+        if (hasText) onSubmit?.(value.trim());
       }}
     >
       <TextField
@@ -150,13 +161,23 @@ export function DictationField({
             surface={surface}
             variant="primary"
             size="icon-sm"
-            type={hasText && !recording ? "submit" : "button"}
+            type={!fillOnly && hasText && !recording ? "submit" : "button"}
             pressed={recording}
-            aria-label={recording ? "Release to send" : hasText ? "Send" : "Hold to talk"}
+            aria-label={
+              recording
+                ? fillOnly
+                  ? "Release to stop"
+                  : "Release to send"
+                : !fillOnly && hasText
+                  ? "Send"
+                  : "Hold to talk"
+            }
             onMouseDown={(e) => e.preventDefault()}
             onTouchStart={(e) => e.preventDefault()}
             onPointerDown={(e) => {
-              if (hasText || recording) return;
+              // fillOnly stays a mic even with text (hold to re-record); the
+              // composer mode's mic is only live while the field is empty.
+              if (recording || (!fillOnly && hasText)) return;
               e.preventDefault();
               startRecord();
             }}
@@ -170,7 +191,7 @@ export function DictationField({
               if (recording) finishRecord();
             }}
           >
-            {hasText && !recording ? <ArrowUp strokeWidth={2} /> : <Mic strokeWidth={1.75} />}
+            {!fillOnly && hasText && !recording ? <ArrowUp strokeWidth={2} /> : <Mic strokeWidth={1.75} />}
           </Button>
         }
       />
