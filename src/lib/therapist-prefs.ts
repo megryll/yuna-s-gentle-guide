@@ -23,14 +23,26 @@ export type Appointment = {
   summaryShared?: boolean;
 };
 
+/** The client's edits to the shareable summary: which sections they left out,
+ *  and any narrative they reworded. Both are keyed by section id, so the
+ *  document's own copy stays the default and edits layer on top. */
+export type SummaryEdits = { removed: string[]; bodies: Record<string, string> };
+
 type State = {
   savedIds: string[];
   preferencesApplied: boolean;
   appointments: Appointment[];
+  summaryEdits: SummaryEdits;
 };
 
 const KEY = "yuna.therapistPrefs";
-const EMPTY: State = { savedIds: [], preferencesApplied: false, appointments: [] };
+const NO_EDITS: SummaryEdits = { removed: [], bodies: {} };
+const EMPTY: State = {
+  savedIds: [],
+  preferencesApplied: false,
+  appointments: [],
+  summaryEdits: NO_EDITS,
+};
 
 function read(): State {
   if (typeof window === "undefined") return EMPTY;
@@ -42,6 +54,13 @@ function read(): State {
       savedIds: Array.isArray(parsed.savedIds) ? parsed.savedIds : [],
       preferencesApplied: !!parsed.preferencesApplied,
       appointments: Array.isArray(parsed.appointments) ? parsed.appointments : [],
+      summaryEdits: {
+        removed: Array.isArray(parsed.summaryEdits?.removed) ? parsed.summaryEdits.removed : [],
+        bodies:
+          parsed.summaryEdits?.bodies && typeof parsed.summaryEdits.bodies === "object"
+            ? parsed.summaryEdits.bodies
+            : {},
+      },
     };
   } catch {
     return EMPTY;
@@ -136,6 +155,13 @@ export function completeNextAppointment() {
   if (next) updateAppointment(next.id, { completed: true });
 }
 
+/** The reverse, so the sidebar chip can put the session back in the future.
+ *  Clears the debrief with it: that's a post-session artifact. */
+export function reopenLastAppointment() {
+  const last = [...state.appointments].reverse().find((a) => a.completed);
+  if (last) updateAppointment(last.id, { completed: false, debriefed: false });
+}
+
 /** The debrief chat resolves the completed appointment by therapist (the chat
  *  is launched with a therapist id, not an appointment id). */
 export function markDebriefed(therapistId: string) {
@@ -143,6 +169,36 @@ export function markDebriefed(therapistId: string) {
     (a) => a.therapistId === therapistId && a.completed && !a.debriefed,
   );
   if (target) updateAppointment(target.id, { debriefed: true });
+}
+
+// ─── Summary edits ───────────────────────────────────────────────────────────
+
+export function useSummaryEdits(): SummaryEdits {
+  return useSyncExternalStore(
+    subscribe,
+    () => state.summaryEdits,
+    () => NO_EDITS,
+  );
+}
+
+/** Leave a section out of the share, or put it back. */
+export function toggleSummarySection(id: string) {
+  const { removed } = state.summaryEdits;
+  write({
+    ...state,
+    summaryEdits: {
+      ...state.summaryEdits,
+      removed: removed.includes(id) ? removed.filter((x) => x !== id) : [...removed, id],
+    },
+  });
+}
+
+/** Reword a section's narrative. An empty edit falls back to Yuna's draft. */
+export function setSummaryBody(id: string, body: string) {
+  const bodies = { ...state.summaryEdits.bodies };
+  if (body.trim()) bodies[id] = body.trim();
+  else delete bodies[id];
+  write({ ...state, summaryEdits: { ...state.summaryEdits, bodies } });
 }
 
 // ─── Preferences applied ─────────────────────────────────────────────────────
@@ -166,7 +222,14 @@ export function preferencesAppliedThisSession(): boolean {
  *  yet taken (so the recommendations screen shows its pre-survey teaser), no
  *  appointments. Used when the admin "New" user toggle is flipped. */
 export function resetTherapistPrefs() {
-  if (!state.preferencesApplied && state.savedIds.length === 0 && state.appointments.length === 0)
+  const { removed, bodies } = state.summaryEdits;
+  if (
+    !state.preferencesApplied &&
+    state.savedIds.length === 0 &&
+    state.appointments.length === 0 &&
+    removed.length === 0 &&
+    Object.keys(bodies).length === 0
+  )
     return;
   write(EMPTY);
 }

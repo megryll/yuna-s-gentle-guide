@@ -50,6 +50,10 @@ let scheduleSessionOn = false;
 let upcomingApptOn = false;
 let guidedTitle: string | null = null;
 let guidedComplete = false;
+// One-shot counter rather than a boolean: the hub's booking celebration is a
+// moment, not a mode, so each press has to re-fire it even after the last one
+// was dismissed.
+let bookingCelebration = 0;
 
 function emit() {
   for (const l of listeners) l();
@@ -102,6 +106,21 @@ export function setSessionGuidedComplete(next: boolean) {
   emit();
 }
 
+/** Replay the therapist hub's "appointment confirmed" celebration. Armed here,
+ *  played by whichever hub is mounted — so pressing the chip from /tools still
+ *  lands once you get to the hub. */
+export function triggerBookingCelebration() {
+  bookingCelebration += 1;
+  emit();
+}
+
+/** Played once and cleared, so navigating back to the hub doesn't replay it. */
+export function consumeBookingCelebration() {
+  if (!bookingCelebration) return;
+  bookingCelebration = 0;
+  emit();
+}
+
 export function useSessionStatus(): YunaState | null {
   return useSyncExternalStore(
     subscribe,
@@ -149,6 +168,13 @@ export function useSessionUpcomingAppointment(): boolean {
     subscribe,
     () => upcomingApptOn,
     () => upcomingApptOn,
+  );
+}
+export function useBookingCelebration(): number {
+  return useSyncExternalStore(
+    subscribe,
+    () => bookingCelebration,
+    () => bookingCelebration,
   );
 }
 export function useSessionGuided(): string | null {

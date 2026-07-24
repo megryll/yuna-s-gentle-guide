@@ -16,7 +16,12 @@ import {
 } from "lucide-react";
 
 import { getEngineerNotes, type Gotcha } from "@/lib/engineer-notes";
-import { completeNextAppointment, useAppointments } from "@/lib/therapist-prefs";
+import {
+  completeNextAppointment,
+  reopenLastAppointment,
+  updateAppointment,
+  useAppointments,
+} from "@/lib/therapist-prefs";
 import { addUserNote, editNote, exportOverlay, removeNote, useResolvedNotes, type ResolvedNote } from "@/lib/notes-prefs";
 import { cn } from "@/lib/utils";
 import type { YunaState } from "@/components/YunaStatus";
@@ -32,6 +37,7 @@ import {
   setSessionStatus,
   setSessionSuicidality,
   setSessionUpcomingAppointment,
+  triggerBookingCelebration,
   useSessionEscalation,
   useSessionGuided,
   useSessionGuidedComplete,
@@ -677,14 +683,37 @@ function HomeStatesSection() {
 
 function CompleteAppointmentChip() {
   const appointments = useAppointments();
-  const upcoming = appointments.filter((a) => !a.completed).length;
+  const on = appointments.some((a) => a.completed);
+  const hasUpcoming = appointments.some((a) => !a.completed);
   return (
     <Chip
-      active={false}
-      label={`Appointment followup${upcoming ? ` (${upcoming} upcoming)` : ""}`}
-      onClick={completeNextAppointment}
-      disabled={upcoming === 0}
+      active={on}
+      label="Appointment followup"
+      onClick={() => (on ? reopenLastAppointment() : completeNextAppointment())}
+      disabled={!on && !hasUpcoming}
       disabledReason="No upcoming appointment to complete"
+    />
+  );
+}
+
+// Secures the next upcoming appointment and replays the hub's celebration —
+// the same thing the card's "Confirm on booking platform" button does, minus
+// the 2s handoff. Toggling back off returns the card to "Action Required".
+function ConfirmAppointmentChip() {
+  const appointments = useAppointments();
+  const next = appointments.find((a) => !a.completed);
+  const on = !!next?.confirmed;
+  return (
+    <Chip
+      active={on}
+      label="Booking confirmed"
+      onClick={() => {
+        if (!next) return;
+        updateAppointment(next.id, { confirmed: !on });
+        if (!on) triggerBookingCelebration();
+      }}
+      disabled={!next}
+      disabledReason="No upcoming appointment to confirm"
     />
   );
 }
@@ -693,6 +722,7 @@ function TherapistStatesSection() {
   return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
+        <ConfirmAppointmentChip />
         <CompleteAppointmentChip />
       </div>
     </Section>

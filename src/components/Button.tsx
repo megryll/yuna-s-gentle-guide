@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { LeafSpinner } from "@/components/LeafSpinner";
 
 /**
  * Root Button.
@@ -38,6 +39,10 @@ import { cn } from "@/lib/utils";
  * pressed (toggle): when true, button visually flips to the primary variant
  *   for the current surface, regardless of the `variant` prop. aria-pressed
  *   is set automatically.
+ *
+ * loading: work in flight — swaps the label for the brand LeafSpinner while
+ *   holding the button's exact size, and blocks input (without the disabled
+ *   dimming, since the button isn't off, it's busy). Ignored by card/link.
  *
  * label (icon sizes only): renders a small text caption below the icon circle.
  * subtitle (card variant only): secondary line under the title.
@@ -137,6 +142,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   pressed?: boolean;
+  loading?: boolean;
   selected?: boolean;
   label?: string;
   subtitle?: string;
@@ -145,6 +151,17 @@ export interface ButtonProps
 }
 
 const ICON_SIZES: ReadonlySet<IconSize> = new Set(["icon", "icon-sm", "icon-lg"]);
+
+// Spinner diameter per size. The invisible label holds the box, so the spinner
+// is free to overhang the line box — it's centered over the whole button.
+const SPINNER_SIZE: Record<string, number> = {
+  md: 24,
+  sm: 18,
+  xs: 14,
+  icon: 18,
+  "icon-sm": 16,
+  "icon-lg": 22,
+};
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -155,6 +172,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       fullWidth,
       pressed,
+      loading,
       selected,
       label,
       subtitle,
@@ -171,6 +189,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const ariaPressed =
       pressed !== undefined ? pressed : props["aria-pressed"];
     const isIcon = ICON_SIZES.has(size as IconSize);
+
+    // Busy content: the label stays in the layout (invisible) so the button
+    // holds its width and height, with the spinner centered over it.
+    const content = loading ? (
+      <>
+        <span className="invisible inline-flex items-center gap-2" aria-hidden>
+          {children}
+        </span>
+        <span className="absolute inset-0 flex items-center justify-center">
+          <LeafSpinner size={SPINNER_SIZE[(size as string) ?? "md"] ?? 20} className="text-current" />
+        </span>
+      </>
+    ) : (
+      children
+    );
 
     // Card — full-width list-row "card-as-button": title + optional subtitle +
     // optional trailing element. Authored in white-on-dark vocabulary so
@@ -260,20 +293,24 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "transition-transform duration-100 ease-out active:scale-[0.97]",
             "disabled:opacity-50 disabled:pointer-events-none",
             "focus-visible:outline-none",
+            loading && "disabled:opacity-100",
             className,
           )}
           ref={ref}
           aria-pressed={ariaPressed}
           {...props}
+          aria-busy={loading || undefined}
+          disabled={props.disabled || loading}
         >
           <span
             className={cn(
               buttonVariants({ surface, variant: effectiveVariant, size, fullWidth: false }),
               // Reset transitions/scale on the inner span — outer drives press feedback.
               "active:scale-100",
+              loading && "relative",
             )}
           >
-            {children}
+            {content}
           </span>
           <span
             className={cn(
@@ -291,13 +328,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ surface, variant: effectiveVariant, size, fullWidth }),
+          // Busy, not off: keep full strength and just take input away.
+          loading && "relative disabled:opacity-100",
           className,
         )}
         ref={ref}
         aria-pressed={ariaPressed}
         {...props}
+        aria-busy={loading || undefined}
+        disabled={props.disabled || loading}
       >
-        {children}
+        {content}
       </Comp>
     );
   },

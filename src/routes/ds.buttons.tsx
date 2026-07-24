@@ -41,6 +41,8 @@ function DSButtons() {
              // icon* sizes also set the glyph size (16 / 18 / 22px) — don't size icons at the call site
   fullWidth?: boolean                                  // default: false
   pressed?:  boolean       // toggles into primary look; sets aria-pressed
+  loading?:  boolean       // busy: LeafSpinner replaces the label, size held, input blocked
+                           // (no disabled dimming); ignored by card/link
   label?:    string        // icon sizes only — caption below the circle
   subtitle?: string        // card variant — secondary line under the title
   leading?:  ReactNode     // card variant — leading element (e.g. an IconMedallion)
@@ -237,6 +239,9 @@ function StateStack({
       <Button surface={surface} variant={variant} fullWidth disabled>
         Disabled
       </Button>
+      <Button surface={surface} variant={variant} fullWidth loading>
+        Loading
+      </Button>
     </div>
   );
 }
@@ -280,14 +285,15 @@ function IconStateRow({
   variant: "plain" | "secondary" | "primary";
   glyph: ReactNode;
 }) {
-  const states: { caption: string; className?: string; disabled?: boolean }[] = [
+  const states: { caption: string; className?: string; disabled?: boolean; loading?: boolean }[] = [
     { caption: "Default" },
     { caption: "Pressed", className: pressedClass(variant, surface) },
     { caption: "Disabled", disabled: true },
+    { caption: "Loading", loading: true },
   ];
   return (
     <Row className="gap-6">
-      {states.map(({ caption, className, disabled }) => (
+      {states.map(({ caption, className, disabled, loading }) => (
         <div key={caption} className="flex flex-col items-center gap-2">
           <Button
             surface={surface}
@@ -295,6 +301,7 @@ function IconStateRow({
             size="icon"
             className={className}
             disabled={disabled}
+            loading={loading}
             aria-label={caption}
           >
             {glyph}

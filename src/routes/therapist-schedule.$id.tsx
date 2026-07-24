@@ -54,6 +54,9 @@ export const Route = createFileRoute("/therapist-schedule/$id")({
 // The only offering: the standard 45-minute session.
 const SESSION = SESSION_TYPES[0];
 
+// Simulated wait while the therapist's booking platform loads.
+const HANDOFF_MS = 2000;
+
 function ScheduleRoute() {
   const { id } = Route.useParams();
   const { appt } = Route.useSearch();
@@ -71,6 +74,9 @@ function ScheduleRoute() {
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
+  // Handing off to the therapist's booking platform takes a beat in real life —
+  // the CTA sits in its loading state before we leave the screen.
+  const [handingOff, setHandingOff] = useState(false);
   // One therapist at a time: booking while another appointment is upcoming
   // asks the user to confirm swapping it out before anything is written.
   const [conflict, setConflict] = useState<Appointment | null>(null);
@@ -129,6 +135,10 @@ function ScheduleRoute() {
     // Booking replaces this screen in history so "back" from the hub returns
     // to wherever the user was before scheduling, not a stale scheduling flow.
     const toHub = () => navigate({ to: "/therapist-hub", replace: true });
+    const openBookingPlatform = () => {
+      setHandingOff(true);
+      setTimeout(toHub, HANDOFF_MS);
+    };
     return (
       <PhoneFrame themed>
         <div className="flex-1 flex flex-col min-h-0">
@@ -161,13 +171,19 @@ function ScheduleRoute() {
               <SummaryLine icon={<Video size={16} aria-hidden />}>{SESSION.label} · Video call</SummaryLine>
             </div>
 
-            <Button surface={surface} variant="primary" fullWidth onClick={toHub}>
+            <Button
+              surface={surface}
+              variant="primary"
+              fullWidth
+              loading={handingOff}
+              onClick={openBookingPlatform}
+            >
               Confirm on booking platform
               <ExternalLink size={16} strokeWidth={2} aria-hidden />
             </Button>
           </div>
 
-          <Button surface={surface} variant="link" className="mx-auto mt-4" onClick={toHub}>
+          <Button surface={surface} variant="link" className="mx-auto mt-4" disabled={handingOff} onClick={toHub}>
             I'll confirm my appointment later
           </Button>
           </div>

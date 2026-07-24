@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { Calendar as CalendarIcon, ExternalLink, FileText } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -7,10 +7,20 @@ import { HomeCardItem } from "@/components/HomeCards";
 import { PageHeader } from "@/components/PageHeader";
 import { Divider } from "@/components/Divider";
 import { Toast, ToastViewport } from "@/components/Toast";
+import { Confetti } from "@/components/Confetti";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { TherapistCard, TherapistPhoto, frostedPanel } from "@/components/TherapistCard";
 import { useAppMode } from "@/lib/theme-prefs";
 import { useTransientToast } from "@/lib/use-transient-toast";
 import { useStartChat } from "@/lib/chat-launch";
+import { consumeBookingCelebration, useBookingCelebration } from "@/lib/session-dev";
 import {
   cancelAppointment,
   toggleSaved,
@@ -40,6 +50,9 @@ function firstName(t: Therapist): string {
   return t.name.split(" ")[0];
 }
 
+// Simulated wait while the therapist's booking platform loads.
+const HANDOFF_MS = 2000;
+
 function HubRoute() {
   const navigate = useNavigate();
   const router = useRouter();
@@ -48,6 +61,16 @@ function HubRoute() {
   const appointments = useAppointments();
   const savedIds = useSavedIds();
   const { message: toast, show: flashToast, dismiss } = useTransientToast();
+  // Securing the appointment is the milestone of this whole flow, so it gets a
+  // moment rather than a toast: confetti over the frame plus a drawer that
+  // names what they just did. `burstKey` remounts the cascade each time.
+  const [celebrated, setCelebrated] = useState<Appointment | null>(null);
+  const [burstKey, setBurstKey] = useState(0);
+
+  const celebrate = (a: Appointment) => {
+    setCelebrated(a);
+    setBurstKey((k) => k + 1);
+  };
 
   const upcoming = useMemo(
     () =>
@@ -83,9 +106,23 @@ function HubRoute() {
   );
   const rebookTherapist =
     upcoming.length === 0 && lastCompleted ? getTherapist(lastCompleted.therapistId) : null;
+  const celebratedTherapist = celebrated
+    ? getTherapist(celebrated.therapistId) ?? matchedTherapists()[0]
+    : null;
+
   // The share offer targets the next call; the common case is one appointment.
   const next = upcoming[0];
   const nextTherapist = next ? getTherapist(next.therapistId) : null;
+
+  // EngineerSidebar "Booking confirmed" chip: replay the celebration for the
+  // next appointment without waiting out the booking-platform handoff.
+  const celebrationSignal = useBookingCelebration();
+  useEffect(() => {
+    if (!celebrationSignal) return;
+    consumeBookingCelebration();
+    if (next) celebrate(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [celebrationSignal]);
 
   const savedList = useMemo(
     () => savedIds.map((id) => getTherapist(id)).filter(Boolean) as Therapist[],
@@ -139,7 +176,7 @@ function HubRoute() {
                       onJoin={() => flashToast("Your video link is in your confirmation email.")}
                       onConfirm={() => {
                         updateAppointment(a.id, { confirmed: true });
-                        flashToast("Your appointment is confirmed.");
+                        celebrate(a);
                       }}
                       onReschedule={() =>
                         navigate({
@@ -268,6 +305,40 @@ function HubRoute() {
         )}
       </div>
 
+      <Drawer open={!!celebrated} onOpenChange={(v) => !v && setCelebrated(null)}>
+        <DrawerContent>
+          <DrawerHeader className="px-6 pt-3 pb-2 text-left">
+            <DrawerTitle>That's a big step</DrawerTitle>
+            <DrawerDescription className="mt-2">
+              {celebrated && celebratedTherapist && (
+                <>
+                  Your session with {firstName(celebratedTherapist)} is confirmed for{" "}
+                  {formatLongDate(fromISODate(celebrated.dateISO))} at {celebrated.time}. Making
+                  space for therapy takes real effort, and you did that today.
+                </>
+              )}
+            </DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="px-6 pb-8">
+            <Button
+              surface={surface}
+              variant="primary"
+              fullWidth
+              onClick={() => setCelebrated(null)}
+            >
+              Done
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Anchored to the frame so the cascade spans the whole screen and falls
+          over the drawer, not behind it. */}
+      {burstKey > 0 && (
+        <div className="pointer-events-none absolute inset-0 z-[60] overflow-hidden">
+          <Confetti key={burstKey} />
+        </div>
+      )}
     </PhoneFrame>
   );
 }
@@ -345,6 +416,16 @@ function AppointmentCard({
   const session =
     SESSION_TYPES.find((s) => s.id === appointment.sessionTypeId) ?? SESSION_TYPES[0];
   const unconfirmed = !appointment.confirmed;
+  // The booking platform takes a beat to load — hold the CTA in its loading
+  // state before the handoff resolves.
+  const [handingOff, setHandingOff] = useState(false);
+  const confirm = () => {
+    setHandingOff(true);
+    setTimeout(() => {
+      setHandingOff(false);
+      onConfirm();
+    }, HANDOFF_MS);
+  };
   return (
     <div className={`rounded-3xl ${frostedPanel(surface)} p-5 flex flex-col gap-4`}>
       {/* The when leads; who you're meeting supports it. */}
@@ -375,7 +456,7 @@ function AppointmentCard({
             Your timeslot is held for 24 hours. Confirm on {firstName(therapist)}'s
             booking platform to secure your appointment.
           </p>
-          <Button surface={surface} variant="primary" fullWidth onClick={onConfirm}>
+          <Button surface={surface} variant="primary" fullWidth loading={handingOff} onClick={confirm}>
             Confirm on booking platform
             <ExternalLink size={16} strokeWidth={2} aria-hidden />
           </Button>

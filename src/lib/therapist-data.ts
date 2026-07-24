@@ -715,7 +715,22 @@ export function guidedPrepGreeting(
 // The consent-forward pre-session share. Each section is individually
 // includable; nothing is shared until the user explicitly sends.
 
-export type ShareSummarySection = { id: string; title: string; body: string };
+/** A section of the generated summary document.
+ *
+ *  `body` is narrative Yuna drafted about the client — the only thing they can
+ *  reword. `trends` / `bullets` come straight from their check-ins and goals:
+ *  they can leave the section out, but they can't rewrite the numbers. */
+export type ShareSummarySection = {
+  id: string;
+  title: string;
+  /** Editable narrative. */
+  body?: string;
+  /** Fixed lead-in above a data block. */
+  intro?: string;
+  /** Screener trends — label, bar fill (0–100), and the change read-out. */
+  trends?: { label: string; fill: number; value: string }[];
+  bullets?: string[];
+};
 
 /** The prototype's stand-in for the generated PDF: a static mock document
  *  (public/mock-summary.html) opened in a new tab, personalized via params. */
@@ -724,25 +739,39 @@ export function summaryPdfUrl(t: Therapist): string {
   return `/mock-summary.html?${params}`;
 }
 
+/** The document's fixed matter: written for the therapist, not editable. */
+export const SHARE_SUMMARY_DOC = {
+  title: "Getting to know your new client",
+  disclaimer:
+    "This summary reflects self-reported conversations and check-ins with Yuna. It is not a clinical assessment or diagnosis. The client chose which sections to include and can revoke access at any time.",
+};
+
 export const SHARE_SUMMARY_SECTIONS: ShareSummarySection[] = [
   {
     id: "focus",
-    title: "What you've been working on",
-    body: "Work stress and setting boundaries with family. You've practiced grounding techniques in your recent conversations with Yuna.",
+    title: "What they've been working on",
+    body: "Recent conversations have centered on work stress and setting boundaries with family. They have been practicing grounding techniques and reported finding them helpful during high-pressure moments at work.",
   },
   {
     id: "sessions",
     title: "Recent conversations",
-    body: "A short recap of the past month: six conversations, mostly about workload, sleep, and one hard conversation you've been putting off.",
+    body: "Six conversations over the past month, mostly about workload, sleep, and one difficult conversation they have been putting off. Sessions were a mix of open reflection and short guided exercises.",
   },
   {
     id: "checkins",
     title: "Mood check-ins",
-    body: "Your anxiety (GAD-7) and mood (PHQ-9) trends from the past three months.",
+    intro: "Self-reported screeners over the past three months.",
+    trends: [
+      { label: "Anxiety · GAD-7", fill: 38, value: "11 → 8" },
+      { label: "Mood · PHQ-9", fill: 30, value: "9 → 8" },
+    ],
   },
   {
     id: "goals",
-    title: "Your goals",
-    body: "Two active goals: building a wind-down routine and speaking up in your weekly team meeting.",
+    title: "Their goals",
+    bullets: [
+      "Build a consistent wind-down routine before bed.",
+      "Speak up at least once in the weekly team meeting.",
+    ],
   },
 ];
