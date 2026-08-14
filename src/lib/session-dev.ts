@@ -38,6 +38,20 @@ export const RECO_SAMPLES: Partial<
 export const GUIDED_SAMPLE_TITLE =
   "Untangle perfectionism at work, one thread at a time";
 
+// Wrap-up A/B variants — which reflection treatment the wrap-up screen renders.
+// "current" is the shipped screen; every other value hides the hero keepsake
+// card and promotes the stress/mood reflection to the top of the scroll, so the
+// variants differ only in how the two answers are captured.
+export type WrapUpVariant = "current" | "focus" | "sliders" | "choice6" | "choice4";
+
+export const WRAPUP_VARIANTS: { value: WrapUpVariant; label: string }[] = [
+  { value: "current", label: "Current" },
+  { value: "focus", label: "Reflection first" },
+  { value: "sliders", label: "Sliders" },
+  { value: "choice6", label: "6 options" },
+  { value: "choice4", label: "4 options" },
+];
+
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
@@ -50,6 +64,7 @@ let scheduleSessionOn = false;
 let upcomingApptOn = false;
 let guidedTitle: string | null = null;
 let guidedComplete = false;
+let wrapUpVariant: WrapUpVariant = "current";
 // One-shot counter rather than a boolean: the hub's booking celebration is a
 // moment, not a mode, so each press has to re-fire it even after the last one
 // was dismissed.
@@ -103,6 +118,11 @@ export function setSessionGuidedComplete(next: boolean) {
   guidedComplete = next;
   // Completion implies an active guided session, so the header + tracker render.
   if (next && guidedTitle === null) guidedTitle = GUIDED_SAMPLE_TITLE;
+  emit();
+}
+
+export function setWrapUpVariant(next: WrapUpVariant) {
+  wrapUpVariant = next;
   emit();
 }
 
@@ -189,5 +209,12 @@ export function useSessionGuidedComplete(): boolean {
     subscribe,
     () => guidedComplete,
     () => guidedComplete,
+  );
+}
+export function useWrapUpVariant(): WrapUpVariant {
+  return useSyncExternalStore(
+    subscribe,
+    () => wrapUpVariant,
+    () => wrapUpVariant,
   );
 }

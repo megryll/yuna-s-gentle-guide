@@ -37,7 +37,10 @@ import {
   setSessionStatus,
   setSessionSuicidality,
   setSessionUpcomingAppointment,
+  setWrapUpVariant,
   triggerBookingCelebration,
+  useWrapUpVariant,
+  WRAPUP_VARIANTS,
   useSessionEscalation,
   useSessionGuided,
   useSessionGuidedComplete,
@@ -158,6 +161,7 @@ export function EngineerSidebar() {
       {path === "/chat" && <YunaStatesSection />}
       {path === "/home" && <HomeStatesSection />}
       {(path === "/therapist-hub" || path === "/tools") && <TherapistStatesSection />}
+      {path === "/wrap-up" && <WrapUpStatesSection />}
     </aside>
   );
 }
@@ -724,6 +728,30 @@ function TherapistStatesSection() {
       <div className="flex flex-wrap gap-1">
         <ConfirmAppointmentChip />
         <CompleteAppointmentChip />
+      </div>
+    </Section>
+  );
+}
+
+// ─── Wrap-up states (A/B variants) ───────────────────────────────────────────
+// Swaps the wrap-up's reflection treatment for an A/B comparison. "Current" is
+// the shipped screen; the rest hide the hero keepsake card and lead with the
+// stress/mood question, varying only how the two answers are captured. Exactly
+// one is active at a time, so the chips read as a radio group.
+
+function WrapUpStatesSection() {
+  const variant = useWrapUpVariant();
+  return (
+    <Section title="States" defaultOpen={true}>
+      <div className="flex flex-wrap gap-1">
+        {WRAPUP_VARIANTS.map((v) => (
+          <Chip
+            key={v.value}
+            active={variant === v.value}
+            label={v.label}
+            onClick={() => setWrapUpVariant(v.value)}
+          />
+        ))}
       </div>
     </Section>
   );

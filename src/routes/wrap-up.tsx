@@ -3,8 +3,8 @@ import { useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
-import { Slider } from "@/components/Slider";
 import { Surface } from "@/components/Surface";
+import { WrapUpReflection } from "@/components/WrapUpReflection";
 import { Accordion } from "@/components/Accordion";
 import {
   HeroKeepsakeCard,
@@ -18,6 +18,7 @@ import { keepsakeUid, saveKeepsake, type Keepsake } from "@/lib/keepsakes";
 import { HOME_CARDS, type HomeCard } from "@/lib/home-cards";
 import { setUserType } from "@/lib/user-type";
 import { requestSchedulePrompt } from "@/lib/schedule-prompt";
+import { useWrapUpVariant } from "@/lib/session-dev";
 
 export const Route = createFileRoute("/wrap-up")({
   head: () => ({
@@ -85,6 +86,10 @@ function WrapUp() {
   const navigate = useNavigate();
   const { avatar } = useYunaIdentity();
   const idRef = useRef<string>(keepsakeUid());
+  // A/B variant from the EngineerSidebar. Anything but "current" drops the hero
+  // keepsake card and leads the screen with the stress/mood reflection instead.
+  const variant = useWrapUpVariant();
+  const reflectionFirst = variant !== "current";
 
   const quotes = useMemo(() => extractQuotes(), []);
   const displayQuotes = quotes.length > 0 ? quotes : FALLBACK_QUOTES;
@@ -95,6 +100,21 @@ function WrapUp() {
   const [mood, setMood] = useState(0);
   const [stressTouched, setStressTouched] = useState(false);
   const [moodTouched, setMoodTouched] = useState(false);
+
+  const reflectionValues = {
+    stress,
+    stressTouched,
+    onStressChange: (v: number) => {
+      setStress(v);
+      setStressTouched(true);
+    },
+    mood,
+    moodTouched,
+    onMoodChange: (v: number) => {
+      setMood(v);
+      setMoodTouched(true);
+    },
+  };
 
   const onDone = () => {
     const k: Keepsake = {
@@ -121,7 +141,7 @@ function WrapUp() {
               pt-14 lives here (the first scroll child, like a back-arrow
               header) rather than on the scroll wrapper, so it doesn't eat
               viewport per the photo-bg-scrolling padding rule. */}
-          <div className="flex flex-col gap-6 pt-14">
+          <div className={"flex flex-col pt-14 " + (reflectionFirst ? "gap-9" : "gap-6")}>
             {/* ── Title bar: centered eyebrow, close button pinned right ──── */}
             <div className="relative flex items-center justify-center">
               <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
@@ -141,24 +161,17 @@ function WrapUp() {
             </div>
 
             {/* ── Hero keepsake card ──────────────────────────────────────── */}
-            <HeroKeepsakeCard message={HERO_MESSAGE} avatar={avatar} onShare={() => undefined} />
+            {!reflectionFirst && (
+              <HeroKeepsakeCard message={HERO_MESSAGE} avatar={avatar} onShare={() => undefined} />
+            )}
+
+            {/* The variants promote the reflection into the top cluster, where
+                the keepsake card used to sit, so it owns the first screenful. */}
+            {reflectionFirst && <WrapUpReflection variant={variant} values={reflectionValues} />}
           </div>
 
           {/* ── Reflection: how did the session land? ───────────────────── */}
-          <ReflectionSection
-            stress={stress}
-            stressTouched={stressTouched}
-            onStressChange={(v) => {
-              setStress(v);
-              setStressTouched(true);
-            }}
-            mood={mood}
-            moodTouched={moodTouched}
-            onMoodChange={(v) => {
-              setMood(v);
-              setMoodTouched(true);
-            }}
-          />
+          {!reflectionFirst && <WrapUpReflection variant={variant} values={reflectionValues} />}
 
           {/* ── Emotions ────────────────────────────────────────────────── */}
           <EmotionsSection emotions={EMOTIONS} />
@@ -177,55 +190,6 @@ function WrapUp() {
         </div>
       </div>
     </PhoneFrame>
-  );
-}
-
-// ── Reflection: how did the session land? ──────────────────────────────────────
-// Two center-out (bipolar) sliders let the user self-report the directional shift
-// the session produced — stress and mood. Rests at center; the active end label
-// emphasises once moved. Lives outside a card so it reads at body width.
-function ReflectionSection({
-  stress,
-  stressTouched,
-  onStressChange,
-  mood,
-  moodTouched,
-  onMoodChange,
-}: {
-  stress: number;
-  stressTouched: boolean;
-  onStressChange: (v: number) => void;
-  mood: number;
-  moodTouched: boolean;
-  onMoodChange: (v: number) => void;
-}) {
-  return (
-    <section className="flex flex-col gap-9 yuna-rise">
-      <h2 className="font-display text-xl leading-tight text-white text-center">
-        How did this session land?
-      </h2>
-
-      <div className="flex flex-col gap-9">
-        <Slider
-          variant="bipolar"
-          surface="dark"
-          leftLabel="Increased stress"
-          rightLabel="Decreased stress"
-          value={stress}
-          touched={stressTouched}
-          onChange={onStressChange}
-        />
-        <Slider
-          variant="bipolar"
-          surface="dark"
-          leftLabel="Worsened mood"
-          rightLabel="Improved mood"
-          value={mood}
-          touched={moodTouched}
-          onChange={onMoodChange}
-        />
-      </div>
-    </section>
   );
 }
 
