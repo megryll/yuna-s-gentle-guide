@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
 import { Slider } from "@/components/Slider";
 import {
@@ -33,6 +34,9 @@ export type ReflectionValues = {
   mood: number;
   moodTouched: boolean;
   onMoodChange: (v: number) => void;
+  /** Clears both answers. Variants that hide the questions behind a payoff
+   *  need it, or there's no way back to them. */
+  onReset: () => void;
 };
 
 // Zone labels + faces, ordered negative → positive. One list per variant: the
@@ -200,14 +204,6 @@ function ReflectionBody({
 
     case "trendFirst":
       return <TrendVariant values={values} firstTime />;
-
-    case "tally":
-      return (
-        <div className="flex flex-col gap-9">
-          <FourOptions values={values} />
-          <TallyVariant values={values} />
-        </div>
-      );
 
     case "binary":
       return <TwoTaps values={values} />;
@@ -566,7 +562,12 @@ function useCheckInCelebration(answered: boolean) {
   const [burstKey, setBurstKey] = useState(0);
   const fired = useRef(false);
   useEffect(() => {
-    if (!answered || fired.current) return;
+    // Starting over re-arms it, so a second run celebrates too.
+    if (!answered) {
+      fired.current = false;
+      return;
+    }
+    if (fired.current) return;
     fired.current = true;
     playCompleteSwell({ muted });
     setBurstKey((k) => k + 1);
@@ -574,23 +575,23 @@ function useCheckInCelebration(answered: boolean) {
   return burstKey;
 }
 
-function TallyVariant({ values }: { values: ReflectionValues }) {
+/** The tally payoff for the one-tap variants. Nothing until both answers land. */
+function TallyPayoff({ values }: { values: ReflectionValues }) {
   const history = useCheckIns();
   const answered = values.stressTouched && values.moodTouched;
   const burstKey = useCheckInCelebration(answered);
 
-  if (!answered) {
-    return (
-      <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 px-5 py-6 text-center">
-        <p className="text-base text-white/75">
-          Answer both to see how this session compares.
-        </p>
-      </div>
-    );
-  }
+  if (!answered) return null;
 
   const points = [...history, { label: "Today", stress: values.stress, mood: values.mood }];
   return <TallyReward points={points} stats={checkInStats(points)} burstKey={burstKey} />;
+}
+
+/** What the user just recorded, in words. */
+function answerSummary(values: ReflectionValues) {
+  const mood = values.mood > 0 ? "Mood better" : "Mood worse";
+  const stress = values.stress > 0 ? "stress lighter" : "stress heavier";
+  return `${mood}, ${stress}.`;
 }
 
 function ordinal(n: number) {
@@ -968,6 +969,10 @@ function TwoTaps({ values }: { values: ReflectionValues }) {
           onChange={q.key === "mood" ? values.onMoodChange : values.onStressChange}
         />
       ))}
+
+      {/* No start-over here: the rows stay on screen and stay tappable, so
+          changing an answer is just another tap. */}
+      <TallyPayoff values={values} />
     </div>
   );
 }
@@ -1035,30 +1040,25 @@ function BinaryRow({
 }
 
 // ─── One at a time ───────────────────────────────────────────────────────────
-// The same binary input, but only one question is ever on screen: answering
-// mood cascades straight to stress, and the pair collapses to a confirmed
-// summary. Two taps, no scanning, nothing to scroll past.
+// The same binary input paced one question at a time: answering mood cascades
+// straight to stress, then both are replaced by the tally. Two taps, one
+// decision on screen at a time, and the run of check-ins as the payoff.
+// Because the questions are gone by then, this is the variant that needs an
+// explicit way back.
 
 function OneAtATime({ values }: { values: ReflectionValues }) {
-  const muted = usePrototypeMute();
   const step = !values.moodTouched ? 0 : !values.stressTouched ? 1 : 2;
-
-  const celebrated = useRef(false);
-  useEffect(() => {
-    if (step < 2 || celebrated.current) return;
-    celebrated.current = true;
-    playCompleteSwell({ muted });
-  }, [step, muted]);
 
   if (step === 2) {
     return (
-      <div className="flex flex-col items-center gap-3 yuna-rise">
-        <Badge icon size="md" label="Check-in saved" />
-        <p className="font-display text-2xl leading-tight text-white text-center">
-          {values.mood > 0 ? "Mood better" : "Mood worse"},{" "}
-          {values.stress > 0 ? "stress lighter" : "stress heavier"}
-        </p>
-        <p className="text-base text-white/75">Saved to your check-ins.</p>
+      <div className="flex flex-col gap-4 yuna-rise">
+        <TallyPayoff values={values} />
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-base text-white/85">{answerSummary(values)}</p>
+          <Button variant="link" surface="dark" onClick={values.onReset}>
+            Start over
+          </Button>
+        </div>
       </div>
     );
   }

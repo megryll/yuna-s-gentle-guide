@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -101,15 +101,21 @@ function WrapUp() {
   const [stressTouched, setStressTouched] = useState(false);
   const [moodTouched, setMoodTouched] = useState(false);
 
-  // Switching A/B variants starts the new one unanswered. The answers live up
-  // here so they survive a treatment swap, which is wrong for review: you'd
-  // land on a variant's submitted state and never see how it opens.
-  useEffect(() => {
+  // Also the "start over" action for variants that replace the questions with
+  // a payoff, where there'd otherwise be no way back to them.
+  const resetReflection = useCallback(() => {
     setStress(0);
     setMood(0);
     setStressTouched(false);
     setMoodTouched(false);
-  }, [variant]);
+  }, []);
+
+  // Switching A/B variants starts the new one unanswered. The answers live up
+  // here so they survive a treatment swap, which is wrong for review: you'd
+  // land on a variant's submitted state and never see how it opens.
+  useEffect(() => {
+    resetReflection();
+  }, [variant, resetReflection]);
 
   const reflectionValues = {
     stress,
@@ -124,6 +130,7 @@ function WrapUp() {
       setMood(v);
       setMoodTouched(true);
     },
+    onReset: resetReflection,
   };
 
   const onDone = () => {

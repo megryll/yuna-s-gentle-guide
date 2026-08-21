@@ -50,7 +50,6 @@ export type WrapUpVariant =
   | "choice4"
   | "trend"
   | "trendFirst"
-  | "tally"
   | "binary"
   | "stepped";
 
@@ -66,8 +65,8 @@ export const WRAPUP_VARIANTS: { value: WrapUpVariant; label: string }[] = [
   // Same treatment with no prior check-ins, so the first-run empty state is
   // reviewable without clearing localStorage.
   { value: "trendFirst", label: "Trend: first time" },
-  { value: "tally", label: "Tally reward" },
-  // Make answering as cheap as possible: one tap per question.
+  // One tap per question, then the tally as the payoff. These two differ only
+  // in pacing: both questions at once, or one at a time.
   { value: "binary", label: "Two taps" },
   { value: "stepped", label: "One at a time" },
 ];
