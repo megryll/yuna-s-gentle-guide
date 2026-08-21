@@ -5,9 +5,9 @@ import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
 import { Slider } from "@/components/Slider";
 import {
+  CHECKIN_WINDOW,
   checkInStats,
   improved,
-  lift,
   useCheckIns,
   type CheckIn,
 } from "@/lib/checkin-history";
@@ -584,7 +584,15 @@ function TallyPayoff({ values }: { values: ReflectionValues }) {
   if (!answered) return null;
 
   const points = [...history, { label: "Today", stress: values.stress, mood: values.mood }];
-  return <TallyReward points={points} stats={checkInStats(points)} burstKey={burstKey} />;
+  // Tiles show the recent window; the figures count the whole run, so a long
+  // history reports its real total rather than the window size.
+  return (
+    <TallyReward
+      points={points.slice(-CHECKIN_WINDOW)}
+      stats={checkInStats(points)}
+      burstKey={burstKey}
+    />
+  );
 }
 
 /** What the user just recorded, in words. */
@@ -592,13 +600,6 @@ function answerSummary(values: ReflectionValues) {
   const mood = values.mood > 0 ? "Mood better" : "Mood worse";
   const stress = values.stress > 0 ? "stress lighter" : "stress heavier";
   return `${mood}, ${stress}.`;
-}
-
-function ordinal(n: number) {
-  const rem100 = n % 100;
-  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
-  const suffix = ["th", "st", "nd", "rd"][n % 10] ?? "th";
-  return `${n}${suffix}`;
 }
 
 // ─── Trend reward ────────────────────────────────────────────────────────────
@@ -634,44 +635,24 @@ function TrendVariant({
 
   const live: CheckIn = { label: "Today", stress: values.stress, mood: values.mood };
   const points = answered ? [...history, live] : history;
-  const stats = checkInStats(points);
-
-  const liveLift = answered ? lift(live) : null;
-  const prevLift = history.length > 0 ? lift(history[history.length - 1]) : null;
 
   return (
     <div className="flex flex-col gap-7">
-      <div className="flex flex-col gap-3.5">
-        {/* Three states, not one chart with holes in it: nothing logged yet is
-            an intro card rather than an empty plot (an empty frame advertises
-            the absence), a run you haven't added to is a compact ghost strip,
-            and answering grows it into the full chart. Keyed so the reveal
-            replays as it resolves. */}
-        {!answered && history.length === 0 ? (
-          <FirstCheckInCard />
-        ) : (
-          <TrendChart key={answered ? "live" : "ghost"} points={points} ghost={!answered} />
-        )}
-
-        {answered && (
-          <div className="flex flex-col gap-1 text-center">
-            <p className="font-display text-2xl leading-tight text-white">
-              {history.length === 0
-                ? "Your first check-in"
-                : `That's your ${ordinal(stats.total)} check-in`}
-            </p>
-            <p className="text-base text-white/85">
-              {history.length === 0
-                ? "The next one gets measured against this."
-                : liveLift !== null && prevLift !== null && liveLift > prevLift
-                  ? "A bigger shift than last session."
-                  : stats.streak > 1
-                    ? `${stats.streak} in a row you've left lighter.`
-                    : "Logged alongside the rest of your run."}
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Three states, not one chart with holes in it: nothing logged yet is an
+          intro card rather than an empty plot (an empty frame advertises the
+          absence), a run you haven't added to is a compact ghost strip, and
+          answering grows it into the full chart. Keyed so the reveal replays as
+          it resolves. The chart carries the payoff on its own, with no copy
+          under it. */}
+      {!answered && history.length === 0 ? (
+        <FirstCheckInCard />
+      ) : (
+        <TrendChart
+          key={answered ? "live" : "ghost"}
+          points={points.slice(-CHECKIN_WINDOW)}
+          ghost={!answered}
+        />
+      )}
 
       <FourOptions values={values} />
     </div>
@@ -746,12 +727,13 @@ function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
             Stays sharp in the ghost state: it's the frame, not the data. */}
         <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/25" />
 
-        {/* The run itself. Blurred while unanswered so the payoff is legible as
-            a shape without giving away the read. */}
+        {/* The run itself. Heavily blurred while unanswered: the point is to
+            read as a shape, not as data you could squint at and skip the
+            questions for. */}
         <div
           className={cn(
             "absolute inset-0 transition-[filter,opacity] duration-500",
-            ghost && "blur-[3px] opacity-70",
+            ghost && "blur-[10px] opacity-80",
           )}
           aria-hidden={ghost || undefined}
         >
@@ -825,7 +807,7 @@ function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
         {ghost && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="rounded-full bg-white/20 px-3.5 py-1.5 text-sm font-medium text-white">
-              Answer to add today
+              Answer below to see trends
             </span>
           </div>
         )}

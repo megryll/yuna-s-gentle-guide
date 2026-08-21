@@ -45,7 +45,12 @@ export function improved(c: CheckIn): boolean {
   return l !== null && l > 0;
 }
 
-const MAX_POINTS = 6;
+/**
+ * How many check-ins a chart or tile row shows at once. The run itself isn't
+ * capped: totals and streaks count everything, so a browser that's completed a
+ * pile of wrap-ups still reports real figures.
+ */
+export const CHECKIN_WINDOW = 7;
 
 /** Seeded demo run plus any real saved keepsakes, oldest first. */
 export function loadCheckIns(): CheckIn[] {
@@ -62,7 +67,9 @@ export function loadCheckIns(): CheckIn[] {
       stress: k.stress,
       mood: k.mood,
     }));
-  return [...SEEDED, ...real].slice(-MAX_POINTS);
+  // Seeded entries always lead, never trimmed: without them a browser with a
+  // few skipped-answer wrap-ups reports a run of zeroes.
+  return [...SEEDED, ...real];
 }
 
 /**
