@@ -193,21 +193,19 @@ function ReflectionBody({
     case "choice4":
       return <FourOptions values={values} />;
 
-    // Reward variants share the 4-option input, so the payoff below it is the
+    // Reward variants share the 4-option input; the payoff around it is the
     // only thing that differs between them.
     case "trend":
-      return (
-        <div className="flex flex-col gap-9">
-          <FourOptions values={values} />
-          <RewardPanel values={values} kind="trend" />
-        </div>
-      );
+      return <TrendVariant values={values} />;
+
+    case "trendFirst":
+      return <TrendVariant values={values} firstTime />;
 
     case "tally":
       return (
         <div className="flex flex-col gap-9">
           <FourOptions values={values} />
-          <RewardPanel values={values} kind="tally" />
+          <TallyVariant values={values} />
         </div>
       );
 
@@ -556,33 +554,30 @@ function ChoiceGroup({
   );
 }
 
-// ─── Reward panel ────────────────────────────────────────────────────────────
-// The payoff for answering. Stays locked until both questions are in, then
-// unlocks with the completion swell and shows the user's run of check-ins —
-// either as a trend over time or as a tally. Reads the same keepsake store the
-// wrap-up already writes to, padded with seeded demo entries so the run reads
-// as a run in a fresh browser (see checkin-history.ts).
+// ─── Reward variants ─────────────────────────────────────────────────────────
+// The payoff for answering: the user's run of check-ins, either as a trend
+// over time or as a tally. Reads the same keepsake store the wrap-up already
+// writes to, padded with seeded demo entries so the run reads as a run in a
+// fresh browser (see checkin-history.ts).
 
-function RewardPanel({
-  values,
-  kind,
-}: {
-  values: ReflectionValues;
-  kind: "trend" | "tally";
-}) {
-  const history = useCheckIns();
+/** Plays the completion swell once, and returns a key that replays confetti. */
+function useCheckInCelebration(answered: boolean) {
   const muted = usePrototypeMute();
-  const answered = values.stressTouched && values.moodTouched;
-
-  // Bumped when the panel unlocks, so Confetti remounts and replays.
   const [burstKey, setBurstKey] = useState(0);
-  const celebrated = useRef(false);
+  const fired = useRef(false);
   useEffect(() => {
-    if (!answered || celebrated.current) return;
-    celebrated.current = true;
+    if (!answered || fired.current) return;
+    fired.current = true;
     playCompleteSwell({ muted });
     setBurstKey((k) => k + 1);
   }, [answered, muted]);
+  return burstKey;
+}
+
+function TallyVariant({ values }: { values: ReflectionValues }) {
+  const history = useCheckIns();
+  const answered = values.stressTouched && values.moodTouched;
+  const burstKey = useCheckInCelebration(answered);
 
   if (!answered) {
     return (
@@ -594,19 +589,8 @@ function RewardPanel({
     );
   }
 
-  const live: CheckIn = {
-    label: "Today",
-    stress: values.stress,
-    mood: values.mood,
-  };
-  const points = [...history, live];
-  const stats = checkInStats(points);
-
-  return kind === "trend" ? (
-    <TrendReward points={points} stats={stats} />
-  ) : (
-    <TallyReward points={points} stats={stats} burstKey={burstKey} />
-  );
+  const points = [...history, { label: "Today", stress: values.stress, mood: values.mood }];
+  return <TallyReward points={points} stats={checkInStats(points)} burstKey={burstKey} />;
 }
 
 function ordinal(n: number) {
@@ -628,13 +612,94 @@ const SERIES = [
   { key: "stress", label: "Stress", color: "var(--peach)", get: (c: CheckIn) => c.stress },
 ] as const;
 
-function TrendReward({
-  points,
-  stats,
+/**
+ * The chart leads, the questions follow. Before answering it sits above the
+ * options as a blurred ghost of the user's existing run, so the payoff is
+ * visible as a reason to answer rather than a surprise afterwards. Answering
+ * sharpens it and lands today's point. `firstTime` drops the history entirely
+ * to show the first-run state.
+ */
+function TrendVariant({
+  values,
+  firstTime = false,
 }: {
-  points: CheckIn[];
-  stats: ReturnType<typeof checkInStats>;
+  values: ReflectionValues;
+  firstTime?: boolean;
 }) {
+  const loaded = useCheckIns();
+  const history = firstTime ? [] : loaded;
+  const answered = values.stressTouched && values.moodTouched;
+  useCheckInCelebration(answered);
+
+  const live: CheckIn = { label: "Today", stress: values.stress, mood: values.mood };
+  const points = answered ? [...history, live] : history;
+  const stats = checkInStats(points);
+
+  const liveLift = answered ? lift(live) : null;
+  const prevLift = history.length > 0 ? lift(history[history.length - 1]) : null;
+
+  return (
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-col gap-3.5">
+        {/* Keyed on the state so the chart replays its reveal as it sharpens. */}
+        <TrendChart key={answered ? "live" : "ghost"} points={points} ghost={!answered} />
+
+        {answered ? (
+          <div className="flex flex-col gap-1 text-center">
+            <p className="font-display text-2xl leading-tight text-white">
+              {history.length === 0
+                ? "Your first check-in"
+                : `That's your ${ordinal(stats.total)} check-in`}
+            </p>
+            <p className="text-base text-white/85">
+              {history.length === 0
+                ? "The next one gets measured against this."
+                : liveLift !== null && prevLift !== null && liveLift > prevLift
+                  ? "A bigger shift than last session."
+                  : stats.streak > 1
+                    ? `${stats.streak} in a row you've left lighter.`
+                    : "Logged alongside the rest of your run."}
+            </p>
+          </div>
+        ) : (
+          <p className="text-center text-base text-white/85">
+            {history.length === 0
+              ? "This is your first check-in. Answer below to set the starting point."
+              : `Your last ${history.length} check-ins. Answer below to add today.`}
+          </p>
+        )}
+
+        <Legend dimmed={!answered} />
+      </div>
+
+      <FourOptions values={values} />
+    </div>
+  );
+}
+
+function Legend({ dimmed }: { dimmed: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center gap-5 transition-opacity duration-300",
+        dimmed && "opacity-60",
+      )}
+    >
+      {SERIES.map((s) => (
+        <span key={s.key} className="flex items-center gap-2 text-sm text-white/85">
+          <span
+            aria-hidden
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ background: s.color }}
+          />
+          {s.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
   const n = points.length;
   // Percent geometry, like the assessment chart: the SVG stretches to the box,
   // so dots ride a separate overlay to stay round.
@@ -642,34 +707,32 @@ function TrendReward({
   const x = (i: number) => (n <= 1 ? 50 : 10 + (i * 80) / (n - 1));
   const y = (v: number) => (1 - (v + 1) / 2) * 100;
 
-  const liveLift = lift(points[n - 1]);
-  const prevLift = n > 1 ? lift(points[n - 2]) : null;
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 text-center">
-        <p className="font-display text-2xl leading-tight text-white">
-          That's your {ordinal(stats.total)} check-in
-        </p>
-        <p className="text-base text-white/85">
-          {liveLift !== null && prevLift !== null && liveLift > prevLift
-            ? "A bigger shift than last session."
-            : stats.streak > 1
-              ? `${stats.streak} in a row you've left lighter.`
-              : "Logged alongside the rest of your run."}
-        </p>
-      </div>
+    <div
+      className={cn(
+        "rounded-2xl border bg-white/5 px-4 pt-4 pb-3",
+        ghost ? "border-dashed border-white/20" : "border-white/15",
+      )}
+    >
+      <div className="relative h-40 w-full">
+        {/* No-change baseline. Everything above it is a session that helped.
+            Stays sharp in the ghost state: it's the frame, not the data. */}
+        <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/25" />
+        {/* Right-aligned: the left end of the baseline is where the oldest
+            points sit, and the label would land on top of them. */}
+        <span className="absolute right-0 top-1/2 mt-1.5 text-uppercase uppercase tracking-[0.18em] text-white/75">
+          No change
+        </span>
 
-      <div className="rounded-2xl border border-white/15 bg-white/5 px-4 pt-4 pb-3">
-        <div className="relative h-40 w-full">
-          {/* No-change baseline. Everything above it is a session that helped. */}
-          <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/25" />
-          {/* Right-aligned: the left end of the baseline is where the oldest
-              points sit, and the label would land on top of them. */}
-          <span className="absolute right-0 top-1/2 mt-1.5 text-uppercase uppercase tracking-[0.18em] text-white/75">
-            No change
-          </span>
-
+        {/* The run itself. Blurred while unanswered so the payoff is legible as
+            a shape without giving away the read. */}
+        <div
+          className={cn(
+            "absolute inset-0 transition-[filter,opacity] duration-500",
+            ghost && "blur-[3px] opacity-70",
+          )}
+          aria-hidden={ghost || undefined}
+        >
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
@@ -701,7 +764,9 @@ function TrendReward({
               points.map((c, i) => {
                 const v = s.get(c);
                 if (v === null) return null;
-                const newest = i === n - 1;
+                // Only the live answer gets the landing treatment, and only
+                // once the ghost has resolved.
+                const newest = !ghost && i === n - 1;
                 return (
                   <span
                     key={`${s.key}-${i}`}
@@ -733,23 +798,33 @@ function TrendReward({
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-sm font-medium text-white/75">
-          <span>{points[0].label}</span>
-          <span className="text-white">Today</span>
-        </div>
+        {/* Nothing logged yet: the frame stands on its own with the axis named,
+            so the first-timer sees what they're about to start. */}
+        {n === 0 && (
+          <div className="absolute inset-0 flex flex-col justify-between py-1">
+            <span className="text-uppercase uppercase tracking-[0.18em] text-white/75">
+              Lighter
+            </span>
+            <span className="text-uppercase uppercase tracking-[0.18em] text-white/75">
+              Heavier
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center justify-center gap-5">
-        {SERIES.map((s) => (
-          <span key={s.key} className="flex items-center gap-2 text-sm text-white/85">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: s.color }}
-            />
-            {s.label}
+      {/* One label, centered, until there's a span of time to bracket: a lone
+          point sits mid-chart, so a left/right pair would both read "Today". */}
+      <div className="mt-2 flex items-center justify-between text-sm font-medium text-white/75">
+        {n <= 1 ? (
+          <span className={cn("mx-auto", !ghost && n === 1 && "text-white")}>
+            {n === 0 ? "No check-ins yet" : "Today"}
           </span>
-        ))}
+        ) : (
+          <>
+            <span>{points[0].label}</span>
+            <span className={cn(!ghost && "text-white")}>Today</span>
+          </>
+        )}
       </div>
     </div>
   );

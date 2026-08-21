@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
@@ -101,6 +101,16 @@ function WrapUp() {
   const [stressTouched, setStressTouched] = useState(false);
   const [moodTouched, setMoodTouched] = useState(false);
 
+  // Switching A/B variants starts the new one unanswered. The answers live up
+  // here so they survive a treatment swap, which is wrong for review: you'd
+  // land on a variant's submitted state and never see how it opens.
+  useEffect(() => {
+    setStress(0);
+    setMood(0);
+    setStressTouched(false);
+    setMoodTouched(false);
+  }, [variant]);
+
   const reflectionValues = {
     stress,
     stressTouched,
@@ -166,12 +176,20 @@ function WrapUp() {
             )}
 
             {/* The variants promote the reflection into the top cluster, where
-                the keepsake card used to sit, so it owns the first screenful. */}
-            {reflectionFirst && <WrapUpReflection variant={variant} values={reflectionValues} />}
+                the keepsake card used to sit, so it owns the first screenful.
+                Keyed on the variant so a treatment swap remounts it: sibling
+                variants share an element shape, so without the key React reuses
+                the instance and its internal state (a reward panel's
+                already-celebrated flag, a slider's press state) leaks across. */}
+            {reflectionFirst && (
+              <WrapUpReflection key={variant} variant={variant} values={reflectionValues} />
+            )}
           </div>
 
           {/* ── Reflection: how did the session land? ───────────────────── */}
-          {!reflectionFirst && <WrapUpReflection variant={variant} values={reflectionValues} />}
+          {!reflectionFirst && (
+            <WrapUpReflection key={variant} variant={variant} values={reflectionValues} />
+          )}
 
           {/* ── Emotions ────────────────────────────────────────────────── */}
           <EmotionsSection emotions={EMOTIONS} />
