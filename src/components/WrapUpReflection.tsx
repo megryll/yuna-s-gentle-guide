@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { Confetti } from "@/components/Confetti";
 import { Slider } from "@/components/Slider";
@@ -641,10 +641,18 @@ function TrendVariant({
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-col gap-3.5">
-        {/* Keyed on the state so the chart replays its reveal as it sharpens. */}
-        <TrendChart key={answered ? "live" : "ghost"} points={points} ghost={!answered} />
+        {/* Three states, not one chart with holes in it: nothing logged yet is
+            an intro card rather than an empty plot (an empty frame advertises
+            the absence), a run you haven't added to is a compact ghost strip,
+            and answering grows it into the full chart. Keyed so the reveal
+            replays as it resolves. */}
+        {!answered && history.length === 0 ? (
+          <FirstCheckInCard />
+        ) : (
+          <TrendChart key={answered ? "live" : "ghost"} points={points} ghost={!answered} />
+        )}
 
-        {answered ? (
+        {answered && (
           <div className="flex flex-col gap-1 text-center">
             <p className="font-display text-2xl leading-tight text-white">
               {history.length === 0
@@ -661,15 +669,7 @@ function TrendVariant({
                     : "Logged alongside the rest of your run."}
             </p>
           </div>
-        ) : (
-          <p className="text-center text-base text-white/85">
-            {history.length === 0
-              ? "This is your first check-in. Answer below to set the starting point."
-              : `Your last ${history.length} check-ins. Answer below to add today.`}
-          </p>
         )}
-
-        <Legend dimmed={!answered} />
       </div>
 
       <FourOptions values={values} />
@@ -677,24 +677,25 @@ function TrendVariant({
   );
 }
 
-function Legend({ dimmed }: { dimmed: boolean }) {
+/**
+ * First-ever check-in: no plot, because there's nothing to plot. Names what
+ * answering starts instead of framing an empty chart.
+ */
+function FirstCheckInCard() {
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center gap-5 transition-opacity duration-300",
-        dimmed && "opacity-60",
-      )}
-    >
-      {SERIES.map((s) => (
-        <span key={s.key} className="flex items-center gap-2 text-sm text-white/85">
-          <span
-            aria-hidden
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ background: s.color }}
-          />
-          {s.label}
-        </span>
-      ))}
+    <div className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/5 px-5 py-5">
+      <span
+        aria-hidden
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10"
+      >
+        <TrendingUp size={20} strokeWidth={2} className="text-white/85" />
+      </span>
+      <div className="flex flex-col gap-0.5">
+        <p className="text-base font-medium text-white">Your first check-in</p>
+        <p className="text-sm text-white/85">
+          Answer below and this becomes your starting point.
+        </p>
+      </div>
     </div>
   );
 }
@@ -707,22 +708,42 @@ function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
   const x = (i: number) => (n <= 1 ? 50 : 10 + (i * 80) / (n - 1));
   const y = (v: number) => (1 - (v + 1) / 2) * 100;
 
+  const lastLabel = points[n - 1]?.label;
+
   return (
-    <div
-      className={cn(
-        "rounded-2xl border bg-white/5 px-4 pt-4 pb-3",
-        ghost ? "border-dashed border-white/20" : "border-white/15",
-      )}
-    >
-      <div className="relative h-40 w-full">
+    <div className="rounded-2xl border border-white/15 bg-white/5 px-4 pt-3 pb-3">
+      {/* Titled, with the legend as chart chrome rather than a stranded row
+          under the card. Names itself, so no explanatory sentence is needed. */}
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <span className="text-uppercase uppercase tracking-[0.2em] text-white/75">
+          Your check-ins
+        </span>
+        <span className="flex items-center gap-3">
+          {SERIES.map((s) => (
+            <span key={s.key} className="flex items-center gap-1.5 text-sm text-white/85">
+              <span
+                aria-hidden
+                className="h-2 w-2 rounded-full"
+                style={{ background: s.color }}
+              />
+              {s.label}
+            </span>
+          ))}
+        </span>
+      </div>
+
+      {/* The un-answered strip stays short so the questions keep the screen,
+          then grows into the full chart as the reward. A lone point stays short
+          too: there's no trend in it, so the height would just be dead space. */}
+      <div
+        className={cn(
+          "relative w-full transition-[height]",
+          ghost || n < 2 ? "h-24" : "h-40",
+        )}
+      >
         {/* No-change baseline. Everything above it is a session that helped.
             Stays sharp in the ghost state: it's the frame, not the data. */}
         <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/25" />
-        {/* Right-aligned: the left end of the baseline is where the oldest
-            points sit, and the label would land on top of them. */}
-        <span className="absolute right-0 top-1/2 mt-1.5 text-uppercase uppercase tracking-[0.18em] text-white/75">
-          No change
-        </span>
 
         {/* The run itself. Blurred while unanswered so the payoff is legible as
             a shape without giving away the read. */}
@@ -798,31 +819,28 @@ function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
           </div>
         </div>
 
-        {/* Nothing logged yet: the frame stands on its own with the axis named,
-            so the first-timer sees what they're about to start. */}
-        {n === 0 && (
-          <div className="absolute inset-0 flex flex-col justify-between py-1">
-            <span className="text-uppercase uppercase tracking-[0.18em] text-white/75">
-              Lighter
-            </span>
-            <span className="text-uppercase uppercase tracking-[0.18em] text-white/75">
-              Heavier
+        {/* Says outright what the blur means, so the ghost reads as locked
+            rather than as a rendering fault. Sits above the blurred layer. */}
+        {ghost && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-white/20 px-3.5 py-1.5 text-sm font-medium text-white">
+              Answer to add today
             </span>
           </div>
         )}
       </div>
 
       {/* One label, centered, until there's a span of time to bracket: a lone
-          point sits mid-chart, so a left/right pair would both read "Today". */}
+          point sits mid-chart, so a left/right pair would read the same twice.
+          The right end names the newest point, which is only "Today" once the
+          live answer has actually landed. */}
       <div className="mt-2 flex items-center justify-between text-sm font-medium text-white/75">
         {n <= 1 ? (
-          <span className={cn("mx-auto", !ghost && n === 1 && "text-white")}>
-            {n === 0 ? "No check-ins yet" : "Today"}
-          </span>
+          <span className={cn("mx-auto", !ghost && "text-white")}>{lastLabel}</span>
         ) : (
           <>
             <span>{points[0].label}</span>
-            <span className={cn(!ghost && "text-white")}>Today</span>
+            <span className={cn(lastLabel === "Today" && "text-white")}>{lastLabel}</span>
           </>
         )}
       </div>
