@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
+import { Badge } from "@/components/Badge";
+import { Confetti } from "@/components/Confetti";
 import { Slider } from "@/components/Slider";
+import {
+  checkInStats,
+  improved,
+  lift,
+  useCheckIns,
+  type CheckIn,
+} from "@/lib/checkin-history";
 import { usePrototypeMute } from "@/lib/prototype-mute";
-import { playSelectPop, playSliderTick } from "@/lib/survey-sound";
+import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
 import type { WrapUpVariant } from "@/lib/session-dev";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +102,11 @@ function zoneForValue(v: number, n: number) {
   return Math.min(Math.max(idx, 0), n - 1);
 }
 
+// The two "as easy as possible" variants ask their own short question per
+// metric ("Mood?", "Stress?"), so the shared section heading would just be
+// noise above them.
+const SELF_TITLED: WrapUpVariant[] = ["binary", "stepped"];
+
 export function WrapUpReflection({
   variant,
   values,
@@ -105,16 +120,32 @@ export function WrapUpReflection({
 
   return (
     <section className="flex flex-col gap-8 yuna-rise">
-      <h2
-        className={cn(
-          "font-display leading-tight text-white text-center",
-          lead ? "text-3xl" : "text-xl",
-        )}
-      >
-        How did this session land?
-      </h2>
+      {!SELF_TITLED.includes(variant) && (
+        <h2
+          className={cn(
+            "font-display leading-tight text-white text-center",
+            lead ? "text-3xl" : "text-xl",
+          )}
+        >
+          How did this session land?
+        </h2>
+      )}
 
-      {variant === "sliders" ? (
+      <ReflectionBody variant={variant} values={values} />
+    </section>
+  );
+}
+
+function ReflectionBody({
+  variant,
+  values,
+}: {
+  variant: WrapUpVariant;
+  values: ReflectionValues;
+}) {
+  switch (variant) {
+    case "sliders":
+      return (
         <div className="flex flex-col gap-10">
           <BigSlider
             zones={SLIDER_STRESS}
@@ -135,7 +166,10 @@ export function WrapUpReflection({
             rightAnchor="Better mood"
           />
         </div>
-      ) : variant === "choice6" ? (
+      );
+
+    case "choice6":
+      return (
         <div className="flex flex-col gap-8">
           <ChoiceGroup
             title="Your stress"
@@ -154,24 +188,37 @@ export function WrapUpReflection({
             rightAnchor="Better"
           />
         </div>
-      ) : variant === "choice4" ? (
-        <div className="flex flex-col gap-8">
-          <ChoiceGroup
-            title="Your stress"
-            zones={STRESS_4}
-            value={values.stressTouched ? values.stress : null}
-            onChange={values.onStressChange}
-            showLabels
-          />
-          <ChoiceGroup
-            title="Your mood"
-            zones={MOOD_4}
-            value={values.moodTouched ? values.mood : null}
-            onChange={values.onMoodChange}
-            showLabels
-          />
+      );
+
+    case "choice4":
+      return <FourOptions values={values} />;
+
+    // Reward variants share the 4-option input, so the payoff below it is the
+    // only thing that differs between them.
+    case "trend":
+      return (
+        <div className="flex flex-col gap-9">
+          <FourOptions values={values} />
+          <RewardPanel values={values} kind="trend" />
         </div>
-      ) : (
+      );
+
+    case "tally":
+      return (
+        <div className="flex flex-col gap-9">
+          <FourOptions values={values} />
+          <RewardPanel values={values} kind="tally" />
+        </div>
+      );
+
+    case "binary":
+      return <TwoTaps values={values} />;
+
+    case "stepped":
+      return <OneAtATime values={values} />;
+
+    default:
+      return (
         <div className="flex flex-col gap-9">
           <Slider
             variant="bipolar"
@@ -192,8 +239,28 @@ export function WrapUpReflection({
             onChange={values.onMoodChange}
           />
         </div>
-      )}
-    </section>
+      );
+  }
+}
+
+function FourOptions({ values }: { values: ReflectionValues }) {
+  return (
+    <div className="flex flex-col gap-8">
+      <ChoiceGroup
+        title="Your stress"
+        zones={STRESS_4}
+        value={values.stressTouched ? values.stress : null}
+        onChange={values.onStressChange}
+        showLabels
+      />
+      <ChoiceGroup
+        title="Your mood"
+        zones={MOOD_4}
+        value={values.moodTouched ? values.mood : null}
+        onChange={values.onMoodChange}
+        showLabels
+      />
+    </div>
   );
 }
 
@@ -485,6 +552,436 @@ function ChoiceGroup({
           <span>{rightAnchor}</span>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Reward panel ────────────────────────────────────────────────────────────
+// The payoff for answering. Stays locked until both questions are in, then
+// unlocks with the completion swell and shows the user's run of check-ins —
+// either as a trend over time or as a tally. Reads the same keepsake store the
+// wrap-up already writes to, padded with seeded demo entries so the run reads
+// as a run in a fresh browser (see checkin-history.ts).
+
+function RewardPanel({
+  values,
+  kind,
+}: {
+  values: ReflectionValues;
+  kind: "trend" | "tally";
+}) {
+  const history = useCheckIns();
+  const muted = usePrototypeMute();
+  const answered = values.stressTouched && values.moodTouched;
+
+  // Bumped when the panel unlocks, so Confetti remounts and replays.
+  const [burstKey, setBurstKey] = useState(0);
+  const celebrated = useRef(false);
+  useEffect(() => {
+    if (!answered || celebrated.current) return;
+    celebrated.current = true;
+    playCompleteSwell({ muted });
+    setBurstKey((k) => k + 1);
+  }, [answered, muted]);
+
+  if (!answered) {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 px-5 py-6 text-center">
+        <p className="text-base text-white/75">
+          Answer both to see how this session compares.
+        </p>
+      </div>
+    );
+  }
+
+  const live: CheckIn = {
+    label: "Today",
+    stress: values.stress,
+    mood: values.mood,
+  };
+  const points = [...history, live];
+  const stats = checkInStats(points);
+
+  return kind === "trend" ? (
+    <TrendReward points={points} stats={stats} />
+  ) : (
+    <TallyReward points={points} stats={stats} burstKey={burstKey} />
+  );
+}
+
+function ordinal(n: number) {
+  const rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  const suffix = ["th", "st", "nd", "rd"][n % 10] ?? "th";
+  return `${n}${suffix}`;
+}
+
+// ─── Trend reward ────────────────────────────────────────────────────────────
+// Today's answer lands as the newest point on a bipolar trend of past
+// check-ins. Center line is "no change"; above it the session helped. Two
+// series (mood, stress) in secondary-palette hues rather than the sentiment
+// green/orange, which on a line would read as "this line is good/bad" instead
+// of naming which metric it is.
+
+const SERIES = [
+  { key: "mood", label: "Mood", color: "var(--blue)", get: (c: CheckIn) => c.mood },
+  { key: "stress", label: "Stress", color: "var(--peach)", get: (c: CheckIn) => c.stress },
+] as const;
+
+function TrendReward({
+  points,
+  stats,
+}: {
+  points: CheckIn[];
+  stats: ReturnType<typeof checkInStats>;
+}) {
+  const n = points.length;
+  // Percent geometry, like the assessment chart: the SVG stretches to the box,
+  // so dots ride a separate overlay to stay round.
+  // Inset the ends so the newest point's halo clears the card edge.
+  const x = (i: number) => (n <= 1 ? 50 : 10 + (i * 80) / (n - 1));
+  const y = (v: number) => (1 - (v + 1) / 2) * 100;
+
+  const liveLift = lift(points[n - 1]);
+  const prevLift = n > 1 ? lift(points[n - 2]) : null;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1 text-center">
+        <p className="font-display text-2xl leading-tight text-white">
+          That's your {ordinal(stats.total)} check-in
+        </p>
+        <p className="text-base text-white/85">
+          {liveLift !== null && prevLift !== null && liveLift > prevLift
+            ? "A bigger shift than last session."
+            : stats.streak > 1
+              ? `${stats.streak} in a row you've left lighter.`
+              : "Logged alongside the rest of your run."}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/15 bg-white/5 px-4 pt-4 pb-3">
+        <div className="relative h-40 w-full">
+          {/* No-change baseline. Everything above it is a session that helped. */}
+          <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/25" />
+          {/* Right-aligned: the left end of the baseline is where the oldest
+              points sit, and the label would land on top of them. */}
+          <span className="absolute right-0 top-1/2 mt-1.5 text-uppercase uppercase tracking-[0.18em] text-white/75">
+            No change
+          </span>
+
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="survey-chart-in absolute inset-0 h-full w-full"
+            aria-hidden
+          >
+            {SERIES.map((s) => {
+              const pts = points
+                .map((c, i) => ({ i, v: s.get(c) }))
+                .filter((p): p is { i: number; v: number } => p.v !== null);
+              if (pts.length < 2) return null;
+              return (
+                <polyline
+                  key={s.key}
+                  points={pts.map((p) => `${x(p.i)},${y(p.v)}`).join(" ")}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              );
+            })}
+          </svg>
+
+          {/* Dots, newest popping in last. */}
+          <div className="absolute inset-0" aria-hidden>
+            {SERIES.map((s) =>
+              points.map((c, i) => {
+                const v = s.get(c);
+                if (v === null) return null;
+                const newest = i === n - 1;
+                return (
+                  <span
+                    key={`${s.key}-${i}`}
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${x(i)}%`, top: `${y(v)}%` }}
+                  >
+                    <span
+                      className={cn("relative block", newest && "survey-dot-pop")}
+                      style={newest ? { animationDelay: "260ms" } : undefined}
+                    >
+                      {newest && (
+                        <span
+                          className="absolute -inset-2 rounded-full"
+                          style={{ background: s.color, opacity: 0.25 }}
+                        />
+                      )}
+                      <span
+                        className={cn(
+                          "relative block rounded-full",
+                          newest ? "h-3 w-3" : "h-2 w-2",
+                        )}
+                        style={{ background: s.color }}
+                      />
+                    </span>
+                  </span>
+                );
+              }),
+            )}
+          </div>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between text-sm font-medium text-white/75">
+          <span>{points[0].label}</span>
+          <span className="text-white">Today</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-5">
+        {SERIES.map((s) => (
+          <span key={s.key} className="flex items-center gap-2 text-sm text-white/85">
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: s.color }}
+            />
+            {s.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tally reward ────────────────────────────────────────────────────────────
+// The collectible read on the same data: every past check-in is a tile, and
+// today's lands last with a check and a confetti burst. Three figures below
+// give the run a score without turning it into a chart.
+
+function TallyReward({
+  points,
+  stats,
+  burstKey,
+}: {
+  points: CheckIn[];
+  stats: ReturnType<typeof checkInStats>;
+  burstKey: number;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-5 py-6">
+      {burstKey > 0 && <Confetti key={burstKey} />}
+
+      <div className="relative flex flex-col gap-5">
+        <p className="text-center font-display text-2xl leading-tight text-white">
+          {stats.streak > 1
+            ? `${stats.streak} sessions in a row you've left lighter`
+            : "Another one logged"}
+        </p>
+
+        <div className="flex items-end justify-center gap-2">
+          {points.map((c, i) => {
+            const newest = i === points.length - 1;
+            const good = improved(c);
+            return (
+              <span
+                key={`${c.label}-${i}`}
+                className={cn(
+                  "relative flex h-12 w-8 items-end justify-center rounded-xl border",
+                  newest && "survey-pop-item h-14",
+                  // Tints carry enough alpha to stay distinct on the light
+                  // photo, where a 25% fill over near-white washes out.
+                  good
+                    ? "border-secondary-green/60 bg-secondary-green/40"
+                    : "border-alert-orange/60 bg-alert-orange/35",
+                )}
+                style={newest ? { animationDelay: "180ms" } : undefined}
+                title={c.label}
+              >
+                {newest && (
+                  <Badge icon size="sm" className="absolute -top-2 -right-2" label="Logged today" />
+                )}
+              </span>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { figure: stats.total, label: "Check-ins" },
+            { figure: stats.improved, label: "Lighter" },
+            { figure: stats.streak, label: "Streak" },
+          ].map((s) => (
+            <div key={s.label} className="flex flex-col items-center gap-0.5">
+              <span className="survey-numeral-pop font-display text-3xl tabular-nums text-white">
+                {s.figure}
+              </span>
+              <span className="text-uppercase tracking-[0.2em] uppercase text-white/75">
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Binary questions ────────────────────────────────────────────────────────
+// The cheapest possible input: one tap per metric. Arrow direction shows which
+// way the metric moved (stress up = more), and the sentiment color says whether
+// that reads as better or worse, so the tile is legible without reading.
+
+type BinaryQuestion = {
+  key: "mood" | "stress";
+  question: string;
+  /** Negative option: the direction that reads as worse. */
+  neg: { label: string; dir: "up" | "down" };
+  pos: { label: string; dir: "up" | "down" };
+};
+
+const BINARY: BinaryQuestion[] = [
+  {
+    key: "mood",
+    question: "Mood?",
+    neg: { label: "Worse", dir: "down" },
+    pos: { label: "Better", dir: "up" },
+  },
+  {
+    key: "stress",
+    question: "Stress?",
+    neg: { label: "More", dir: "up" },
+    pos: { label: "Less", dir: "down" },
+  },
+];
+
+function TwoTaps({ values }: { values: ReflectionValues }) {
+  return (
+    <div className="flex flex-col gap-8">
+      {BINARY.map((q) => (
+        <BinaryRow
+          key={q.key}
+          q={q}
+          value={
+            q.key === "mood"
+              ? values.moodTouched
+                ? values.mood
+                : null
+              : values.stressTouched
+                ? values.stress
+                : null
+          }
+          onChange={q.key === "mood" ? values.onMoodChange : values.onStressChange}
+        />
+      ))}
+    </div>
+  );
+}
+
+function BinaryRow({
+  q,
+  value,
+  onChange,
+}: {
+  q: BinaryQuestion;
+  value: number | null;
+  onChange: (v: number) => void;
+}) {
+  const muted = usePrototypeMute();
+  const picked = value === null ? null : value > 0 ? "pos" : "neg";
+
+  const opts = [
+    { side: "neg" as const, ...q.neg, value: -1 },
+    { side: "pos" as const, ...q.pos, value: 1 },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3.5">
+      <h3 className="font-display text-3xl leading-tight text-white">{q.question}</h3>
+
+      <div className="grid grid-cols-2 gap-3">
+        {opts.map((o) => {
+          const active = picked === o.side;
+          const Icon = o.dir === "up" ? ArrowUp : ArrowDown;
+          return (
+            <button
+              key={o.side}
+              type="button"
+              aria-pressed={active}
+              onClick={() => {
+                onChange(o.value);
+                playSelectPop({ muted });
+              }}
+              className={cn(
+                "flex flex-col items-center justify-center gap-2 rounded-2xl border py-6",
+                "transition-[transform,background-color,border-color,opacity] duration-200 ease-out",
+                "active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
+                active
+                  ? "border-white/40 bg-white/20 tag-pop"
+                  : picked !== null
+                    ? "border-white/12 bg-white/5 opacity-70"
+                    : "border-white/15 bg-white/10",
+              )}
+            >
+              <Icon
+                size={26}
+                strokeWidth={2.25}
+                aria-hidden
+                className={o.side === "pos" ? "text-secondary-green" : "text-alert-orange"}
+              />
+              <span className={cn("text-base", active ? "text-white font-medium" : "text-white/85")}>
+                {o.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── One at a time ───────────────────────────────────────────────────────────
+// The same binary input, but only one question is ever on screen: answering
+// mood cascades straight to stress, and the pair collapses to a confirmed
+// summary. Two taps, no scanning, nothing to scroll past.
+
+function OneAtATime({ values }: { values: ReflectionValues }) {
+  const muted = usePrototypeMute();
+  const step = !values.moodTouched ? 0 : !values.stressTouched ? 1 : 2;
+
+  const celebrated = useRef(false);
+  useEffect(() => {
+    if (step < 2 || celebrated.current) return;
+    celebrated.current = true;
+    playCompleteSwell({ muted });
+  }, [step, muted]);
+
+  if (step === 2) {
+    return (
+      <div className="flex flex-col items-center gap-3 yuna-rise">
+        <Badge icon size="md" label="Check-in saved" />
+        <p className="font-display text-2xl leading-tight text-white text-center">
+          {values.mood > 0 ? "Mood better" : "Mood worse"},{" "}
+          {values.stress > 0 ? "stress lighter" : "stress heavier"}
+        </p>
+        <p className="text-base text-white/75">Saved to your check-ins.</p>
+      </div>
+    );
+  }
+
+  const q = BINARY[step];
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Keyed on the step so each question cascades in as the last one leaves. */}
+      <div key={q.key} className="survey-cascade-item">
+        <BinaryRow
+          q={q}
+          value={null}
+          onChange={q.key === "mood" ? values.onMoodChange : values.onStressChange}
+        />
+      </div>
+      <p className="text-center text-sm font-medium text-white/75">{step + 1} of 2</p>
     </div>
   );
 }

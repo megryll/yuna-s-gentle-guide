@@ -42,7 +42,16 @@ export const GUIDED_SAMPLE_TITLE =
 // "current" is the shipped screen; every other value hides the hero keepsake
 // card and promotes the stress/mood reflection to the top of the scroll, so the
 // variants differ only in how the two answers are captured.
-export type WrapUpVariant = "current" | "focus" | "sliders" | "choice6" | "choice4";
+export type WrapUpVariant =
+  | "current"
+  | "focus"
+  | "sliders"
+  | "choice6"
+  | "choice4"
+  | "trend"
+  | "tally"
+  | "binary"
+  | "stepped";
 
 export const WRAPUP_VARIANTS: { value: WrapUpVariant; label: string }[] = [
   { value: "current", label: "Current" },
@@ -50,6 +59,13 @@ export const WRAPUP_VARIANTS: { value: WrapUpVariant; label: string }[] = [
   { value: "sliders", label: "Sliders" },
   { value: "choice6", label: "6 options" },
   { value: "choice4", label: "4 options" },
+  // Reward the answer: the same 4-option input, then a payoff built from the
+  // user's run of past check-ins.
+  { value: "trend", label: "Trend reward" },
+  { value: "tally", label: "Tally reward" },
+  // Make answering as cheap as possible: one tap per question.
+  { value: "binary", label: "Two taps" },
+  { value: "stepped", label: "One at a time" },
 ];
 
 type Listener = () => void;
