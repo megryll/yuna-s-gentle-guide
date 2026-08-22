@@ -32,23 +32,31 @@ const SEEDED: CheckIn[] = [
   { label: "Aug 18", stress: 1 / 3, mood: 1, seeded: true },
 ];
 
-/** How far a single check-in moved overall, or null if nothing was answered. */
-export function lift(c: CheckIn): number | null {
+/**
+ * How a check-in landed. Both axes moving the right way is a different day
+ * from one up and one down, and averaging them into a single "improved yes/no"
+ * threw that away: a session that lifted your mood but left the stress read the
+ * same as one where nothing moved.
+ */
+export type CheckInTone = "lighter" | "mixed" | "heavier";
+
+/** null when neither axis was answered, so unanswered never counts as a day. */
+export function tone(c: CheckIn): CheckInTone | null {
   const vals = [c.stress, c.mood].filter((v): v is number => v !== null);
   if (vals.length === 0) return null;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
-}
-
-/** A check-in the user left better than they arrived. */
-export function improved(c: CheckIn): boolean {
-  const l = lift(c);
-  return l !== null && l > 0;
+  const up = vals.filter((v) => v > 0).length;
+  const down = vals.filter((v) => v < 0).length;
+  if (up > 0 && down > 0) return "mixed";
+  if (up > 0) return "lighter";
+  if (down > 0) return "heavier";
+  // Both answered dead centre (only reachable on the slider variants).
+  return "mixed";
 }
 
 /**
  * How many check-ins a chart or tile row shows at once. The run itself isn't
- * capped: totals and streaks count everything, so a browser that's completed a
- * pile of wrap-ups still reports real figures.
+ * capped: the tallies count everything, so a browser that's completed a pile of
+ * wrap-ups still reports real figures.
  */
 export const CHECKIN_WINDOW = 7;
 
@@ -84,24 +92,27 @@ export function useCheckIns(): CheckIn[] {
   return list;
 }
 
+/**
+ * The run broken down by tone. The three counts sum to `total`, so the tally
+ * reads as a full account of every logged day rather than a highlight reel.
+ */
 export type CheckInStats = {
   /** Check-ins logged, including the live one. */
   total: number;
-  /** How many the user left lighter than they arrived. */
-  improved: number;
-  /** Consecutive improved check-ins ending at the most recent. */
-  streak: number;
+  /** Both answers moved the right way. */
+  lighter: number;
+  /** One up, one down. */
+  mixed: number;
+  /** Both answers moved the wrong way. */
+  heavier: number;
 };
 
 export function checkInStats(list: CheckIn[]): CheckInStats {
-  let streak = 0;
-  for (let i = list.length - 1; i >= 0; i--) {
-    if (!improved(list[i])) break;
-    streak++;
-  }
+  const tones = list.map(tone).filter((t): t is CheckInTone => t !== null);
   return {
-    total: list.length,
-    improved: list.filter(improved).length,
-    streak,
+    total: tones.length,
+    lighter: tones.filter((t) => t === "lighter").length,
+    mixed: tones.filter((t) => t === "mixed").length,
+    heavier: tones.filter((t) => t === "heavier").length,
   };
 }

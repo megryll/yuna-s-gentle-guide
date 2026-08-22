@@ -6,9 +6,10 @@ import { Slider } from "@/components/Slider";
 import {
   CHECKIN_WINDOW,
   checkInStats,
-  improved,
+  tone,
   useCheckIns,
   type CheckIn,
+  type CheckInTone,
 } from "@/lib/checkin-history";
 import { usePrototypeMute } from "@/lib/prototype-mute";
 import { playCompleteSwell, playSelectPop, playSliderTick } from "@/lib/survey-sound";
@@ -817,9 +818,38 @@ function TrendChart({ points, ghost }: { points: CheckIn[]; ghost: boolean }) {
 }
 
 // ─── Tally reward ────────────────────────────────────────────────────────────
-// The collectible read on the same data: every past check-in is a tile, and
-// today's lands last with a check and a confetti burst. Three figures below
-// give the run a score without turning it into a chart.
+// The collectible read on the same data: every past check-in is a bar, and
+// today's lands last with a check and a confetti burst. Bar height and tint
+// both carry the tone, so the run is legible as a shape before any of the
+// colour is read, and the three figures below double as its key.
+
+const TONE_STYLE: Record<CheckInTone, { bar: string; height: string; label: string }> = {
+  // Tints carry enough alpha to stay distinct on the light photo, where a 25%
+  // fill over near-white washes out. Mixed sits on white-alpha rather than a
+  // third hue: the `.theme-light` shim already inverts it, and a neutral reads
+  // as "in between" green and orange without inventing a sentiment colour.
+  lighter: {
+    bar: "border-secondary-green/60 bg-secondary-green/40",
+    height: "h-14",
+    label: "Lighter",
+  },
+  mixed: {
+    bar: "border-white/40 bg-white/25",
+    height: "h-9",
+    label: "Mixed",
+  },
+  heavier: {
+    bar: "border-alert-orange/60 bg-alert-orange/35",
+    height: "h-5",
+    label: "Heavier",
+  },
+};
+
+const TONE_HEADLINE: Record<CheckInTone, string> = {
+  lighter: "You left this one lighter",
+  mixed: "Some of it lifted",
+  heavier: "A heavy one, and you logged it",
+};
 
 function TallyReward({
   points,
@@ -830,35 +860,36 @@ function TallyReward({
   stats: ReturnType<typeof checkInStats>;
   burstKey: number;
 }) {
+  const today = tone(points[points.length - 1]);
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 px-5 py-6">
       {burstKey > 0 && <Confetti key={burstKey} />}
 
       <div className="relative flex flex-col gap-5">
         <p className="text-center font-display text-2xl leading-tight text-white">
-          {stats.streak > 1
-            ? `${stats.streak} sessions in a row you've left lighter`
-            : "Another one logged"}
+          {today ? TONE_HEADLINE[today] : "Another one logged"}
         </p>
 
-        <div className="flex items-end justify-center gap-2">
+        {/* Fixed-height rail so the short bars sit on a shared baseline
+            instead of re-centring the row as the run's tones change. */}
+        <div className="flex h-14 items-end justify-center gap-2">
           {points.map((c, i) => {
+            const t = tone(c);
+            if (!t) return null;
             const newest = i === points.length - 1;
-            const good = improved(c);
+            const style = TONE_STYLE[t];
             return (
               <span
                 key={`${c.label}-${i}`}
                 className={cn(
-                  "relative flex h-12 w-8 items-end justify-center rounded-xl border",
-                  newest && "survey-pop-item h-14",
-                  // Tints carry enough alpha to stay distinct on the light
-                  // photo, where a 25% fill over near-white washes out.
-                  good
-                    ? "border-secondary-green/60 bg-secondary-green/40"
-                    : "border-alert-orange/60 bg-alert-orange/35",
+                  "relative w-8 rounded-xl border",
+                  style.height,
+                  style.bar,
+                  newest && "survey-pop-item",
                 )}
                 style={newest ? { animationDelay: "180ms" } : undefined}
-                title={c.label}
+                title={`${c.label}: ${style.label}`}
               >
                 {newest && (
                   <Badge icon size="sm" className="absolute -top-2 -right-2" label="Logged today" />
@@ -868,18 +899,20 @@ function TallyReward({
           })}
         </div>
 
+        {/* Counts of every logged day, split three ways. They sum to the run,
+            and the dots tie each figure back to its bar colour. */}
         <div className="grid grid-cols-3 gap-2">
-          {[
-            { figure: stats.total, label: "Check-ins" },
-            { figure: stats.improved, label: "Lighter" },
-            { figure: stats.streak, label: "Streak" },
-          ].map((s) => (
-            <div key={s.label} className="flex flex-col items-center gap-0.5">
+          {(["lighter", "mixed", "heavier"] as const).map((key) => (
+            <div key={key} className="flex flex-col items-center gap-0.5">
               <span className="survey-numeral-pop font-display text-3xl tabular-nums text-white">
-                {s.figure}
+                {stats[key]}
               </span>
-              <span className="text-uppercase tracking-[0.2em] uppercase text-white/75">
-                {s.label}
+              <span className="flex items-center gap-1.5 text-uppercase tracking-[0.2em] uppercase text-white/75">
+                <span
+                  aria-hidden
+                  className={cn("h-2 w-2 rounded-full border", TONE_STYLE[key].bar)}
+                />
+                {TONE_STYLE[key].label}
               </span>
             </div>
           ))}
