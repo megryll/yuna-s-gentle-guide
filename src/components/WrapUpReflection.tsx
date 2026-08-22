@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/Badge";
-import { Button } from "@/components/Button";
 import { Confetti } from "@/components/Confetti";
 import { Slider } from "@/components/Slider";
 import {
@@ -17,7 +16,7 @@ import type { WrapUpVariant } from "@/lib/session-dev";
 import { cn } from "@/lib/utils";
 
 // ─── Wrap-up reflection A/B variants ─────────────────────────────────────────
-// Four alternative treatments of the wrap-up's "how did this session land?"
+// Alternative treatments of the wrap-up's "how did this session land?"
 // question, driven by the EngineerSidebar's States chips. Every variant reads
 // and writes the same two bipolar values (-1 → 1) the shipped screen persists,
 // so switching treatments never changes what a keepsake stores.
@@ -34,9 +33,6 @@ export type ReflectionValues = {
   mood: number;
   moodTouched: boolean;
   onMoodChange: (v: number) => void;
-  /** Clears both answers. Variants that hide the questions behind a payoff
-   *  need it, or there's no way back to them. */
-  onReset: () => void;
 };
 
 // Zone labels + faces, ordered negative → positive. One list per variant: the
@@ -106,10 +102,9 @@ function zoneForValue(v: number, n: number) {
   return Math.min(Math.max(idx, 0), n - 1);
 }
 
-// The two "as easy as possible" variants ask their own short question per
-// metric ("Mood?", "Stress?"), so the shared section heading would just be
-// noise above them.
-const SELF_TITLED: WrapUpVariant[] = ["binary", "stepped"];
+// The one-tap variant asks its own short question per metric ("Mood?",
+// "Stress?"), so the shared section heading would just be noise above it.
+const SELF_TITLED: WrapUpVariant[] = ["binary"];
 
 export function WrapUpReflection({
   variant,
@@ -207,9 +202,6 @@ function ReflectionBody({
 
     case "binary":
       return <TwoTaps values={values} />;
-
-    case "stepped":
-      return <OneAtATime values={values} />;
 
     default:
       return (
@@ -593,13 +585,6 @@ function TallyPayoff({ values }: { values: ReflectionValues }) {
       burstKey={burstKey}
     />
   );
-}
-
-/** What the user just recorded, in words. */
-function answerSummary(values: ReflectionValues) {
-  const mood = values.mood > 0 ? "Mood better" : "Mood worse";
-  const stress = values.stress > 0 ? "stress lighter" : "stress heavier";
-  return `${mood}, ${stress}.`;
 }
 
 // ─── Trend reward ────────────────────────────────────────────────────────────
@@ -1021,42 +1006,3 @@ function BinaryRow({
   );
 }
 
-// ─── One at a time ───────────────────────────────────────────────────────────
-// The same binary input paced one question at a time: answering mood cascades
-// straight to stress, then both are replaced by the tally. Two taps, one
-// decision on screen at a time, and the run of check-ins as the payoff.
-// Because the questions are gone by then, this is the variant that needs an
-// explicit way back.
-
-function OneAtATime({ values }: { values: ReflectionValues }) {
-  const step = !values.moodTouched ? 0 : !values.stressTouched ? 1 : 2;
-
-  if (step === 2) {
-    return (
-      <div className="flex flex-col gap-4 yuna-rise">
-        <TallyPayoff values={values} />
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-base text-white/85">{answerSummary(values)}</p>
-          <Button variant="link" surface="dark" onClick={values.onReset}>
-            Start over
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const q = BINARY[step];
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Keyed on the step so each question cascades in as the last one leaves. */}
-      <div key={q.key} className="survey-cascade-item">
-        <BinaryRow
-          q={q}
-          value={null}
-          onChange={q.key === "mood" ? values.onMoodChange : values.onStressChange}
-        />
-      </div>
-      <p className="text-center text-sm font-medium text-white/75">{step + 1} of 2</p>
-    </div>
-  );
-}

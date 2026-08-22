@@ -101,8 +101,6 @@ function WrapUp() {
   const [stressTouched, setStressTouched] = useState(false);
   const [moodTouched, setMoodTouched] = useState(false);
 
-  // Also the "start over" action for variants that replace the questions with
-  // a payoff, where there'd otherwise be no way back to them.
   const resetReflection = useCallback(() => {
     setStress(0);
     setMood(0);
@@ -130,7 +128,6 @@ function WrapUp() {
       setMood(v);
       setMoodTouched(true);
     },
-    onReset: resetReflection,
   };
 
   const onDone = () => {
