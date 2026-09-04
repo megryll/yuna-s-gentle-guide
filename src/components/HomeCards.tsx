@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Play, Star } from "lucide-react";
-import { GRATITUDE_PROMPTS, KIND_META, type HomeCard } from "@/lib/home-cards";
+import { GRATITUDE_PROMPTS, KIND_META, quizMeta, type HomeCard } from "@/lib/home-cards";
+import { useQuizVariant } from "@/lib/session-dev";
 import { Button } from "@/components/Button";
 import { YunaAvatar } from "@/components/YunaAvatar";
 import { DEFAULT_VOICE } from "@/lib/voices";
@@ -13,6 +14,7 @@ import {
   CardRow,
   DailyTag,
   MetaDot,
+  MotifIcon,
 } from "@/components/Card";
 import { useYunaIdentity } from "@/lib/yuna-session";
 
@@ -61,7 +63,8 @@ export function HomeCardRow({
   onMenu?: () => void;
   interactive?: boolean;
 }) {
-  const meta = KIND_META[card.type];
+  const quizVariant = useQuizVariant();
+  const meta = card.type === "self-discovery" ? quizMeta(quizVariant) : KIND_META[card.type];
   const { avatar } = useYunaIdentity();
   const isGuided = card.type === "guided-session";
 
@@ -79,7 +82,7 @@ export function HomeCardRow({
       completed={completed}
       naturePath={isSolid ? undefined : card.naturePath ?? meta.naturePath}
       solidFill={isSolid ? meta.solidBg ?? undefined : undefined}
-      watermark={meta.watermark}
+      motif={meta.motif}
       onClick={onClick}
       onMenu={onMenu}
       interactive={interactive}
@@ -87,6 +90,7 @@ export function HomeCardRow({
         <>
           <span className={`text-xs font-medium tracking-[0.08em] uppercase ${isLight ? "text-foreground" : "text-white"} inline-flex items-center gap-1.5`}>
             {isGuided && avatar && <YunaAvatar variant={avatar} size={15} />}
+            {meta.motif && <MotifIcon motif={meta.motif} size={13} />}
             {meta.label}
           </span>
           {hasCadence(card) && <DailyTag tone={isLight ? "light" : "dark"} />}
@@ -266,19 +270,27 @@ function SelfDiscoveryCard({
   onMenu,
   onToggleSave,
 }: ItemProps & { card: Extract<HomeCard, { type: "self-discovery" }> }) {
-  const meta = KIND_META[card.type];
+  // The surface (and the ink tone it forces) comes from the active quiz
+  // variant; everything else is the kind's.
+  const meta = quizMeta(useQuizVariant());
+  const isDark = meta.tone === "dark";
   return (
-    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg} watermark={meta.watermark}>
-      <CardHeader meta={meta} onMore={onMenu} />
+    <Card tone={meta.tone} isNew={card.isNew} completed={completed} naturePath={card.naturePath ?? meta.naturePath} solidFill={meta.solidBg} motif={meta.motif}>
+      <CardHeader meta={meta} leading={meta.motif && <MotifIcon motif={meta.motif} />} onMore={onMenu} />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-9">
-        <h3 className="font-display text-2xl leading-[1.75] tracking-tight text-white">
+        <h3
+          className={`font-display text-2xl leading-[1.75] tracking-tight ${isDark ? "text-white" : "text-neutral-900"}`}
+        >
           {card.title}
         </h3>
-        <p className="mt-3 text-sm leading-relaxed text-white/80 max-w-[20rem]">
+        <p
+          className={`mt-3 text-sm leading-relaxed max-w-[20rem] ${isDark ? "text-white/85" : "text-neutral-700"}`}
+        >
           {card.description}
         </p>
       </div>
       <CardFooter
+        tone={meta.tone}
         primary={
           <CardCTA tone={meta.tone} onClick={onClick}>
             {meta.ctaLabel}

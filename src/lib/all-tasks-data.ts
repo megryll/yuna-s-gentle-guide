@@ -1,10 +1,10 @@
 import { SKILLS } from "./skills-data";
 import { LIBRARY } from "./progress-data";
 
-// The unified task feed behind the You tab's tiles (Skills, Questionnaires,
+// The unified task feed behind the You tab's tiles (Skills, Quizzes,
 // Meditations, Goals, Days of Gratitude), shown on the All Tasks screen. Skills
-// and questionnaires derive from their existing data so the lists stay in sync;
-// the rest are authored here. `to` deep-links a task into its feature screen.
+// and quizzes derive from their existing data so the lists stay in sync; the
+// rest are authored here. `to` deep-links a task into its feature screen.
 
 export type TaskType = "skill" | "questionnaire" | "meditation" | "goal" | "gratitude";
 
@@ -13,14 +13,17 @@ export type Task = {
   type: TaskType;
   title: string;
   completed: boolean;
-  naturePath: string;
+  // Photo behind the row. Quizzes leave it unset — they render on the quiz
+  // kind's gradient + answer-sheet motif instead, the same surface a quiz
+  // carries on Home and in session.
+  naturePath?: string;
   to?: string;
   params?: Record<string, string>;
 };
 
 export const TASK_TYPE_LABEL: Record<TaskType, string> = {
   skill: "Skills",
-  questionnaire: "Questionnaires",
+  questionnaire: "Quizzes",
   meditation: "Meditations",
   goal: "Goals",
   gratitude: "Gratitude",
@@ -38,22 +41,11 @@ const skillTasks: Task[] = SKILLS.map((s) => ({
   ...(s.hasArticle ? { to: "/skill/$id", params: { id: s.id } } : {}),
 }));
 
-const Q_BGS = [
-  "/nature/Background-1.png",
-  "/nature/Background-6.png",
-  "/nature/Background-11.png",
-  "/nature/Background-16.png",
-  "/nature/Background-19.png",
-  "/nature/Background-3.png",
-  "/nature/Background-8.png",
-];
-
-const questionnaireTasks: Task[] = LIBRARY.map((m, i) => ({
+const quizTasks: Task[] = LIBRARY.map((m) => ({
   id: `q-${m.id}`,
   type: "questionnaire",
   title: m.domain,
   completed: m.taken > 0,
-  naturePath: Q_BGS[i % Q_BGS.length],
   ...(m.taken > 0 && m.assessmentId ? { to: "/assessment/$id", params: { id: m.assessmentId } } : {}),
 }));
 
@@ -78,7 +70,7 @@ const gratitudeTasks: Task[] = [
 
 export const TASKS: Task[] = [
   ...skillTasks,
-  ...questionnaireTasks,
+  ...quizTasks,
   ...meditationTasks,
   ...goalTasks,
   ...gratitudeTasks,

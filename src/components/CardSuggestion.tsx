@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ChatBubble } from "@/components/ChatBubble";
-import { cardSurface, CardWatermark, MetaDot } from "@/components/Card";
-import { KIND_META, type CardKind } from "@/lib/home-cards";
+import { cardSurface, CardMotif, MetaDot, MotifIcon } from "@/components/Card";
+import { KIND_META, quizMeta, type CardKind } from "@/lib/home-cards";
+import { useQuizVariant } from "@/lib/session-dev";
 
 export type EscalationTier = "self-harm" | "crisis" | "non-crisis";
 
@@ -62,9 +63,9 @@ type BaseProps = {
 
 type RecoProps = BaseProps & {
   variant?: "reco";
-  /** CardKind — drives the eyebrow label + the tile background. Solid kinds
-   *  (e.g. questionnaires) render their fixed fill + watermark; photo kinds
-   *  fall back to KIND_META[kind].naturePath. */
+  /** CardKind — drives the eyebrow label, icon + the tile background. Solid
+   *  kinds (e.g. quizzes) render their fixed fill + motif; photo kinds fall
+   *  back to KIND_META[kind].naturePath. */
   kind: CardKind;
   /** Overrides the kind's eyebrow label (the tile keeps the kind's background)
    *  — for offers that reuse a kind's look but aren't that content type. */
@@ -113,7 +114,7 @@ type CardSuggestionProps = RecoProps | EscalationProps | CompletionProps;
  *               above the voice pad.
  *
  * Three variants, picked by `variant`:
- *   - "reco" (default) — recommends a card (meditation, questionnaire, any
+ *   - "reco" (default) — recommends a card (meditation, quiz, any
  *     CardKind): an eyebrow + a photo-washed tile carrying the title + a
  *     No-thanks / Start pair.
  *   - "escalation" — hands over a vetted support resource when a conversation
@@ -131,6 +132,7 @@ type CardSuggestionProps = RecoProps | EscalationProps | CompletionProps;
 export function CardSuggestion(props: CardSuggestionProps) {
   const { mode = "text", surface = "dark", frostedImage, className, style } = props;
   const voice = mode === "voice";
+  const quizVariant = useQuizVariant();
 
   let body: ReactNode;
   if (props.variant === "escalation") {
@@ -203,30 +205,59 @@ export function CardSuggestion(props: CardSuggestionProps) {
       </div>
     );
   } else {
-    const meta = KIND_META[props.kind];
+    const meta =
+      props.kind === "self-discovery" ? quizMeta(quizVariant) : KIND_META[props.kind];
+    // A quiz variant can flip the tile to a pale surface, so the tile's ink
+    // follows the kind's tone rather than assuming white.
+    const tileDark = meta.tone === "dark";
     body = (
       <div>
         <div className={cn("flex items-center gap-1.5", voice && "justify-center")}>
-          <MessageCircle size={16} strokeWidth={1.7} aria-hidden className="text-white" />
+          {/* Motif kinds carry their own eyebrow glyph (a quiz gets the
+              checklist mark); everything else keeps the conversational one. */}
+          <span className="text-white">
+            {meta.motif ? (
+              <MotifIcon motif={meta.motif} size={16} />
+            ) : (
+              <MessageCircle size={16} strokeWidth={1.7} aria-hidden />
+            )}
+          </span>
           <span className="text-sm font-medium text-white/90">{props.eyebrow ?? meta.label}</span>
           {props.duration && <MetaDot>{props.duration}</MetaDot>}
         </div>
 
         <div
-          className="relative mt-2.5 rounded-2xl overflow-hidden card-fixed-dark"
+          className={cn(
+            "relative mt-2.5 rounded-2xl overflow-hidden",
+            tileDark && "card-fixed-dark",
+          )}
           style={
             meta.solidBg != null
-              ? { backgroundColor: meta.solidBg }
+              ? { background: meta.solidBg }
               : cardSurface({ naturePath: props.naturePath ?? meta.naturePath }).style
           }
         >
-          {meta.watermark && <CardWatermark src={meta.watermark} className="h-[130%] -right-3" />}
+          {meta.motif && (
+            <CardMotif motif={meta.motif} placement="reco" tone={meta.tone} />
+          )}
           <div className="relative px-5 py-6">
-            <h3 className="font-display text-2xl leading-[1.15] tracking-tight text-white">
+            <h3
+              className={cn(
+                "font-display text-2xl leading-[1.15] tracking-tight",
+                tileDark ? "text-white" : "text-neutral-900",
+              )}
+            >
               {props.title}
             </h3>
             {props.description && (
-              <p className="mt-2 text-sm leading-snug text-white/80">{props.description}</p>
+              <p
+                className={cn(
+                  "mt-2 text-sm leading-snug",
+                  tileDark ? "text-white/85" : "text-neutral-700",
+                )}
+              >
+                {props.description}
+              </p>
             )}
           </div>
         </div>

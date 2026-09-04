@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Card, CardCTA, CardFooter, CardHeader } from "@/components/Card";
+import { Card, CardCTA, CardFooter, CardHeader, MotifIcon, type CardMotif } from "@/components/Card";
 import { HomeCardRow } from "@/components/HomeCards";
 import type { HomeCard } from "@/lib/home-cards";
 import { DSPage, Section, SurfaceMatrix, PropsBlock, type MatrixRow } from "@/ds-docs/surface";
@@ -30,9 +30,9 @@ function DSCards() {
         <PropsBlock>{`<Card
   tone:       "dark" | "light"   // content tone (dark = white text)
   naturePath: string             // background photo (always dark-washed)
-  solidFill?: string             // flat fill instead of photo
-  watermark?: string             // image src painted as an oversized translucent
-                                 //   glyph behind the content
+  solidFill?: string             // flat or gradient fill instead of photo
+  motif?:     "quiz"             // kind glyph painted behind the content
+                                 //   (see <CardMotif> / <MotifIcon>)
   isNew?:     boolean            // green "New" flag, top-left (see /ds/badge)
   completed?: boolean            // fade the tile + show a check Badge top-left
 >
@@ -40,7 +40,7 @@ function DSCards() {
     meta:     { label, tone }
     cadence?: "Daily"            // appends a "• Daily" tag
     eyebrow?: string             // overrides meta.label
-    leading?: ReactNode          // leading glyph (e.g. an avatar)
+    leading?: ReactNode          // leading glyph (e.g. an avatar, <MotifIcon>)
     onMore?:  () => void         // shows the top-right More (3-dot) button; omit for a plain header
   />
   …body (caller-owned, centered)…
@@ -55,6 +55,14 @@ function DSCards() {
 
 <CardCTA tone onClick>{label}</CardCTA>   // uppercase-tracked secondary button
 
+<CardMotif motif placement tone? />       // the kind glyph itself, for surfaces
+                                          //   that paint their own card bg.
+                                          //   placement "tile" | "row" | "reco"
+                                          //   picks the crop; tone "dark"
+                                          //   (default) = white shapes,
+                                          //   "light" = ink shapes
+<MotifIcon motif size?={14} />            // its eyebrow-sized counterpart
+
 <MetaDot tone?>{text}</MetaDot>           // dot-prefixed meta token after an
                                           //   eyebrow ("• Daily", "• 3 min");
                                           //   <DailyTag> is its "Daily" preset
@@ -67,8 +75,8 @@ function DSCards() {
   isNew?:       boolean
   completed?:   boolean            // fade the row + show a check Badge top-left
   naturePath?:  string             // photo fill
-  solidFill?:   string             // flat fill instead of photo
-  watermark?:   string             // oversized translucent glyph behind content
+  solidFill?:   string             // flat or gradient fill instead of photo
+  motif?:       "quiz"             // kind glyph behind content, cropped for the row
   onClick?:     () => void
   onMenu?:      () => void         // top-right 3-dot button; drops the arrow to
                                    //   the bottom-right. Omit = arrow centered
@@ -132,17 +140,32 @@ const VARIANT_ROWS: MatrixRow[] = [
     render: (s) => withCluster(s, <DemoSolidCard tone="dark" fill="#6E5A6B" />),
   },
   {
-    label: "Solid + watermark",
+    label: "Gradient + motif",
     render: (s) =>
       withCluster(
         s,
         <DemoSolidCard
           tone="dark"
-          fill="var(--primary-green)"
-          watermark="/yuna-mark.svg"
-          label="Questionnaire"
+          fill="var(--gradient-quiz)"
+          motif="quiz"
+          label="Quiz"
           title="How Have You Been Feeling Lately?"
-          cta="Try it now"
+          cta="Take the quiz"
+        />,
+      ),
+  },
+  {
+    label: "Gradient + motif (light)",
+    render: (s) =>
+      withCluster(
+        s,
+        <DemoSolidCard
+          tone="light"
+          fill="var(--gradient-quiz-paper)"
+          motif="quiz"
+          label="Quiz"
+          title="How Have You Been Feeling Lately?"
+          cta="Take the quiz"
         />,
       ),
   },
@@ -210,14 +233,14 @@ function DemoCard({ completed = false }: { completed?: boolean } = {}) {
 function DemoSolidCard({
   tone,
   fill,
-  watermark,
+  motif,
   label = "Recommended Skill",
   title = "The Non-Judgemental Skill",
   cta = "Learn this",
 }: {
   tone: "dark" | "light";
   fill: string;
-  watermark?: string;
+  motif?: CardMotif;
   label?: string;
   title?: string;
   cta?: string;
@@ -226,8 +249,8 @@ function DemoSolidCard({
   const isDark = tone === "dark";
   return (
     <div className="max-w-[300px]">
-      <Card tone={tone} solidFill={fill} watermark={watermark}>
-        <CardHeader meta={{ label, tone }} />
+      <Card tone={tone} solidFill={fill} motif={motif}>
+        <CardHeader meta={{ label, tone }} leading={motif && <MotifIcon motif={motif} />} />
         <div className="flex-1 flex items-center justify-center px-6 pt-9">
           <h3
             className={

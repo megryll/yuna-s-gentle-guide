@@ -111,7 +111,7 @@ const AGREE_OPTIONS = [
 // numeric → rank).
 const DISCOVER: SurveyDef = {
   id: "discover-your-style",
-  eyebrow: "Questionnaire",
+  eyebrow: "Quiz",
   title: "Getting to know you",
   questions: [
     {

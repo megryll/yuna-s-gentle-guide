@@ -118,8 +118,8 @@ function DSCardSuggestion() {
   style?:        CSSProperties
 
   // variant="reco" (default) — recommend a card
-  kind:          CardKind           // drives the eyebrow label + tile background
-                                    //   (solid kinds: fixed fill + watermark)
+  kind:          CardKind           // drives the eyebrow label, icon + tile
+                                    //   background (solid kinds: fixed fill + motif)
   eyebrow?:      string             // overrides the kind's eyebrow label; tile
                                     //   keeps the kind's background
   title:         string             // recommended card's title (white Fraunces)

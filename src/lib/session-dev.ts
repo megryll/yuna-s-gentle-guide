@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { YunaState } from "@/components/YunaStatus";
 import type { EscalationTier } from "@/components/CardSuggestion";
-import type { CardKind } from "@/lib/home-cards";
+import type { CardKind, QuizVariant } from "@/lib/home-cards";
 
 // Dev-only session overrides driven by the right-hand EngineerSidebar's "Yuna
 // states" panel. Selecting a chip pushes the live session screen into that
@@ -12,7 +12,7 @@ import type { CardKind } from "@/lib/home-cards";
 // Sample card content for each reco chip, so the dev trigger renders a real
 // suggestion. CardSuggestion itself is generic (kind + title + photo); this is
 // just the demo payload shared by the text and voice session screens. Solid
-// kinds (questionnaire) carry their fixed fill + watermark, so no naturePath.
+// kinds (quiz) carry their fixed gradient + motif, so no naturePath.
 export const RECO_SAMPLES: Partial<
   Record<
     CardKind,
@@ -81,6 +81,7 @@ let upcomingApptOn = false;
 let guidedTitle: string | null = null;
 let guidedComplete = false;
 let wrapUpVariant: WrapUpVariant = "current";
+let quizVariant: QuizVariant = "v1";
 // One-shot counter rather than a boolean: the hub's booking celebration is a
 // moment, not a mode, so each press has to re-fire it even after the last one
 // was dismissed.
@@ -139,6 +140,14 @@ export function setSessionGuidedComplete(next: boolean) {
 
 export function setWrapUpVariant(next: WrapUpVariant) {
   wrapUpVariant = next;
+  emit();
+}
+
+// Which quiz-card background treatment the whole app renders. Not screen-scoped
+// like the other triggers: the point is to see one variant everywhere a quiz
+// shows up at once.
+export function setQuizVariant(next: QuizVariant) {
+  quizVariant = next;
   emit();
 }
 
@@ -232,5 +241,12 @@ export function useWrapUpVariant(): WrapUpVariant {
     subscribe,
     () => wrapUpVariant,
     () => wrapUpVariant,
+  );
+}
+export function useQuizVariant(): QuizVariant {
+  return useSyncExternalStore(
+    subscribe,
+    () => quizVariant,
+    () => quizVariant,
   );
 }

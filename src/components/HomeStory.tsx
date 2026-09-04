@@ -5,7 +5,7 @@ import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
 import { YunaAvatar, type AvatarVariant } from "@/components/YunaAvatar";
 import { usePhoneFrameContainer } from "@/components/PhoneFrame";
-import { CardCTA, DailyTag } from "@/components/Card";
+import { CardCTA, DailyTag, MotifIcon } from "@/components/Card";
 import { GRATITUDE_PROMPTS, KIND_META, type HomeCard } from "@/lib/home-cards";
 import { useYunaIdentity } from "@/lib/yuna-session";
 import { DEFAULT_VOICE } from "@/lib/voices";
@@ -177,7 +177,7 @@ function StorySlide({
 
     case "self-discovery":
       return frame(
-        head(),
+        head(meta.motif && <MotifIcon motif={meta.motif} />),
         <div className="text-center">
           <h2 className={centered}>{card.title}</h2>
           <p className="mx-auto mt-3 max-w-[20rem] text-sm leading-relaxed text-white/85">

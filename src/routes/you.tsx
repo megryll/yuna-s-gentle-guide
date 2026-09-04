@@ -38,7 +38,7 @@ const STAT_CARDS: {
 }[] = [
   { key: "chats", label: "Chats", icon: MessageCircle, to: "/sessions", search: { from: "you" } },
   { key: "skills", label: "Skills", icon: GraduationCap, to: "/all-tasks", search: { type: "skill" } },
-  { key: "questionnaires", label: "Questionnaires", icon: ClipboardList, to: "/all-tasks", search: { type: "questionnaire" } },
+  { key: "questionnaires", label: "Quizzes", icon: ClipboardList, to: "/all-tasks", search: { type: "questionnaire" } },
   { key: "gratitude", label: "Days of Gratitude", icon: NotebookPen, to: "/all-tasks", search: { type: "gratitude" } },
   { key: "meditations", label: "Meditations", icon: Flower2, to: "/all-tasks", search: { type: "meditation" } },
   { key: "goals", label: "Goals", icon: Target, to: "/all-tasks", search: { type: "goal" } },
@@ -231,7 +231,7 @@ function YouEmptyState() {
           </Button>
           <Button surface="dark" variant="secondary" fullWidth asChild>
             <Link to="/questionnaire/$id" params={{ id: "your-starting-point" }}>
-              Take a 3-minute questionnaire
+              Take a 3-minute quiz
             </Link>
           </Button>
         </div>

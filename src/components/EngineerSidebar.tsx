@@ -28,7 +28,7 @@ import { clearSeededHistory, seedTherapistHistory } from "@/lib/therapist-demo";
 import { addUserNote, editNote, exportOverlay, removeNote, useResolvedNotes, type ResolvedNote } from "@/lib/notes-prefs";
 import { cn } from "@/lib/utils";
 import type { YunaState } from "@/components/YunaStatus";
-import type { CardKind } from "@/lib/home-cards";
+import { QUIZ_VARIANTS, type CardKind } from "@/lib/home-cards";
 import {
   GUIDED_SAMPLE_TITLE,
   setSessionEscalation,
@@ -40,8 +40,10 @@ import {
   setSessionStatus,
   setSessionSuicidality,
   setSessionUpcomingAppointment,
+  setQuizVariant,
   setWrapUpVariant,
   triggerBookingCelebration,
+  useQuizVariant,
   useWrapUpVariant,
   WRAPUP_VARIANTS,
   useSessionEscalation,
@@ -552,7 +554,7 @@ const STATUS_STATES: YunaState[] = [
 // Card kinds Yuna can surface as a mid-session suggestion, with the chip label.
 const RECO_STATES: { kind: CardKind; label: string }[] = [
   { kind: "meditation", label: "Meditation Reco" },
-  { kind: "self-discovery", label: "Questionnaire Reco" },
+  { kind: "self-discovery", label: "Quiz Reco" },
 ];
 
 // Statuses that only exist in a voice session — disabled in text mode.
@@ -643,6 +645,9 @@ function YunaStatesSection() {
           label="Guided Complete"
           onClick={() => setSessionGuidedComplete(!guidedComplete)}
         />
+        {/* Also here, not just on Home: the quiz reco above renders the same
+            surface, so the variants have to be comparable in session too. */}
+        <QuizCardChips />
       </div>
     </Section>
   );
@@ -654,6 +659,27 @@ function YunaStatesSection() {
 // "Upcoming appointment" prep card pinned to the top of the feed, and (shared
 // with the therapist screens) completing a booked appointment, which pins the
 // post-session follow-up card to the top of the feed.
+
+// Swaps the quiz card's background treatment app-wide (feed tile, feed row, the
+// in-session reco, All Tasks) so the two can be compared in place. Exactly one
+// is active at a time, so the chips read as a radio group. V1 is the shipped
+// treatment.
+
+function QuizCardChips() {
+  const variant = useQuizVariant();
+  return (
+    <>
+      {QUIZ_VARIANTS.map((v) => (
+        <Chip
+          key={v.value}
+          active={variant === v.value}
+          label={v.label}
+          onClick={() => setQuizVariant(v.value)}
+        />
+      ))}
+    </>
+  );
+}
 
 function HomeStatesSection() {
   const illinois = useSessionIllinois();
@@ -678,6 +704,7 @@ function HomeStatesSection() {
           onClick={() => setSessionUpcomingAppointment(!upcoming)}
         />
         <CompleteAppointmentChip />
+        <QuizCardChips />
       </div>
     </Section>
   );

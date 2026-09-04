@@ -187,6 +187,30 @@
   --rose: #F7A7A7;
   --pink: #F2B4D3;
   --aqua: #B5DEDB;
+  /* Quiz cards — the one surface every quiz shares (Home tile, feed row, the
+     in-session reco tile, the All Tasks row). A forest gradient with a soft
+     top-left light source, so the kind carries the same depth as the
+     photo-backed kinds instead of reading as a flat fill. Derived from the
+     brand greens rather than authored hexes, so it moves with the palette. */
+  --gradient-quiz:
+    radial-gradient(130% 95% at 12% -10%, rgba(255, 255, 255, 0.16), transparent 62%),
+    linear-gradient(
+      152deg,
+      color-mix(in oklab, var(--secondary-green) 26%, var(--primary-green)) 0%,
+      var(--primary-green) 48%,
+      color-mix(in oklab, var(--neutral) 55%, var(--primary-green)) 100%
+    );
+  /* Quiz card variant B — "paper". The same illustration on a warm cream sheet
+     with dark ink, so a quiz reads as a form you fill in rather than a tile you
+     watch. Sage corner keeps it on-brand rather than plain beige. */
+  --gradient-quiz-paper:
+    radial-gradient(120% 95% at 12% -10%, rgba(255, 255, 255, 0.75), transparent 62%),
+    linear-gradient(
+      152deg,
+      var(--primary-beige) 0%,
+      color-mix(in oklab, var(--amber-soft) 65%, var(--primary-beige)) 52%,
+      color-mix(in oklab, var(--secondary-green) 12%, var(--primary-beige)) 100%
+    );
 }
 
 .dark {

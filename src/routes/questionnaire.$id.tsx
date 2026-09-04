@@ -305,7 +305,7 @@ function QuestionnaireRoute() {
             <div className="pt-14">
               <div className="relative flex items-center justify-center">
                 <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
-                  Questionnaire complete
+                  Quiz complete
                 </p>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2">
                   <Button
@@ -374,7 +374,7 @@ function QuestionnaireRoute() {
           </div>
           <span className="justify-self-center inline-flex items-center gap-1.5 text-sm font-semibold text-white">
             <MessageCircle size={15} strokeWidth={2} aria-hidden />
-            Questionnaire
+            Quiz
           </span>
           <div className="justify-self-end">
             <Button surface={surface} variant="secondary" size="icon" aria-label="Close" onClick={exitFlow}>

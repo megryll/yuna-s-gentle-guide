@@ -4,7 +4,9 @@ import { ChevronLeft } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { Tag } from "@/components/Tag";
-import { CardRow, MetaDot } from "@/components/Card";
+import { CardRow, MetaDot, MotifIcon } from "@/components/Card";
+import { quizMeta } from "@/lib/home-cards";
+import { useQuizVariant } from "@/lib/session-dev";
 import { useAppMode } from "@/lib/theme-prefs";
 import {
   TASKS,
@@ -16,7 +18,7 @@ import {
 
 // ─── All Tasks ────────────────────────────────────────────────────────────────
 // One feed for everything the user can work on, reached from the You tab's
-// Skills / Questionnaires / Meditations / Goals / Days of Gratitude tiles. A
+// Skills / Quizzes / Meditations / Goals / Days of Gratitude tiles. A
 // horizontal row of type filters narrows the list; within each type the
 // incomplete tasks sort above the completed ones. Photo-bg cluster; follows the
 // Light/Dark toggle.
@@ -132,20 +134,32 @@ function TaskCard({
   task: Task;
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  // Quiz rows borrow the quiz kind's own surface — the active variant's
+  // background + the answer-sheet motif — so a quiz looks the same here as it
+  // does on Home and in session.
+  const quizVariant = useQuizVariant();
+  const quiz = task.type === "questionnaire" ? quizMeta(quizVariant) : null;
+  const tone = quiz?.tone ?? "dark";
+  const isLight = tone === "light";
   return (
     <CardRow
       title={task.title}
-      tone="dark"
-      naturePath={task.naturePath}
+      tone={tone}
+      naturePath={quiz ? undefined : task.naturePath}
+      solidFill={quiz?.solidBg}
+      motif={quiz?.motif}
       completed={task.completed}
       interactive={!!task.to}
       onClick={task.to ? () => navigate({ to: task.to!, params: task.params as never }) : undefined}
       meta={
         <>
-          <span className="text-xs font-medium tracking-[0.08em] uppercase text-white">
+          <span
+            className={`text-xs font-medium tracking-[0.08em] uppercase inline-flex items-center gap-1.5 ${isLight ? "text-neutral-900" : "text-white"}`}
+          >
+            {quiz?.motif && <MotifIcon motif={quiz.motif} size={13} />}
             {TASK_TYPE_LABEL[task.type]}
           </span>
-          <MetaDot>{task.completed ? "Done" : "To do"}</MetaDot>
+          <MetaDot tone={tone}>{task.completed ? "Done" : "To do"}</MetaDot>
         </>
       }
     />

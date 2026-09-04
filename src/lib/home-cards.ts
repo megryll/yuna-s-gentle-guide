@@ -1,3 +1,5 @@
+import type { CardMotif } from "@/components/Card";
+
 // A learn-skill article shown on the skill detail screen (/skill/$id):
 // a text-based explainer with an acronym breakdown and nested section images.
 export type SkillArticle = {
@@ -112,13 +114,14 @@ export type CardKindMeta = {
   ctaLabel: string;
   // Fallback photo when an individual card doesn't override `naturePath`.
   naturePath: string;
-  // When set, the card renders on this solid fill instead of a tinted photo
-  // (fixed in both light/dark app modes — see Card `solidFill`). Pair a pale
-  // fill with tone "light" (dark ink) and a deep fill with tone "dark" (white).
+  // When set, the card renders on this fill instead of a tinted photo (fixed
+  // in both light/dark app modes — see Card `solidFill`). Pair a pale fill with
+  // tone "light" (dark ink) and a deep fill with tone "dark" (white). Any CSS
+  // background value works, so gradient kinds live here too.
   solidBg?: string;
-  // Image src painted as an oversized translucent glyph behind the content
-  // (see Card / CardRow `watermark`).
-  watermark?: string;
+  // Decorative kind glyph painted behind the content, and echoed as the eyebrow
+  // icon (see Card / CardRow `motif`, CardMotif, MotifIcon).
+  motif?: CardMotif;
 };
 
 export const KIND_META: Record<CardKind, CardKindMeta> = {
@@ -144,14 +147,16 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
     naturePath: "/nature/Background-17.png",
     solidBg: "#D4E3F4",
   },
+  // Quizzes skip the photo pool entirely: the gradient + answer-sheet motif is
+  // the kind's identity, and it has to look the same wherever a quiz renders.
   "self-discovery": {
-    label: "Questionnaire",
+    label: "Quiz",
     tone: "dark",
     action: "arrow",
-    ctaLabel: "Try it now",
+    ctaLabel: "Take the quiz",
     naturePath: "/nature/Background-9.png",
-    solidBg: "var(--primary-green)",
-    watermark: "/yuna-mark.svg",
+    solidBg: "var(--gradient-quiz)",
+    motif: "quiz",
   },
   affirmation: {
     label: "Affirmation",
@@ -185,13 +190,40 @@ export const KIND_META: Record<CardKind, CardKindMeta> = {
   },
 };
 
+// ─── Quiz card variants (dev A/B) ────────────────────────────────────────────
+// Two background treatments for the quiz kind, switched from the engineer
+// sidebar so the card can be compared in place across the feed, the list rows
+// and the in-session reco. v1 is the shipped treatment; v2 changes only the
+// surface — the answer-sheet illustration, copy and CTA are constant, so the
+// comparison is about the background alone.
+
+export type QuizVariant = "v1" | "v2";
+
+export const QUIZ_VARIANTS: {
+  value: QuizVariant;
+  label: string;
+  solidBg: string;
+  tone: "dark" | "light";
+}[] = [
+  { value: "v1", label: "Quiz Card V1", solidBg: "var(--gradient-quiz)", tone: "dark" },
+  { value: "v2", label: "Quiz Card V2", solidBg: "var(--gradient-quiz-paper)", tone: "light" },
+];
+
+// The quiz kind's meta for a given variant. Everything but the surface (and the
+// ink tone it forces) comes from KIND_META, so a copy or CTA change lands on
+// both variants at once.
+export function quizMeta(variant: QuizVariant): CardKindMeta {
+  const v = QUIZ_VARIANTS.find((q) => q.value === variant) ?? QUIZ_VARIANTS[0];
+  return { ...KIND_META["self-discovery"], solidBg: v.solidBg, tone: v.tone };
+}
+
 // Plural, human-facing name for a card kind. Used by the 3-dot menu's
 // "Stop seeing …" action and by the Content Preferences settings screen.
 export const KIND_PLURAL: Record<CardKind, string> = {
   "guided-session": "Guided Sessions",
   meditation: "Personalised Meditations",
   gratitude: "Gratitude Journal Prompts",
-  "self-discovery": "Questionnaires",
+  "self-discovery": "Quizzes",
   affirmation: "Affirmations",
   "learn-skill": "Recommended Skills",
   accountability: "Goals",
@@ -230,8 +262,8 @@ export const GRATITUDE_PROMPTS = [
 ] as const;
 
 export const HOME_CARDS: HomeCard[] = [
-  // Questionnaire cards never set naturePath — the kind's solidBg is the one
-  // shared background for every questionnaire, everywhere it renders.
+  // Quiz cards never set naturePath — the kind's gradient solidBg is the one
+  // shared background for every quiz, everywhere it renders.
   {
     type: "self-discovery",
     id: "your-starting-point",
