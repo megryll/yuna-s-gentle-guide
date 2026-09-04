@@ -36,7 +36,7 @@ import { setContentPref, useContentPrefs } from "@/lib/content-prefs";
 import { getCompletedQuestionnaireIds } from "@/lib/questionnaire-state";
 import { startAmbient } from "@/lib/ambient-audio";
 import { useStartChat } from "@/lib/chat-launch";
-import { useAppointments } from "@/lib/therapist-prefs";
+import { pendingDebriefs, sortedUpcoming, useAppointments } from "@/lib/therapist-prefs";
 import {
   debriefHomeCard,
   prepHomeCard,
@@ -99,10 +99,13 @@ export function HomeScreen({
   const [savedOnly, setSavedOnly] = useState(false);
   // Once a therapist appointment's time has passed and the debrief hasn't
   // happened, a follow-up guided-session card pins to the top of the feed.
-  // Opening it launches the same debrief chat as the hub; the chat's
-  // markDebriefed clears the flag and the card leaves the feed on its own.
+  // Opening it launches the same debrief chat as the hub; saving the
+  // reflection clears the flag and the card leaves the feed on its own.
   const appointments = useAppointments();
-  const debriefAppt = appointments.find((a) => a.completed && !a.debriefed) ?? null;
+  const upcomingAppt = sortedUpcoming(appointments)[0] ?? null;
+  // A booked session outranks an unfinished reflection: once something new is
+  // on the calendar the follow-up unpins and lives in the past-sessions list.
+  const debriefAppt = upcomingAppt ? null : pendingDebriefs(appointments)[0] ?? null;
   const followUpCard = useMemo(
     () => (debriefAppt ? debriefHomeCard(debriefAppt) : null),
     [debriefAppt],
@@ -112,7 +115,6 @@ export function HomeScreen({
   // and forced on by the EngineerSidebar "Upcoming appointment" state so it can
   // be reviewed without booking. Opening it launches the same prep chat the hub
   // does.
-  const upcomingAppt = appointments.find((a) => !a.completed) ?? null;
   const upcomingState = useSessionUpcomingAppointment();
   const prepCard = useMemo(
     () => (upcomingAppt || upcomingState ? prepHomeCard(upcomingAppt ?? undefined) : null),
@@ -371,6 +373,8 @@ export function HomeScreen({
                 return;
               }
               if (followUpCard && c.id === followUpCard.id && debriefAppt) {
+                // Carries the appointment id so the chat saves the reflection
+                // against the right session.
                 // The post-session follow-up opens the scripted debrief (the
                 // same chat the hub's "Debrief with Yuna" launches), not a
                 // generic guided session.
@@ -378,6 +382,7 @@ export function HomeScreen({
                   guided: GUIDED_DEBRIEF_TITLE,
                   flow: "therapist-debrief",
                   therapist: debriefAppt.therapistId,
+                  appt: debriefAppt.id,
                 });
                 return;
               }

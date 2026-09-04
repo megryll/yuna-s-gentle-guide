@@ -59,7 +59,14 @@ import {
   formatLongDate,
   fromISODate,
 } from "@/lib/therapist-data";
-import { getAppointments, markDebriefed } from "@/lib/therapist-prefs";
+import {
+  getAppointment,
+  getAppointments,
+  pendingDebriefs,
+  recordDebrief,
+  sortedUpcoming,
+  type DebriefEntry,
+} from "@/lib/therapist-prefs";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -71,6 +78,7 @@ export const Route = createFileRoute("/chat")({
     guided?: string;
     flow?: "therapist-debrief" | "therapist-prep";
     therapist?: string;
+    appt?: string;
     personalize?: boolean;
   } => ({
     q: (s.q as string | undefined) ?? "",
@@ -86,6 +94,9 @@ export const Route = createFileRoute("/chat")({
         : undefined,
     // The therapist a scripted flow is about (both flows name them).
     therapist: (s.therapist as string | undefined) || undefined,
+    // The appointment a debrief belongs to. Absent on the catalog deep link,
+    // which falls back to whichever session is still waiting on one.
+    appt: (s.appt as string | undefined) || undefined,
     // Deep-link the Personalize Yuna drawer open (used by the /gallery board).
     // The search parser coerces `personalize=1` to the number 1, so accept the
     // numeric, boolean, and string forms.
@@ -208,7 +219,7 @@ function isReminisceEntry(initial: string): boolean {
 }
 
 function Chat() {
-  const { q, revisit, mode, guided, flow, therapist, personalize } = Route.useSearch();
+  const { q, revisit, mode, guided, flow, therapist, appt, personalize } = Route.useSearch();
   const navigate = useNavigate();
   const appMode = useAppMode();
   const blurBg = useModeImage();
@@ -248,15 +259,21 @@ function Chat() {
   const debriefTherapist = isDebrief ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
   const debriefFirstName = debriefTherapist?.name.split(" ")[0] ?? "";
   const script = isDebrief ? guidedDebriefScript(debriefFirstName) : null;
+  // The session being reflected on. The `appt` param names it; without one
+  // (the /gallery catalog link) fall back to this therapist's oldest session
+  // still waiting on a debrief.
+  const debriefAppointment = isDebrief
+    ? getAppointment(appt) ??
+      pendingDebriefs(getAppointments()).find((a) => a.therapistId === debriefTherapist?.id) ??
+      null
+    : null;
   // The pre-session prep is greeting-only: Yuna opens with the upcoming
   // appointment's context (therapist, date), then it's an ordinary open
   // conversation — no fixed follow-up, no hand-off.
   const isPrep = flow === "therapist-prep";
   const prepTherapist = isPrep ? getTherapist(therapist) ?? matchedTherapists()[0] : null;
   const prepAppointment = prepTherapist
-    ? (getAppointments()
-        .filter((a) => !a.completed && a.therapistId === prepTherapist.id)
-        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0] ?? null)
+    ? (sortedUpcoming(getAppointments()).find((a) => a.therapistId === prepTherapist.id) ?? null)
     : null;
   const prepGreeting = prepTherapist
     ? guidedPrepGreeting(
@@ -278,6 +295,9 @@ function Chat() {
   // that hand-off is showing. The hand-off is a local flag, not a persisted
   // message — on a revisit it's re-derived from the restored transcript.
   const scriptStepRef = useRef(0);
+  // Answers given in this pass through the debrief, saved to the appointment
+  // when the script reaches its wrap-up.
+  const debriefAnswersRef = useRef<DebriefEntry[]>([]);
   const [handoffShown, setHandoffShown] = useState(false);
   // Debrief progress: 1 of 2 once its hand-off is up; otherwise the dev
   // completion store drives the generic flow.
@@ -753,11 +773,18 @@ function Chat() {
   // Advance the scripted conversation after a user answer. Step 0 → the
   // follow-up question; step 1 → the wrap-up + the flow's hand-off (the
   // debrief's booking actions).
-  const advanceScripted = () => {
+  const advanceScripted = (answer: string) => {
     if (!script) return;
     const step = scriptStepRef.current;
     scriptStepRef.current = step + 1;
     const line = step === 0 ? script.followUp : script.wrapUp;
+    // Keep the question alongside the answer so the past-sessions screen can
+    // render the reflection back as a conversation.
+    debriefAnswersRef.current.push({
+      atISO: new Date().toISOString(),
+      question: step === 0 ? script.greeting[script.greeting.length - 1] : script.followUp,
+      answer,
+    });
     setTyping(true);
     setTimeout(() => {
       setMessages((m) => [...m, { id: uid(), from: "yuna", kind: "text", text: line }]);
@@ -766,8 +793,10 @@ function Chat() {
       if (step >= 1) {
         setHandoffShown(true);
         // The debrief itself is what the hub was waiting on — reaching the
-        // wrap-up settles the appointment's "how did it go?" prompt.
-        if (isDebrief && debriefTherapist) markDebriefed(debriefTherapist.id);
+        // wrap-up settles the appointment's "how did it go?" prompt and saves
+        // the answers so the session can be revisited later.
+        if (isDebrief && debriefAppointment)
+          recordDebrief(debriefAppointment.id, debriefAnswersRef.current);
       }
     }, 900);
   };
@@ -819,7 +848,7 @@ function Chat() {
     // advance the script rather than hitting the model. Once the hand-off is
     // up the script is finished — fall through to Claude.
     if (isDebrief && !handoffShown) {
-      advanceScripted();
+      advanceScripted(value);
       return;
     }
     // Suggestion-chip entries from /home still go through the older

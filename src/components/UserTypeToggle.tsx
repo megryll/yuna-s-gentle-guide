@@ -6,6 +6,7 @@ import {
   type UserType,
 } from "@/lib/user-type";
 import { resetTherapistPrefs } from "@/lib/therapist-prefs";
+import { seedTherapistHistory } from "@/lib/therapist-demo";
 
 export function UserTypeToggle() {
   const userType = useUserType();
@@ -38,7 +39,13 @@ export function UserTypeToggle() {
       <ToggleButton
         active={displayed === "returning"}
         disabled={returningDisabled}
-        onClick={() => setUserType("returning")}
+        onClick={() => {
+          setUserType("returning");
+          // Land on a therapist journey that already has a past — an upcoming
+          // session, one waiting on its debrief, and the record behind them —
+          // rather than making the reviewer click the whole flow through.
+          seedTherapistHistory();
+        }}
       >
         Returning
       </ToggleButton>

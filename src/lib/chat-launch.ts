@@ -15,6 +15,9 @@ export type ChatLaunchSearch = {
   // The therapist a scripted flow is about (the debrief names them and its
   // hand-off card books with them).
   therapist?: string;
+  // The appointment a debrief belongs to, so the reflection is saved against
+  // the right session (there can be several with the same therapist).
+  appt?: string;
 };
 
 // Pending first-session chat launch. The very first time a user starts a

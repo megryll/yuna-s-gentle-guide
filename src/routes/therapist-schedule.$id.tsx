@@ -33,6 +33,8 @@ import {
   cancelAppointment,
   getAppointment,
   getAppointments,
+  rescheduleAppointment,
+  sortedUpcoming,
   updateAppointment,
   type Appointment,
 } from "@/lib/therapist-prefs";
@@ -70,6 +72,12 @@ function ScheduleRoute() {
   // The appointment this screen owns: seeded by the `appt` param (reschedule),
   // or set on first confirm so the confirmation's actions edit in place.
   const [bookedId, setBookedId] = useState<string | null>(() => (getAppointment(appt) ? appt! : null));
+  // The appointment we arrived here to move, if any. Confirming writes a new
+  // row and retires this one so the past list keeps the trail; after that,
+  // further edits on the confirmation screen update the new row in place.
+  const [movingId, setMovingId] = useState<string | null>(() =>
+    getAppointment(appt) ? appt! : null,
+  );
 
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -91,7 +99,10 @@ function ScheduleRoute() {
       // A new or moved timeslot always needs securing on the booking platform.
       confirmed: false,
     };
-    if (bookedId) updateAppointment(bookedId, record);
+    if (movingId) {
+      setBookedId(rescheduleAppointment(movingId, record));
+      setMovingId(null);
+    } else if (bookedId) updateAppointment(bookedId, record);
     else setBookedId(addAppointment(record));
     // Someone with a booked therapist is no longer a brand-new user — flip the
     // admin toggle so it reflects (and keeps rendering) the returning state.
@@ -101,7 +112,9 @@ function ScheduleRoute() {
 
   const confirmBooking = () => {
     if (!date || !time) return;
-    const existing = getAppointments().find((a) => !a.completed && a.id !== bookedId);
+    const existing = sortedUpcoming(getAppointments()).find(
+      (a) => a.id !== bookedId && a.id !== movingId,
+    );
     if (existing) {
       setConflict(existing);
       return;

@@ -23,6 +23,10 @@ import { useStartChat } from "@/lib/chat-launch";
 import { consumeBookingCelebration, useBookingCelebration } from "@/lib/session-dev";
 import {
   cancelAppointment,
+  latestCompleted,
+  pendingDebriefs,
+  sortedPast,
+  sortedUpcoming,
   toggleSaved,
   updateAppointment,
   useAppointments,
@@ -72,38 +76,14 @@ function HubRoute() {
     setBurstKey((k) => k + 1);
   };
 
-  const upcoming = useMemo(
-    () =>
-      appointments
-        .filter((a) => !a.completed)
-        .slice()
-        .sort((a, b) => a.dateISO.localeCompare(b.dateISO)),
-    [appointments],
-  );
-  const needsDebrief = useMemo(
-    () => appointments.filter((a) => a.completed && !a.debriefed),
-    [appointments],
-  );
-  // Once the debrief is done, a completed appointment settles into the past
-  // record rather than vanishing from the hub.
-  const past = useMemo(
-    () =>
-      appointments
-        .filter((a) => a.completed && a.debriefed)
-        .slice()
-        .sort((a, b) => b.dateISO.localeCompare(a.dateISO)),
-    [appointments],
-  );
+  const upcoming = useMemo(() => sortedUpcoming(appointments), [appointments]);
+  const needsDebrief = useMemo(() => pendingDebriefs(appointments), [appointments]);
+  // Everything off the calendar — sessions had, moved, and called off. The hub
+  // only counts them; the record itself lives on /therapist-appointments.
+  const past = useMemo(() => sortedPast(appointments), [appointments]);
   // With nothing on the calendar, the hub pivots to rebooking: the most recent
   // completed session names the therapist the next-session tile books with.
-  const lastCompleted = useMemo(
-    () =>
-      appointments
-        .filter((a) => a.completed)
-        .slice()
-        .sort((a, b) => b.dateISO.localeCompare(a.dateISO))[0] ?? null,
-    [appointments],
-  );
+  const lastCompleted = useMemo(() => latestCompleted(appointments), [appointments]);
   const rebookTherapist =
     upcoming.length === 0 && lastCompleted ? getTherapist(lastCompleted.therapistId) : null;
   const celebratedTherapist = celebrated
@@ -131,7 +111,12 @@ function HubRoute() {
 
   const openDebrief = (a: Appointment) => {
     const t = getTherapist(a.therapistId) ?? matchedTherapists()[0];
-    startChat({ guided: GUIDED_DEBRIEF_TITLE, flow: "therapist-debrief", therapist: t.id });
+    startChat({
+      guided: GUIDED_DEBRIEF_TITLE,
+      flow: "therapist-debrief",
+      therapist: t.id,
+      appt: a.id,
+    });
   };
 
   return (
@@ -141,6 +126,18 @@ function HubRoute() {
           surface={surface}
           onBack={() =>
             router.history.canGoBack() ? router.history.back() : navigate({ to: "/tools" })
+          }
+          trailing={
+            past.length > 0 ? (
+              <Button
+                surface={surface}
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate({ to: "/therapist-appointments" })}
+              >
+                Past sessions
+              </Button>
+            ) : undefined
           }
         />
 
@@ -154,7 +151,10 @@ function HubRoute() {
               {upcoming.length > 0 ? "Upcoming Appointments" : "Your Therapist"}
             </h1>
 
-            {needsDebrief.length > 0 && (
+            {/* A booked session owns the primary slot: once something is on the
+                calendar an unfinished reflection steps out of the hub entirely
+                and lives in the past-sessions record. */}
+            {needsDebrief.length > 0 && upcoming.length === 0 && (
               <section>
                 <SectionLabel>After your session</SectionLabel>
                 <div className="flex flex-col gap-3">
@@ -242,17 +242,6 @@ function HubRoute() {
                       })
                     }
                   />
-                </div>
-              </section>
-            )}
-
-            {past.length > 0 && (
-              <section>
-                <SectionLabel>Past sessions</SectionLabel>
-                <div className="flex flex-col gap-3">
-                  {past.map((a) => (
-                    <PastAppointmentCard key={a.id} surface={surface} appointment={a} />
-                  ))}
                 </div>
               </section>
             )}
@@ -504,28 +493,6 @@ function DebriefCard({
       <Button surface={surface} variant="primary" fullWidth onClick={onDebrief}>
         Debrief with Yuna
       </Button>
-    </div>
-  );
-}
-
-// Quiet record of a completed, debriefed session — who and when, no actions.
-// Rebooking lives in the "Next step" tile, not here.
-function PastAppointmentCard({
-  surface,
-  appointment,
-}: {
-  surface: "dark" | "light";
-  appointment: Appointment;
-}) {
-  const therapist = getTherapist(appointment.therapistId) ?? matchedTherapists()[0];
-  const session =
-    SESSION_TYPES.find((s) => s.id === appointment.sessionTypeId) ?? SESSION_TYPES[0];
-  return (
-    <div className={`rounded-3xl ${frostedPanel(surface)} p-5 flex flex-col gap-3`}>
-      <TherapistMini therapist={therapist} />
-      <p className="text-sm text-white/75">
-        {session.label} · {formatLongDate(fromISODate(appointment.dateISO))} · {appointment.time}
-      </p>
     </div>
   );
 }

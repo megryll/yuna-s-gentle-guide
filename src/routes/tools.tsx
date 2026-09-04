@@ -2,7 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ScreenChrome } from "@/components/ScreenChrome";
 import { Badge } from "@/components/Badge";
 import { useAppMode } from "@/lib/theme-prefs";
-import { useAppointments } from "@/lib/therapist-prefs";
+import {
+  latestCompleted,
+  pendingDebriefs,
+  sortedUpcoming,
+  useAppointments,
+} from "@/lib/therapist-prefs";
 import { formatShortDate, fromISODate, getTherapist } from "@/lib/therapist-data";
 
 type Tool = {
@@ -18,8 +23,10 @@ type Tool = {
 };
 
 // The therapist tile follows the user through the journey: discover → an
-// upcoming appointment → a completed call waiting on its debrief. Derived in
-// useTherapistTool below; this is the not-yet-booked base state.
+// upcoming appointment → a completed call waiting on its debrief → rebooking.
+// A booked session outranks a pending debrief, so an unfinished reflection
+// never hides the next appointment. Derived in useTherapistTool below; this is
+// the not-yet-booked base state.
 const THERAPIST_TILE: Tool = {
   id: "therapist",
   title: "Therapist Recommendation",
@@ -31,11 +38,9 @@ const THERAPIST_TILE: Tool = {
 
 function useTherapistTool(): Tool {
   const appointments = useAppointments();
-  const upcoming = appointments
-    .filter((a) => !a.completed)
-    .slice()
-    .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
-  const needsDebrief = appointments.find((a) => a.completed && !a.debriefed);
+  const upcoming = sortedUpcoming(appointments)[0];
+  const needsDebrief = pendingDebriefs(appointments)[0];
+  const lastSession = latestCompleted(appointments);
 
   if (upcoming) {
     const name = getTherapist(upcoming.therapistId)?.name.split(" ")[0] ?? "your therapist";
@@ -54,6 +59,18 @@ function useTherapistTool(): Tool {
       ...THERAPIST_TILE,
       title: "Your Therapist",
       caption: `How did your call with ${name} go?`,
+      to: "/therapist-hub",
+    };
+  }
+  // Every session talked through and nothing booked: the tile's job is the
+  // next one, not discovery.
+  if (lastSession) {
+    const name = getTherapist(lastSession.therapistId)?.name.split(" ")[0] ?? "your therapist";
+    return {
+      ...THERAPIST_TILE,
+      title: "Your Therapist",
+      caption: `Book your next session with ${name}`,
+      emoji: "🗓️",
       to: "/therapist-hub",
     };
   }

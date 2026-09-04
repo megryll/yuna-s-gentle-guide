@@ -18,10 +18,13 @@ import {
 import { getEngineerNotes, type Gotcha } from "@/lib/engineer-notes";
 import {
   completeNextAppointment,
+  latestCompleted,
   reopenLastAppointment,
+  sortedUpcoming,
   updateAppointment,
   useAppointments,
 } from "@/lib/therapist-prefs";
+import { clearSeededHistory, seedTherapistHistory } from "@/lib/therapist-demo";
 import { addUserNote, editNote, exportOverlay, removeNote, useResolvedNotes, type ResolvedNote } from "@/lib/notes-prefs";
 import { cn } from "@/lib/utils";
 import type { YunaState } from "@/components/YunaStatus";
@@ -687,8 +690,8 @@ function HomeStatesSection() {
 
 function CompleteAppointmentChip() {
   const appointments = useAppointments();
-  const on = appointments.some((a) => a.completed);
-  const hasUpcoming = appointments.some((a) => !a.completed);
+  const on = !!latestCompleted(appointments);
+  const hasUpcoming = sortedUpcoming(appointments).length > 0;
   return (
     <Chip
       active={on}
@@ -705,7 +708,7 @@ function CompleteAppointmentChip() {
 // the 2s handoff. Toggling back off returns the card to "Action Required".
 function ConfirmAppointmentChip() {
   const appointments = useAppointments();
-  const next = appointments.find((a) => !a.completed);
+  const next = sortedUpcoming(appointments)[0];
   const on = !!next?.confirmed;
   return (
     <Chip
@@ -722,12 +725,29 @@ function ConfirmAppointmentChip() {
   );
 }
 
+// Seeds a whole therapist journey (upcoming session, one waiting on its
+// debrief, and the past record behind them) so the hub and the past-sessions
+// list can be reviewed without booking and completing a chain by hand. Same
+// seed the admin "Returning" toggle uses.
+function DemoHistoryChip() {
+  const appointments = useAppointments();
+  const seeded = appointments.some((a) => a.id.startsWith("seed-appt-"));
+  return (
+    <Chip
+      active={seeded}
+      label="Demo history"
+      onClick={() => (seeded ? clearSeededHistory() : seedTherapistHistory())}
+    />
+  );
+}
+
 function TherapistStatesSection() {
   return (
     <Section title="States" defaultOpen={true}>
       <div className="flex flex-wrap gap-1">
         <ConfirmAppointmentChip />
         <CompleteAppointmentChip />
+        <DemoHistoryChip />
       </div>
     </Section>
   );

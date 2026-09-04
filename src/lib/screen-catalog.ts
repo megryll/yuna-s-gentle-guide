@@ -97,6 +97,7 @@ export const PAGES: ScreenEntry[] = [
       { label: "Therapist Profile", to: "/therapist-profile/$id", params: { id: "kerstin" } },
       { label: "Schedule Session", to: "/therapist-schedule/$id", params: { id: "kerstin" } },
       { label: "Your Therapist · Hub", to: "/therapist-hub" },
+      { label: "Past Sessions", to: "/therapist-appointments" },
       { label: "Share Summary", to: "/therapist-share-summary/$id", params: { id: "kerstin" } },
       {
         label: "Guided debrief · Chat",
