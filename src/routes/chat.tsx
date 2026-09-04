@@ -56,10 +56,13 @@ import {
   guidedPrepGreeting,
   getTherapist,
   matchedTherapists,
+  debriefConversation,
   formatLongDate,
   fromISODate,
+  prepConversation,
 } from "@/lib/therapist-data";
 import {
+  attachGuidedSession,
   getAppointment,
   getAppointments,
   pendingDebriefs,
@@ -67,6 +70,7 @@ import {
   sortedUpcoming,
   type DebriefEntry,
 } from "@/lib/therapist-prefs";
+import { upsertSession, type PastSession } from "@/lib/sessions";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (
@@ -795,10 +799,41 @@ function Chat() {
         // The debrief itself is what the hub was waiting on — reaching the
         // wrap-up settles the appointment's "how did it go?" prompt and saves
         // the answers so the session can be revisited later.
-        if (isDebrief && debriefAppointment)
+        if (isDebrief && debriefAppointment) {
           recordDebrief(debriefAppointment.id, debriefAnswersRef.current);
+          saveDebriefConversation(debriefAppointment.id);
+        }
       }
     }, 900);
+  };
+
+  // The prep chat is open-ended, so there's no wrap-up to save on. Keep it in
+  // step with the thread instead: once the user has said something, the
+  // conversation is written to its appointment (and rewritten as it grows), so
+  // the session is reachable from the appointment afterwards.
+  const prepAppointmentId = prepAppointment?.id ?? null;
+  useEffect(() => {
+    if (!isPrep || !prepAppointmentId || !prepTherapist) return;
+    const a = getAppointment(prepAppointmentId);
+    if (!a) return;
+    const transcript = messages.flatMap((m) =>
+      m.kind === "text" ? [{ from: m.from, text: m.text }] : [],
+    );
+    if (!transcript.some((t) => t.from === "you")) return;
+    const conversation = prepConversation(a, prepTherapist.name.split(" ")[0], transcript);
+    upsertSession(conversation);
+    attachGuidedSession(a.id, { kind: "prep", session: conversation });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, isPrep, prepAppointmentId]);
+
+  // Keep the debrief as a conversation too, not just a reflection: it joins the
+  // session list and stays reachable from the appointment it belongs to.
+  const saveDebriefConversation = (appointmentId: string) => {
+    const a = getAppointment(appointmentId);
+    const conversation = a ? debriefConversation(a, debriefFirstName) : null;
+    if (!a || !conversation) return;
+    upsertSession(conversation);
+    attachGuidedSession(a.id, { kind: "debrief", session: conversation });
   };
 
   // Chat-now text opener. Voice mode is driven separately by VoiceSession's

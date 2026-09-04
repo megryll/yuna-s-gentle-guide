@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { PastSession } from "@/lib/sessions";
 
 // ─── Therapist Recommendations — local prototype state ───────────────────────
 // localStorage-backed so saved therapists and "preferences applied" persist
@@ -12,6 +13,12 @@ import { useSyncExternalStore } from "react";
  *  rescheduling retire a row rather than deleting it, so the past-sessions
  *  list can show the whole record. */
 export type AppointmentStatus = "booked" | "cancelled" | "rescheduled" | "completed";
+
+/** A guided conversation tied to an appointment — the prep chat before it or
+ *  the debrief after. The whole conversation is kept here rather than only its
+ *  id: appointments persist and the session list doesn't, so this is what lets
+ *  a past appointment still open its conversation after a reload. */
+export type GuidedSession = { kind: "prep" | "debrief"; session: PastSession };
 
 /** One pass through the guided debrief. Revisiting a session appends another
  *  entry instead of overwriting, so the reflection reads as a thread. */
@@ -38,6 +45,8 @@ export type Appointment = {
   cancelledAtISO?: string;
   /** What the user told Yuna after the session. */
   debrief?: DebriefEntry[];
+  /** Prep / debrief conversations held around this appointment. */
+  guidedSessions?: GuidedSession[];
 };
 
 /** The client's edits to the shareable summary: which sections they left out,
@@ -252,6 +261,15 @@ export function reopenLastAppointment() {
   const last = latestCompleted(state.appointments);
   if (last)
     updateAppointment(last.id, { status: "booked", debriefed: false, debrief: undefined });
+}
+
+/** Tie a guided conversation to an appointment, replacing an earlier one of
+ *  the same kind (a second debrief pass supersedes the first). */
+export function attachGuidedSession(id: string, next: GuidedSession) {
+  const a = getAppointment(id);
+  if (!a) return;
+  const rest = (a.guidedSessions ?? []).filter((g) => g.kind !== next.kind);
+  updateAppointment(id, { guidedSessions: [...rest, next] });
 }
 
 /** Save what the user told Yuna in the guided debrief. Appending rather than

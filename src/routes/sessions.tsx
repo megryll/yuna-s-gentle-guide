@@ -6,8 +6,9 @@ import { Button } from "@/components/Button";
 import { IconMedallion } from "@/components/IconMedallion";
 import { PastSessionCard } from "@/components/PastSessionCard";
 import { Toast, ToastViewport } from "@/components/Toast";
-import { useSessions } from "@/lib/sessions";
+import { upsertSession, useSessions } from "@/lib/sessions";
 import { consumeSessionToast } from "@/lib/session-toast";
+import { useAppointments } from "@/lib/therapist-prefs";
 import { useTransientToast } from "@/lib/use-transient-toast";
 import { useUserType } from "@/lib/user-type";
 import { useStartChat } from "@/lib/chat-launch";
@@ -74,6 +75,13 @@ function SessionsNew() {
 function SessionsReturning() {
   const navigate = useNavigate();
   const sessions = useSessions();
+  // Guided conversations held around a therapist appointment persist with that
+  // appointment, not with the session list — put them back so they show up
+  // here too, not only from the appointment they belong to.
+  const appointments = useAppointments();
+  useEffect(() => {
+    for (const a of appointments) for (const g of a.guidedSessions ?? []) upsertSession(g.session);
+  }, [appointments]);
   const { message: toast, show, dismiss } = useTransientToast();
 
   // Pick up a one-shot confirmation handed off from a detail screen (e.g. after

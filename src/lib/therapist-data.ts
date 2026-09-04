@@ -1,5 +1,6 @@
 import type { HomeCard } from "@/lib/home-cards";
-import type { Appointment } from "@/lib/therapist-prefs";
+import type { Appointment, GuidedSession } from "@/lib/therapist-prefs";
+import type { PastSession, TranscriptTurn } from "@/lib/sessions";
 
 // ─── Therapist Recommendations — data model ──────────────────────────────────
 // Ported from the reference prototype's therapistData.js, retyped for this
@@ -654,6 +655,68 @@ export function guidedDebriefScript(therapistFirstName: string): SurveyChatScrip
       "Thank you for sharing that. One more: did you feel like you could open up, or was something missing?",
     wrapUp: `That's helpful to sit with, and whatever you decide is okay. If it felt right, you can book a full session with ${name} below. If it didn't, I can help you keep looking.`,
   };
+}
+
+// ─── Guided conversations as sessions ────────────────────────────────────────
+// The prep and debrief chats are ordinary conversations, so they belong in the
+// session list and open on the session detail screen. Both are built here so
+// the seeded demo journey, the live chat, and the appointments list all produce
+// the same record for the same appointment.
+
+export function prepConversation(
+  a: Appointment,
+  therapistFirstName: string,
+  transcript: TranscriptTurn[],
+): PastSession {
+  return {
+    id: `s-prep-${a.id}`,
+    date: formatShortDate(fromISODate(a.dateISO)),
+    length: `${Math.max(3, Math.round(transcript.length * 1.5))} min`,
+    title: `Getting ready for your session with ${therapistFirstName}`,
+    tags: [{ label: "Gained clarity", emoji: "💎", tone: "positive" }],
+    transcript,
+    highlights: [],
+  };
+}
+
+/** The debrief read back as a conversation. Written from the answers the
+ *  appointment stores rather than from the chat thread, so it can be rebuilt
+ *  for any debriefed appointment — including ones talked through before the
+ *  conversation was ever kept. Null when there's nothing to show. */
+export function debriefConversation(
+  a: Appointment,
+  therapistFirstName: string,
+): PastSession | null {
+  if (!a.debrief?.length) return null;
+  const script = guidedDebriefScript(therapistFirstName);
+  return {
+    id: `s-debrief-${a.id}`,
+    date: formatShortDate(fromISODate(a.dateISO)),
+    length: "6 min",
+    title: `How your session with ${therapistFirstName} went`,
+    tags: [{ label: "Felt heard", emoji: "🫶", tone: "positive" }],
+    transcript: [
+      { from: "yuna", text: script.greeting[0] },
+      ...a.debrief.flatMap((e) => [
+        { from: "yuna" as const, text: e.question },
+        { from: "you" as const, text: e.answer },
+      ]),
+      { from: "yuna", text: script.wrapUp },
+    ],
+    highlights: [{ quote: a.debrief[0].answer, emotions: ["Relief", "Hopefulness"] }],
+  };
+}
+
+/** Every conversation an appointment can show: the ones kept on it, plus a
+ *  debrief rebuilt from its saved answers when the conversation itself was
+ *  never kept (a session talked through before they were). Prep reads first,
+ *  since that's the order they happened. */
+export function appointmentConversations(a: Appointment, therapistFirstName: string): GuidedSession[] {
+  const kept = a.guidedSessions ?? [];
+  const debrief =
+    kept.some((g) => g.kind === "debrief") ? null : debriefConversation(a, therapistFirstName);
+  const all = debrief ? [...kept, { kind: "debrief" as const, session: debrief }] : kept;
+  return [...all].sort((x, y) => (x.kind === y.kind ? 0 : x.kind === "prep" ? -1 : 1));
 }
 
 // ─── Home follow-up card ─────────────────────────────────────────────────────

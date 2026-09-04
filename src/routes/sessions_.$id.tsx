@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
@@ -61,6 +61,7 @@ function deriveEmotions(
 function SessionDetailRoute() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const router = useRouter();
   const { avatar } = useYunaIdentity();
   // Themed screen: follows the Light/Dark toggle, so its controls must flip
   // surface with it (the photo + .theme-light invert automatically).
@@ -104,7 +105,14 @@ function SessionDetailRoute() {
             <PageHeader
               surface={surface}
               className="px-0 pt-0 pb-0"
-              onBack={() => navigate({ to: "/sessions" })}
+              // A session is reachable from more than the list now (a past
+              // appointment links to its prep / debrief), so go back to
+              // wherever the user actually came from.
+              onBack={() =>
+                router.history.canGoBack()
+                  ? router.history.back()
+                  : navigate({ to: "/sessions" })
+              }
               center={
                 <p className="text-uppercase tracking-[0.32em] uppercase text-white/75">
                   {session.date} · {session.length}

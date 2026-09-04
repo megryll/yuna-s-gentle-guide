@@ -55,6 +55,18 @@ export function getSession(id: string): PastSession | undefined {
   return sessions.find((s) => s.id === id);
 }
 
+/** Add a conversation to the list, or replace it if that id is already there.
+ *  The therapist flow's guided sessions live on their appointment (which
+ *  persists); this is how they join the in-memory session list so the detail
+ *  screen can render them. */
+export function upsertSession(next: PastSession) {
+  const i = sessions.findIndex((s) => s.id === next.id);
+  if (i === -1) sessions = [next, ...sessions];
+  else if (sessions[i] !== next) sessions = sessions.map((s) => (s.id === next.id ? next : s));
+  else return;
+  emit();
+}
+
 export function deleteSession(id: string) {
   sessions = sessions.filter((s) => s.id !== id);
   emit();

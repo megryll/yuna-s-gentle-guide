@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { ChevronRight, MessageCircle, MessageCirclePlus } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Button } from "@/components/Button";
 import { PageHeader } from "@/components/PageHeader";
@@ -7,7 +8,9 @@ import { frostedPanel, TherapistPhoto } from "@/components/TherapistCard";
 import { useAppMode } from "@/lib/theme-prefs";
 import { useStartChat } from "@/lib/chat-launch";
 import { useAppointments, type Appointment } from "@/lib/therapist-prefs";
+import { upsertSession } from "@/lib/sessions";
 import {
+  appointmentConversations,
   formatLongDate,
   fromISODate,
   getTherapist,
@@ -45,6 +48,15 @@ function AppointmentRoute() {
     [appointments, appointment],
   );
 
+  const conversations = useMemo(() => {
+    if (!appointment) return [];
+    const t = getTherapist(appointment.therapistId) ?? matchedTherapists()[0];
+    return appointmentConversations(appointment, firstName(t));
+  }, [appointment]);
+  useEffect(() => {
+    for (const g of conversations) upsertSession(g.session);
+  }, [conversations]);
+
   const back = () =>
     router.history.canGoBack()
       ? router.history.back()
@@ -78,7 +90,10 @@ function AppointmentRoute() {
   const session =
     SESSION_TYPES.find((s) => s.id === appointment.sessionTypeId) ?? SESSION_TYPES[0];
   const name = firstName(therapist);
-  const debrief = appointment.debrief ?? [];
+
+  // A debrief that hasn't happened yet is still a guided session, just one that
+  // starts rather than opens.
+  const offerDebrief = appointment.status === "completed" && !appointment.debriefed;
 
   const openDebrief = () =>
     startChat({
@@ -147,34 +162,25 @@ function AppointmentRoute() {
             </div>
           )}
 
-          {appointment.status === "completed" && (
-            <section className="flex flex-col gap-4">
-              <SectionLabel>{debrief.length > 0 ? "Your reflection" : "After your session"}</SectionLabel>
-              {debrief.length === 0 ? (
-                <>
-                  <p className="text-sm leading-snug text-white/85">
-                    You had your {session.label.toLowerCase()} with {name}. It's not too late to
-                    talk it through, however long ago it was.
-                  </p>
-                  <Button surface={surface} variant="primary" fullWidth onClick={openDebrief}>
-                    Debrief with Yuna
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className={`rounded-3xl ${frostedPanel(surface)} p-5 flex flex-col gap-5`}>
-                    {debrief.map((entry, i) => (
-                      <div key={`${entry.atISO}-${i}`}>
-                        <p className="text-sm leading-snug text-white/75">{entry.question}</p>
-                        <p className="mt-2 text-base leading-snug text-white">{entry.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <Button surface={surface} variant="secondary" fullWidth onClick={openDebrief}>
-                    Add to this reflection
-                  </Button>
-                </>
-              )}
+          {/* Every guided conversation this appointment has: the ones already
+              held, and the debrief still on offer. They're the same kind of
+              thing, so they read as one list. */}
+          {(conversations.length > 0 || offerDebrief) && (
+            <section>
+              <SectionLabel>Guided sessions</SectionLabel>
+              <div className={`rounded-3xl ${frostedPanel(surface)} px-5 py-4 flex flex-col gap-3.5`}>
+                {conversations.map((g) => (
+                  <GuidedRow
+                    key={g.session.id}
+                    label={g.session.title}
+                    meta={g.session.date}
+                    onClick={() => navigate({ to: "/sessions/$id", params: { id: g.session.id } })}
+                  />
+                ))}
+                {offerDebrief && (
+                  <GuidedRow label="Debrief with Yuna" meta="Start" pending onClick={openDebrief} />
+                )}
+              </div>
             </section>
           )}
 
@@ -189,6 +195,44 @@ function AppointmentRoute() {
         </div>
       </div>
     </PhoneFrame>
+  );
+}
+
+/** A guided conversation in the list. One that already happened is dated and
+ *  quiet; one still on offer carries the add glyph and reads as an action, so
+ *  the two are told apart without a status line. */
+function GuidedRow({
+  label,
+  meta,
+  pending = false,
+  onClick,
+}: {
+  label: string;
+  meta: string;
+  pending?: boolean;
+  onClick: () => void;
+}) {
+  const Icon = pending ? MessageCirclePlus : MessageCircle;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2.5 text-left active:opacity-70 transition-opacity"
+    >
+      <Icon
+        size={16}
+        strokeWidth={1.75}
+        className={`shrink-0 ${pending ? "text-white" : "text-white/75"}`}
+        aria-hidden
+      />
+      <span
+        className={`min-w-0 flex-1 truncate text-sm ${pending ? "font-semibold text-white" : "text-white/85"}`}
+      >
+        {label}
+      </span>
+      <span className={`shrink-0 text-xs ${pending ? "text-white" : "text-white/75"}`}>{meta}</span>
+      <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-white/75" aria-hidden />
+    </button>
   );
 }
 
