@@ -117,20 +117,11 @@ function PastRow({
       <p className="text-sm text-white/75">
         {session.label} · {formatLongDate(fromISODate(appointment.dateISO))} · {appointment.time}
       </p>
-      <StatusLine appointment={appointment} />
+      {/* Only a cancellation changes what the row means; a session talked
+          through or moved reads from the detail screen. */}
+      {appointment.status === "cancelled" && (
+        <p className="text-sm font-semibold text-alert-orange">Cancelled</p>
+      )}
     </button>
   );
-}
-
-/** What happened to this appointment, in one line. A session that was never
- *  talked through says nothing — the row is a record, not a chore list; the
- *  debrief is still offered inside. */
-function StatusLine({ appointment: a }: { appointment: Appointment }) {
-  if (a.status === "cancelled")
-    return <p className="text-sm text-white/75">You canceled this appointment.</p>;
-  if (a.status === "rescheduled")
-    return <p className="text-sm text-white/75">You moved this session to a new time.</p>;
-  if (a.debriefed)
-    return <p className="text-sm text-white/75">You reflected on this one with Yuna.</p>;
-  return null;
 }
